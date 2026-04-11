@@ -13,11 +13,25 @@
       "domainLabel": "Platform Domain",
       "domainValue": "platform.craftive.io",
       "modulesLabel": "Aktif Modüller",
-      "modules": ["Core CMS", "Sayfa Oluşturucu", "Medya Kütüphanesi", "Tenant Yönetimi"],
+      "modules": [
+        "Core CMS",
+        "Sayfa Oluşturucu",
+        "Medya Kütüphanesi",
+        "Tenant Yönetimi"
+      ],
       "metrics": [
-        { "label": "Aktif Tenant", "value": "500+" },
-        { "label": "Hazır Modül", "value": "12" },
-        { "label": "Uptime SLA", "value": "99.9%" }
+        {
+          "label": "Aktif Tenant",
+          "value": "500+"
+        },
+        {
+          "label": "Hazır Modül",
+          "value": "12"
+        },
+        {
+          "label": "Uptime SLA",
+          "value": "99.9%"
+        }
       ],
       "deliveryLabel": "Teslim Modeli",
       "deliveryValue": "Modüler Platform",
@@ -111,11 +125,25 @@
         "domain": "www.medicore.com",
         "eyebrow": "Yapılandırılmış İçerik Operasyonu",
         "summary": "Her proje için CMS, medya ve yayın akışlarını sıfırdan kurmak yerine çok dilli kurumsal web varlığını yeniden kullanılabilir bir temel üzerinde yayına alın.",
-        "modules": ["Core CMS", "Sayfa Oluşturucu", "Medya Kütüphanesi", "Navigasyon"],
+        "modules": [
+          "Core CMS",
+          "Sayfa Oluşturucu",
+          "Medya Kütüphanesi",
+          "Navigasyon"
+        ],
         "stats": [
-          { "label": "Dil", "value": "5" },
-          { "label": "Sayfa", "value": "200+" },
-          { "label": "Ekip", "value": "3" }
+          {
+            "label": "Dil",
+            "value": "5"
+          },
+          {
+            "label": "Sayfa",
+            "value": "200+"
+          },
+          {
+            "label": "Ekip",
+            "value": "3"
+          }
         ]
       },
       {
@@ -126,11 +154,25 @@
         "domain": "insights.novamed.com",
         "eyebrow": "Editoryal Teslim",
         "summary": "İçerik ekiplerine yeniden kullanılabilir yapılar, SEO odaklı yayın akışları ve kontrollü medya operasyonu verin; her güncellemeyi özel geliştirme işine çevirmeyin.",
-        "modules": ["Yazılar", "Kategoriler", "Medya", "SEO Araçları"],
+        "modules": [
+          "Yazılar",
+          "Kategoriler",
+          "Medya",
+          "SEO Araçları"
+        ],
         "stats": [
-          { "label": "İçerik", "value": "124" },
-          { "label": "Dil", "value": "6" },
-          { "label": "Taslak", "value": "14" }
+          {
+            "label": "İçerik",
+            "value": "124"
+          },
+          {
+            "label": "Dil",
+            "value": "6"
+          },
+          {
+            "label": "Taslak",
+            "value": "14"
+          }
         ]
       },
       {
@@ -141,11 +183,25 @@
         "domain": "shop.lumena.com",
         "eyebrow": "Headless Commerce",
         "summary": "Katalog ve ürün operasyonlarını Craftive üzerinde yönetin; storefront tarafını ise temalanabilir, frontend bağımsız ve kontrollü büyümeye açık tutun.",
-        "modules": ["Ürün Kataloğu", "CMS Delivery API", "Medya Kütüphanesi", "Bileşen Kütüphanesi"],
+        "modules": [
+          "Ürün Kataloğu",
+          "CMS Delivery API",
+          "Medya Kütüphanesi",
+          "Bileşen Kütüphanesi"
+        ],
         "stats": [
-          { "label": "Ürün", "value": "248" },
-          { "label": "Kategori", "value": "42" },
-          { "label": "Pazar", "value": "4" }
+          {
+            "label": "Ürün",
+            "value": "248"
+          },
+          {
+            "label": "Kategori",
+            "value": "42"
+          },
+          {
+            "label": "Pazar",
+            "value": "4"
+          }
         ]
       },
       {
@@ -156,11 +212,25 @@
         "domain": "go.finovo.com",
         "eyebrow": "Kampanya Operasyonları",
         "summary": "Her kampanya için yeni bir stack kurmak yerine tek modüler temel üzerinden lansman sayfalarını, lead akışlarını ve varyantları çok daha hızlı çıkarın.",
-        "modules": ["Sayfa Oluşturucu", "Formlar", "Analitik", "Mail Marketing"],
+        "modules": [
+          "Sayfa Oluşturucu",
+          "Formlar",
+          "Analitik",
+          "Mail Marketing"
+        ],
         "stats": [
-          { "label": "Kampanya", "value": "12" },
-          { "label": "Lead", "value": "340" },
-          { "label": "Varyant", "value": "8" }
+          {
+            "label": "Kampanya",
+            "value": "12"
+          },
+          {
+            "label": "Lead",
+            "value": "340"
+          },
+          {
+            "label": "Varyant",
+            "value": "8"
+          }
         ]
       },
       {
@@ -171,11 +241,25 @@
         "domain": "clients.northstarstudio.com",
         "eyebrow": "Yeniden Kullanılabilir Müşteri Teslimi",
         "summary": "Birden fazla müşteri projesini tenant güvenli izolasyon, yeniden kullanılabilir modüller ve kontrollü özelleştirme ile tek operasyonel tabanda yönetin.",
-        "modules": ["Provisioning", "Core CMS", "Mail Marketing", "Ürün Kataloğu"],
+        "modules": [
+          "Provisioning",
+          "Core CMS",
+          "Mail Marketing",
+          "Ürün Kataloğu"
+        ],
         "stats": [
-          { "label": "Müşteri", "value": "12" },
-          { "label": "Yeniden Kullanım", "value": "78%" },
-          { "label": "Canlıya Geçiş", "value": "<2 hf" }
+          {
+            "label": "Müşteri",
+            "value": "12"
+          },
+          {
+            "label": "Yeniden Kullanım",
+            "value": "78%"
+          },
+          {
+            "label": "Canlıya Geçiş",
+            "value": "<2 hf"
+          }
         ]
       }
     ]
@@ -334,20 +418,48 @@
       "product": {
         "label": "Ürün",
         "items": [
-          { "label": "Özellikler", "href": "#features" },
-          { "label": "Nasıl Çalışır?", "href": "#howitworks" },
-          { "label": "SSS", "href": "#faq" }
+          {
+            "label": "Özellikler",
+            "href": "#features"
+          },
+          {
+            "label": "Nasıl Çalışır?",
+            "href": "#howitworks"
+          },
+          {
+            "label": "SSS",
+            "href": "#faq"
+          }
         ]
       },
       "resources": {
         "label": "Kaynaklar",
         "items": [
-          { "label": "Dokümantasyon", "href": "https://docs.craftive.io" },
-          { "label": "API Referansı", "href": "https://docs.craftive.io/api" },
-          { "label": "GitHub", "href": "https://github.com" }
+          {
+            "label": "Dokümantasyon",
+            "href": "https://docs.craftive.io"
+          },
+          {
+            "label": "API Referansı",
+            "href": "https://docs.craftive.io/api"
+          },
+          {
+            "label": "GitHub",
+            "href": "https://github.com"
+          }
         ]
       }
     },
     "copyright": "© 2026 Craftive. Tüm hakları saklıdır."
+  },
+  "newsletter": {
+    "eyebrow": "Gelişmelerden haberdar ol",
+    "heading": "Ürün güncellemeleri doğrudan gelen kutuna",
+    "subheading": "Spam yok. İstediğin zaman abonelikten çık.",
+    "placeholder": "eposta@adresin.com",
+    "submit": "Abone Ol",
+    "submitting": "Abone olunuyor...",
+    "errNetwork": "Bağlantı hatası. İnternet bağlantını kontrol edip tekrar dene.",
+    "errHttp": "Bir hata oluştu. Lütfen tekrar dene."
   }
 }

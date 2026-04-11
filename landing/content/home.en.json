@@ -13,11 +13,25 @@
       "domainLabel": "Platform Domain",
       "domainValue": "platform.craftive.io",
       "modulesLabel": "Active Modules",
-      "modules": ["Core CMS", "Page Builder", "Media Library", "Tenant Management"],
+      "modules": [
+        "Core CMS",
+        "Page Builder",
+        "Media Library",
+        "Tenant Management"
+      ],
       "metrics": [
-        { "label": "Active Tenants", "value": "500+" },
-        { "label": "Ready Modules", "value": "12" },
-        { "label": "Uptime SLA", "value": "99.9%" }
+        {
+          "label": "Active Tenants",
+          "value": "500+"
+        },
+        {
+          "label": "Ready Modules",
+          "value": "12"
+        },
+        {
+          "label": "Uptime SLA",
+          "value": "99.9%"
+        }
       ],
       "deliveryLabel": "Delivery Model",
       "deliveryValue": "Composable Platform",
@@ -111,11 +125,25 @@
         "domain": "www.medicore.com",
         "eyebrow": "Structured Content Operations",
         "summary": "Launch a multilingual corporate web presence on a reusable foundation instead of rebuilding CMS, media, and publishing flows from scratch for every project.",
-        "modules": ["Core CMS", "Page Builder", "Media Library", "Navigation"],
+        "modules": [
+          "Core CMS",
+          "Page Builder",
+          "Media Library",
+          "Navigation"
+        ],
         "stats": [
-          { "label": "Languages", "value": "5" },
-          { "label": "Pages", "value": "200+" },
-          { "label": "Teams", "value": "3" }
+          {
+            "label": "Languages",
+            "value": "5"
+          },
+          {
+            "label": "Pages",
+            "value": "200+"
+          },
+          {
+            "label": "Teams",
+            "value": "3"
+          }
         ]
       },
       {
@@ -126,11 +154,25 @@
         "domain": "insights.novamed.com",
         "eyebrow": "Editorial Delivery",
         "summary": "Give content teams reusable structures, SEO-ready publishing flows, and governed media operations without turning every update into a custom dev task.",
-        "modules": ["Articles", "Categories", "Media", "SEO Tools"],
+        "modules": [
+          "Articles",
+          "Categories",
+          "Media",
+          "SEO Tools"
+        ],
         "stats": [
-          { "label": "Articles", "value": "124" },
-          { "label": "Languages", "value": "6" },
-          { "label": "Drafts", "value": "14" }
+          {
+            "label": "Articles",
+            "value": "124"
+          },
+          {
+            "label": "Languages",
+            "value": "6"
+          },
+          {
+            "label": "Drafts",
+            "value": "14"
+          }
         ]
       },
       {
@@ -141,11 +183,25 @@
         "domain": "shop.lumena.com",
         "eyebrow": "Headless Commerce",
         "summary": "Run catalog and product operations on Craftive while keeping the storefront fully themeable, frontend-independent, and ready for controlled expansion.",
-        "modules": ["Product Catalog", "CMS Delivery API", "Media Library", "Component Library"],
+        "modules": [
+          "Product Catalog",
+          "CMS Delivery API",
+          "Media Library",
+          "Component Library"
+        ],
         "stats": [
-          { "label": "Products", "value": "248" },
-          { "label": "Categories", "value": "42" },
-          { "label": "Markets", "value": "4" }
+          {
+            "label": "Products",
+            "value": "248"
+          },
+          {
+            "label": "Categories",
+            "value": "42"
+          },
+          {
+            "label": "Markets",
+            "value": "4"
+          }
         ]
       },
       {
@@ -156,11 +212,25 @@
         "domain": "go.finovo.com",
         "eyebrow": "Campaign Operations",
         "summary": "Ship launch pages, capture flows, and campaign variants faster by reusing one modular base instead of creating a new stack for every initiative.",
-        "modules": ["Page Builder", "Forms", "Analytics", "Mail Marketing"],
+        "modules": [
+          "Page Builder",
+          "Forms",
+          "Analytics",
+          "Mail Marketing"
+        ],
         "stats": [
-          { "label": "Campaigns", "value": "12" },
-          { "label": "Leads", "value": "340" },
-          { "label": "Variants", "value": "8" }
+          {
+            "label": "Campaigns",
+            "value": "12"
+          },
+          {
+            "label": "Leads",
+            "value": "340"
+          },
+          {
+            "label": "Variants",
+            "value": "8"
+          }
         ]
       },
       {
@@ -171,11 +241,25 @@
         "domain": "clients.northstarstudio.com",
         "eyebrow": "Reusable Client Delivery",
         "summary": "Deliver multiple client projects on one operational base with tenant-safe isolation, reusable modules, and controlled customization at each rollout.",
-        "modules": ["Provisioning", "Core CMS", "Mail Marketing", "Product Catalog"],
+        "modules": [
+          "Provisioning",
+          "Core CMS",
+          "Mail Marketing",
+          "Product Catalog"
+        ],
         "stats": [
-          { "label": "Clients", "value": "12" },
-          { "label": "Reuse Rate", "value": "78%" },
-          { "label": "Go-live", "value": "<2w" }
+          {
+            "label": "Clients",
+            "value": "12"
+          },
+          {
+            "label": "Reuse Rate",
+            "value": "78%"
+          },
+          {
+            "label": "Go-live",
+            "value": "<2w"
+          }
         ]
       }
     ]
@@ -329,14 +413,23 @@
     "secondaryCta": "View Documentation"
   },
   "footer": {
-  "tagline": "Customizable digital solutions for every idea.",
+    "tagline": "Customizable digital solutions for every idea.",
     "links": {
       "product": {
         "label": "Product",
         "items": [
-          { "label": "Features", "href": "#features" },
-          { "label": "How It Works", "href": "#howitworks" },
-          { "label": "FAQ", "href": "#faq" }
+          {
+            "label": "Features",
+            "href": "#features"
+          },
+          {
+            "label": "How It Works",
+            "href": "#howitworks"
+          },
+          {
+            "label": "FAQ",
+            "href": "#faq"
+          }
         ]
       },
       "company": {
@@ -346,12 +439,31 @@
       "resources": {
         "label": "Resources",
         "items": [
-          { "label": "Documentation", "href": "https://docs.craftive.io" },
-          { "label": "API Reference", "href": "https://docs.craftive.io/api" },
-          { "label": "GitHub", "href": "https://github.com" }
+          {
+            "label": "Documentation",
+            "href": "https://docs.craftive.io"
+          },
+          {
+            "label": "API Reference",
+            "href": "https://docs.craftive.io/api"
+          },
+          {
+            "label": "GitHub",
+            "href": "https://github.com"
+          }
         ]
       }
     },
     "copyright": "© 2026 Craftive. All rights reserved."
+  },
+  "newsletter": {
+    "eyebrow": "Stay in the loop",
+    "heading": "Product updates, straight to your inbox",
+    "subheading": "No spam. Unsubscribe anytime.",
+    "placeholder": "your@email.com",
+    "submit": "Subscribe",
+    "submitting": "Subscribing...",
+    "errNetwork": "Connection error. Please check your internet and try again.",
+    "errHttp": "Something went wrong. Please try again."
   }
 }

@@ -61,7 +61,7 @@ export function CTABanner({ content }: { content: CTAContent }) {
 
         <div className="relative mx-auto max-w-[1440px] flex flex-col items-center gap-8 text-center">
           <AnimateInView>
-            <h2 className="font-heading max-w-2xl text-3xl font-semibold tracking-tight text-[var(--color-dark-neutral-1)] sm:text-4xl lg:text-5xl">
+            <h2 className="font-display max-w-2xl text-3xl text-[var(--color-dark-neutral-1)] sm:text-4xl lg:text-5xl">
               {content.heading}
             </h2>
           </AnimateInView>

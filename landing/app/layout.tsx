@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const geist = Geist({
   variable: "--font-geist",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const commune = localFont({
+  src: "../commune/WOFF/GC commune.woff2",
+  variable: "--font-commune",
   display: "swap",
 });
 
@@ -21,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${geist.variable} font-sans antialiased`}>
+      <body suppressHydrationWarning className={`${geist.variable} ${commune.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

@@ -8,6 +8,7 @@ import { Segments } from "@/components/sections/Segments";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { FAQ } from "@/components/sections/FAQ";
 import { CTABanner } from "@/components/sections/CTABanner";
+import { NewsletterSection } from "@/components/sections/NewsletterSection";
 
 const SUPPORTED_LOCALES = ["tr", "en"] as const;
 type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -37,6 +38,7 @@ export default async function LocaleHomePage({ params }: PageProps) {
       <Segments content={c.segments} />
       <HowItWorks content={c.howItWorks} />
       <FAQ content={c.faq} />
+      <NewsletterSection content={c.newsletter} locale={locale} />
       <CTABanner content={c.cta} />
     </div>
   );
