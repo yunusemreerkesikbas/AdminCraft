@@ -226,8 +226,8 @@ export async function subscribePlatformNewsletter(
       headers: platformJsonHeaders(lang),
       body: JSON.stringify({
         email,
-        templateType: "PLATFORM_NEWSLETTER",
-        source: "landing",
+        templateType: "NEWSLETTER_DEFAULT",
+        source: "LANDING_NEWSLETTER",
         locale,
         honeypot,
         formStartedAt,
