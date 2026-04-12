@@ -78,7 +78,7 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 | Prod | Admin Panel | `https://app.craftive.io` | Proxied |
 | Prod | Tenant storefront | `https://{tenant}.craftive.io` | Proxied |
 
-`craftive.io` and `www.craftive.io` redirect to `app.craftive.io` via Traefik `redirectregex` middleware.
+`craftive.io` and `www.craftive.io` are served by Cloudflare Pages (landing project) — not Traefik. The Traefik root-redirect rule was removed from `docker-compose.prod.yml`.
 
 > **Note:** Frontend `apiBaseUrl` must include the `/api` context-path suffix (e.g. `https://s1-api.craftive.io/api`, not `https://s1-api.craftive.io`). Without it, requests bypass Spring's DispatcherServlet and CORS headers are not applied.
 
@@ -235,16 +235,18 @@ This model keeps tenant-specific deploy workflows independent from the platform 
 
 `landing/` is deployed independently from droplet-based platform services.
 
-1. Connect repository to Cloudflare Pages.
+1. Connect repository to Cloudflare Pages (project: `craftive-landing`).
 2. Set root directory to `landing`.
 3. Build command: `npm run pages:build`.
 4. Output directory: `out`.
-5. Set custom domain to `landing.craftive.io`.
+5. Set custom domains: `craftive.io` (apex) and `www.craftive.io`.
 6. Keep Cloudflare SSL mode `Full (strict)`.
+7. Production branch: `landing` (not `master`). Auto-deploy on push to `landing` branch.
 
 Notes:
 - `landing/next.config.ts` uses static export (`output: "export"`).
-- Primary site URL is controlled by `NEXT_PUBLIC_SITE_URL` at build time (defaults to `https://landing.craftive.io`).
+- Primary site URL is controlled by `NEXT_PUBLIC_SITE_URL` at build time (defaults to `https://craftive.io`).
+- `craftive.io` and `www.craftive.io` DNS are managed by Cloudflare Pages (apex flatten + CNAME). Do not add A records for these to the prod droplet.
 - This flow is separate from Traefik tenant storefront scripts and does not require droplet deployment scripts.
 
 ### Tenant storefront repository CI/CD policy

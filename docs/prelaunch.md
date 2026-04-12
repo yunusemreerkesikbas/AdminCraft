@@ -221,14 +221,16 @@ Asagidaki liste deploy sorumlulugu devredilmeden once tamamlanmis olmali.
 
 ## Production Readiness Checklist
 
-- [ ] Tum prod secret'lari stage'den farkli ve rotate edilmis durumda
-- [ ] GitHub production environment approval akisi aktif
-- [ ] Prod deploy workflow demo/reference storefront image'ini build/push ediyor
-- [ ] Traefik DNS challenge icin `CF_API_TOKEN` calisiyor
-- [ ] `app.<domain>`, `api.<domain>`, root domain ve tenant wildcard kayitlari dogru
-- [ ] Demo/reference storefront prod'da ayakta
+- [x] Tum prod secret'lari stage'den farkli ve rotate edilmis durumda
+- [x] GitHub production environment approval akisi aktif
+- [x] Prod deploy workflow demo/reference storefront image'ini build/push ediyor
+- [x] Traefik DNS challenge icin `CF_API_TOKEN` calisiyor
+- [x] `app.craftive.io`, `api.craftive.io`, `demo.craftive.io` DNS kayitlari prod droplet'e (164.92.167.165) isaret ediyor
+- [x] `craftive.io` ve `www.craftive.io` Cloudflare Pages (landing) ile yonetiliyor — prod droplet'e A record yok
+- [x] Demo/reference storefront prod'da ayakta (`demo.craftive.io`)
 - [ ] Tenant-specific storefront deploy script'i ayrik image ile calisiyor
 - [ ] Backup / rollback proseduru dogrulandi
+- [ ] SMTP port 587 unblock (DO ticket) veya 2525 ile test maili gonderildi
 - [ ] Monitoring, alerting ve basic smoke testler tanimli
 
 ## Repository Hygiene Checklist
