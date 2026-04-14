@@ -88,8 +88,9 @@ export default async function RootLayout({
   return (
     <html lang={lang} dir={dir}>
       <head>
-        {/* SEO TODO: Add robots meta tag based on site config */}
-        <meta name="robots" content="noindex,nofollow" />
+        {site.searchEngine?.indexingEnabled === false && (
+          <meta name="robots" content="noindex,nofollow" />
+        )}
         {googleSiteVerification ? (
           <meta
             name="google-site-verification"

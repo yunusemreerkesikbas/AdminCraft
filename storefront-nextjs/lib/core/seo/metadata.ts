@@ -7,8 +7,15 @@ const SAFE_DEFAULT_ROBOTS = "noindex,nofollow";
 const parseRobotsTag = (
   tag?: string | null,
   defaultRobots?: string | null,
+  indexingEnabled?: boolean,
 ): Metadata["robots"] => {
-  const effective = tag || defaultRobots || SAFE_DEFAULT_ROBOTS;
+  if (indexingEnabled === false) {
+    return { index: false, follow: false };
+  }
+
+  const effectiveDefault =
+    indexingEnabled === true ? "index,follow" : SAFE_DEFAULT_ROBOTS;
+  const effective = tag || defaultRobots || effectiveDefault;
   const lower = effective.toLowerCase();
 
   return {
@@ -109,7 +116,8 @@ export const buildPageMetadata = (
       : pageTitle;
   const description = page.description || site.seo?.description || undefined;
   const canonical = resolveCanonicalUrl(page.canonicalUrl, site.canonicalBaseUrl, localizedPath);
-  const ogImage = site.ogImageUrl ? buildMediaUrl(site.ogImageUrl) : undefined;
+  const ogImageSource = site.ogImageUrl || site.logoDarkUrl;
+  const ogImage = ogImageSource ? buildMediaUrl(ogImageSource) : undefined;
   const ogTitle = pageTitle || site.seo?.ogTitle || title;
   const ogDescription = page.description || site.seo?.ogDescription || site.seo?.description || undefined;
   const twitterCard = toTwitterCard(site.seo?.twitterCard);
@@ -118,7 +126,7 @@ export const buildPageMetadata = (
     title,
     description,
     keywords: site.seo?.keywords,
-    robots: parseRobotsTag(page.robotTag, site.searchEngine?.defaultRobots),
+    robots: parseRobotsTag(page.robotTag, site.searchEngine?.defaultRobots, site.searchEngine?.indexingEnabled),
     alternates: {
       canonical: canonical ?? undefined,
       languages: buildAlternateLanguages(site, localizedPath),
