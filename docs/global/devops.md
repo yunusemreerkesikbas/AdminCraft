@@ -15,31 +15,31 @@ Both prod and stage use Cloudflare proxy (orange cloud). Stage uses the single-l
 
 Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md)
 
-| Concern | File |
-|---------|------|
-| Base services | [`../../docker-compose.yml`](../../docker-compose.yml) |
-| Production overrides | [`../../docker-compose.prod.yml`](../../docker-compose.prod.yml) |
-| Stage overrides | [`../../docker-compose.stage.yml`](../../docker-compose.stage.yml) |
-| Dev overrides | [`../../docker-compose.dev.yml`](../../docker-compose.dev.yml) |
-| Next.js SSR image | [`../../docker/storefront/Dockerfile`](../../docker/storefront/Dockerfile) |
-| PR checks | [`../../.github/workflows/ci.yml`](../../.github/workflows/ci.yml) |
-| Stage deploy | [`../../.github/workflows/deploy-stage.yml`](../../.github/workflows/deploy-stage.yml) |
-| Prod deploy | [`../../.github/workflows/deploy-prod.yml`](../../.github/workflows/deploy-prod.yml) |
-| Droplet setup | [`../../scripts/server/provision-droplet.sh`](../../scripts/server/provision-droplet.sh) |
-| DO Spaces backup | [`../../scripts/server/configure-rclone.sh`](../../scripts/server/configure-rclone.sh) |
-| Compose file copy | [`../../scripts/server/deploy-files.sh`](../../scripts/server/deploy-files.sh) |
-| Tenant storefront deploy | [`../../scripts/server/deploy-tenant-storefront.sh`](../../scripts/server/deploy-tenant-storefront.sh) |
-| Tenant storefront remove | [`../../scripts/server/remove-tenant-storefront.sh`](../../scripts/server/remove-tenant-storefront.sh) |
-| CORS properties | [`../../backend/src/main/java/com/backend/infrastructure/config/CorsProperties.java`](../../backend/src/main/java/com/backend/infrastructure/config/CorsProperties.java) |
-| CORS wiring | [`../../backend/src/main/java/com/backend/infrastructure/config/SecurityConfig.java`](../../backend/src/main/java/com/backend/infrastructure/config/SecurityConfig.java) |
-| Backend config (prod) | [`../../backend/src/main/resources/application-prod.yml`](../../backend/src/main/resources/application-prod.yml) |
-| Backend config (stage) | [`../../backend/src/main/resources/application-stage.yml`](../../backend/src/main/resources/application-stage.yml) |
-| Env template | [`../../.env.example`](../../.env.example) |
-| Alloy config (prod) | [`../../observability/alloy.river`](../../observability/alloy.river) |
-| Alloy config (local) | [`../../observability/alloy-local.river`](../../observability/alloy-local.river) |
-| Loki config (local) | [`../../observability/loki-local.yml`](../../observability/loki-local.yml) |
-| Grafana datasource provision | [`../../observability/grafana/provisioning/datasources/datasources.yml`](../../observability/grafana/provisioning/datasources/datasources.yml) |
-| Dev observability overlay | [`../../docker-compose.observability.yml`](../../docker-compose.observability.yml) |
+| Concern                      | File                                                                                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Base services                | [`../../docker-compose.yml`](../../docker-compose.yml)                                                                                                                   |
+| Production overrides         | [`../../docker-compose.prod.yml`](../../docker-compose.prod.yml)                                                                                                         |
+| Stage overrides              | [`../../docker-compose.stage.yml`](../../docker-compose.stage.yml)                                                                                                       |
+| Dev overrides                | [`../../docker-compose.dev.yml`](../../docker-compose.dev.yml)                                                                                                           |
+| Next.js SSR image            | [`../../docker/storefront/Dockerfile`](../../docker/storefront/Dockerfile)                                                                                               |
+| PR checks                    | [`../../.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                                                                                                       |
+| Stage deploy                 | [`../../.github/workflows/deploy-stage.yml`](../../.github/workflows/deploy-stage.yml)                                                                                   |
+| Prod deploy                  | [`../../.github/workflows/deploy-prod.yml`](../../.github/workflows/deploy-prod.yml)                                                                                     |
+| Droplet setup                | [`../../scripts/server/provision-droplet.sh`](../../scripts/server/provision-droplet.sh)                                                                                 |
+| DO Spaces backup             | [`../../scripts/server/configure-rclone.sh`](../../scripts/server/configure-rclone.sh)                                                                                   |
+| Compose file copy            | [`../../scripts/server/deploy-files.sh`](../../scripts/server/deploy-files.sh)                                                                                           |
+| Tenant storefront deploy     | [`../../scripts/server/deploy-tenant-storefront.sh`](../../scripts/server/deploy-tenant-storefront.sh)                                                                   |
+| Tenant storefront remove     | [`../../scripts/server/remove-tenant-storefront.sh`](../../scripts/server/remove-tenant-storefront.sh)                                                                   |
+| CORS properties              | [`../../backend/src/main/java/com/backend/infrastructure/config/CorsProperties.java`](../../backend/src/main/java/com/backend/infrastructure/config/CorsProperties.java) |
+| CORS wiring                  | [`../../backend/src/main/java/com/backend/infrastructure/config/SecurityConfig.java`](../../backend/src/main/java/com/backend/infrastructure/config/SecurityConfig.java) |
+| Backend config (prod)        | [`../../backend/src/main/resources/application-prod.yml`](../../backend/src/main/resources/application-prod.yml)                                                         |
+| Backend config (stage)       | [`../../backend/src/main/resources/application-stage.yml`](../../backend/src/main/resources/application-stage.yml)                                                       |
+| Env template                 | [`../../.env.example`](../../.env.example)                                                                                                                               |
+| Alloy config (prod)          | [`../../observability/alloy.river`](../../observability/alloy.river)                                                                                                     |
+| Alloy config (local)         | [`../../observability/alloy-local.river`](../../observability/alloy-local.river)                                                                                         |
+| Loki config (local)          | [`../../observability/loki-local.yml`](../../observability/loki-local.yml)                                                                                               |
+| Grafana datasource provision | [`../../observability/grafana/provisioning/datasources/datasources.yml`](../../observability/grafana/provisioning/datasources/datasources.yml)                           |
+| Dev observability overlay    | [`../../docker-compose.observability.yml`](../../docker-compose.observability.yml)                                                                                       |
 
 ---
 
@@ -67,16 +67,16 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 
 ### Environment URLs
 
-| Env | Service | URL | Cloudflare |
-|-----|---------|-----|------------|
-| Dev | Backend API | `http://localhost:8080/api` | — |
-| Dev | Admin Panel | `http://localhost:4200` | — |
-| Stage | Backend API | `https://s1-api.craftive.io/api` | Proxied |
-| Stage | Admin Panel | `https://s1-app.craftive.io` | Proxied |
-| Stage | Tenant storefront | `https://s1-{tenant}.craftive.io` | Proxied |
-| Prod | Backend API | `https://api.craftive.io/api` | Proxied |
-| Prod | Admin Panel | `https://app.craftive.io` | Proxied |
-| Prod | Tenant storefront | `https://{tenant}.craftive.io` | Proxied |
+| Env   | Service           | URL                               | Cloudflare |
+| ----- | ----------------- | --------------------------------- | ---------- |
+| Dev   | Backend API       | `http://localhost:8080/api`       | —          |
+| Dev   | Admin Panel       | `http://localhost:4200`           | —          |
+| Stage | Backend API       | `https://s1-api.craftive.io/api`  | Proxied    |
+| Stage | Admin Panel       | `https://s1-app.craftive.io`      | Proxied    |
+| Stage | Tenant storefront | `https://s1-{tenant}.craftive.io` | Proxied    |
+| Prod  | Backend API       | `https://api.craftive.io/api`     | Proxied    |
+| Prod  | Admin Panel       | `https://app.craftive.io`         | Proxied    |
+| Prod  | Tenant storefront | `https://{tenant}.craftive.io`    | Proxied    |
 
 `craftive.io` and `www.craftive.io` redirect to `app.craftive.io` via Traefik `redirectregex` middleware.
 
@@ -93,21 +93,23 @@ ghcr.io/{github.repository_owner}/<tenant>-storefront:{tag}   # tenant-specific 
 
 > **Note:** GHCR org is derived from `${{ github.repository_owner }}` — never hardcode. Docker Compose uses `${GHCR_ORG}` variable, set by deploy workflows.
 
-| Source | Tag format | Example |
-|--------|-----------|---------|
-| `stage` branch | `stage-{sha}` | `stage-a3f9c12` |
-| `release/*` → stage smoke test | `release-DD.MM.YYYY` | `release-27.02.2026` |
-| `release/*` → prod | `release-DD.MM.YYYY` + `latest` | `release-27.02.2026` |
+| Source                         | Tag format                      | Example              |
+| ------------------------------ | ------------------------------- | -------------------- |
+| `stage` branch                 | `stage-{sha}`                   | `stage-a3f9c12`      |
+| `release/*` → stage smoke test | `release-DD.MM.YYYY`            | `release-27.02.2026` |
+| `release/*` → prod             | `release-DD.MM.YYYY` + `latest` | `release-27.02.2026` |
 
 ### Centralized logs (Grafana Cloud Loki + Alloy)
 
 Platform compose includes a `craftive-alloy` service that:
+
 1. Collects Docker container logs from `/var/run/docker.sock`.
 2. Collects host ops logs from `/opt/craftive/logs/*.log` (e.g. backup cron logs).
 3. Redacts common sensitive patterns (authorization, cookie, password/token-like keys, email, phone).
 4. Pushes to Grafana Cloud Loki.
 
 Required `.env.{stage|prod}` variables:
+
 ```shell
 GRAFANA_CLOUD_LOKI_URL=https://logs-<stack>.grafana.net/loki/api/v1/push
 GRAFANA_CLOUD_LOKI_USER=<grafana-cloud-logs-user>
@@ -117,6 +119,7 @@ LOG_HOST=<droplet-identifier>
 ```
 
 TODO — Environment keys (fill in before deploy):
+
 - [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_URL` set to the correct stage stack endpoint.
 - [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_USER` set.
 - [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_TOKEN` set.
@@ -129,6 +132,7 @@ TODO — Environment keys (fill in before deploy):
 - [ ] `.env.prod` has `LOG_HOST` set (e.g. `do-fra1-prod-01`).
 
 Rollout sequence:
+
 1. Sync files to droplet (`scripts/server/deploy-files.sh` now also copies `observability/alloy.river`).
 2. Deploy Stage and verify logs/labels in Grafana.
 3. Deploy Production.
@@ -142,15 +146,16 @@ An optional compose overlay runs Loki + Grafana + Alloy locally to validate the 
 docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.observability.yml --env-file .env.dev up -d
 ```
 
-| Service | URL | Purpose |
-|---------|-----|---------|
-| Loki | `http://localhost:3100/ready` | Log storage (72h retention, filesystem) |
-| Grafana | `http://localhost:3000` (admin/admin) | Dashboards, Explore queries |
-| Alloy UI | `http://localhost:12345` | Pipeline graph, component health |
+| Service  | URL                                   | Purpose                                 |
+| -------- | ------------------------------------- | --------------------------------------- |
+| Loki     | `http://localhost:3100/ready`         | Log storage (72h retention, filesystem) |
+| Grafana  | `http://localhost:3000` (admin/admin) | Dashboards, Explore queries             |
+| Alloy UI | `http://localhost:12345`              | Pipeline graph, component health        |
 
 Loki datasource is auto-provisioned in Grafana. Query `{job="docker"}` in Explore to see container logs.
 
 `alloy-local.river` mirrors the prod config (`alloy.river`) with two differences:
+
 - Pushes to local Loki (`http://loki:3100`) instead of Grafana Cloud (no auth).
 - Host log collection removed (Windows dev has no `/opt/craftive/logs`).
 
@@ -174,9 +179,7 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
 4. Build 3 images (backend, frontend, storefront), push to GHCR
 5. SSH to Stage Droplet → GHCR login → decode `ENV_STAGE` secret → pull images → `docker compose up -d --force-recreate` → write tag to `.last-deployed-tag`
 
-> **Compose file sync:** The deploy job checks out the branch and copies `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.stage.yml` to the droplet via `scp-action` before deploying. This ensures Traefik routing rules and service definitions are always in sync with the repository — no manual `deploy-files.sh` needed for compose changes.
-6. Health check via SSH: `docker exec craftive-backend wget -qO- http://localhost:8080/api/actuator/health` → `{"status":"UP"}` (20 attempts, 15s interval, 10min timeout)
-7. On failure: automatic rollback — SSH back, redeploy previous tag from `.last-deployed-tag.prev`
+> **Compose file sync:** The deploy job checks out the branch and copies `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.stage.yml` to the droplet via `scp-action` before deploying. This ensures Traefik routing rules and service definitions are always in sync with the repository — no manual `deploy-files.sh` needed for compose changes. 6. Health check via SSH: `docker exec craftive-backend wget -qO- http://localhost:8080/api/actuator/health` → `{"status":"UP"}` (20 attempts, 15s interval, 10min timeout) 7. On failure: automatic rollback — SSH back, redeploy previous tag from `.last-deployed-tag.prev`
 
 > **Why SSH-based health check?** External HTTPS health checks fail during first deploy because Let's Encrypt cert issuance takes time. SSH + `docker exec` bypasses DNS/SSL and checks the backend directly inside the container.
 
@@ -214,17 +217,22 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
    - Stage default domain: `s1-<tenant>.craftive.io`
    - Prod default domain: `<tenant>.craftive.io`
 3. Deploy command on droplet:
+
    ```bash
    bash /opt/craftive/scripts/deploy-tenant-storefront.sh \
      stage democompany ghcr.io/{owner}/democompany-storefront:stage-a3f9c12
    ```
+
 4. Optional custom domains can be passed as additional arguments:
+
    ```bash
    bash /opt/craftive/scripts/deploy-tenant-storefront.sh \
      prod democompany ghcr.io/{owner}/democompany-storefront:release-27.02.2026 \
      democompany.com "www.democompany.com,shop.democompany.com"
    ```
+
 5. Rollback/remove:
+
    ```bash
    bash /opt/craftive/scripts/remove-tenant-storefront.sh prod democompany
    ```
@@ -239,12 +247,13 @@ This model keeps tenant-specific deploy workflows independent from the platform 
 2. Set root directory to `landing`.
 3. Build command: `npm run pages:build`.
 4. Output directory: `out`.
-5. Set custom domain to `landing.craftive.io`.
+5. Set custom domain to `craftive.io`.
 6. Keep Cloudflare SSL mode `Full (strict)`.
 
 Notes:
+
 - `landing/next.config.ts` uses static export (`output: "export"`).
-- Primary site URL is controlled by `NEXT_PUBLIC_SITE_URL` at build time (defaults to `https://landing.craftive.io`).
+- Primary site URL is controlled by `NEXT_PUBLIC_SITE_URL` at build time (defaults to `https://craftive.io`).
 - This flow is separate from Traefik tenant storefront scripts and does not require droplet deployment scripts.
 
 ### Tenant storefront repository CI/CD policy
@@ -267,10 +276,10 @@ Notes:
 
 **DNS strategy — Wildcard vs explicit records:**
 
-| Approach | When to use |
-|----------|-------------|
+| Approach                              | When to use                                                                                                                                                           |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Wildcard `*.craftive.io` → Droplet IP | Recommended. All tenant subdomains auto-resolve. Explicit records (e.g. `s1.app`, `api`) override the wildcard. Unknown tenants hit storefront → backend returns 404. |
-| Per-tenant A records | If strict control is needed. Requires manual DNS management per tenant (automatable via Cloudflare API). |
+| Per-tenant A records                  | If strict control is needed. Requires manual DNS management per tenant (automatable via Cloudflare API).                                                              |
 
 > **Stage DNS records use orange cloud** — all stage service subdomains (`s1-api`, `s1-app`, `s1-cdn`, `s1-{tenant}`) are single-level and work with Cloudflare Universal SSL.
 > **Prod tenant subdomains** (`{tenant}.craftive.io`) are single-level and use Cloudflare proxy (orange cloud). Real tenants in prod use whitelabel custom domains (e.g. `democompany.com`), not craftive subdomains.
@@ -296,6 +305,7 @@ Custom tenant domains (e.g. `democompany.com`) use HTTP-01 — Traefik auto-issu
 ### CORS per environment
 
 `application-prod.yml`:
+
 ```yaml
 app:
   cors:
@@ -308,6 +318,7 @@ app:
 ```
 
 `application-stage.yml`:
+
 ```yaml
 app:
   cors:
@@ -345,6 +356,7 @@ Add the middleware definition to `docker-compose.yml` (or the relevant prod/stag
 > **Note:** `ipstrategy.depth=1` trusts the first real IP from `X-Forwarded-For` when Cloudflare is the upstream proxy. Adjust `depth` if you add additional proxy hops.
 
 Current thresholds:
+
 - Demo request: **5 requests / 10 minutes / IP** with burst **10**
 - Newsletter subscribe: **15 requests / 10 minutes / IP** with burst **25**
 
@@ -352,14 +364,14 @@ Stage inherits the same middleware values from `docker-compose.prod.yml` and onl
 
 ### GitHub Secrets
 
-| Secret | Used by |
-|--------|---------|
-| `DROPLET_SSH_PRIVATE_KEY` | Both deploy workflows |
-| `PROD_DROPLET_IP` | `deploy-prod.yml` |
-| `STAGE_DROPLET_IP` | `deploy-stage.yml` |
-| `CF_API_TOKEN` | Traefik DNS-01 (injected via `.env.*`) |
-| `ENV_PROD` | `.env.prod` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for prod bucket |
-| `ENV_STAGE` | `.env.stage` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for stage bucket |
+| Secret                    | Used by                                                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `DROPLET_SSH_PRIVATE_KEY` | Both deploy workflows                                                                                          |
+| `PROD_DROPLET_IP`         | `deploy-prod.yml`                                                                                              |
+| `STAGE_DROPLET_IP`        | `deploy-stage.yml`                                                                                             |
+| `CF_API_TOKEN`            | Traefik DNS-01 (injected via `.env.*`)                                                                         |
+| `ENV_PROD`                | `.env.prod` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for prod bucket   |
+| `ENV_STAGE`               | `.env.stage` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for stage bucket |
 
 Use separate DO Spaces key pairs for stage and prod (stage key compromise cannot affect prod bucket).
 
@@ -367,16 +379,17 @@ Use separate DO Spaces key pairs for stage and prod (stage key compromise cannot
 
 ### Tenant storefront repo secrets (minimum)
 
-| Secret | Used by |
-|--------|---------|
-| `DROPLET_SSH_PRIVATE_KEY` | SSH deploy to droplet |
-| `STAGE_DROPLET_IP` | Stage deploy workflow |
-| `PROD_DROPLET_IP` | Prod deploy workflow |
-| `GHCR_TOKEN` (optional) | If not using default `GITHUB_TOKEN` for package push |
+| Secret                    | Used by                                              |
+| ------------------------- | ---------------------------------------------------- |
+| `DROPLET_SSH_PRIVATE_KEY` | SSH deploy to droplet                                |
+| `STAGE_DROPLET_IP`        | Stage deploy workflow                                |
+| `PROD_DROPLET_IP`         | Prod deploy workflow                                 |
+| `GHCR_TOKEN` (optional)   | If not using default `GITHUB_TOKEN` for package push |
 
 ### Tenant storefront workflow templates
 
 `deploy-stage.yml` (automatic on `stage`):
+
 ```yaml
 name: Tenant Storefront - Deploy Stage
 
@@ -422,6 +435,7 @@ jobs:
 ```
 
 `deploy-prod.yml` (manual):
+
 ```yaml
 name: Tenant Storefront - Deploy Prod
 
@@ -477,21 +491,45 @@ bash scripts/server/deploy-files.sh prod <PROD_IP>
 ### Backup
 
 Daily cron (03:00 UTC+3) on each Droplet, run by `deploy` user:
+
 ```
 mysqldump --all-databases | gzip → DO Spaces: craftive-backups/{env}/YYYY-MM-DD.sql.gz
 ```
+
 `rclone` credentials are stored in `/home/deploy/.config/rclone/rclone.conf` so cron and manual backup runs use the same user context.
 30-day retention enforced via Spaces lifecycle policy.
 
 ### Rollback pattern (platform)
 
 Deploy workflows save the previous image tag before each deploy:
+
 - Before deploy: current tag copied to `.last-deployed-tag.prev`
 - After successful `up -d`: new tag written to `.last-deployed-tag`
 
 If the health check fails, the `Rollback on failure` step (runs on `if: failure()`) automatically re-deploys the previous tag. Both `deploy-prod.yml` and `deploy-stage.yml` implement this pattern.
 
 Manual rollback (if needed):
+
+Daily cron (03:00 UTC+3) on each Droplet, run by `deploy` user:
+
+```
+mysqldump --all-databases | gzip → DO Spaces: craftive-backups/{env}/YYYY-MM-DD.sql.gz
+```
+
+`rclone` credentials are stored in `/home/deploy/.config/rclone/rclone.conf` so cron and manual backup runs use the same user context.
+30-day retention enforced via Spaces lifecycle policy.
+
+### Rollback pattern (platform)
+
+Deploy workflows save the previous image tag before each deploy:
+
+- Before deploy: current tag copied to `.last-deployed-tag.prev`
+- After successful `up -d`: new tag written to `.last-deployed-tag`
+
+If the health check fails, the `Rollback on failure` step (runs on `if: failure()`) automatically re-deploys the previous tag. Both `deploy-prod.yml` and `deploy-stage.yml` implement this pattern.
+
+Manual rollback (if needed):
+
 ```bash
 # On the droplet
 cd /opt/craftive/{prod|stage}
