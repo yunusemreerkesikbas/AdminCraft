@@ -63,7 +63,6 @@ app:
       - http://127.0.0.1:4200
       - http://admin.localhost:4200
       - https://s1-app.craftive.io
-      - https://landing.craftive.io
       - https://craftive.io
       - https://www.craftive.io
       - https://craftive-landing.pages.dev

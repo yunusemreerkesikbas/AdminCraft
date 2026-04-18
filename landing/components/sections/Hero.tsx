@@ -84,7 +84,7 @@ export function Hero({ content, locale }: HeroProps) {
           </motion.div>
 
           <div className="flex flex-col items-center gap-4 lg:items-start">
-            <h1 className="heading-1 max-w-[12ch] text-balance text-[var(--color-dark-neutral-1)] lg:text-[4.65rem] lg:leading-[0.98]">
+            <h1 className="heading-hero max-w-[12ch] text-balance text-[var(--color-dark-neutral-1)] lg:text-[5rem] lg:leading-[0.94]">
               {shouldReduce ? (
                 content.headline
               ) : (

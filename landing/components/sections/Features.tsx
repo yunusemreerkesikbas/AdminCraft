@@ -1,8 +1,10 @@
 "use client";
 
-import type { ComponentType } from "react";
-import { AnimateInView, StaggerContainer, StaggerItem } from "@/components/AnimateInView";
-import { ArchitectureDiagram } from "@/components/visuals/ArchitectureDiagram";
+import {
+  AnimateInView,
+  StaggerContainer,
+  StaggerItem,
+} from "@/components/AnimateInView";
 import { Badge } from "@/components/ui/badge";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -14,6 +16,7 @@ import {
   PanelTop,
   Zap,
 } from "lucide-react";
+import type { ComponentType } from "react";
 
 const TRIO_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   template: LayoutTemplate,
@@ -86,8 +89,18 @@ const CARD_ACCENTS = [
   },
 ];
 
-type TrioItem = { key: string; name: string; label: string; description: string };
-type PowerTrio = { label: string; heading: string; subheading: string; items: TrioItem[] };
+type TrioItem = {
+  key: string;
+  name: string;
+  label: string;
+  description: string;
+};
+type PowerTrio = {
+  label: string;
+  heading: string;
+  subheading: string;
+  items: TrioItem[];
+};
 type FeatureCard = { icon: string; title: string; description: string };
 type FeaturesContent = {
   sectionTag: string;
@@ -125,13 +138,17 @@ function TrioStage({ item, index }: { item: TrioItem; index: number }) {
           >
             <Icon className={`h-5 w-5 ${accent.icon}`} />
           </div>
-          <span className={`font-heading text-5xl font-black leading-none ${accent.number}`}>
+          <span
+            className={`font-heading text-5xl font-black leading-none ${accent.number}`}
+          >
             {stepNum}
           </span>
         </div>
 
         <div className="space-y-3">
-          <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${accent.chip}`}>
+          <span
+            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${accent.chip}`}
+          >
             {item.label}
           </span>
           <h4 className="font-heading text-2xl font-bold tracking-tight text-white">
@@ -177,10 +194,14 @@ function FeatureTile({ card, index }: { card: FeatureCard; index: number }) {
 
       <div className="relative flex h-full flex-col gap-5">
         <div className="flex items-start justify-between gap-4">
-          <div className={`flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/10 ${accent.iconBg} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/10 ${accent.iconBg} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
+          >
             <Icon className={`h-5 w-5 ${accent.iconColor}`} />
           </div>
-          <span className={`font-heading text-5xl font-black leading-none ${accent.number}`}>
+          <span
+            className={`font-heading text-5xl font-black leading-none ${accent.number}`}
+          >
             {stepNum}
           </span>
         </div>
@@ -225,7 +246,8 @@ export function Features({ content }: { content: FeaturesContent }) {
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 top-[32%] opacity-[0.04]"
         style={{
-          backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+          backgroundImage:
+            "radial-gradient(circle, #ffffff 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
         aria-hidden="true"
@@ -246,7 +268,7 @@ export function Features({ content }: { content: FeaturesContent }) {
             </Badge>
           </AnimateInView>
           <AnimateInView delay={1} className="mt-5">
-            <h2 className="font-heading text-3xl font-bold tracking-[-0.04em] text-[var(--color-dark-neutral-1)] sm:text-4xl lg:text-5xl">
+            <h2 className="font-display text-3xl tracking-[-0.04em] text-[var(--color-dark-neutral-1)] sm:text-4xl lg:text-5xl">
               {content.heading}
             </h2>
           </AnimateInView>
@@ -278,15 +300,13 @@ export function Features({ content }: { content: FeaturesContent }) {
                   {content.powerTrio.label}
                 </span>
                 <div className="space-y-4">
-                  <h3 className="font-heading max-w-[12ch] text-3xl font-bold tracking-tight text-white sm:text-[2.5rem]">
+                  <h3 className="font-display max-w-[12ch] text-3xl text-white sm:text-[2.5rem]">
                     {content.powerTrio.heading}
                   </h3>
                   <p className="max-w-[34rem] text-sm leading-7 text-white/56 sm:text-base">
                     {content.powerTrio.subheading}
                   </p>
                 </div>
-                {/* Architecture diagram */}
-                <ArchitectureDiagram className="mt-6 hidden lg:block" />
               </div>
 
               <div className="relative">
@@ -295,9 +315,16 @@ export function Features({ content }: { content: FeaturesContent }) {
                   className="pointer-events-none absolute left-[12%] right-[12%] top-[3.25rem] hidden h-px bg-[linear-gradient(90deg,rgba(96,165,250,0.12)_0%,rgba(129,140,248,0.55)_46%,rgba(56,189,248,0.18)_100%)] animate-shimmer-slow lg:block"
                   aria-hidden="true"
                 />
-                <StaggerContainer className="grid gap-4 lg:auto-rows-fr lg:grid-cols-3 lg:items-stretch" staggerDelay={0.12}>
+                <StaggerContainer
+                  className="grid gap-4 lg:auto-rows-fr lg:grid-cols-3 lg:items-stretch"
+                  staggerDelay={0.12}
+                >
                   {content.powerTrio.items.map((item, index) => (
-                    <StaggerItem key={item.key} variant="scaleIn" className="h-full">
+                    <StaggerItem
+                      key={item.key}
+                      variant="scaleIn"
+                      className="h-full"
+                    >
                       <TrioStage item={item} index={index} />
                     </StaggerItem>
                   ))}
@@ -307,7 +334,10 @@ export function Features({ content }: { content: FeaturesContent }) {
           </div>
         </AnimateInView>
 
-        <StaggerContainer className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" staggerDelay={0.1}>
+        <StaggerContainer
+          className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4"
+          staggerDelay={0.1}
+        >
           {content.cards.map((card, index) => (
             <StaggerItem key={card.title} variant="fadeUp" className="h-full">
               <FeatureTile card={card} index={index} />

@@ -38,7 +38,7 @@ type LayoutProps = {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const isEN = locale === "en";
-  const canonical = `${SITE_URL}/${locale}`;
+  const canonical = `${SITE_URL}/${locale}/`;
 
   const title = isEN
     ? "Craftive — Multi-Tenant Project Platform"
@@ -53,9 +53,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     alternates: {
       canonical,
       languages: {
-        tr: `${SITE_URL}/tr`,
-        en: `${SITE_URL}/en`,
-        "x-default": `${SITE_URL}/en`,
+        tr: `${SITE_URL}/tr/`,
+        en: `${SITE_URL}/en/`,
+        "x-default": `${SITE_URL}/en/`,
       },
     },
     openGraph: {
@@ -63,7 +63,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description,
       url: canonical,
       siteName: "Craftive",
-      images: [{ url: `${SITE_URL}${OG_IMAGE_PATH}`, width: 1200, height: 630, alt: "Craftive" }],
       locale: isEN ? "en_US" : "tr_TR",
       type: "website",
     },
@@ -71,7 +70,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       card: "summary_large_image",
       title,
       description,
-      images: [`${SITE_URL}${OG_IMAGE_PATH}`],
     },
   };
 }
@@ -91,7 +89,6 @@ const softwareJsonLd = {
   name: "Craftive",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
-  offers: { "@type": "Offer", price: "1500", priceCurrency: "TRY" },
 };
 
 function serializeJsonLd(obj: unknown): string {

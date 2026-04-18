@@ -27,9 +27,9 @@ This project is configured with static export (`output: "export"`), so build art
    - Build command: `npm run pages:build`
    - Build output directory: `out`
 4. Add environment variable if needed:
-   - `NEXT_PUBLIC_SITE_URL=https://landing.craftive.io`
+   - `NEXT_PUBLIC_SITE_URL=https://craftive.io`
 5. Deploy and verify preview URL.
-6. Attach custom domain: `landing.craftive.io`.
+6. Attach custom domain: `craftive.io`.
 
 ## Post-deploy verification checklist
 

@@ -1,11 +1,20 @@
 "use client";
 
-import { useRef } from "react";
-import { AnimateInView, StaggerContainer, StaggerItem } from "@/components/AnimateInView";
+import {
+  AnimateInView,
+  StaggerContainer,
+  StaggerItem,
+} from "@/components/AnimateInView";
 import { Badge } from "@/components/ui/badge";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import { Layers, LayoutDashboard, Monitor, Rocket, Server } from "lucide-react";
 import type { ComponentType } from "react";
+import { useRef } from "react";
 
 type Step = {
   key: string;
@@ -34,7 +43,6 @@ const STEP_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   deploy: Rocket,
 };
 
-
 function buildTimelineSteps(steps: Step[]): TimelineStep[] {
   return steps.map((step, index) => ({
     step,
@@ -60,11 +68,15 @@ function StepCard({ item }: { item: TimelineStep }) {
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-80"
         style={{
-          background: "linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(96,165,250,0.95) 50%, rgba(59,130,246,0) 100%)",
+          background:
+            "linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(96,165,250,0.95) 50%, rgba(59,130,246,0) 100%)",
         }}
         aria-hidden="true"
       />
-      <div className="pointer-events-none absolute right-5 top-3 select-none font-heading text-8xl font-black leading-none text-white/[0.05]" aria-hidden="true">
+      <div
+        className="pointer-events-none absolute right-5 top-3 select-none font-heading text-8xl font-black leading-none text-white/[0.05]"
+        aria-hidden="true"
+      >
         {stepNum}
       </div>
 
@@ -89,20 +101,45 @@ function StepCard({ item }: { item: TimelineStep }) {
   );
 }
 
-function ScrollDrivenProgressNode({ index, total }: { index: number; total: number }) {
+function ScrollDrivenProgressNode({
+  index,
+  total,
+}: {
+  index: number;
+  total: number;
+}) {
   const shouldReduce = useReducedMotion();
 
   return (
     <div className="relative flex items-center justify-center">
-      <div className="pointer-events-none absolute h-16 w-16 rounded-full border border-[#93c5fd]/10 bg-[radial-gradient(circle,rgba(96,165,250,0.12)_0%,rgba(96,165,250,0.03)_45%,transparent_72%)]" aria-hidden="true" />
-      <div className="pointer-events-none absolute h-11 w-11 rounded-full border border-[#60a5fa]/18 bg-[#081225]/92 shadow-[0_0_0_10px_rgba(15,23,42,0.42)]" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute h-16 w-16 rounded-full border border-[#93c5fd]/10 bg-[radial-gradient(circle,rgba(96,165,250,0.12)_0%,rgba(96,165,250,0.03)_45%,transparent_72%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute h-11 w-11 rounded-full border border-[#60a5fa]/18 bg-[#081225]/92 shadow-[0_0_0_10px_rgba(15,23,42,0.42)]"
+        aria-hidden="true"
+      />
       <motion.div
         className="pointer-events-none absolute h-6 w-6 rounded-full border border-[#bfdbfe]/18 bg-[#60a5fa]/22"
-        animate={shouldReduce ? {} : { boxShadow: ["0 0 16px rgba(96,165,250,0.3)", "0 0 32px rgba(96,165,250,0.6)", "0 0 16px rgba(96,165,250,0.3)"] }}
+        animate={
+          shouldReduce
+            ? {}
+            : {
+                boxShadow: [
+                  "0 0 16px rgba(96,165,250,0.3)",
+                  "0 0 32px rgba(96,165,250,0.6)",
+                  "0 0 16px rgba(96,165,250,0.3)",
+                ],
+              }
+        }
         transition={{ duration: 2.5, repeat: Infinity, delay: index * 0.4 }}
         aria-hidden="true"
       />
-      <span className="h-1.5 w-1.5 rounded-full bg-[#7dd3fc] shadow-[0_0_10px_rgba(125,211,252,0.9)]" aria-hidden="true" />
+      <span
+        className="h-1.5 w-1.5 rounded-full bg-[#7dd3fc] shadow-[0_0_10px_rgba(125,211,252,0.9)]"
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -134,19 +171,26 @@ function DesktopTimeline({ items }: { items: TimelineStep[] }) {
       <div
         className="pointer-events-none absolute left-[10%] right-[10%] top-1/2 h-24 -translate-y-1/2 blur-3xl"
         style={{
-          background: "radial-gradient(circle at center, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.08) 40%, transparent 75%)",
+          background:
+            "radial-gradient(circle at center, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.08) 40%, transparent 75%)",
         }}
         aria-hidden="true"
       />
 
-      <StaggerContainer className="grid min-h-[34rem] grid-cols-4 gap-6" staggerDelay={0.15}>
+      <StaggerContainer
+        className="grid min-h-[34rem] grid-cols-4 gap-6"
+        staggerDelay={0.15}
+      >
         {items.map((item, index) => (
           <StaggerItem key={item.step.key} variant="fadeUp" className="h-full">
             <div className="grid h-full grid-rows-[1fr_auto_1fr] justify-items-center">
               {item.isTop ? (
                 <div className="flex h-full flex-col items-center justify-end">
                   <StepCard item={item} />
-                  <div className="h-16 w-px bg-[linear-gradient(180deg,rgba(96,165,250,0)_0%,rgba(96,165,250,0.82)_100%)]" aria-hidden="true" />
+                  <div
+                    className="h-16 w-px bg-[linear-gradient(180deg,rgba(96,165,250,0)_0%,rgba(96,165,250,0.82)_100%)]"
+                    aria-hidden="true"
+                  />
                 </div>
               ) : (
                 <div />
@@ -154,7 +198,10 @@ function DesktopTimeline({ items }: { items: TimelineStep[] }) {
               <ScrollDrivenProgressNode index={index} total={items.length} />
               {!item.isTop ? (
                 <div className="flex h-full flex-col items-center justify-start">
-                  <div className="h-16 w-px bg-[linear-gradient(180deg,rgba(96,165,250,0.82)_0%,rgba(96,165,250,0)_100%)]" aria-hidden="true" />
+                  <div
+                    className="h-16 w-px bg-[linear-gradient(180deg,rgba(96,165,250,0.82)_0%,rgba(96,165,250,0)_100%)]"
+                    aria-hidden="true"
+                  />
                   <StepCard item={item} />
                 </div>
               ) : (
@@ -220,25 +267,31 @@ export function HowItWorks({ content }: { content: HowItWorksContent }) {
       id="howitworks"
       className="relative overflow-hidden px-4 py-24 sm:px-6 lg:px-20"
       style={{
-        background: "linear-gradient(180deg, #01050d 0%, #071121 34%, #0b1730 68%, #020611 100%)",
+        background:
+          "linear-gradient(180deg, #01050d 0%, #071121 34%, #0b1730 68%, #020611 100%)",
       }}
     >
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          background: "radial-gradient(ellipse 68% 44% at 50% 0%, rgba(59,130,246,0.16) 0%, rgba(29,78,216,0.08) 34%, transparent 72%)",
+          background:
+            "radial-gradient(ellipse 68% 44% at 50% 0%, rgba(59,130,246,0.16) 0%, rgba(29,78,216,0.08) 34%, transparent 72%)",
         }}
         aria-hidden="true"
       />
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
-          backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+          backgroundImage:
+            "radial-gradient(circle, #ffffff 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
         aria-hidden="true"
       />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(147,197,253,0.06)_0%,rgba(147,197,253,0)_100%)]" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(147,197,253,0.06)_0%,rgba(147,197,253,0)_100%)]"
+        aria-hidden="true"
+      />
 
       <div className="relative mx-auto max-w-[1440px]">
         <div className="flex flex-col items-center gap-4 text-center">
@@ -248,27 +301,19 @@ export function HowItWorks({ content }: { content: HowItWorksContent }) {
             </Badge>
           </AnimateInView>
           <AnimateInView delay={1}>
-            <h2 className="font-heading max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <h2 className="font-display max-w-2xl text-3xl text-white sm:text-4xl lg:text-5xl">
               {content.heading}
             </h2>
           </AnimateInView>
           <AnimateInView delay={2}>
-            <p className="max-w-2xl text-white/54 sm:text-base">{content.subheading}</p>
+            <p className="max-w-2xl text-white/54 sm:text-base">
+              {content.subheading}
+            </p>
           </AnimateInView>
         </div>
 
         <DesktopTimeline items={timelineSteps} />
         <MobileTimeline items={timelineSteps} />
-
-        {/* PLACEHOLDER — full-width "result" visual, ~1400×600 px.
-            Önerilen içerik: deploy edilmiş bir tenant storefrontunun tarayıcı ekranı
-            (masaüstü + mobil yan yana). "İşte ne inşa ediyorsunuz" mesajını güçlendirir.
-            Üst kısımda kısa bir başlık/label + altta hafif bir fade gradient bekleniyor. */}
-        <AnimateInView variant="scaleIn" delay={3} className="mt-20">
-          <div className="flex min-h-[260px] items-center justify-center rounded-[28px] border-2 border-dashed border-white/10 bg-white/[0.03] text-center text-sm text-white/30 select-none">
-            <span>[ görsel: deploy edilmiş tenant storefrontu — masaüstü + mobil önizleme ]</span>
-          </div>
-        </AnimateInView>
       </div>
     </section>
   );

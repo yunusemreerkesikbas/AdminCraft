@@ -267,7 +267,7 @@ export function Segments({ content }: { content: SegmentsContent }) {
             </Badge>
           </AnimateInView>
           <AnimateInView delay={1}>
-            <h2 className="font-heading max-w-2xl text-3xl font-bold tracking-tight text-[var(--color-dark-neutral-1)] sm:text-4xl">
+            <h2 className="font-display max-w-2xl text-3xl text-[var(--color-dark-neutral-1)] sm:text-4xl">
               {content.heading}
             </h2>
           </AnimateInView>
