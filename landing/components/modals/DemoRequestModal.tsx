@@ -115,7 +115,12 @@ export function DemoRequestModal({ open, onClose, locale, content }: DemoRequest
   const apiOrigin = getCraftiveApiOrigin();
 
   useEffect(() => {
-    if (!open || !apiOrigin) return;
+    if (!open) return;
+    if (!apiOrigin) {
+      // Env var eksik — reCAPTCHA gerekmez, butonu aktif et; submit hatayı gösterir
+      setCmsConfig({ recaptchaEnabled: false, recaptchaSiteKey: "" });
+      return;
+    }
     let cancelled = false;
     setConfigErrorText(null);
     fetchPlatformCmsConfig(localeTag)

@@ -61,7 +61,7 @@ export function FAQ({ content }: { content: FAQContent }) {
               </Badge>
             </AnimateInView>
             <AnimateInView delay={1}>
-              <h2 className="font-heading text-3xl font-semibold tracking-tight text-[var(--color-dark-neutral-1)] sm:text-4xl">
+              <h2 className="font-display text-3xl text-[var(--color-dark-neutral-1)] sm:text-4xl">
                 {content.heading}
               </h2>
             </AnimateInView>
