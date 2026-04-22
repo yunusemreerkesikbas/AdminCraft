@@ -15,12 +15,14 @@ public class JwtTokenProvider {
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
+    private final long rememberMeExpiration;
 
     public JwtTokenProvider(JwtProperties jwtProperties) {
         log.info("Initializing JwtTokenProvider with secret length: {}", jwtProperties.getSecret().length());
         this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
         this.accessTokenExpiration = jwtProperties.getExpiration();
         this.refreshTokenExpiration = jwtProperties.getRefreshExpiration();
+        this.rememberMeExpiration = jwtProperties.getRememberMeExpiration();
     }
 
     public String createAccessToken(String email, String role, Long userId, Long tenantId) {
@@ -48,8 +50,17 @@ public class JwtTokenProvider {
     }
 
     public String createRefreshToken(String email, String role, Long userId, Long tenantId) {
+        return createRefreshToken(email, role, userId, tenantId, refreshTokenExpiration);
+    }
+
+    public String createRefreshToken(String email, String role, Long userId, Long tenantId, boolean rememberMe) {
+        long ttl = rememberMe ? rememberMeExpiration : refreshTokenExpiration;
+        return createRefreshToken(email, role, userId, tenantId, ttl);
+    }
+
+    public String createRefreshToken(String email, String role, Long userId, Long tenantId, long expirationMs) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
+        Date expiryDate = new Date(now.getTime() + expirationMs);
 
         JwtBuilder builder = Jwts.builder()
                 .subject(email)
@@ -167,6 +178,14 @@ public class JwtTokenProvider {
 
     public long getRefreshTokenExpiration() {
         return refreshTokenExpiration;
+    }
+
+    public long getRefreshTokenExpiration(boolean rememberMe) {
+        return rememberMe ? rememberMeExpiration : refreshTokenExpiration;
+    }
+
+    public long getRememberMeExpiration() {
+        return rememberMeExpiration;
     }
     
     public String getTokenType(String token) {

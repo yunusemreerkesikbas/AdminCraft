@@ -1,8 +1,8 @@
 package com.backend.infrastructure.persistence.config;
 
-import com.backend.infrastructure.tenant.MultiTenantConnectionProvider;
-import com.backend.infrastructure.tenant.CurrentTenantIdentifierResolver;
-import jakarta.persistence.EntityManagerFactory;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,8 +14,10 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.backend.infrastructure.tenant.CurrentTenantIdentifierResolver;
+import com.backend.infrastructure.tenant.MultiTenantConnectionProvider;
+
+import jakarta.persistence.EntityManagerFactory;
 
 @Configuration
 @EnableTransactionManagement
@@ -43,7 +45,8 @@ public class DatabaseConfig {
                 LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
                 em.setPackagesToScan(
                                 "com.backend.domain.entity",
-                                "com.backend.infrastructure.persistence.entity");
+                                "com.backend.infrastructure.persistence.entity",
+                                "com.backend.infrastructure.persistence.repository.entity");
                 em.setPersistenceUnitName("tenant");
 
                 HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();

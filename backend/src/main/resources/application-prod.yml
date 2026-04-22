@@ -48,6 +48,8 @@ craftive:
 app:
   jwt:
     secret: ${JWT_SECRET}
+    cookie:
+      secure: true
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:https://%s.craftive.io}
     admin-url: ${APP_FRONTEND_ADMIN_URL:https://app.craftive.io}
@@ -55,7 +57,6 @@ app:
     auto-sync-on-startup: true
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}
   email:
-    provider: smtp
     from-address: ${EMAIL_FROM_ADDRESS:noreply@craftive.io}
     from-name: ${EMAIL_FROM_NAME:Craftive}
     log-content: false

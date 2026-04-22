@@ -79,6 +79,7 @@ Base path: `/api/page-templates`
 - `POST /api/page-templates`
 - `PUT /api/page-templates/{id}`
 - `DELETE /api/page-templates/{id}`
+- `POST /api/page-templates/bulk-delete` (same semantics as component bulk delete: max **100** IDs, **200** + partial/full report and localized `ApiResponse.message`, **422** when all IDs fail)
 - `POST /api/page-templates/{id}/slots`
 - `DELETE /api/page-templates/{id}/slots/{slotName}`
 - `PUT /api/page-templates/{id}/slots/reorder`

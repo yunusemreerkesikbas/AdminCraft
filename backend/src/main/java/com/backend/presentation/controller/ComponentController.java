@@ -30,6 +30,7 @@ import com.backend.application.command.ComponentI18nCommands.UpsertComponentI18n
 import com.backend.application.dto.request.ComponentCreateRequest;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
+import com.backend.application.dto.response.BulkDeleteResultResponse;
 import com.backend.application.dto.response.ComponentCompositeResponse;
 import com.backend.application.dto.response.ComponentListItemResponse;
 import com.backend.application.query.ComponentI18nQueries.GetComponentI18nQuery;
@@ -42,6 +43,7 @@ import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.ComponentI18nRequest;
+import com.backend.presentation.dto.request.BulkDeleteRequest;
 import com.backend.presentation.dto.response.ComponentDetailResponse;
 import com.backend.presentation.dto.response.ComponentI18nContentResponse;
 import com.backend.presentation.dto.response.ComponentI18nResponse;
@@ -227,6 +229,33 @@ public class ComponentController {
                 } catch (Exception ex) {
                         log.error("Error deleting component {}", id, ex);
                         String msg = messageSource.getMessage("component.delete.error",
+                                        null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(msg));
+                }
+        }
+
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        @PostMapping("/bulk-delete")
+        public ResponseEntity<ApiResponse<BulkDeleteResultResponse>> bulkDelete(
+                        @Valid @RequestBody BulkDeleteRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+                try {
+                        BulkDeleteResultResponse result = componentService.bulkDeleteComponents(request.ids());
+                        int requested = request.ids().size();
+                        if (result.deletedIds().isEmpty() && result.failedIds().size() == requested && requested > 0) {
+                                String allFailedMsg = messageSource.getMessage("component.bulk.delete.allFailed", null,
+                                                Locale.forLanguageTag(lang));
+                                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                                                .body(ApiResponse.error(allFailedMsg));
+                        }
+                        String successMessage = messageSource.getMessage("component.bulk.delete.success",
+                                        new Object[] { result.deletedIds().size(), result.failedIds().size() },
+                                        Locale.forLanguageTag(lang));
+                        return ResponseEntity.ok(ApiResponse.success(successMessage, result));
+                } catch (Exception ex) {
+                        log.error("Error bulk deleting components", ex);
+                        String msg = messageSource.getMessage("component.bulk.delete.error",
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));

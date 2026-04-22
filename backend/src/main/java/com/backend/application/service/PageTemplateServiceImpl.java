@@ -6,17 +6,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCommand;
 import com.backend.application.command.PageTemplateCommands.CreateTemplateSlotCommand;
 import com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand;
 import com.backend.application.command.PageTemplateCommands.UpdatePageTemplateCommand;
+import com.backend.application.dto.response.BulkDeleteResultResponse;
 import com.backend.application.dto.template.PageTemplateDto;
 import com.backend.application.dto.template.TemplateSlotDto;
 import com.backend.application.mapper.PageTemplateMapper;
+import com.backend.application.support.BulkDeleteExceptionMapper;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageSlot;
 import com.backend.domain.entity.PageTemplate;
@@ -47,6 +53,14 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   private final PageTemplateI18nRepository templateI18nRepository;
   private final PageTemplateMapper pageTemplateMapper;
   private final TenantContextPort tenantContext;
+  private final MessageSource messageSource;
+
+  private PageTemplateService self;
+
+  @Autowired
+  public void setSelf(@Lazy PageTemplateService self) {
+    this.self = self;
+  }
 
   @Override
   @Transactional(readOnly = true)
@@ -153,6 +167,32 @@ public class PageTemplateServiceImpl implements PageTemplateService {
 
     pageTemplateRepository.deleteById(id);
     log.info("Deleted page template: {}", template.getUid());
+  }
+
+  @Override
+  @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+  public void deleteTemplateInNewTransaction(Long id) {
+    delete(id);
+  }
+
+  @Override
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
+  public BulkDeleteResultResponse bulkDeletePageTemplates(List<Long> ids) {
+    List<Long> deletedIds = new ArrayList<>();
+    List<Long> failedIds = new ArrayList<>();
+    List<BulkDeleteResultResponse.BulkDeleteError> errors = new ArrayList<>();
+
+    for (Long id : ids) {
+      try {
+        self.deleteTemplateInNewTransaction(id);
+        deletedIds.add(id);
+      } catch (Exception ex) {
+        failedIds.add(id);
+        errors.add(BulkDeleteExceptionMapper.toError(id, ex, messageSource));
+      }
+    }
+
+    return new BulkDeleteResultResponse(ids.size(), deletedIds, failedIds, errors);
   }
 
   @Override

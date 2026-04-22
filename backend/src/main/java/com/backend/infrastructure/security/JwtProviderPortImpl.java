@@ -23,6 +23,11 @@ public class JwtProviderPortImpl implements JwtProviderPort {
     }
 
     @Override
+    public String createRefreshToken(String email, String role, Long userId, Long tenantId, boolean rememberMe) {
+        return jwtTokenProvider.createRefreshToken(email, role, userId, tenantId, rememberMe);
+    }
+
+    @Override
     public boolean validateToken(String token) {
         return jwtTokenProvider.validateToken(token);
     }

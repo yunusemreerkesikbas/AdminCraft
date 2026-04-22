@@ -11,6 +11,9 @@ public interface AuthenticationService {
     AuthResult authenticate(String email, String password, Long tenantId, String subdomain,
             String deviceFingerprint, String ipAddress, String userAgent);
 
+    AuthResult authenticate(String email, String password, Long tenantId, String subdomain,
+            String deviceFingerprint, String ipAddress, String userAgent, boolean rememberMe);
+
     AuthResult verifyOtp(String pendingToken, String otpCode, boolean trustDevice,
             String deviceFingerprint, String deviceName, String ipAddress, String userAgent,
             Long tenantId, String subdomain);
@@ -30,5 +33,5 @@ public interface AuthenticationService {
 
     AuthResult refreshToken(String refreshToken, String deviceFingerprint, String ipAddress, String userAgent);
 
-    void logout(String token);
+    void logout(String accessToken, String refreshToken);
 }

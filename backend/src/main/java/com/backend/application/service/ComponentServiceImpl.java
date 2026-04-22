@@ -8,15 +8,21 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.request.ComponentCreateRequest;
 import com.backend.application.dto.request.ComponentI18nCommand;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
+import com.backend.application.dto.response.BulkDeleteResultResponse;
+import com.backend.application.support.BulkDeleteExceptionMapper;
 import com.backend.application.dto.response.ComponentCompositeResponse;
 import com.backend.application.dto.response.ComponentListItemResponse;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
@@ -61,6 +67,14 @@ public class ComponentServiceImpl implements ComponentService {
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
     private final SiteActivityPublisher activityPublisher;
     private final SecurityHelper securityHelper;
+    private final MessageSource messageSource;
+
+    private ComponentService self;
+
+    @Autowired
+    public void setSelf(@Lazy ComponentService self) {
+        this.self = self;
+    }
 
     @Override
     @Transactional
@@ -199,6 +213,39 @@ public class ComponentServiceImpl implements ComponentService {
     public void deleteComponent(Long id) {
         Component component = componentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Component", id));
+        deleteComponentInternal(component);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void deleteComponentInNewTransaction(Long id) {
+        Component component = componentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Component", id));
+        deleteComponentInternal(component);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BulkDeleteResultResponse bulkDeleteComponents(List<Long> ids) {
+        List<Long> deletedIds = new ArrayList<>();
+        List<Long> failedIds = new ArrayList<>();
+        List<BulkDeleteResultResponse.BulkDeleteError> errors = new ArrayList<>();
+
+        for (Long id : ids) {
+            try {
+                self.deleteComponentInNewTransaction(id);
+                deletedIds.add(id);
+            } catch (Exception ex) {
+                failedIds.add(id);
+                errors.add(BulkDeleteExceptionMapper.toError(id, ex, messageSource));
+            }
+        }
+
+        return new BulkDeleteResultResponse(ids.size(), deletedIds, failedIds, errors);
+    }
+
+    private void deleteComponentInternal(Component component) {
+        Long id = component.getId();
         String componentName = component.getName() != null ? component.getName() : component.getUid();
 
         componentMediaLinkSyncService.removeComponentResponsiveLinks(id);
