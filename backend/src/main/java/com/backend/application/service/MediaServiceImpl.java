@@ -1,14 +1,19 @@
 package com.backend.application.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.application.config.StorageConfigProperties;
 import com.backend.application.dto.ImageDimensions;
 import com.backend.application.dto.request.MediaBindRequest;
+import com.backend.application.dto.response.BulkDeleteResultResponse;
+import com.backend.application.support.BulkDeleteExceptionMapper;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentMediaLink;
@@ -56,6 +63,14 @@ public class MediaServiceImpl implements MediaService {
     private final ComponentEntryRepository componentEntryRepository;
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
     private final ComponentMediaLinkRepository componentMediaLinkRepository;
+    private final MessageSource messageSource;
+
+    private MediaService self;
+
+    @Autowired
+    public void setSelf(@Lazy MediaService self) {
+        this.self = self;
+    }
 
     @Override
     public Media uploadComposite(MultipartFile file, Long uploadedBy,
@@ -202,25 +217,52 @@ public class MediaServiceImpl implements MediaService {
     @Transactional
     public void delete(Long id) {
         log.debug("Deleting media with ID: {}", id);
+        deleteMediaInternal(id);
+    }
 
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void deleteMediaInNewTransaction(Long id) {
+        log.debug("Deleting media in new transaction, ID: {}", id);
+        deleteMediaInternal(id);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public BulkDeleteResultResponse bulkDeleteMedia(List<Long> ids) {
+        List<Long> deletedIds = new ArrayList<>();
+        List<Long> failedIds = new ArrayList<>();
+        List<BulkDeleteResultResponse.BulkDeleteError> errors = new ArrayList<>();
+
+        for (Long id : ids) {
+            try {
+                self.deleteMediaInNewTransaction(id);
+                deletedIds.add(id);
+            } catch (Exception ex) {
+                failedIds.add(id);
+                errors.add(BulkDeleteExceptionMapper.toError(id, ex, messageSource));
+            }
+        }
+
+        return new BulkDeleteResultResponse(ids.size(), deletedIds, failedIds, errors);
+    }
+
+    private void deleteMediaInternal(Long id) {
         Media media = mediaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + id));
 
         String filePath = media.getFilePath();
 
-        // Delete DB record first (inside transaction)
         mediaRepository.deleteById(id);
         log.info("Media deleted from database: {}", id);
 
         activityPublisher.publishMediaEvent(id, media.getOriginalName(), ActivityAction.DELETED,
                 securityHelper.getCurrentUserIdOrNull(), null, null);
 
-        // Delete file after DB commit (best effort)
         try {
             storageService.delete(filePath);
         } catch (Exception e) {
             log.warn("Failed to delete file {} after DB deletion: {}", filePath, e.getMessage());
-            // Consider adding to a cleanup queue for retry
         }
     }
 

@@ -368,24 +368,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidTokenException("Invalid refresh token");
         }
 
-        // Validate token exists in DB and has not been revoked
         String tokenHash = hashRefreshToken(refreshToken);
         String role = jwtProviderPort.getRoleFromToken(refreshToken);
-        if ("SUPER_ADMIN".equals(role)) {
-            int revoked = platformRefreshTokenRepository.revokeByTokenHash(tokenHash);
-            if (revoked == 0) {
-                throw new InvalidTokenException("Refresh token has been revoked or expired");
-            }
-        } else {
-            int revoked = refreshTokenRepository.revokeByTokenHash(tokenHash);
-            if (revoked == 0) {
-                throw new InvalidTokenException("Refresh token has been revoked or expired");
-            }
-        }
         String email = jwtProviderPort.getEmailFromToken(refreshToken);
         Long tenantId = jwtProviderPort.getTenantIdFromToken(refreshToken);
 
         if ("SUPER_ADMIN".equals(role) && tenantId == null) {
+            int revoked = platformRefreshTokenRepository.revokeByTokenHash(tokenHash);
+            if (revoked == 0) {
+                throw new InvalidTokenException("Refresh token has been revoked or expired");
+            }
             PlatformAdminUser admin = platformAdminUserRepository
                     .findByEmailAndIsActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException(email));
@@ -444,6 +436,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 MDC.put("tenantId", String.valueOf(tenant.getId()));
                 MDC.put("tenantDb", tenant.getDatabaseName());
                 MDC.put("correlationId", UUID.randomUUID().toString());
+
+                int revoked = refreshTokenRepository.revokeByTokenHash(tokenHash);
+                if (revoked == 0) {
+                    throw new InvalidTokenException("Refresh token has been revoked or expired");
+                }
 
                 TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
                 return transactionTemplate.execute(status -> {
@@ -533,10 +530,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 String role = jwtProviderPort.getRoleFromToken(refreshToken);
                 if ("SUPER_ADMIN".equals(role)) {
                     platformRefreshTokenRepository.revokeByTokenHash(tokenHash);
+                    log.info("Platform refresh token revoked on logout");
                 } else {
-                    refreshTokenRepository.revokeByTokenHash(tokenHash);
+                    Long tenantId = jwtProviderPort.getTenantIdFromToken(refreshToken);
+                    if (tenantId != null) {
+                        Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+                        if (tenant != null) {
+                            try {
+                                tenantContext.setTenantId(String.valueOf(tenant.getId()));
+                                tenantContext.setTenantDbName(tenant.getDatabaseName());
+                                refreshTokenRepository.revokeByTokenHash(tokenHash);
+                                log.info("Refresh token revoked on logout");
+                            } finally {
+                                tenantContext.clear();
+                            }
+                        }
+                    }
                 }
-                log.info("Refresh token revoked on logout");
             } catch (Exception ex) {
                 log.warn("Could not revoke refresh token during logout: {}", ex.getMessage());
             }

@@ -103,6 +103,7 @@ public class TenantFilter extends OncePerRequestFilter {
           // Tenant-scoped validation is handled inside auth service (tenantId/subdomain + token checks).
           if (path.startsWith("/api/auth/login")
               || path.startsWith("/api/auth/refresh")
+              || path.startsWith("/api/auth/logout")
               || path.startsWith("/api/auth/verify-otp")) {
             filterChain.doFilter(request, response);
             return;

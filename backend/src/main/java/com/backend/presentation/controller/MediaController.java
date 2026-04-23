@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.backend.application.dto.response.BulkDeleteResultResponse;
 import com.backend.application.service.MediaContainerService;
 import com.backend.application.service.MediaI18nService;
 import com.backend.application.service.MediaProcessingService;
@@ -39,6 +40,7 @@ import com.backend.domain.entity.Media;
 import com.backend.domain.entity.MediaContainer;
 import com.backend.domain.entity.MediaI18n;
 import com.backend.domain.enums.Language;
+import com.backend.presentation.dto.request.BulkDeleteRequest;
 import com.backend.presentation.dto.request.FocalPointRequest;
 import com.backend.presentation.dto.request.GenerateFormatRequest;
 import com.backend.presentation.dto.request.GenerateFormatsRequest;
@@ -148,6 +150,34 @@ public class MediaController {
                         log.error("Error uploading composite media: {}", ex.getMessage(), ex);
                         String message = buildOperationErrorMessage(languageCode, "media.upload.error",
                                         "error.invalid.data");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
+                }
+        }
+
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        @PostMapping("/bulk-delete")
+        @Operation(summary = "Bulk delete media", description = "Deletes multiple media files with partial error reporting per ID.")
+        public ResponseEntity<ApiResponse<BulkDeleteResultResponse>> bulkDeleteMedia(
+                        @Valid @RequestBody BulkDeleteRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        BulkDeleteResultResponse result = mediaService.bulkDeleteMedia(request.ids());
+                        int requested = request.ids().size();
+                        if (result.deletedIds().isEmpty() && result.failedIds().size() == requested && requested > 0) {
+                                String allFailedMsg = messageSource.getMessage("media.bulk.delete.allFailed", null,
+                                                Locale.forLanguageTag(languageCode));
+                                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                                                .body(ApiResponse.error(allFailedMsg));
+                        }
+                        String successMessage = messageSource.getMessage("media.bulk.delete.success",
+                                        new Object[] { result.deletedIds().size(), result.failedIds().size() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.ok(ApiResponse.success(successMessage, result));
+                } catch (Exception ex) {
+                        log.error("Error bulk deleting media: {}", ex.getMessage(), ex);
+                        String message = messageSource.getMessage("media.bulk.delete.error", null,
+                                        Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 }

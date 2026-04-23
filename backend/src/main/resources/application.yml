@@ -45,7 +45,7 @@ app:
     allowed-origin-patterns:
       - http://*.localhost:4200
   tenant:
-    auto-sync-on-startup: ${TENANT_AUTO_SYNC:false}
+    auto-sync-on-startup: ${TENANT_AUTO_SYNC:true}
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}
   email:
     enabled: ${EMAIL_ENABLED:true}

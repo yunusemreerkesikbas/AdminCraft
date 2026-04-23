@@ -473,7 +473,7 @@ public class AuthController {
                                 .maxAge(Duration.ofSeconds(maxAgeSeconds))
                                 .sameSite(cfg.getSameSite())
                                 .build();
-                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toHeaderValue());
+                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         }
 
         private void clearRefreshTokenCookie(HttpServletResponse response) {
@@ -485,7 +485,7 @@ public class AuthController {
                                 .maxAge(Duration.ZERO)
                                 .sameSite(cfg.getSameSite())
                                 .build();
-                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toHeaderValue());
+                response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         }
 
         private void validateRecaptchaIfEnabled(String token, String action) {

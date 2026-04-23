@@ -78,6 +78,7 @@ public class TenantMigrationService {
             .load();
 
         try {
+          flyway.repair();
           var result = flyway.migrate();
           log.info("Migration result for module {} in {}: {} migrations executed, target version: {}",
               module, dbName, result.migrationsExecuted, result.targetSchemaVersion);
@@ -85,10 +86,8 @@ public class TenantMigrationService {
             result.migrations.forEach(m -> log.info("  Executed: {} - {}", m.version, m.description));
           }
         } catch (org.flywaydb.core.api.FlywayException e) {
-          log.warn("Flyway migration failed validation for module: {}. Attempting repair due to error: {}", module,
-              e.getMessage());
-          flyway.repair();
-          flyway.migrate();
+          log.error("Flyway migration failed for module {} in {}: {}", module, dbName, e.getMessage());
+          throw e;
         }
         log.info("Migration completed for module: {} in database: {}", module, dbName);
       }
