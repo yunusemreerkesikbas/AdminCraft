@@ -32,6 +32,7 @@ Base path: `/api/media`
 - `POST /api/media/{id}/bind` (bind uploaded media to a component or component entry)
 - `PUT /api/media/{id}` (metadata patch/update)
 - `DELETE /api/media/{id}`
+- `POST /api/media/bulk-delete` (body `{ "ids": [...] }`, max **100** IDs; **200** + `ApiResponse.SUCCESS` with localized summary in `message` and `data` `{ requestedCount, deletedIds, failedIds, errors[] }` for partial or full success; **422** + `ApiResponse.ERROR` + `message` when **every** ID fails; `TENANT_ADMIN` only, same per-item error mapping as other bulk-delete modules)
 
 Note:
 
@@ -88,6 +89,8 @@ Notes:
 ## Frontend integration (Admin)
 
 Location: `storefront/src/app/modules/admin/custom/media/`
+
+The main library view [`list/media-list.component.ts`](../../storefront/src/app/modules/admin/custom/media/list/media-list.component.ts) (non–selection-mode) supports page-scoped multi-select, **Delete selected** via `POST /api/media/bulk-delete`, and shows **`ApiResponse.message`** from the server for bulk success or error responses. `VIEWER` users do not see checkboxes, upload, row actions, or bulk delete. When embedded with **selection mode** (e.g. media picker), bulk/admin selection UI is hidden and only the picker “select” action applies.
 
 Key files:
 

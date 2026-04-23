@@ -9,6 +9,7 @@ import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCo
 import com.backend.application.command.PageTemplateCommands.CreateTemplateSlotCommand;
 import com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand;
 import com.backend.application.command.PageTemplateCommands.UpdatePageTemplateCommand;
+import com.backend.application.dto.response.BulkDeleteResultResponse;
 import com.backend.application.dto.template.PageTemplateDto;
 import com.backend.application.dto.template.TemplateSlotDto;
 
@@ -27,6 +28,8 @@ public interface PageTemplateService {
   PageTemplateDto update(Long id, UpdatePageTemplateCommand command);
 
   void delete(Long id);
+
+  BulkDeleteResultResponse bulkDeletePageTemplates(List<Long> ids);
 
   TemplateSlotDto addSlot(Long templateId, CreateTemplateSlotCommand command);
 

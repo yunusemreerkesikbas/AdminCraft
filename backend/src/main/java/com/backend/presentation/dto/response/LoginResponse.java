@@ -1,8 +1,10 @@
 package com.backend.presentation.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public record LoginResponse(
         String accessToken,
-        String refreshToken,
+        @JsonIgnore String refreshToken,
         String tokenType,
         Long expiresIn,
         Long userId,
@@ -35,9 +37,6 @@ public record LoginResponse(
         } else {
             if (accessToken == null || accessToken.trim().isEmpty()) {
                 throw new IllegalArgumentException("Access token cannot be null or empty");
-            }
-            if (refreshToken == null || refreshToken.trim().isEmpty()) {
-                throw new IllegalArgumentException("Refresh token cannot be null or empty");
             }
         }
         if (email == null || email.trim().isEmpty()) {

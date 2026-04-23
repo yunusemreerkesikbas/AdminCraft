@@ -232,6 +232,20 @@ The `base/` folder now contains only theme-neutral catalogs and optional non-the
 11. base/base_mail_marketing_tenant.sql  — optional tenant mail marketing sample data
 ```
 
+### Execution order (fresh tenant — Mulayim portfolio homepage)
+
+```text
+1. base/base_site_settings.sql           — default site settings and i18n
+2. base/base_media_formats.sql           — system media format presets
+3. base/base_product_types.sql           — product types and attribute definitions
+4. theme/mulayim/mulayim_foundation.sql  — theme-owned page templates, template slots, shared chrome components, navigation
+5. [upload media via Admin UI]           — upload port-1.jpg through port-8.jpg, logo.png, logo-white.png
+6. theme/mulayim/portfolio_homepage.sql  — homepage IntroBannerBlock, PortfolioCardGrid, StatementCtaBlock, Section1-Section3 slot wiring, media UID alignment
+```
+
+Mulayim foundation/homepage scripts include their required generic component type seeds. Running `base_component_types.sql` and `base_entry_field_definitions.sql` first is still safe, but not required for the Mulayim path.
+The Mulayim homepage intentionally defines only `Section1`, `Section2`, and `Section3`. Additional vertical content can be added by binding more components into an existing section slot with a higher `sort_order`.
+
 Platform sample data remains separate:
 
 - `base/base_mail_marketing_platform.sql` — platform DB sample data, run only from Platform → ImpEx with no tenant selected

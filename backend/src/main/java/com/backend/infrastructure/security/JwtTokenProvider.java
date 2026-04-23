@@ -15,12 +15,14 @@ public class JwtTokenProvider {
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
+    private final long rememberMeExpiration;
 
     public JwtTokenProvider(JwtProperties jwtProperties) {
         log.info("Initializing JwtTokenProvider with secret length: {}", jwtProperties.getSecret().length());
         this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
         this.accessTokenExpiration = jwtProperties.getExpiration();
         this.refreshTokenExpiration = jwtProperties.getRefreshExpiration();
+        this.rememberMeExpiration = jwtProperties.getRememberMeExpiration();
     }
 
     public String createAccessToken(String email, String role, Long userId, Long tenantId) {
@@ -48,8 +50,42 @@ public class JwtTokenProvider {
     }
 
     public String createRefreshToken(String email, String role, Long userId, Long tenantId) {
+        return createRefreshToken(email, role, userId, tenantId, refreshTokenExpiration);
+    }
+
+    public String createRefreshToken(String email, String role, Long userId, Long tenantId, boolean rememberMe) {
+        long ttl = rememberMe ? rememberMeExpiration : refreshTokenExpiration;
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
+        Date expiryDate = new Date(now.getTime() + ttl);
+
+        JwtBuilder builder = Jwts.builder()
+                .subject(email)
+                .claim("type", "refresh")
+                .issuedAt(now)
+                .expiration(expiryDate);
+
+        if (role != null) {
+            builder.claim("role", role);
+        }
+
+        if (userId != null) {
+            builder.claim("userId", userId);
+        }
+
+        if (tenantId != null) {
+            builder.claim("tenantId", tenantId);
+        }
+
+        if (rememberMe) {
+            builder.claim("rememberMe", true);
+        }
+
+        return builder.signWith(secretKey).compact();
+    }
+
+    public String createRefreshToken(String email, String role, Long userId, Long tenantId, long expirationMs) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationMs);
 
         JwtBuilder builder = Jwts.builder()
                 .subject(email)
@@ -72,34 +108,24 @@ public class JwtTokenProvider {
         return builder.signWith(secretKey).compact();
     }
 
-    public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parser()
+    private Claims parseToken(String token) {
+        return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        
-        return claims.getSubject();
+    }
+
+    public String getEmailFromToken(String token) {
+        return parseToken(token).getSubject();
     }
 
     public String getRoleFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        
-        return claims.get("role", String.class);
+        return parseToken(token).get("role", String.class);
     }
 
     public Long getTenantIdFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
-        Object tenantIdObj = claims.get("tenantId");
+        Object tenantIdObj = parseToken(token).get("tenantId");
         if (tenantIdObj == null) {
             return null;
         }
@@ -117,13 +143,7 @@ public class JwtTokenProvider {
     }
 
     public Long getUserIdFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
-        Object userIdObj = claims.get("userId");
+        Object userIdObj = parseToken(token).get("userId");
         if (userIdObj == null) {
             return null;
         }
@@ -137,6 +157,15 @@ public class JwtTokenProvider {
         } catch (NumberFormatException ex) {
             log.warn("Invalid userId format in token: {}", userIdObj);
             return null;
+        }
+    }
+
+    public boolean isRememberMeToken(String token) {
+        try {
+            Claims claims = parseToken(token);
+            return Boolean.TRUE.equals(claims.get("rememberMe", Boolean.class));
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -168,15 +197,17 @@ public class JwtTokenProvider {
     public long getRefreshTokenExpiration() {
         return refreshTokenExpiration;
     }
+
+    public long getRefreshTokenExpiration(boolean rememberMe) {
+        return rememberMe ? rememberMeExpiration : refreshTokenExpiration;
+    }
+
+    public long getRememberMeExpiration() {
+        return rememberMeExpiration;
+    }
     
     public String getTokenType(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        
-        return claims.get("type", String.class);
+        return parseToken(token).get("type", String.class);
     }
     
     public boolean isAccessToken(String token) {
