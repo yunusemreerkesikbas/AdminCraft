@@ -25,4 +25,6 @@ public interface JwtProviderPort {
     long getRefreshTokenExpiration();
 
     long getRefreshTokenExpiration(boolean rememberMe);
+
+    boolean isRememberMeToken(String token);
 }

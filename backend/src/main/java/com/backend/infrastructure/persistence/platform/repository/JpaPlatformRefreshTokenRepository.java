@@ -19,7 +19,7 @@ interface JpaPlatformRefreshTokenRepository extends JpaRepository<PlatformRefres
 
     @Modifying
     @Transactional("platformTransactionManager")
-    @Query("UPDATE PlatformRefreshToken t SET t.revokedAt = :now WHERE t.tokenHash = :tokenHash AND t.revokedAt IS NULL")
+    @Query("UPDATE PlatformRefreshToken t SET t.revokedAt = :now WHERE t.tokenHash = :tokenHash AND t.revokedAt IS NULL AND t.expiresAt > :now")
     int revokeByTokenHash(@Param("tokenHash") String tokenHash, @Param("now") LocalDateTime now);
 
     @Modifying

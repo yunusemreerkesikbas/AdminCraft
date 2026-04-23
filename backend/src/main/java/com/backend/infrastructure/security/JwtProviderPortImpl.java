@@ -71,4 +71,9 @@ public class JwtProviderPortImpl implements JwtProviderPort {
     public long getRefreshTokenExpiration(boolean rememberMe) {
         return jwtTokenProvider.getRefreshTokenExpiration(rememberMe);
     }
+
+    @Override
+    public boolean isRememberMeToken(String token) {
+        return jwtTokenProvider.isRememberMeToken(token);
+    }
 }

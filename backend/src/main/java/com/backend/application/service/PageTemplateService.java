@@ -29,8 +29,6 @@ public interface PageTemplateService {
 
   void delete(Long id);
 
-  void deleteTemplateInNewTransaction(Long id);
-
   BulkDeleteResultResponse bulkDeletePageTemplates(List<Long> ids);
 
   TemplateSlotDto addSlot(Long templateId, CreateTemplateSlotCommand command);

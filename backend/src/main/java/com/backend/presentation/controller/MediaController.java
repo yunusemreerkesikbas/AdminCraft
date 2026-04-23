@@ -168,7 +168,7 @@ public class MediaController {
                                 String allFailedMsg = messageSource.getMessage("media.bulk.delete.allFailed", null,
                                                 Locale.forLanguageTag(languageCode));
                                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                                                .body(ApiResponse.error(allFailedMsg));
+                                                .body(ApiResponse.success(allFailedMsg, result));
                         }
                         String successMessage = messageSource.getMessage("media.bulk.delete.success",
                                         new Object[] { result.deletedIds().size(), result.failedIds().size() },

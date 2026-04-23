@@ -88,6 +88,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Qualifier("tenantTransactionManager")
     private final PlatformTransactionManager tenantTransactionManager;
 
+    @Qualifier("platformTransactionManager")
+    private final PlatformTransactionManager platformTransactionManager;
+
     @Override
     public AuthResult authenticate(String email, String password, Long tenantId, String subdomain) {
         return authenticate(email, password, tenantId, subdomain, null, null, null, false);
@@ -235,36 +238,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidCredentialsException();
         }
 
-        // Check if 2FA is required
         TwoFactorPolicy twoFactorPolicy = tenant.getTwoFactorPolicy();
         boolean requires2FA = twoFactorPolicy == TwoFactorPolicy.REQUIRED;
 
         if (requires2FA) {
-            // Check if device is trusted
             boolean deviceTrusted = deviceFingerprint != null && !deviceFingerprint.isBlank() &&
                     trustedDeviceService.isDeviceTrusted(user.getId(), deviceFingerprint);
 
             if (!deviceTrusted) {
                 log.info("2FA required for user: {}, generating OTP", maskEmail(user.getEmail()));
 
-                // Check rate limit before generating OTP
                 checkOtpRateLimit(user.getEmail());
 
-                // Generate OTP and session token, send OTP via email
                 OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
                 Language userLanguage = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
                 emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), userLanguage);
 
-                // Return response with session token (not the OTP)
                 return AuthResult.requiring2FA(user.getEmail(), otpResult.sessionToken(), subdomain, tenantId);
             } else {
                 log.info("Device trusted for user: {}, skipping 2FA", user.getId());
-                // Update last used time for trusted device
                 trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
             }
         }
 
-        // Reset failed login attempts on successful login
         user.recordSuccessfulLogin(ipAddress);
         userRepository.save(user);
         String accessToken = jwtProviderPort.createAccessToken(
@@ -293,7 +289,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getFullName(),
                 user.getRole().name(),
                 subdomain,
-                tenantId);
+                tenantId,
+                rememberMe);
     }
 
     private AuthResult authenticatePlatformAdmin(String email, String password, String ipAddress, String userAgent, boolean rememberMe) {
@@ -357,7 +354,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 admin.getFullName(),
                 "SUPER_ADMIN",
                 null,
-                null);
+                null,
+                rememberMe);
     }
 
     @Override
@@ -374,10 +372,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Long tenantId = jwtProviderPort.getTenantIdFromToken(refreshToken);
 
         if ("SUPER_ADMIN".equals(role) && tenantId == null) {
-            int revoked = platformRefreshTokenRepository.revokeByTokenHash(tokenHash);
-            if (revoked == 0) {
-                throw new InvalidTokenException("Refresh token has been revoked or expired");
-            }
+            boolean wasRememberMe = jwtProviderPort.isRememberMeToken(refreshToken);
             PlatformAdminUser admin = platformAdminUserRepository
                     .findByEmailAndIsActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException(email));
@@ -399,9 +394,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     admin.getEmail(),
                     "SUPER_ADMIN",
                     admin.getId(),
-                    null);
+                    null,
+                    wasRememberMe);
 
-            savePlatformRefreshToken(admin.getId(), newRefreshToken, false);
+            TransactionTemplate platformTxTemplate = new TransactionTemplate(platformTransactionManager);
+            platformTxTemplate.executeWithoutResult(status -> {
+                int revoked = platformRefreshTokenRepository.revokeByTokenHash(tokenHash);
+                if (revoked == 0) {
+                    throw new InvalidTokenException("Refresh token has been revoked or expired");
+                }
+                savePlatformRefreshToken(admin.getId(), newRefreshToken, wasRememberMe);
+            });
 
             log.info("Token refresh successful for platform admin: {}", admin.getEmail());
 
@@ -415,7 +418,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     admin.getFullName(),
                     "SUPER_ADMIN",
                     null,
-                    null);
+                    null,
+                    wasRememberMe);
         } else {
             if (tenantId == null) {
                 throw new InvalidTokenException("Tenant ID required for user refresh");
@@ -437,13 +441,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 MDC.put("tenantDb", tenant.getDatabaseName());
                 MDC.put("correlationId", UUID.randomUUID().toString());
 
-                int revoked = refreshTokenRepository.revokeByTokenHash(tokenHash);
-                if (revoked == 0) {
-                    throw new InvalidTokenException("Refresh token has been revoked or expired");
-                }
-
                 TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
                 return transactionTemplate.execute(status -> {
+                    int revoked = refreshTokenRepository.revokeByTokenHash(tokenHash);
+                    if (revoked == 0) {
+                        throw new InvalidTokenException("Refresh token has been revoked or expired");
+                    }
+
                     User user = userRepository.findByEmail(email)
                             .orElseThrow(() -> new UserNotFoundException(email));
                     boolean refreshAllowed = user.getRole() == UserRole.TENANT_ADMIN
@@ -470,6 +474,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
                     }
 
+                    boolean wasRememberMe = jwtProviderPort.isRememberMeToken(refreshToken);
+
                     String newAccessToken = jwtProviderPort.createAccessToken(
                             user.getEmail(),
                             user.getRole().name(),
@@ -479,9 +485,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             user.getEmail(),
                             user.getRole().name(),
                             user.getId(),
-                            tenantId);
+                            tenantId,
+                            wasRememberMe);
 
-                    saveTenantRefreshToken(user, newRefreshToken, false);
+                    saveTenantRefreshToken(user, newRefreshToken, wasRememberMe);
 
                     log.info("Token refresh successful for userId: {}, tenantId: {}", user.getId(), tenantId);
 
@@ -495,7 +502,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             user.getFullName(),
                             user.getRole().name(),
                             tenant.getSubdomain(),
-                            tenantId);
+                            tenantId,
+                            wasRememberMe);
                 });
             } finally {
                 tenantContext.clear();
@@ -513,15 +521,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             if (accessToken != null && jwtProviderPort.validateToken(accessToken)) {
                 String role = jwtProviderPort.getRoleFromToken(accessToken);
-                String email = jwtProviderPort.getEmailFromToken(accessToken);
+                Long userId = jwtProviderPort.getUserIdFromToken(accessToken);
                 if ("SUPER_ADMIN".equals(role)) {
-                    log.info("Logout for platform admin: {}", email);
+                    log.info("Logout for platform admin: userId={}", userId);
                 } else {
-                    log.info("Logout for user: {}", email);
+                    log.info("Logout for user: userId={}", userId);
                 }
             }
         } catch (Exception ex) {
-            log.warn("Could not validate access token during logout: {}", ex.getMessage());
+            log.warn("Could not validate access token during logout: {}",
+                    ex.getMessage() != null ? ex.getMessage().substring(0, Math.min(500, ex.getMessage().length())) : "null");
         }
 
         if (refreshToken != null && !refreshToken.isBlank()) {
@@ -571,11 +580,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public AuthResult verifyOtp(String pendingToken, String otpCode, boolean trustDevice,
             String deviceFingerprint, String deviceName, String ipAddress, String userAgent,
-            Long tenantId, String subdomain) {
+            Long tenantId, String subdomain, boolean rememberMe) {
         log.info("Verifying OTP");
 
         if (isPlatformOtpRequest(tenantId, subdomain)) {
-            return verifyPlatformOtp(pendingToken, otpCode, ipAddress);
+            return verifyPlatformOtp(pendingToken, otpCode, ipAddress, rememberMe);
         }
 
         Tenant tenant = resolveTenant(tenantId, subdomain);
@@ -647,9 +656,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         user.getEmail(),
                         user.getRole().name(),
                         user.getId(),
-                        tenant.getId());
+                        tenant.getId(),
+                        rememberMe);
 
-                saveTenantRefreshToken(user, refreshToken, false);
+                saveTenantRefreshToken(user, refreshToken, rememberMe);
 
                 log.info("OTP verification successful for userId: {}", user.getId());
 
@@ -663,7 +673,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         user.getFullName(),
                         user.getRole().name(),
                         tenant.getSubdomain(),
-                        tenant.getId());
+                        tenant.getId(),
+                        rememberMe);
             });
         } finally {
             tenantContext.clear();
@@ -674,7 +685,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Transactional("platformTransactionManager")
-    private AuthResult verifyPlatformOtp(String pendingToken, String otpCode, String ipAddress) {
+    public AuthResult verifyPlatformOtp(String pendingToken, String otpCode, String ipAddress, boolean rememberMe) {
         String tokenHash = otpService.hashToken(pendingToken);
         PlatformVerificationToken token = platformVerificationTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new InvalidTokenException("Invalid or expired OTP session"));
@@ -720,9 +731,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 admin.getEmail(),
                 "SUPER_ADMIN",
                 admin.getId(),
-                null);
+                null,
+                rememberMe);
 
-        savePlatformRefreshToken(admin.getId(), refreshToken, false);
+        savePlatformRefreshToken(admin.getId(), refreshToken, rememberMe);
 
         log.info("OTP verification successful for platform admin userId: {}", admin.getId());
 
@@ -736,7 +748,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 admin.getFullName(),
                 "SUPER_ADMIN",
                 null,
-                null);
+                null,
+                rememberMe);
     }
 
     @Override
@@ -931,7 +944,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Transactional("platformTransactionManager")
-    private PlatformLoginOtpResult createPlatformLoginOtpToken(
+    public PlatformLoginOtpResult createPlatformLoginOtpToken(
             PlatformAdminUser admin,
             String ipAddress,
             String userAgent) {

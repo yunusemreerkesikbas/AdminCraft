@@ -77,17 +77,11 @@ public class TenantMigrationService {
             .validateOnMigrate(true)
             .load();
 
-        try {
-          flyway.repair();
-          var result = flyway.migrate();
-          log.info("Migration result for module {} in {}: {} migrations executed, target version: {}",
-              module, dbName, result.migrationsExecuted, result.targetSchemaVersion);
-          if (result.migrationsExecuted > 0) {
-            result.migrations.forEach(m -> log.info("  Executed: {} - {}", m.version, m.description));
-          }
-        } catch (org.flywaydb.core.api.FlywayException e) {
-          log.error("Flyway migration failed for module {} in {}: {}", module, dbName, e.getMessage());
-          throw e;
+        var result = flyway.migrate();
+        log.info("Migration result for module {} in {}: {} migrations executed, target version: {}",
+            module, dbName, result.migrationsExecuted, result.targetSchemaVersion);
+        if (result.migrationsExecuted > 0) {
+          result.migrations.forEach(m -> log.info("  Executed: {} - {}", m.version, m.description));
         }
         log.info("Migration completed for module: {} in database: {}", module, dbName);
       }

@@ -6,14 +6,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,24 +61,48 @@ public class MediaServiceImpl implements MediaService {
     private final ResponsiveMediaService responsiveMediaService;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
     private final SiteActivityPublisher activityPublisher;
-    private final SecurityHelper securityHelper;
     private final ComponentService componentService;
     private final ComponentEntryRepository componentEntryRepository;
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
     private final ComponentMediaLinkRepository componentMediaLinkRepository;
     private final MessageSource messageSource;
+    private final SecurityHelper securityHelper;
+    @Qualifier("tenantTransactionManager")
+    private final PlatformTransactionManager tenantTransactionManager;
 
-    private MediaService self;
+    private TransactionTemplate requiresNewTx;
 
-    @Autowired
-    public void setSelf(@Lazy MediaService self) {
-        this.self = self;
+    @PostConstruct
+    void initRequiresNewTx() {
+        requiresNewTx = new TransactionTemplate(tenantTransactionManager);
+        requiresNewTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
+
+    private void deleteInNewTransaction(Long id) {
+        AtomicReference<String> filePathRef = new AtomicReference<>();
+        requiresNewTx.execute(status -> {
+            Media media = mediaRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Media", id));
+            filePathRef.set(media.getFilePath());
+            mediaRepository.deleteById(id);
+            log.info("Media deleted from database: {}", id);
+            activityPublisher.publishMediaEvent(id, media.getOriginalName(),
+                    ActivityAction.DELETED, securityHelper.getCurrentUserIdOrNull(), null, null);
+            return null;
+        });
+        String filePath = filePathRef.get();
+        if (filePath != null) {
+            try {
+                storageService.delete(filePath);
+            } catch (Exception e) {
+                log.warn("Failed to delete file {} after DB commit: {}", filePath, e.getMessage());
+            }
+        }
     }
 
     @Override
     public Media uploadComposite(MultipartFile file, Long uploadedBy,
             Map<Language, MediaI18nRequest> translations) {
-        // 1. Upload basic file (reuses existing logic)
         Media media = uploadFile(file, uploadedBy);
 
         return transactionTemplate.execute(status -> {
@@ -83,7 +110,6 @@ public class MediaServiceImpl implements MediaService {
 
             Media saved = mediaRepository.save(currentMedia);
 
-            // 2. Create I18n entries
             if (translations != null && !translations.isEmpty()) {
                 translations.forEach((lang, req) -> {
                     i18nService.upsert(saved.getId(), lang, req.altText(), req.title(), req.description());
@@ -102,11 +128,8 @@ public class MediaServiceImpl implements MediaService {
             throw new IllegalArgumentException(String.join(", ", validation.errors()));
         }
 
-        // I/O Operation 1: Store file (Outside Transaction)
         MediaStorageService.StoredFileResult stored = storageService.store(file, "media");
 
-        // I/O Operation 2: Extract dimensions BEFORE transaction (avoid holding DB
-        // connection)
         ImageDimensions dimensions = null;
         boolean requiresProcessing = processingService.isProcessingSupported(stored.mimeType());
         if (requiresProcessing) {
@@ -117,7 +140,6 @@ public class MediaServiceImpl implements MediaService {
         final ImageDimensions finalDimensions = dimensions;
 
         try {
-            // Database Operations (Transactional via TransactionTemplate)
             Media savedMedia = transactionTemplate.execute(status -> {
                 Media media = new Media();
                 media.setOriginalName(file.getOriginalFilename());
@@ -135,7 +157,6 @@ public class MediaServiceImpl implements MediaService {
                 media.setIsPublic(true);
                 media.setUsageCount(0);
 
-                // Always set to ACTIVE - format generation is now on-demand
                 media.setStatus(MediaStatus.ACTIVE);
                 if (requiresProcessing && finalDimensions != null) {
                     media.setWidth(finalDimensions.width());
@@ -198,12 +219,10 @@ public class MediaServiceImpl implements MediaService {
         Media media = mediaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + id));
 
-        // Update public flag if provided
         if (isPublic != null) {
             media.setIsPublic(isPublic);
         }
 
-        // Update tags if provided
         if (tags != null) {
             media.setTags(String.join(",", tags));
         }
@@ -214,21 +233,13 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    @Transactional
     public void delete(Long id) {
         log.debug("Deleting media with ID: {}", id);
-        deleteMediaInternal(id);
+        deleteInNewTransaction(id);
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public void deleteMediaInNewTransaction(Long id) {
-        log.debug("Deleting media in new transaction, ID: {}", id);
-        deleteMediaInternal(id);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public BulkDeleteResultResponse bulkDeleteMedia(List<Long> ids) {
         List<Long> deletedIds = new ArrayList<>();
         List<Long> failedIds = new ArrayList<>();
@@ -236,7 +247,7 @@ public class MediaServiceImpl implements MediaService {
 
         for (Long id : ids) {
             try {
-                self.deleteMediaInNewTransaction(id);
+                deleteInNewTransaction(id);
                 deletedIds.add(id);
             } catch (Exception ex) {
                 failedIds.add(id);
@@ -245,25 +256,6 @@ public class MediaServiceImpl implements MediaService {
         }
 
         return new BulkDeleteResultResponse(ids.size(), deletedIds, failedIds, errors);
-    }
-
-    private void deleteMediaInternal(Long id) {
-        Media media = mediaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + id));
-
-        String filePath = media.getFilePath();
-
-        mediaRepository.deleteById(id);
-        log.info("Media deleted from database: {}", id);
-
-        activityPublisher.publishMediaEvent(id, media.getOriginalName(), ActivityAction.DELETED,
-                securityHelper.getCurrentUserIdOrNull(), null, null);
-
-        try {
-            storageService.delete(filePath);
-        } catch (Exception e) {
-            log.warn("Failed to delete file {} after DB deletion: {}", filePath, e.getMessage());
-        }
     }
 
     @Override

@@ -6,13 +6,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCommand;
 import com.backend.application.command.PageTemplateCommands.CreateTemplateSlotCommand;
@@ -54,12 +58,28 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   private final PageTemplateMapper pageTemplateMapper;
   private final TenantContextPort tenantContext;
   private final MessageSource messageSource;
+  @Qualifier("tenantTransactionManager")
+  private final PlatformTransactionManager tenantTransactionManager;
 
-  private PageTemplateService self;
+  private TransactionTemplate requiresNewTx;
 
-  @Autowired
-  public void setSelf(@Lazy PageTemplateService self) {
-    this.self = self;
+  @PostConstruct
+  void initRequiresNewTx() {
+    requiresNewTx = new TransactionTemplate(tenantTransactionManager);
+    requiresNewTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+  }
+
+  private void deleteInNewTransaction(Long id) {
+    requiresNewTx.execute(status -> {
+      PageTemplate template = pageTemplateRepository.findById(id)
+          .orElseThrow(() -> new EntityNotFoundException("PageTemplate", id));
+      if (Boolean.TRUE.equals(template.getIsSystem())) {
+        throw new IllegalArgumentException("Cannot delete system template: " + template.getUid());
+      }
+      pageTemplateRepository.deleteById(id);
+      log.info("Deleted page template: {}", template.getUid());
+      return null;
+    });
   }
 
   @Override
@@ -170,12 +190,6 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   }
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-  public void deleteTemplateInNewTransaction(Long id) {
-    delete(id);
-  }
-
-  @Override
   @Transactional(propagation = Propagation.NOT_SUPPORTED)
   public BulkDeleteResultResponse bulkDeletePageTemplates(List<Long> ids) {
     List<Long> deletedIds = new ArrayList<>();
@@ -184,7 +198,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
 
     for (Long id : ids) {
       try {
-        self.deleteTemplateInNewTransaction(id);
+        deleteInNewTransaction(id);
         deletedIds.add(id);
       } catch (Exception ex) {
         failedIds.add(id);

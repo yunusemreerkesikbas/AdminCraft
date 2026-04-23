@@ -46,8 +46,6 @@ public interface MediaService {
 
     void delete(Long id);
 
-    void deleteMediaInNewTransaction(Long id);
-
     BulkDeleteResultResponse bulkDeleteMedia(List<Long> ids);
 
     List<Media> findAll();

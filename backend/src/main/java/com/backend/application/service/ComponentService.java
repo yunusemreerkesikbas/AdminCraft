@@ -37,11 +37,6 @@ public interface ComponentService {
 
     void deleteComponent(Long id);
 
-    /**
-     * Deletes one component in its own transaction (for bulk partial-commit semantics).
-     */
-    void deleteComponentInNewTransaction(Long id);
-
     BulkDeleteResultResponse bulkDeleteComponents(List<Long> ids);
 
     ComponentCompositeResponse createComposite(CreateComponentCompositeRequest request);

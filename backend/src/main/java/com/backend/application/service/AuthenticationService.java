@@ -16,7 +16,7 @@ public interface AuthenticationService {
 
     AuthResult verifyOtp(String pendingToken, String otpCode, boolean trustDevice,
             String deviceFingerprint, String deviceName, String ipAddress, String userAgent,
-            Long tenantId, String subdomain);
+            Long tenantId, String subdomain, boolean rememberMe);
 
     void requestPasswordReset(String email, Long tenantId, String subdomain,
             String ipAddress, String userAgent, Language language);

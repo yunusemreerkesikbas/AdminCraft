@@ -298,7 +298,8 @@ Request:
   "subdomain": "acme",
   "tenantId": 1,
   "trustDevice": true,
-  "deviceFingerprint": "sha256-hash"
+  "deviceFingerprint": "sha256-hash",
+  "rememberMe": true
 }
 
 Response (success):
@@ -315,6 +316,8 @@ Set-Cookie: craftive_rt=eyJ...; HttpOnly; Secure; SameSite=Strict; Path=/api/aut
   }
 }
 ```
+
+**`rememberMe` propagation**: Pass the same value used during initial login. Backend uses it to set the refresh token TTL (7 days vs 30 days) and the `craftive_rt` cookie `Max-Age`.
 
 **Validation**:
 - `deviceFingerprint`: Max 128 chars, alphanumeric with underscore/hyphen only (`[A-Za-z0-9_-]*`)
@@ -715,8 +718,7 @@ setInitialPassword(token: string, password: string, confirmPassword: string, ...
 // External (initial password flow — no signIn)
 completeSignInWithResponse(response: LoginResponseData): void
 
-// Legacy scaffold — not production flows
-signUp(user): Observable<any>
+// Lock-screen re-auth (idle session)
 unlockSession(credentials): Observable<any>
 ```
 

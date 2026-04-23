@@ -235,9 +235,11 @@ SELECT data.uuid, data.uid, n.id, 'URL', NULL, data.url, NULL, '_self', FALSE, d
 FROM navigation_nodes n
 JOIN (
   SELECT 'm1900001-0000-4000-8000-000000000001' AS uuid, 'LandingMainNavHomeEntry' AS uid, 'LandingMainNavNode' AS node_uid, '/' AS url, 0 AS sort_order
-  UNION ALL SELECT 'm1900002-0000-4000-8000-000000000002', 'LandingMainNavSearchEntry', 'LandingMainNavNode', '/search', 1
+  UNION ALL SELECT 'm1900005-0000-4000-8000-000000000005', 'LandingMainNavAboutEntry', 'LandingMainNavNode', '/about', 1
+  UNION ALL SELECT 'm1900002-0000-4000-8000-000000000002', 'LandingMainNavSearchEntry', 'LandingMainNavNode', '/search', 2
   UNION ALL SELECT 'm1900003-0000-4000-8000-000000000003', 'LandingFooterHomeEntry', 'LandingFooterNavNode', '/', 0
-  UNION ALL SELECT 'm1900004-0000-4000-8000-000000000004', 'LandingFooterSearchEntry', 'LandingFooterNavNode', '/search', 1
+  UNION ALL SELECT 'm1900006-0000-4000-8000-000000000006', 'LandingFooterAboutEntry', 'LandingFooterNavNode', '/about', 1
+  UNION ALL SELECT 'm1900004-0000-4000-8000-000000000004', 'LandingFooterSearchEntry', 'LandingFooterNavNode', '/search', 2
 ) data ON data.node_uid = n.uid
 ON DUPLICATE KEY UPDATE
   node_id = VALUES(node_id),
@@ -256,10 +258,14 @@ FROM navigation_entries e
 JOIN (
   SELECT 'm1950001-0000-4000-8000-000000000001' AS uid, 'm1951001-0000-4000-8000-000000000001' AS uuid, 'LandingMainNavHomeEntry' AS entry_uid, 'TR' AS language, 'Anasayfa' AS link_name
   UNION ALL SELECT 'm1950002-0000-4000-8000-000000000002', 'm1951002-0000-4000-8000-000000000002', 'LandingMainNavHomeEntry', 'EN', 'Home'
+  UNION ALL SELECT 'm1950009-0000-4000-8000-000000000009', 'm1951009-0000-4000-8000-000000000009', 'LandingMainNavAboutEntry', 'TR', 'Hakkımda'
+  UNION ALL SELECT 'm1950010-0000-4000-8000-000000000010', 'm1951010-0000-4000-8000-000000000010', 'LandingMainNavAboutEntry', 'EN', 'About'
   UNION ALL SELECT 'm1950003-0000-4000-8000-000000000003', 'm1951003-0000-4000-8000-000000000003', 'LandingMainNavSearchEntry', 'TR', 'Arama'
   UNION ALL SELECT 'm1950004-0000-4000-8000-000000000004', 'm1951004-0000-4000-8000-000000000004', 'LandingMainNavSearchEntry', 'EN', 'Search'
   UNION ALL SELECT 'm1950005-0000-4000-8000-000000000005', 'm1951005-0000-4000-8000-000000000005', 'LandingFooterHomeEntry', 'TR', 'Anasayfa'
   UNION ALL SELECT 'm1950006-0000-4000-8000-000000000006', 'm1951006-0000-4000-8000-000000000006', 'LandingFooterHomeEntry', 'EN', 'Home'
+  UNION ALL SELECT 'm1950011-0000-4000-8000-000000000011', 'm1951011-0000-4000-8000-000000000011', 'LandingFooterAboutEntry', 'TR', 'Hakkımda'
+  UNION ALL SELECT 'm1950012-0000-4000-8000-000000000012', 'm1951012-0000-4000-8000-000000000012', 'LandingFooterAboutEntry', 'EN', 'About'
   UNION ALL SELECT 'm1950007-0000-4000-8000-000000000007', 'm1951007-0000-4000-8000-000000000007', 'LandingFooterSearchEntry', 'TR', 'Arama'
   UNION ALL SELECT 'm1950008-0000-4000-8000-000000000008', 'm1951008-0000-4000-8000-000000000008', 'LandingFooterSearchEntry', 'EN', 'Search'
 ) data ON data.entry_uid = e.uid

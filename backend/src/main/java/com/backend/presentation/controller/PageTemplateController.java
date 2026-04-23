@@ -52,7 +52,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/page-templates")
 @RequiredArgsConstructor
@@ -165,13 +167,14 @@ public class PageTemplateController {
         String allFailedMsg = messageSource.getMessage("pageTemplate.bulk.delete.allFailed", null,
             Locale.forLanguageTag(lang));
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-            .body(ApiResponse.error(allFailedMsg));
+            .body(ApiResponse.success(allFailedMsg, result));
       }
       String successMessage = messageSource.getMessage("pageTemplate.bulk.delete.success",
           new Object[] { result.deletedIds().size(), result.failedIds().size() },
           Locale.forLanguageTag(lang));
       return ResponseEntity.ok(ApiResponse.success(successMessage, result));
     } catch (Exception ex) {
+      log.error("Error bulk deleting templates: {}", ex.getMessage(), ex);
       String msg = messageSource.getMessage("pageTemplate.bulk.delete.error", null,
           Locale.forLanguageTag(lang));
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)

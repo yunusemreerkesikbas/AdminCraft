@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -149,7 +148,6 @@ public class AuthController {
                         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
         })
         public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
-                        @CookieValue(name = "craftive_rt", required = false) String refreshToken,
                         @RequestHeader(value = "X-Device-Fingerprint", required = false) String deviceFingerprint,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
                         HttpServletRequest httpRequest,
@@ -157,6 +155,7 @@ public class AuthController {
                 try {
                         log.info("Token refresh attempt");
 
+                        String refreshToken = getRefreshTokenFromRequest(httpRequest);
                         if (refreshToken == null || refreshToken.isBlank()) {
                                 String message = messageSource.getMessage("auth.refresh.error", null,
                                                 Locale.forLanguageTag(languageCode));
@@ -171,7 +170,9 @@ public class AuthController {
                         LoginResponse loginResponse = toLoginResponse(authResult);
 
                         if (!authResult.requires2FA() && authResult.refreshToken() != null) {
-                                long maxAgeSecs = jwtProperties.getRefreshExpiration() / 1000;
+                                long maxAgeSecs = authResult.rememberMe()
+                                                ? jwtProperties.getRememberMeExpiration() / 1000
+                                                : jwtProperties.getRefreshExpiration() / 1000;
                                 setRefreshTokenCookie(httpResponse, authResult.refreshToken(), maxAgeSecs);
                         }
 
@@ -199,14 +200,15 @@ public class AuthController {
         })
         public ResponseEntity<ApiResponse<Void>> logout(
                         @RequestHeader(value = "Authorization", required = false) String token,
-                        @CookieValue(name = "craftive_rt", required = false) String refreshToken,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
+                        HttpServletRequest httpRequest,
                         HttpServletResponse httpResponse) {
                 try {
                         log.info("Logout attempt");
                         String cleanAccessToken = (token != null && token.startsWith("Bearer "))
                                         ? token.substring(7)
                                         : token;
+                        String refreshToken = getRefreshTokenFromRequest(httpRequest);
                         authenticationService.logout(cleanAccessToken, refreshToken);
                         clearRefreshTokenCookie(httpResponse);
                         String message = messageSource.getMessage("auth.logout.success", null,
@@ -428,6 +430,7 @@ public class AuthController {
                         String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
                         String userAgent = RequestUtils.getUserAgent(httpRequest);
 
+                        boolean rememberMe = Boolean.TRUE.equals(request.rememberMe());
                         AuthResult authResult = authenticationService.verifyOtp(
                                         request.pendingToken(),
                                         request.otpCode(),
@@ -437,11 +440,14 @@ public class AuthController {
                                         ipAddress,
                                         userAgent,
                                         request.tenantId(),
-                                        request.subdomain());
+                                        request.subdomain(),
+                                        rememberMe);
 
                         LoginResponse loginResponse = toLoginResponse(authResult);
                         if (!authResult.requires2FA() && authResult.refreshToken() != null) {
-                                long maxAgeSecs = jwtProperties.getRefreshExpiration() / 1000;
+                                long maxAgeSecs = authResult.rememberMe()
+                                                ? jwtProperties.getRememberMeExpiration() / 1000
+                                                : jwtProperties.getRefreshExpiration() / 1000;
                                 setRefreshTokenCookie(httpResponse, authResult.refreshToken(), maxAgeSecs);
                         }
 
@@ -462,6 +468,14 @@ public class AuthController {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                         .body(ApiResponse.error(message));
                 }
+        }
+
+        private String getRefreshTokenFromRequest(HttpServletRequest request) {
+                if (request.getCookies() == null) return null;
+                return java.util.Arrays.stream(request.getCookies())
+                                .filter(c -> jwtProperties.getCookie().getName().equals(c.getName()))
+                                .map(jakarta.servlet.http.Cookie::getValue)
+                                .findFirst().orElse(null);
         }
 
         private void setRefreshTokenCookie(HttpServletResponse response, String token, long maxAgeSeconds) {
