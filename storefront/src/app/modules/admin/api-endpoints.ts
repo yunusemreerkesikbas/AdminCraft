@@ -5,6 +5,8 @@
 export const SPA_ENDPOINTS_CONFIG = {
     // ----- AUTH -----
     login: 'auth/login',
+    refresh: 'auth/refresh',
+    logout: 'auth/logout',
     verifyOtp: 'auth/verify-otp',
     forgotPassword: 'auth/forgot-password',
     resetPassword: 'auth/reset-password',
@@ -36,6 +38,7 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- MEDIA -----
     media: 'media',
+    mediaBulkDelete: 'media/bulk-delete',
     mediaById: 'media/${id}',
     mediaDetail: 'media/${id}/detail',
     mediaUpload: 'media/upload',
@@ -149,6 +152,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     componentI18nPublish: 'components/${componentId}/publish/${language}',
     componentComposite: 'components/composite',
     componentCompositeById: 'components/${id}/composite',
+    componentBulkDelete: 'components/bulk-delete',
 
     // ----- COMPONENT LIBRARY: ENTRY FIELDS -----
     componentTypeEntryFields: 'components/types/${typeId}/entry-fields',
@@ -207,6 +211,7 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- PAGE TEMPLATES -----
     pageTemplates: 'page-templates',
+    pageTemplateBulkDelete: 'page-templates/bulk-delete',
     pageTemplatesActive: 'page-templates/active',
     pageTemplateById: 'page-templates/${id}',
     pageTemplateSlots: 'page-templates/${id}/slots',

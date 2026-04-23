@@ -88,6 +88,12 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
         const routeSubdomain = this.#activatedRoute.snapshot.queryParamMap.get('subdomain');
         if (routeSubdomain) {
             this.#tenantContext.setSubdomain(routeSubdomain);
+            this.#router.navigate([], {
+                relativeTo: this.#activatedRoute,
+                queryParams: { subdomain: null },
+                queryParamsHandling: 'merge',
+                replaceUrl: true,
+            });
         }
         const subdomain = routeSubdomain
             ?? this.#tenantContext.getCurrentSubdomain()
@@ -97,6 +103,7 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
         this.signInForm = this.#formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required],
+            rememberMe: [false],
         });
         this.otpForm = this.#formBuilder.group({
             otpCode: [
@@ -133,6 +140,7 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
                 ...this.signInForm.value,
                 deviceFingerprint: await this.#deviceFingerprintService.getDeviceFingerprint(),
                 recaptchaToken: await this.#getRecaptchaToken(),
+                rememberMe: this.signInForm.get('rememberMe')?.value ?? false,
             };
 
             this.#authService

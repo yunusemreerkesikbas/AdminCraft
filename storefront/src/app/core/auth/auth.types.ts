@@ -2,7 +2,6 @@ import { ApiResponse } from '../crud/api.types';
 
 export interface LoginResponseData {
     accessToken: string;
-    refreshToken: string;
     tokenType: string;
     expiresIn: number;
     userId: number;

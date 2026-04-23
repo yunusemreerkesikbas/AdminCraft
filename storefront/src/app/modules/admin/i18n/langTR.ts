@@ -185,6 +185,8 @@ export const langTR = {
                 select: 'Seç',
                 remove: 'Kaldır',
                 sync: 'Senkronize Et',
+                deleteSelected: 'Seçilenleri sil',
+                selectAllOnPage: 'Bu sayfadakilerin tümünü seç',
             },
             messages: {
                 operationSuccess: 'İşlem başarılı',
@@ -653,6 +655,8 @@ export const langTR = {
             actions: {
                 create: 'Şablon Oluştur',
                 createFirst: 'İlk Şablonu Oluştur',
+                deleteSelected: 'Seçilenleri sil',
+                selectAllOnPage: 'Bu sayfadakilerin tümünü seç',
             },
             messages: {
                 noTemplates: 'Sayfa şablonu bulunamadı.',
@@ -664,11 +668,15 @@ export const langTR = {
                 updateFailed: 'Sayfa şablonu güncellenemedi',
                 deleteSuccess: 'Sayfa şablonu başarıyla silindi',
                 deleteFailed: 'Sayfa şablonu silinemedi',
+                bulkDeleteSuccess: 'Seçili sayfa şablonları silindi',
                 loadFailed: 'Sayfa şablonları yüklenemedi',
                 systemTemplateCannotModify: 'Sistem şablonu değiştirilemez: {{templateUid}}',
             },
             confirmDelete:
                 '"{{name}}" şablonunu silmek istediğinize emin misiniz?',
+            bulkDeleteConfirmTitle: 'Seçili sayfa şablonlarını sil',
+            bulkDeleteConfirmMessage:
+                'Seçili {{count}} sayfa şablonu silinsin mi? Bu işlem geri alınamaz.',
         },
         media: {
             title: 'Medya Kütüphanesi',
@@ -683,6 +691,9 @@ export const langTR = {
                 emptyDescription:
                     'Henüz herhangi bir medya dosyası yüklenmemiş.',
             },
+            bulkDeleteConfirmTitle: 'Seçili medyaları sil',
+            bulkDeleteConfirmMessage:
+                'Seçili {{count}} dosya silinsin mi? Bu işlem geri alınamaz.',
 
             upload: 'Medya Yükle',
             actions: {
@@ -1689,6 +1700,11 @@ export const langTR = {
             selectComponent: 'Bileşen Seç',
             noComponents: 'Henüz bileşen bulunmuyor',
             confirmDelete: 'Bu bileşeni silmek istediğinize emin misiniz?',
+            bulkDeleteConfirmTitle: 'Seçili bileşenleri sil',
+            bulkDeleteConfirmMessage:
+                'Seçili {{count}} bileşen silinsin mi? Bu işlem geri alınamaz.',
+            deleteSelected: 'Seçilenleri sil',
+            selectAllOnPage: 'Bu sayfadakilerin tümünü seç',
             fields: {
                 type: 'Tür',
                 category: 'Kategori',

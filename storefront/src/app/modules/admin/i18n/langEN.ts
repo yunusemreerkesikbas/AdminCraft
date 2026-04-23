@@ -190,6 +190,8 @@ export const langEN = {
                 select: 'Select',
                 remove: 'Remove',
                 sync: 'Sync',
+                deleteSelected: 'Delete selected',
+                selectAllOnPage: 'Select all on this page',
             },
             messages: {
                 operationSuccess: 'Operation successful',
@@ -657,6 +659,8 @@ export const langEN = {
             actions: {
                 create: 'Create Template',
                 createFirst: 'Create First Template',
+                deleteSelected: 'Delete selected',
+                selectAllOnPage: 'Select all on this page',
             },
             messages: {
                 noTemplates: 'No page templates found.',
@@ -668,10 +672,14 @@ export const langEN = {
                 updateFailed: 'Failed to update page template',
                 deleteSuccess: 'Page template deleted successfully',
                 deleteFailed: 'Failed to delete page template',
+                bulkDeleteSuccess: 'Selected page templates deleted successfully',
                 loadFailed: 'Failed to load page templates',
                 systemTemplateCannotModify: 'Cannot modify system template: {{templateUid}}',
             },
             confirmDelete: 'Are you sure you want to delete "{{name}}"?',
+            bulkDeleteConfirmTitle: 'Delete selected page templates',
+            bulkDeleteConfirmMessage:
+                'Delete {{count}} selected page template(s)? This cannot be undone.',
         },
         media: {
             title: 'Media Library',
@@ -699,6 +707,9 @@ export const langEN = {
             orBrowse: 'or browse your computer',
             maxFileSize: 'Max file size: 10MB',
             searchPlaceholder: 'Search media...',
+            bulkDeleteConfirmTitle: 'Delete selected media',
+            bulkDeleteConfirmMessage:
+                'Delete {{count}} selected file(s)? This cannot be undone.',
             addMore: 'Add More',
             uploading: 'Uploading',
             selectedFiles: 'Selected Files',
@@ -1709,6 +1720,11 @@ export const langEN = {
             selectComponent: 'Select Component',
             noComponents: 'No components yet',
             confirmDelete: 'Are you sure you want to delete this component?',
+            bulkDeleteConfirmTitle: 'Delete selected components',
+            bulkDeleteConfirmMessage:
+                'Delete {{count}} selected component(s)? This cannot be undone.',
+            deleteSelected: 'Delete selected',
+            selectAllOnPage: 'Select all on this page',
             fields: {
                 type: 'Type',
                 category: 'Category',

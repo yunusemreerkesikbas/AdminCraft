@@ -4,7 +4,7 @@
     <!-- Header -->
     <admin-page-header
         [title]="'admin.media.title' | transloco"
-        [showCreateButton]="true"
+        [showCreateButton]="!isViewerSig()"
         [createButtonText]="'admin.media.upload'"
         (createClick)="openUploadDialog()"
         [showSearch]="true"
@@ -12,7 +12,17 @@
         (search)="searchInputControl.setValue($event)"
     >
         <ng-container actions>
-            <!-- Sort Dropdown -->
+            @if (showSelectionUi() && selectedCountSig() > 0) {
+                <button
+                    mat-stroked-button
+                    color="warn"
+                    type="button"
+                    (click)="deleteSelectedMedia()"
+                >
+                    {{ 'admin.common.actions.deleteSelected' | transloco }}
+                    ({{ selectedCountSig() }})
+                </button>
+            }
             @if (availableSortsSig().length > 0) {
                 <spa-admin-sort-dropdown
                     [availableSorts]="availableSortsSig()"
@@ -31,7 +41,13 @@
             <spa-admin-grid
                 [items]="paginatedItemsSig()"
                 [columns]="columns"
-                [actions]="actions"
+                [actions]="
+                    isViewerSig() || selectionMode()
+                        ? selectionMode()
+                            ? actions
+                            : []
+                        : actions
+                "
                 [isLoading]="store.isLoading()"
                 [emptyIcon]="'heroicons_outline:photo'"
                 [emptyTitle]="'admin.media.list.empty'"
@@ -44,6 +60,7 @@
                     color="primary"
                     class="mt-6 rounded-full"
                     (click)="openUploadDialog()"
+                    [disabled]="isViewerSig()"
                 >
                     <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
                     <span class="ml-2">{{
@@ -52,13 +69,33 @@
                 </button>
             </spa-admin-grid>
 
+            <ng-template #headerSelectAllTemplate>
+                @if (showSelectionUi() && paginatedItemsSig().length > 0) {
+                    <mat-checkbox
+                        [checked]="pageSelectionState().allSelected"
+                        [indeterminate]="pageSelectionState().indeterminate"
+                        (change)="onToggleSelectAllOnPage($event)"
+                        (click)="$event.stopPropagation()"
+                        [attr.aria-label]="
+                            'admin.common.actions.selectAllOnPage' | transloco
+                        "
+                    ></mat-checkbox>
+                }
+            </ng-template>
+
+            <ng-template #rowCheckboxTemplate let-item>
+                <mat-checkbox
+                    [checked]="selectedIdsSig().includes(item.id)"
+                    (change)="onRowCheckboxChange(item)"
+                    (click)="$event.stopPropagation()"
+                ></mat-checkbox>
+            </ng-template>
+
             <ng-template #previewTemplate let-item>
                 <div
                     class="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded border bg-gray-50 dark:bg-gray-800"
                 >
-                    <ng-container
-                        *ngIf="item.fileType === 'image'; else iconHandler"
-                    >
+                    @if (item.fileType === 'image') {
                         <img
                             class="h-full w-full object-cover"
                             [src]="item.publicUrl"
@@ -73,14 +110,13 @@
                                 svgIcon="heroicons_outline:photo"
                             ></mat-icon>
                         </div>
-                    </ng-container>
-                    <ng-template #iconHandler>
+                    } @else {
                         <div
                             class="flex h-full w-full items-center justify-center"
                         >
                             <mat-icon
                                 class="icon-size-8"
-                                [ngClass]="getMediaTypeClass(item)"
+                                [class]="getMediaTypeClass(item)"
                                 [svgIcon]="
                                     item.fileType === 'video'
                                         ? 'heroicons_outline:film'
@@ -91,7 +127,7 @@
                             >
                             </mat-icon>
                         </div>
-                    </ng-template>
+                    }
                 </div>
             </ng-template>
 

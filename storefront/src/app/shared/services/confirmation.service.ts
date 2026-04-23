@@ -14,7 +14,8 @@ export class ConfirmationService {
         title: string,
         message: string,
         confirmLabel: string = 'admin.common.actions.confirm',
-        type: 'warning' | 'info' = 'warning'
+        type: 'warning' | 'info' = 'warning',
+        messageParams?: Record<string, unknown>
     ): Observable<boolean> {
         const dialogConfig = {
             type,
@@ -25,7 +26,7 @@ export class ConfirmationService {
                 {
                     type: 'alert-box' as const,
                     alertType: type,
-                    content: this._transloco.translate(message),
+                    content: this._transloco.translate(message, messageParams),
                 },
             ],
             actions: [

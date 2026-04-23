@@ -8,9 +8,10 @@ import { inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
+import { AuthService } from 'app/core/auth/auth.service';
 import { LanguageService } from 'app/core/language/language.service';
 import { environment } from '@environments/environment';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, catchError, switchMap, throwError } from 'rxjs';
 
 export const errorRedirectInterceptor = (
     req: HttpRequest<unknown>,
@@ -20,6 +21,7 @@ export const errorRedirectInterceptor = (
     const languageService = inject(LanguageService);
     const dialog = inject(MatDialog);
     const tenantContext = inject(TenantContextService);
+    const authService = inject(AuthService);
 
     return next(req).pipe(
         catchError((error) => {
@@ -37,6 +39,7 @@ export const errorRedirectInterceptor = (
                 '/auth/reset-password',
                 '/auth/verify-otp',
                 '/auth/resend-otp',
+                '/auth/refresh',
                 '/config/auth',
             ];
             const isAuthEndpoint = authPaths.some((path) =>
@@ -53,11 +56,33 @@ export const errorRedirectInterceptor = (
             }
 
             if (status === 401) {
-                const subdomain = tenantContext.subdomain();
-                router.navigate(['/sign-in'], {
-                    queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
-                });
-                return throwError(() => error);
+                return authService.refresh().pipe(
+                    switchMap((refreshed) => {
+                        if (refreshed) {
+                            const retried = req.clone({
+                                headers: req.headers.set(
+                                    'Authorization',
+                                    `Bearer ${authService.getAccessToken()}`
+                                ),
+                            });
+                            return next(retried);
+                        }
+                        authService.signOut().subscribe();
+                        const subdomain = tenantContext.subdomain();
+                        router.navigate(['/sign-in'], {
+                            queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                        });
+                        return throwError(() => error);
+                    }),
+                    catchError(() => {
+                        authService.signOut().subscribe();
+                        const subdomain = tenantContext.subdomain();
+                        router.navigate(['/sign-in'], {
+                            queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                        });
+                        return throwError(() => error);
+                    })
+                );
             }
 
             if (status === 403) {

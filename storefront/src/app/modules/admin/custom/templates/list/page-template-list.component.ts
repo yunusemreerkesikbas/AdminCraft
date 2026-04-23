@@ -1,23 +1,27 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BasePaginatedListComponent, CrudStore } from '@core/crud';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { BaseSelectablePaginatedListComponent, BulkDeleteRunnerService } from '@core/crud';
+import { UserService } from '@core/user/user.service';
+import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { take, takeUntil } from 'rxjs';
+import { VIEWER_ROLE } from '@shared/constants';
+import { ConfirmationService } from '@shared/services/confirmation.service';
+import { finalize, take, takeUntil } from 'rxjs';
 import { PageTemplateEditDialogComponent } from '../edit-dialog/page-template-edit-dialog.component';
 import { PageTemplateService } from '../page-template.service';
+import { PageTemplateStore } from '../page-template.store';
 import { PageTemplate } from '../page-template.types';
 
 @Component({
@@ -25,7 +29,6 @@ import { PageTemplate } from '../page-template.types';
   templateUrl: './page-template-list.component.html',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatDialogModule,
@@ -38,32 +41,34 @@ import { PageTemplate } from '../page-template.types';
     AdminPageHeaderComponent,
     SpaAdminGridComponent,
     SpaAdminPaginatorComponent,
-    SpaAdminSortDropdownComponent
+    SpaAdminSortDropdownComponent,
+    MatCheckboxModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PageTemplateListComponent extends BasePaginatedListComponent<PageTemplate> {
+export class PageTemplateListComponent extends BaseSelectablePaginatedListComponent<PageTemplate> {
   @ViewChild('slotsTemplate', { static: true }) slotsTemplate!: TemplateRef<any>;
   @ViewChild('statusTemplate', { static: true }) statusTemplate!: TemplateRef<any>;
+  @ViewChild('headerSelectAllTemplate', { static: true }) headerSelectAllTemplate!: TemplateRef<any>;
+  @ViewChild('rowCheckboxTemplate', { static: true }) rowCheckboxTemplate!: TemplateRef<any>;
 
   protected override service = inject(PageTemplateService);
-  protected override store = new CrudStore<PageTemplate>();
+  protected override store = inject(PageTemplateStore);
   
   readonly #dialog = inject(MatDialog);
   readonly #notify = inject(NotificationService);
-  readonly #transloco = inject(TranslocoService);
+  readonly #confirmationService = inject(ConfirmationService);
+  readonly #userService = inject(UserService);
+  readonly #bulkDeleteRunner = inject(BulkDeleteRunnerService);
 
-  // BasePaginatedList requires these
   protected override readonly defaultSort = 'id,desc';
   protected override readonly defaultPageSize = 10;
 
-  // We can just alias the base searchInput$ via FormControl binding or use base logic
-  // MediaList uses its own FormControl and subscribes. 
-  // BasePaginatedList uses #searchInput$ subject.
-  // We'll follow MediaList pattern:
-  searchInputControl = new FormControl('');
+  protected searchInputControl = new FormControl('');
+  protected readonly selectedIdsSig = this.store.selectedIdsSig;
+  protected readonly selectedCountSig = this.store.selectedCountSig;
+  protected readonly isViewerSig = computed(() => this.#userService.user()?.role === VIEWER_ROLE);
 
-  // Computed from store (which now holds paged items)
   protected paginatedItemsSig = computed(() => this.store.items());
 
   columns: GridColumn<PageTemplate>[] = [];
@@ -81,7 +86,7 @@ export class PageTemplateListComponent extends BasePaginatedListComponent<PageTe
 
 
   private initGrid(): void {
-      this.columns = [
+      const baseColumns: GridColumn<PageTemplate>[] = [
         {
             key: 'uid',
             label: 'admin.common.grid.uid',
@@ -97,11 +102,25 @@ export class PageTemplateListComponent extends BasePaginatedListComponent<PageTe
             hideOn: 'sm'
         }
       ];
+      this.columns = this.isViewerSig()
+        ? baseColumns
+        : [
+            {
+              key: 'select',
+              label: '',
+              type: 'custom',
+              width: '52px',
+              cssClass: 'flex items-center justify-center',
+              headerTemplate: this.headerSelectAllTemplate,
+              template: this.rowCheckboxTemplate,
+            },
+            ...baseColumns,
+          ];
 
       this.actions = [
           {
               action: 'edit',
-              icon: 'heroicons_outline:pencil',
+              icon: 'heroicons_outline:pencil-square',
               label: 'admin.common.edit',
               show: (item) => !item.isSystem
           },
@@ -129,6 +148,9 @@ export class PageTemplateListComponent extends BasePaginatedListComponent<PageTe
   }
 
   protected createTemplate(): void {
+    if (this.isViewerSig()) {
+      return;
+    }
     const dialogRef = this.#dialog.open(PageTemplateEditDialogComponent, {
       width: '800px',
       maxWidth: '95vw',
@@ -145,6 +167,9 @@ export class PageTemplateListComponent extends BasePaginatedListComponent<PageTe
   }
 
   protected editTemplate(template: PageTemplate): void {
+    if (this.isViewerSig()) {
+      return;
+    }
     const dialogRef = this.#dialog.open(PageTemplateEditDialogComponent, {
       width: '800px',
       maxWidth: '95vw',
@@ -161,26 +186,110 @@ export class PageTemplateListComponent extends BasePaginatedListComponent<PageTe
   }
 
   protected deleteTemplate(template: PageTemplate): void {
-    const confirmMessage = this.#transloco.translate('admin.pageTemplates.confirmDelete', { name: template.name });
-    if (confirm(confirmMessage)) {
-      this.deleteItem(template); // Use Base method which handles loading/error
+    if (this.isViewerSig()) {
+      return;
     }
+    this.#confirmationService
+      .confirm(
+        'admin.common.delete',
+        'admin.pageTemplates.confirmDelete',
+        'admin.common.actions.confirm',
+        'warning',
+        { name: template.name }
+      )
+      .pipe(take(1))
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.deleteItem(template);
+        }
+      });
+  }
+
+  protected showSelectionUi(): boolean {
+    return !this.isViewerSig();
+  }
+
+  protected canSelectTemplate(item: PageTemplate): boolean {
+    return !item.isSystem;
+  }
+
+  protected override canSelect(item: PageTemplate): boolean {
+    return this.canSelectTemplate(item);
+  }
+
+  protected pageSelectionState(): { allSelected: boolean; indeterminate: boolean } {
+    return super.pageSelectionState();
+  }
+
+  protected onToggleSelectAllOnPage(event: { checked: boolean }): void {
+    this.toggleSelectAllOnPage(event.checked);
+  }
+
+  protected onRowCheckboxChange(item: PageTemplate): void {
+    if (!this.canSelectTemplate(item)) {
+      return;
+    }
+    this.store.toggleSelected(item.id);
+  }
+
+  protected deleteSelectedTemplates(): void {
+    if (this.isViewerSig()) {
+      return;
+    }
+    const ids = this.selectedIdsSig();
+    if (ids.length === 0) {
+      return;
+    }
+    this.#confirmationService
+      .confirm(
+        'admin.pageTemplates.bulkDeleteConfirmTitle',
+        'admin.pageTemplates.bulkDeleteConfirmMessage',
+        'admin.common.actions.confirm',
+        'warning',
+        { count: ids.length }
+      )
+      .pipe(take(1))
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+        this.store.setLoading(true);
+        this.#bulkDeleteRunner
+          .run(ids, {
+            bulkDelete$: () =>
+              this.service.bulkDeleteTemplatesWithResponse(ids).pipe(take(1)),
+          })
+          .pipe(
+            finalize(() => this.store.setLoading(false)),
+            takeUntil(this.destroy$)
+          )
+          .subscribe({
+            next: (result) => {
+              if (result.message) {
+                this.#notify.success(result.message);
+              }
+              this.store.clearSelection();
+              this.loadItems();
+            },
+            error: (error) => {
+              const msg = error?.error?.message ?? error?.message ?? '';
+              this.#notify.alert(msg);
+              this.loadItems();
+            },
+          });
+      });
   }
   
-  // Implement success/error callbacks for delete if custom notification needed
   protected override onDeleteSuccess(item: PageTemplate): void {
       this.#notify.success('admin.pageTemplates.messages.deleteSuccess');
-      this.loadItems(); // Reload to refresh page state? Base deleteItem removes from store but for paged list usually we might want to reload if page becomes empty or count changes? 
-      // Base deleteItem: this.store.removeItem(item.id);
-      // But if we want to ensure total counts are correct from server, explicit reload is sometimes better.
-      // But let's stick to base behavior or reload.
+      this.store.clearPageSelection([item.id]);
       this.loadItems();
   }
 
   protected override onDeleteError(error: any): void {
     this.#notify.alert('admin.pageTemplates.messages.deleteFailed');
   }
-  
+
   onSortDropdownChange(sortCode: string): void {
       this.onSortChange(sortCode);
   }

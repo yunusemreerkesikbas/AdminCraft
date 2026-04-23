@@ -1,18 +1,17 @@
-import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     computed,
-    EventEmitter,
     inject,
-    Input,
+    input,
     OnInit,
-    Output,
+    output,
     TemplateRef,
     ViewChild,
 } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,7 +20,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
+import { BaseSelectablePaginatedListComponent, BulkDeleteRunnerService } from '@core/crud';
+import { UserService } from '@core/user/user.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
@@ -34,6 +34,7 @@ import {
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { VIEWER_ROLE } from '@shared/constants';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { take, takeUntil } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -49,10 +50,9 @@ import {
 } from '../media.types';
 
 @Component({
-    selector: 'app-media-list',
+    selector: 'spa-media-list',
     standalone: true,
     imports: [
-        CommonModule,
         FormsModule,
         ReactiveFormsModule,
         MatButtonModule,
@@ -68,22 +68,27 @@ import {
         SpaAdminPaginatorComponent,
         SpaAdminSortDropdownComponent,
         MatSelectModule,
+        MatCheckboxModule,
     ],
     templateUrl: './media-list.component.html',
     styles: [],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MediaListComponent
-    extends BasePaginatedListComponent<Media, FormData, UpdateMediaRequest>
+    extends BaseSelectablePaginatedListComponent<Media, FormData, UpdateMediaRequest>
     implements OnInit
 {
-    @Input() selectionMode = false;
-    @Output() onMediaSelect = new EventEmitter<Media>();
+    readonly selectionMode = input(false);
+    readonly mediaSelect = output<Media>();
 
     @ViewChild('previewTemplate', { static: true })
-    previewTemplate!: TemplateRef<any>;
+    previewTemplate!: TemplateRef<unknown>;
     @ViewChild('nameTemplate', { static: true })
-    nameTemplate!: TemplateRef<any>;
+    nameTemplate!: TemplateRef<unknown>;
+    @ViewChild('headerSelectAllTemplate', { static: true })
+    headerSelectAllTemplate!: TemplateRef<unknown>;
+    @ViewChild('rowCheckboxTemplate', { static: true })
+    rowCheckboxTemplate!: TemplateRef<unknown>;
 
     protected override service = inject(MediaService);
     protected override store = inject(MediaStore);
@@ -91,12 +96,17 @@ export class MediaListComponent
     #notificationService = inject(NotificationService);
     #confirmationService = inject(ConfirmationService);
     #tenantContext = inject(TenantContextService);
+    #userService = inject(UserService);
+    #bulkDeleteRunner = inject(BulkDeleteRunnerService);
 
     protected override readonly defaultSort = 'createdAt,desc';
     protected override readonly defaultPageSize = 24;
 
     protected searchInputControl = new FormControl('');
     protected paginatedItemsSig = computed(() => this.store.items());
+    protected readonly selectedIdsSig = this.store.selectedIdsSig;
+    protected readonly selectedCountSig = this.store.selectedCountSig;
+    protected readonly isViewerSig = computed(() => this.#userService.user()?.role === VIEWER_ROLE);
 
     protected columns: GridColumn<Media>[] = [];
     protected actions: GridAction<Media>[] = [];
@@ -106,8 +116,12 @@ export class MediaListComponent
         this.#initGridConfig();
     }
 
+    protected showSelectionUi(): boolean {
+        return !this.selectionMode() && !this.isViewerSig();
+    }
+
     #initGridConfig(): void {
-        this.columns = [
+        const baseColumns: GridColumn<Media>[] = [
             {
                 key: 'preview',
                 label: '',
@@ -128,7 +142,7 @@ export class MediaListComponent
                 type: 'text',
                 width: '100px',
                 hideOn: 'sm',
-                getValue: (item) => item.fileType.toUpperCase(), // Or use badge if preferred
+                getValue: (item) => item.fileType.toUpperCase(),
             },
             {
                 key: 'fileSizeFormatted',
@@ -148,26 +162,42 @@ export class MediaListComponent
             },
         ];
 
+        this.columns =
+            this.isViewerSig() || this.selectionMode()
+                ? baseColumns
+                : [
+                      {
+                          key: 'select',
+                          label: '',
+                          type: 'custom',
+                          width: '52px',
+                          cssClass: 'flex items-center justify-center',
+                          headerTemplate: this.headerSelectAllTemplate,
+                          template: this.rowCheckboxTemplate,
+                      },
+                      ...baseColumns,
+                  ];
+
         this.actions = [
             {
                 icon: 'heroicons_outline:pencil-square',
                 label: 'admin.common.actions.edit',
                 action: 'edit',
-                show: () => !this.selectionMode,
+                show: () => !this.selectionMode() && !this.isViewerSig(),
             },
             {
                 icon: 'heroicons_outline:trash',
                 label: 'admin.common.actions.delete',
                 action: 'delete',
                 color: 'warn',
-                show: () => !this.selectionMode,
+                show: () => !this.selectionMode() && !this.isViewerSig(),
             },
             {
                 icon: 'heroicons_outline:plus-circle',
                 label: 'admin.common.actions.select',
                 action: 'select',
                 color: 'primary',
-                show: () => this.selectionMode,
+                show: () => this.selectionMode(),
             },
         ];
     }
@@ -182,15 +212,19 @@ export class MediaListComponent
     }
 
     openUploadDialog(): void {
+        if (this.isViewerSig()) {
+            return;
+        }
         this.#matDialog
             .open(MediaUploadDialogComponent, {
                 width: '700px',
                 maxHeight: '90vh',
                 disableClose: true,
                 data: {
-                    languages: this.#tenantContext
-                        .tenant()
-                        ?.supportedLanguages?.map((l) => l.code) || ['EN'],
+                    languages:
+                        this.#tenantContext
+                            .tenant()
+                            ?.supportedLanguages?.map((l) => l.code) || ['EN'],
                 },
             })
             .afterClosed()
@@ -211,7 +245,7 @@ export class MediaListComponent
     }
 
     openDetailDialog(media: Media): void {
-        if (this.selectionMode) {
+        if (this.selectionMode()) {
             this.selectMedia(media);
             return;
         }
@@ -234,15 +268,82 @@ export class MediaListComponent
     }
 
     selectMedia(media: Media): void {
-        this.onMediaSelect.emit(media);
+        this.mediaSelect.emit(media);
+    }
+
+    protected override canSelect(_item: Media): boolean {
+        return true;
+    }
+
+    protected onToggleSelectAllOnPage(event: { checked: boolean }): void {
+        this.toggleSelectAllOnPage(event.checked);
+    }
+
+    protected onRowCheckboxChange(item: Media): void {
+        this.store.toggleSelected(item.id);
+    }
+
+    protected pageSelectionState(): { allSelected: boolean; indeterminate: boolean } {
+        return super.pageSelectionState();
+    }
+
+    protected deleteSelectedMedia(): void {
+        if (this.isViewerSig() || this.selectionMode()) {
+            return;
+        }
+        const ids = [...this.store.selectedIdsSig()];
+        if (ids.length === 0) {
+            return;
+        }
+        this.#confirmationService
+            .confirm(
+                'admin.media.bulkDeleteConfirmTitle',
+                'admin.media.bulkDeleteConfirmMessage',
+                'admin.common.actions.confirm',
+                'warning',
+                { count: ids.length }
+            )
+            .pipe(take(1))
+            .subscribe((confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
+                this.store.setLoading(true);
+                this.#bulkDeleteRunner
+                    .run(ids, {
+                        bulkDelete$: () =>
+                            this.service.bulkDeleteMediaWithResponse(ids).pipe(take(1)),
+                    })
+                    .pipe(
+                        finalize(() => this.store.setLoading(false)),
+                        takeUntil(this.destroy$)
+                    )
+                    .subscribe({
+                        next: (result) => {
+                            if (result.message) {
+                                this.#notificationService.success(result.message);
+                            }
+                            this.store.clearSelection();
+                            this.loadItems();
+                        },
+                        error: (error) => {
+                            const msg =
+                                error?.error?.message ?? error?.message ?? '';
+                            this.#notificationService.alert(msg);
+                        },
+                    });
+            });
     }
 
     deleteMedia(media: Media): void {
+        if (this.isViewerSig()) {
+            return;
+        }
         const confirmation = this.#confirmationService.confirm(
             'admin.media.dialogs.delete.title',
             'admin.media.dialogs.delete.confirm'
         );
-        confirmation.pipe(takeUntil(this.destroy$)).subscribe((result) => {
+        confirmation.pipe(take(1)).subscribe((result) => {
             if (result) {
                 this.store.setLoading(true);
                 this.service
@@ -254,6 +355,7 @@ export class MediaListComponent
                     .subscribe({
                         next: (response) => {
                             this.store.removeItem(media.id);
+                            this.store.clearPageSelection([media.id]);
                             this.#notificationService.success(response.message!);
                         },
                         error: (error) => {

@@ -1,10 +1,9 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { CrudStore } from '@core/crud/crud-store';
+import { SelectableCrudStore } from '@core/crud/selectable-crud-store';
 import { Media } from './media.types';
 
 @Injectable({ providedIn: 'root' })
-export class MediaStore extends CrudStore<Media> {
-
+export class MediaStore extends SelectableCrudStore<Media> {
     constructor() {
         super();
     }
@@ -13,34 +12,7 @@ export class MediaStore extends CrudStore<Media> {
     readonly typeFilterSig = signal<string | null>(null);
     readonly viewModeSig = signal<'grid' | 'list'>('grid');
 
-    readonly selectedItemsSig = signal<Media[]>([]);
-    readonly selectionModeSig = signal(false);
-
-    readonly hasSelection = computed(() => this.selectedItemsSig().length > 0);
-    readonly selectionCount = computed(() => this.selectedItemsSig().length);
-
-    toggleSelection(media: Media): void {
-        this.selectedItemsSig.update(items => {
-            const exists = items.find(m => m.id === media.id);
-            return exists
-                ? items.filter(m => m.id !== media.id)
-                : [...items, media];
-        });
-    }
-
-    selectAll(): void {
-        // Select all currently loaded items (server already filtered)
-        this.selectedItemsSig.set([...this.items()]);
-    }
-
-    clearSelection(): void {
-        this.selectedItemsSig.set([]);
-        this.selectionModeSig.set(false);
-    }
-
-    isSelected(media: Media): boolean {
-        return this.selectedItemsSig().some(m => m.id === media.id);
-    }
+    readonly hasSelection = computed(() => this.selectedCountSig() > 0);
 
     setSearchQuery(query: string): void {
         this.searchQuerySig.set(query);
@@ -64,7 +36,5 @@ export class MediaStore extends CrudStore<Media> {
         this.searchQuerySig.set('');
         this.typeFilterSig.set(null);
         this.viewModeSig.set('grid');
-        this.selectedItemsSig.set([]);
-        this.selectionModeSig.set(false);
     }
 }

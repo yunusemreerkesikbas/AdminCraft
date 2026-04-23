@@ -64,15 +64,22 @@
                     </spa-input>
 
                     <!-- Actions -->
-                    @if (!isPlatformHostSig()) {
-                        <div class="mt-1.5 flex w-full justify-end">
+                    <div class="mt-3 flex w-full items-center justify-between">
+                        <mat-checkbox
+                            class="-ml-2"
+                            [color]="'primary'"
+                            [formControlName]="'rememberMe'"
+                        >
+                            {{ 'auth.signIn.rememberMe' | transloco }}
+                        </mat-checkbox>
+                        @if (!isPlatformHostSig()) {
                             <a
                                 class="text-md font-medium text-primary-500 hover:underline"
                                 [routerLink]="['/forgot-password']"
                                 >{{ 'auth.signIn.forgotPassword' | transloco }}
                             </a>
-                        </div>
-                    }
+                        }
+                    </div>
 
                     <!-- Submit button -->
                     <button

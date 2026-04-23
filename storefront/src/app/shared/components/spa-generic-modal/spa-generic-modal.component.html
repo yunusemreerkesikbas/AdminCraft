@@ -70,7 +70,7 @@
 </mat-dialog-content>
 
 <!-- Centered Actions -->
-<mat-dialog-actions>
+<mat-dialog-actions align="center">
     @if (config.actions && config.actions.length > 0) {
         @for (action of config.actions; track action.label) {
             @if (action.color) {
