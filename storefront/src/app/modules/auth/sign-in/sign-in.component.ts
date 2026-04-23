@@ -95,16 +95,23 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
                 replaceUrl: true,
             });
         }
-        const subdomain = routeSubdomain
-            ?? this.#tenantContext.getCurrentSubdomain()
-            ?? this.#tenantContext.extractSubdomainFromHost();
-        this.isPlatformHostSig.set(subdomain === 'admin' || !subdomain);
+        const subdomain = routeSubdomain ?? this.#tenantContext.getCurrentSubdomain();
+        const tenantSubdomain = subdomain && subdomain !== 'admin' ? subdomain : '';
+        this.isPlatformHostSig.set(!tenantSubdomain);
 
         this.signInForm = this.#formBuilder.group({
+            workspace: [tenantSubdomain],
             email: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required],
             rememberMe: [false],
         });
+
+        this.signInForm.get('workspace')!.valueChanges
+            .pipe(takeUntil(this.#destroySubject))
+            .subscribe((val: string) => {
+                this.isPlatformHostSig.set(!(val?.trim()));
+            });
+
         this.otpForm = this.#formBuilder.group({
             otpCode: [
                 '',
@@ -134,6 +141,11 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             return;
         }
         this.signInForm.disable();
+
+        const workspace = this.signInForm.get('workspace')?.value?.trim() ?? '';
+        if (workspace) {
+            this.#tenantContext.setSubdomain(workspace);
+        }
 
         try {
             const credentials = {

@@ -19,13 +19,25 @@
             @if (!showOtpFormSig()) {
                 <!-- Sign in form -->
                 <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">
+                    <!-- Workspace field -->
+                    <spa-input
+                        [label]="'auth.signIn.workspace' | transloco"
+                        type="text"
+                        [styleClasses]="'w-full mb-4'"
+                        [fullWidth]="true"
+                        formControlName="workspace"
+                        [placeholder]="'auth.signIn.workspacePlaceholder' | transloco"
+                        autocomplete="organization"
+                    ></spa-input>
+
                     <!-- Email field -->
                     <spa-input
                         [label]="'auth.signIn.emailLabel' | transloco"
                         type="email"
-                        [styleClasses]="'w-full'"
+                        [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="email"
+                        [placeholder]="'auth.common.emailPlaceholder' | transloco"
                     ></spa-input>
 
                     <!-- Password field -->
@@ -33,9 +45,10 @@
                         #passwordCmp
                         [label]="'auth.signIn.passwordLabel' | transloco"
                         [type]="'password'"
-                        [styleClasses]="'w-full'"
+                        [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="password"
+                        [placeholder]="'auth.common.passwordPlaceholder' | transloco"
                     >
                         <button
                             mat-icon-button
@@ -122,9 +135,10 @@
                     <spa-input
                         [label]="'auth.signIn.2fa.otpLabel' | transloco"
                         type="text"
-                        [styleClasses]="'w-full'"
+                        [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="otpCode"
+                        [placeholder]="'auth.common.otpPlaceholder' | transloco"
                         [maxLength]="6"
                         inputmode="numeric"
                         pattern="[0-9]*"

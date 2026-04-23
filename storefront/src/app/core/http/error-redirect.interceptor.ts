@@ -40,6 +40,7 @@ export const errorRedirectInterceptor = (
                 '/auth/verify-otp',
                 '/auth/resend-otp',
                 '/auth/refresh',
+                '/auth/logout',
                 '/config/auth',
             ];
             const isAuthEndpoint = authPaths.some((path) =>
@@ -56,14 +57,22 @@ export const errorRedirectInterceptor = (
             }
 
             if (status === 401) {
+                if (req.headers.has('X-Retry')) {
+                    authService.signOut().subscribe();
+                    const subdomain = tenantContext.subdomain();
+                    router.navigate(['/sign-in'], {
+                        queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                    });
+                    return throwError(() => error);
+                }
+
                 return authService.refresh().pipe(
                     switchMap((refreshed) => {
                         if (refreshed) {
                             const retried = req.clone({
-                                headers: req.headers.set(
-                                    'Authorization',
-                                    `Bearer ${authService.getAccessToken()}`
-                                ),
+                                headers: req.headers
+                                    .set('Authorization', `Bearer ${authService.getAccessToken()}`)
+                                    .set('X-Retry', '1'),
                             });
                             return next(retried);
                         }

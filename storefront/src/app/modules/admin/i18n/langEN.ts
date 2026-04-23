@@ -2673,6 +2673,8 @@ export const langEN = {
             title: 'Sign in',
             demoInfo:
                 'You are viewing Craftive. Sign in to open the admin workspace.',
+            workspace: 'Workspace',
+            workspacePlaceholder: 'your-company',
             emailLabel: 'Email address',
             passwordLabel: 'Password',
             rememberMe: 'Remember me',
@@ -2696,9 +2698,14 @@ export const langEN = {
             signUp: 'Sign up',
             alreadyHaveAccount: 'Already have an account?',
             emailLabel: 'Email address',
+            emailPlaceholder: 'name@company.com',
             passwordLabel: 'Password',
+            passwordPlaceholder: 'Enter your password',
             confirmPasswordLabel: 'Confirm Password',
+            confirmPasswordPlaceholder: 'Re-enter your password',
             fullNameLabel: 'Full name',
+            fullNamePlaceholder: 'Your full name',
+            otpPlaceholder: '6-digit code',
             companyLabel: 'Company',
             errors: {
                 emailRequired: 'Email address is required',
@@ -2711,7 +2718,7 @@ export const langEN = {
                 title1: 'Modular foundation',
                 title2: 'tenant by tenant',
                 description:
-                    'Craftive delivers modular project solutions: a reusable platform with isolated tenant databases, rich CMS modules, and headless delivery when you need it.',
+                    'Craftive helps you deliver tailored digital projects faster with reusable building blocks that adapt to each customer.',
                 communityStat:
                     'Content, catalog, and marketing operations on one adaptable base.',
             },
@@ -2765,7 +2772,7 @@ export const langEN = {
                 title1: 'Welcome to',
                 title2: 'Craftive',
                 description:
-                    'Complete your invitation by setting a password. You will access your tenant workspace on our modular, isolated platform.',
+                    'Set your password to access your workspace and start running your website, catalog, and campaigns from one place.',
             },
             errors: {
                 tokenMissing: 'Invalid or missing verification token.',

@@ -78,7 +78,14 @@ The `rememberMe: boolean` field is sent in `POST /api/auth/login`. Backend uses 
 - `error-redirect.interceptor`: on 401, always attempts refresh before redirecting to `/sign-in`. On success, retries the original request with the new access token. On failure, calls `signOut()` and redirects.
 - `auth.interceptor`: `/auth/refresh` is excluded from token injection logic. All requests include `withCredentials: true` so the cookie is sent cross-origin.
 
-When the sign-in page reads a `?subdomain` query parameter, it immediately stores it in `localStorage` and removes it from the URL (`replaceUrl: true`). This ensures the correct login form (tenant vs. platform admin) is shown even when the user navigates to `/sign-in` from a new tab without a subdomain in the URL.
+The sign-in page determines the active tenant via an explicit **Workspace** input field (i18n key `auth.signIn.workspace`). The field is pre-filled from the following sources in priority order:
+
+1. `?subdomain` query parameter — stored to `localStorage` and removed from the URL (`replaceUrl: true`)
+2. `localStorage['currentTenantSubdomain']` — persisted from the previous session
+
+If the workspace field is non-empty, the form operates in **tenant mode** (forgot-password link and trust-device checkbox are visible). If left empty, the form operates in **platform admin mode** (no extra UI elements shown). `isPlatformHostSig` is updated reactively via a `valueChanges` subscription on the workspace control.
+
+`extractSubdomainFromHost()` is **not used** during sign-in — it is only used by `rootRedirectGuard` and `NoAuthGuard` for hostname-based context enforcement. This prevents `app.*` hostnames from incorrectly defaulting to the platform admin flow on single-URL deployments.
 
 `superAdminSelectedTenantId` and `craftive-user-language-preference` remain in `localStorage` as well (super admin tenant selection and language preference are safe to share across tabs).
 
@@ -593,21 +600,26 @@ app:
 ### Sign-In Component (2FA)
 
 **Features**:
+- **Workspace field** (`auth.signIn.workspace`) — explicit tenant identification; pre-filled from `?subdomain` query param or localStorage
 - Standard email/password login
 - OTP verification form (shown when 2FA required)
 - Device fingerprint generation
-- "Trust this device" checkbox
+- "Trust this device" checkbox (tenant mode only)
+- Forgot password link (tenant mode only)
 - Auto-redirect after OTP verification
 
 **Flow**:
 ```typescript
-1. User enters credentials → signIn()
-2. If requires2FA === true:
+1. User fills Workspace field (or leaves empty for platform admin)
+2. User enters credentials → signIn()
+   - If workspace non-empty → tenantContext.setSubdomain(workspace) → tenant auth
+   - If workspace empty → no subdomain set → platform admin auth
+3. If requires2FA === true:
    - Show OTP form
    - User enters 6-digit code
-   - Optional: Check "Trust this device"
+   - Optional: Check "Trust this device" (tenant only)
    - Call verifyOtp()
-3. If successful → Redirect to dashboard
+4. If successful → Redirect to dashboard
 ```
 
 ### Reset Password Component

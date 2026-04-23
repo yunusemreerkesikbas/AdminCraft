@@ -310,7 +310,7 @@ export class AuthService {
                         return of(false);
                     }),
                     catchError(() => of(false)),
-                    finalize(() => { setTimeout(() => { this.#refreshInProgress = null; }, 2000); }),
+                    finalize(() => { this.#refreshInProgress = null; }),
                     shareReplay(1)
                 );
         }

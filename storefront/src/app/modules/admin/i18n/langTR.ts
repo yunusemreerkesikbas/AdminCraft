@@ -2653,6 +2653,8 @@ export const langTR = {
             title: 'Giriş yap',
             demoInfo:
                 'Craftive yönetim arayüzünü görüntülüyorsunuz. Panele girmek için «Giriş yap» düğmesini kullanın.',
+            workspace: 'Çalışma Alanı',
+            workspacePlaceholder: 'sirket-adi',
             emailLabel: 'E-posta adresi',
             passwordLabel: 'Şifre',
             rememberMe: 'Beni hatırla',
@@ -2676,9 +2678,14 @@ export const langTR = {
             signUp: 'Kayıt ol',
             alreadyHaveAccount: 'Zaten hesabın var mı?',
             emailLabel: 'E-posta adresi',
+            emailPlaceholder: 'ad@firma.com',
             passwordLabel: 'Şifre',
+            passwordPlaceholder: 'Şifrenizi girin',
             confirmPasswordLabel: 'Şifreyi doğrula',
+            confirmPasswordPlaceholder: 'Şifrenizi tekrar girin',
             fullNameLabel: 'Ad soyad',
+            fullNamePlaceholder: 'Ad ve soyadınız',
+            otpPlaceholder: '6 haneli kod',
             companyLabel: 'Şirket',
             errors: {
                 emailRequired: 'E-posta adresi zorunludur',
@@ -2691,7 +2698,7 @@ export const langTR = {
                 title1: 'Modüler altyapı',
                 title2: 'tenant bazında izole',
                 description:
-                    'Craftive; tenant bazında izole veritabanları, zengin CMS modülleri ve gerektiğinde headless sunum ile modüler proje çözümleri sunan yeniden kullanılabilir bir platformdur.',
+                    'Craftive, her müşteriye göre uyarlanabilen modüler çözümlerle dijital projelerinizi daha hızlı hayata geçirmenizi sağlar.',
                 communityStat:
                     'İçerik, katalog ve pazarlama operasyonları tek uyumlu temel üzerinde.',
             },
@@ -2746,7 +2753,7 @@ export const langTR = {
                 title1: 'Craftive',
                 title2: 'ekibine hoş geldin',
                 description:
-                    'Daveti tamamlamak için bir şifre belirleyin. Modüler ve izole platform üzerindeki tenant çalışma alanınıza erişeceksiniz.',
+                    'Şifrenizi belirleyin, çalışma alanınıza giriş yapın ve web sitenizi, katalogunuzu ve kampanyalarınızı tek yerden yönetin.',
             },
             errors: {
                 tokenMissing: 'Geçersiz veya eksik doğrulama anahtarı.',

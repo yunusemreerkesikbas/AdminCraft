@@ -20,6 +20,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { NgClass } from '@angular/common';
 import { BaseSelectablePaginatedListComponent, BulkDeleteRunnerService } from '@core/crud';
 import { UserService } from '@core/user/user.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
@@ -69,6 +70,7 @@ import {
         SpaAdminSortDropdownComponent,
         MatSelectModule,
         MatCheckboxModule,
+        NgClass,
     ],
     templateUrl: './media-list.component.html',
     styles: [],
@@ -271,20 +273,12 @@ export class MediaListComponent
         this.mediaSelect.emit(media);
     }
 
-    protected override canSelect(_item: Media): boolean {
-        return true;
-    }
-
     protected onToggleSelectAllOnPage(event: { checked: boolean }): void {
         this.toggleSelectAllOnPage(event.checked);
     }
 
     protected onRowCheckboxChange(item: Media): void {
         this.store.toggleSelected(item.id);
-    }
-
-    protected pageSelectionState(): { allSelected: boolean; indeterminate: boolean } {
-        return super.pageSelectionState();
     }
 
     protected deleteSelectedMedia(): void {

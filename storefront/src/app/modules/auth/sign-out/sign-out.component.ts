@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewEncapsulatio
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
-import { Subject, finalize, takeUntil, takeWhile, tap, timer } from 'rxjs';
+import { Subject, finalize, take, takeUntil, takeWhile, tap, timer } from 'rxjs';
 
 @Component({
     selector: 'spa-sign-out',
@@ -23,7 +23,7 @@ export class AuthSignOutComponent implements OnInit, OnDestroy {
     protected countdownMapping: Record<string, string> = {};
 
     ngOnInit(): void {
-        this.#authService.signOut();
+        this.#authService.signOut().pipe(take(1)).subscribe();
         this.countdownMapping = {
             '=1': this.#translocoService.translate('auth.signOut.countdown.one'),
             other: this.#translocoService.translate('auth.signOut.countdown.other'),

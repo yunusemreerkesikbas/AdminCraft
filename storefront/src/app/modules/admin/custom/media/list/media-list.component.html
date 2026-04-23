@@ -116,7 +116,7 @@
                         >
                             <mat-icon
                                 class="icon-size-8"
-                                [class]="getMediaTypeClass(item)"
+                                [ngClass]="getMediaTypeClass(item)"
                                 [svgIcon]="
                                     item.fileType === 'video'
                                         ? 'heroicons_outline:film'
