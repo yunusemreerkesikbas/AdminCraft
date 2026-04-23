@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ApiResponse, CrudHttpService } from '@core/crud';
+import { ApiResponse, BulkDeleteResult, CrudHttpService } from '@core/crud';
 import { map, Observable, take } from 'rxjs';
 import {
     CreatePageTemplateDto,
@@ -72,5 +72,9 @@ export class PageTemplateService extends CrudHttpService<PageTemplate, CreatePag
                 take(1),
                 map(() => void 0)
             );
+    }
+
+    bulkDeleteTemplatesWithResponse(ids: number[]): Observable<ApiResponse<BulkDeleteResult>> {
+        return this.api.post<ApiResponse<BulkDeleteResult>>('pageTemplateBulkDelete', { ids });
     }
 }

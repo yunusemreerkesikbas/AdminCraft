@@ -46,7 +46,6 @@ export const appRoutes: Route[] = [
     {
         path: '',
         canActivate: [NoAuthGuard],
-        canActivateChild: [NoAuthGuard],
         component: LayoutComponent,
         data: {
             layout: 'empty',
@@ -84,11 +83,6 @@ export const appRoutes: Route[] = [
                 path: 'sign-in',
                 loadChildren: () =>
                     import('app/modules/auth/sign-in/sign-in.routes'),
-            },
-            {
-                path: 'sign-up',
-                loadChildren: () =>
-                    import('app/modules/auth/sign-up/sign-up.routes'),
             },
         ],
     },

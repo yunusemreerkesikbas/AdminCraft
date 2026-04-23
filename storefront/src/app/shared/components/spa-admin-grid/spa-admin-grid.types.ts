@@ -6,6 +6,7 @@ export interface GridColumn<T> {
     type: 'text' | 'badge' | 'status' | 'date' | 'custom';
     getValue?: (item: T) => any;
     template?: TemplateRef<any>;
+    headerTemplate?: TemplateRef<any>;
     hideOn?: 'sm' | 'md' | 'lg';
     width?: string;
     cssClass?: string;

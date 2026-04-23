@@ -4,6 +4,8 @@ import { ApiResponse, PageWithSort } from '@core/crud/api.types';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
+    BulkDeleteRequest,
+    BulkDeleteResult,
     ComponentCompositeResponse,
     ComponentDetailDto,
     ComponentDto,
@@ -48,6 +50,11 @@ export class ComponentLibraryService extends CrudHttpService<ComponentDto, Creat
 
     deleteComponentWithResponse(id: number): Observable<ApiResponse<void>> {
         return this.api.delete<ApiResponse<void>>(this.endpoints.delete, { id });
+    }
+
+    bulkDeleteComponentsWithResponse(ids: number[]): Observable<ApiResponse<BulkDeleteResult>> {
+        const payload: BulkDeleteRequest = { ids };
+        return this.api.post<ApiResponse<BulkDeleteResult>>('componentBulkDelete', payload);
     }
 
     getComponentI18n(componentId: number, language: string): Observable<ComponentI18nDto> {

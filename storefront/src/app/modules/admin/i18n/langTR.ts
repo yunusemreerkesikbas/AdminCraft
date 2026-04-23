@@ -185,6 +185,8 @@ export const langTR = {
                 select: 'Seç',
                 remove: 'Kaldır',
                 sync: 'Senkronize Et',
+                deleteSelected: 'Seçilenleri sil',
+                selectAllOnPage: 'Bu sayfadakilerin tümünü seç',
             },
             messages: {
                 operationSuccess: 'İşlem başarılı',
@@ -653,6 +655,8 @@ export const langTR = {
             actions: {
                 create: 'Şablon Oluştur',
                 createFirst: 'İlk Şablonu Oluştur',
+                deleteSelected: 'Seçilenleri sil',
+                selectAllOnPage: 'Bu sayfadakilerin tümünü seç',
             },
             messages: {
                 noTemplates: 'Sayfa şablonu bulunamadı.',
@@ -664,11 +668,15 @@ export const langTR = {
                 updateFailed: 'Sayfa şablonu güncellenemedi',
                 deleteSuccess: 'Sayfa şablonu başarıyla silindi',
                 deleteFailed: 'Sayfa şablonu silinemedi',
+                bulkDeleteSuccess: 'Seçili sayfa şablonları silindi',
                 loadFailed: 'Sayfa şablonları yüklenemedi',
                 systemTemplateCannotModify: 'Sistem şablonu değiştirilemez: {{templateUid}}',
             },
             confirmDelete:
                 '"{{name}}" şablonunu silmek istediğinize emin misiniz?',
+            bulkDeleteConfirmTitle: 'Seçili sayfa şablonlarını sil',
+            bulkDeleteConfirmMessage:
+                'Seçili {{count}} sayfa şablonu silinsin mi? Bu işlem geri alınamaz.',
         },
         media: {
             title: 'Medya Kütüphanesi',
@@ -683,6 +691,9 @@ export const langTR = {
                 emptyDescription:
                     'Henüz herhangi bir medya dosyası yüklenmemiş.',
             },
+            bulkDeleteConfirmTitle: 'Seçili medyaları sil',
+            bulkDeleteConfirmMessage:
+                'Seçili {{count}} dosya silinsin mi? Bu işlem geri alınamaz.',
 
             upload: 'Medya Yükle',
             actions: {
@@ -1689,6 +1700,11 @@ export const langTR = {
             selectComponent: 'Bileşen Seç',
             noComponents: 'Henüz bileşen bulunmuyor',
             confirmDelete: 'Bu bileşeni silmek istediğinize emin misiniz?',
+            bulkDeleteConfirmTitle: 'Seçili bileşenleri sil',
+            bulkDeleteConfirmMessage:
+                'Seçili {{count}} bileşen silinsin mi? Bu işlem geri alınamaz.',
+            deleteSelected: 'Seçilenleri sil',
+            selectAllOnPage: 'Bu sayfadakilerin tümünü seç',
             fields: {
                 type: 'Tür',
                 category: 'Kategori',
@@ -2637,6 +2653,8 @@ export const langTR = {
             title: 'Giriş yap',
             demoInfo:
                 'Craftive yönetim arayüzünü görüntülüyorsunuz. Panele girmek için «Giriş yap» düğmesini kullanın.',
+            workspace: 'Çalışma Alanı',
+            workspacePlaceholder: 'sirket-adi',
             emailLabel: 'E-posta adresi',
             passwordLabel: 'Şifre',
             rememberMe: 'Beni hatırla',
@@ -2660,9 +2678,14 @@ export const langTR = {
             signUp: 'Kayıt ol',
             alreadyHaveAccount: 'Zaten hesabın var mı?',
             emailLabel: 'E-posta adresi',
+            emailPlaceholder: 'ad@firma.com',
             passwordLabel: 'Şifre',
+            passwordPlaceholder: 'Şifrenizi girin',
             confirmPasswordLabel: 'Şifreyi doğrula',
+            confirmPasswordPlaceholder: 'Şifrenizi tekrar girin',
             fullNameLabel: 'Ad soyad',
+            fullNamePlaceholder: 'Ad ve soyadınız',
+            otpPlaceholder: '6 haneli kod',
             companyLabel: 'Şirket',
             errors: {
                 emailRequired: 'E-posta adresi zorunludur',
@@ -2675,7 +2698,7 @@ export const langTR = {
                 title1: 'Modüler altyapı',
                 title2: 'tenant bazında izole',
                 description:
-                    'Craftive; tenant bazında izole veritabanları, zengin CMS modülleri ve gerektiğinde headless sunum ile modüler proje çözümleri sunan yeniden kullanılabilir bir platformdur.',
+                    'Craftive, her müşteriye göre uyarlanabilen modüler çözümlerle dijital projelerinizi daha hızlı hayata geçirmenizi sağlar.',
                 communityStat:
                     'İçerik, katalog ve pazarlama operasyonları tek uyumlu temel üzerinde.',
             },
@@ -2730,7 +2753,7 @@ export const langTR = {
                 title1: 'Craftive',
                 title2: 'ekibine hoş geldin',
                 description:
-                    'Daveti tamamlamak için bir şifre belirleyin. Modüler ve izole platform üzerindeki tenant çalışma alanınıza erişeceksiniz.',
+                    'Şifrenizi belirleyin, çalışma alanınıza giriş yapın ve web sitenizi, katalogunuzu ve kampanyalarınızı tek yerden yönetin.',
             },
             errors: {
                 tokenMissing: 'Geçersiz veya eksik doğrulama anahtarı.',

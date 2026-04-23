@@ -8,10 +8,10 @@
         </button>
     </div>
     <div class="relative flex-auto overflow-hidden">
-        <app-media-list
+        <spa-media-list
             [selectionMode]="true"
-            (onMediaSelect)="select($event)"
-        ></app-media-list>
+            (mediaSelect)="select($event)"
+        ></spa-media-list>
     </div>
 
     @if (data.mode === 'multiple') {

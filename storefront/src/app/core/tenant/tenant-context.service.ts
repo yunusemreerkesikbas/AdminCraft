@@ -52,7 +52,7 @@ export class TenantContextService {
     setCurrentTenant(tenant: Tenant): void {
         this.#tenantSig.set(tenant);
         if (tenant?.subdomain) {
-            sessionStorage.setItem(
+            localStorage.setItem(
                 this.#STORAGE_KEYS.subdomain,
                 tenant.subdomain
             );
@@ -68,7 +68,7 @@ export class TenantContextService {
 
     clear(): void {
         this.#tenantSig.set(null);
-        sessionStorage.removeItem(this.#STORAGE_KEYS.subdomain);
+        localStorage.removeItem(this.#STORAGE_KEYS.subdomain);
         localStorage.removeItem(this.#STORAGE_KEYS.tenantId);
         this.#subdomainSig.set(null);
     }
@@ -78,7 +78,7 @@ export class TenantContextService {
         if (current?.subdomain) {
             return current.subdomain;
         }
-        return sessionStorage.getItem(this.#STORAGE_KEYS.subdomain);
+        return localStorage.getItem(this.#STORAGE_KEYS.subdomain);
     }
 
     getCurrentTenantId(): number | null {
@@ -96,7 +96,7 @@ export class TenantContextService {
 
     setSubdomain(subdomain: string): void {
         if (subdomain) {
-            sessionStorage.setItem(this.#STORAGE_KEYS.subdomain, subdomain);
+            localStorage.setItem(this.#STORAGE_KEYS.subdomain, subdomain);
             this.#subdomainSig.set(subdomain);
         }
     }
