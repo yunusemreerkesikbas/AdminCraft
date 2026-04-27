@@ -5,5 +5,5 @@ import com.backend.application.dto.impex.ImpExResult;
 import java.util.Locale;
 
 public interface ImpExService {
-    ImpExResult execute(String sqlContent, Locale locale);
+    ImpExResult execute(String sqlContent, Locale locale, String clientIp);
 }

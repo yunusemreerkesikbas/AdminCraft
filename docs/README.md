@@ -63,6 +63,7 @@ Platform features are not tenant modules, but they are critical for operating th
 Public APIs are still tenant-scoped (resolved by tenant headers/hostname), but **do not require authentication**.
 
 - CMS delivery (`/api/cms/**`): [`modules/cms-delivery.md`](modules/cms-delivery.md)
+- Tenant public contact ingest (`POST /api/public/contact-requests`): [`modules/cms-delivery.md`](modules/cms-delivery.md#public-contact-requests) — reCAPTCHA when enabled, optional `CF-Connecting-IP` trust and per-IP / per-tenant rate limits via `app.security.*` (see [`global/environment-configuration.md`](global/environment-configuration.md))
 
 **Platform public (no tenant context)** — used by the marketing `landing/` site and CMS tooling, not tenant databases:
 
@@ -79,7 +80,7 @@ Next.js 16 App Router demo/reference storefront consuming the CMS delivery APIs.
 - Fresh tenant databases start with **empty CMS content tables** for theme-owned data. `page_templates`, `template_slots`, `pages`, `page_slots`, `components`, `slot_components`, and theme navigation/chrome content are populated manually via ImpEx after tenant creation.
 - Required tenant seed/import flow for the default landing page (ImpEx, manual via Admin UI `/{lang}/impex`):
   - ImpEx: `impex/base/base_site_settings.sql` → `impex/base/base_media_formats.sql` → `impex/base/base_component_types.sql` → `impex/base/base_entry_field_definitions.sql` → `impex/base/base_product_types.sql` → `impex/theme/liko/liko_foundation.sql` → `[media upload]` → `impex/theme/liko/homepage.sql` → `impex/theme/liko/about_page.sql` (optional) → `impex/theme/liko/service_page.sql` (optional)
-  - Mulayim portfolio homepage: `impex/base/base_site_settings.sql` → `impex/base/base_media_formats.sql` → `impex/base/base_product_types.sql` → `impex/theme/mulayim/mulayim_foundation.sql` → `[media upload]` → `impex/theme/mulayim/portfolio_homepage.sql`. The Mulayim theme scripts seed their required generic component types, so `base_component_types.sql` and `base_entry_field_definitions.sql` are no longer required for this theme path. Mulayim defines only `Section1`-`Section3`; later vertical sections can be added as additional components in those slots by `sort_order`.
+  - Mulayim portfolio homepage + listing + details: `impex/base/base_site_settings.sql` → `impex/base/base_media_formats.sql` → `impex/base/base_product_types.sql` → `impex/theme/mulayim/mulayim_foundation.sql` → `[media upload]` → `impex/theme/mulayim/portfolio_homepage.sql` → `impex/theme/mulayim/portfolio_page.sql` → `impex/theme/mulayim/portfolio_detail_pages.sql`. The Mulayim theme scripts seed their required generic component types, so `base_component_types.sql` and `base_entry_field_definitions.sql` are no longer required for this theme path. Mulayim defines only the slots each template needs, and later vertical sections can be added as additional components in an existing slot by `sort_order`.
 - SSR by default; static export mode available via `NEXT_OUTPUT=export`
 - Locale routing is **tenant-driven**: supported languages and default language come from `GET /api/cms/site`; no hardcoded locale list in the app
 - UI chrome translations via `next-intl`; CMS content translations via `lang` API param

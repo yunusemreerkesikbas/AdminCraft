@@ -1,6 +1,9 @@
 package com.backend.application.service.impl.config;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.UUID;
 
 import org.slf4j.MDC;
@@ -10,12 +13,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.backend.application.config.ConfigAuthProperties;
 import com.backend.application.dto.config.ConfigAuthChallengeResult;
 import com.backend.application.dto.config.ConfigAuthResult;
+import com.backend.application.dto.config.ConfigLoginResult;
 import com.backend.application.dto.config.ConfigPrincipal;
 import com.backend.application.service.EmailService;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.config.ConfigAuthenticationService;
+import com.backend.domain.entity.ConfigChangeAudit;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
 import com.backend.domain.enums.Language;
@@ -37,7 +43,10 @@ import com.backend.domain.entity.PlatformVerificationToken;
 import com.backend.domain.port.JwtProviderPort;
 import com.backend.domain.port.OtpConfig;
 import com.backend.domain.port.PlatformSettingsPort;
+import com.backend.domain.repository.ConfigChangeAuditRepository;
 import com.backend.domain.repository.PlatformAdminUserRepository;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +55,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationService {
+
+    private static final String CONFIG_AUTH_AUDIT_SCOPE = "CONFIG_AUTH";
+    private static final String CONFIG_AUTH_OTP_BYPASSED_ACTION = "OTP_BYPASSED_LOGIN";
 
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
@@ -59,12 +71,18 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
     private final PasswordEncoder passwordEncoder;
     private final JwtProviderPort jwtProviderPort;
     private final OtpConfig otpConfig;
+    private final ConfigAuthProperties configAuthProperties;
+    private final ConfigChangeAuditRepository configChangeAuditRepository;
+    private final MeterRegistry meterRegistry;
 
     @Qualifier("tenantTransactionManager")
     private final PlatformTransactionManager tenantTransactionManager;
 
+    @Qualifier("platformTransactionManager")
+    private final PlatformTransactionManager platformTransactionManager;
+
     @Override
-    public ConfigAuthChallengeResult login(String email, String password, Long tenantId, String subdomain,
+    public ConfigLoginResult login(String email, String password, Long tenantId, String subdomain,
             String ipAddress, String userAgent) {
         if (isPlatformRequest(tenantId, subdomain)) {
             return loginPlatformAdmin(email, password, ipAddress, userAgent);
@@ -155,7 +173,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         }
     }
 
-    private ConfigAuthChallengeResult loginTenantAdmin(String email, String password, Long tenantId, String subdomain,
+    private ConfigLoginResult loginTenantAdmin(String email, String password, Long tenantId, String subdomain,
             String ipAddress, String userAgent) {
         Tenant tenant = resolveTenant(tenantId, subdomain);
 
@@ -191,23 +209,30 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                     throw new InvalidCredentialsException();
                 }
 
-                OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
-                Language language = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
-                emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), language);
+                if (configAuthProperties.otpEnabled()) {
+                    OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
+                    Language language = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
+                    emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), language);
 
-                return new ConfigAuthChallengeResult(
-                        otpResult.sessionToken(),
-                        user.getEmail(),
-                        tenant.getId(),
-                        tenant.getSubdomain(),
-                        ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN);
+                    return ConfigLoginResult.challenge(new ConfigAuthChallengeResult(
+                            otpResult.sessionToken(),
+                            user.getEmail(),
+                            tenant.getId(),
+                            tenant.getSubdomain(),
+                            ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN));
+                }
+
+                recordPasswordOnlyTenantConfigLogin(user, tenant, ipAddress);
+                user.recordSuccessfulLogin(ipAddress);
+                userRepository.save(user);
+                return ConfigLoginResult.session(createTenantAuthResult(user, tenant));
             });
         } finally {
             clearTenantContext();
         }
     }
 
-    private ConfigAuthChallengeResult loginPlatformAdmin(String email, String password, String ipAddress,
+    private ConfigLoginResult loginPlatformAdmin(String email, String password, String ipAddress,
             String userAgent) {
         PlatformAdminUser admin = platformAdminUserRepository
                 .findByEmailAndIsActiveTrue(email)
@@ -229,12 +254,12 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
         emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), resolvePlatformLanguage());
 
-        return new ConfigAuthChallengeResult(
+        return ConfigLoginResult.challenge(new ConfigAuthChallengeResult(
                 otpResult.sessionToken(),
                 admin.getEmail(),
                 null,
                 "admin",
-                ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN);
+                ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN));
     }
 
     private ConfigAuthResult verifyTenantOtp(String pendingToken, String otpCode, Long tenantId, String subdomain,
@@ -322,6 +347,55 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         admin.recordSuccessfulLogin(ipAddress);
         platformAdminUserRepository.save(admin);
 
+        long issuedAt = System.currentTimeMillis();
+        String accessToken = jwtProviderPort.createAccessToken(
+                admin.getEmail(),
+                ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN,
+                admin.getId(),
+                null);
+
+        return new ConfigAuthResult(
+                accessToken,
+                null,
+                "Bearer",
+                jwtProviderPort.getAccessTokenExpiration() / 1000,
+                issuedAt,
+                admin.getId(),
+                admin.getEmail(),
+                admin.getFullName(),
+                ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN,
+                null,
+                "admin");
+    }
+
+    private ConfigAuthResult createTenantAuthResult(User user, Tenant tenant) {
+        long issuedAt = System.currentTimeMillis();
+        String accessToken = jwtProviderPort.createAccessToken(
+                user.getEmail(),
+                ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                user.getId(),
+                tenant.getId());
+        String refreshToken = jwtProviderPort.createRefreshToken(
+                user.getEmail(),
+                ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                user.getId(),
+                tenant.getId());
+
+        return new ConfigAuthResult(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtProviderPort.getAccessTokenExpiration() / 1000,
+                issuedAt,
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                tenant.getId(),
+                tenant.getSubdomain());
+    }
+
+    private ConfigAuthResult createPlatformAuthResult(PlatformAdminUser admin) {
         long issuedAt = System.currentTimeMillis();
         String accessToken = jwtProviderPort.createAccessToken(
                 admin.getEmail(),
@@ -433,6 +507,46 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         MDC.remove("tenantId");
         MDC.remove("tenantDb");
         MDC.remove("correlationId");
+    }
+
+    private void recordPasswordOnlyTenantConfigLogin(User user, Tenant tenant, String ipAddress) {
+        log.warn(
+                "Config tenant login without OTP — actorEmailHash={}, tenantId={}, correlationId={}",
+                sha256Hex(user.getEmail()),
+                tenant.getId(),
+                MDC.get("correlationId"));
+        meterRegistry.counter("config.auth.otp_bypassed_login", "role", ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN)
+                .increment();
+        String reason = "OTP disabled for config login; ip=" + ipAddress
+                + " tenantId=" + tenant.getId() + " subdomain=" + tenant.getSubdomain();
+        TransactionTemplate platformTx = new TransactionTemplate(platformTransactionManager);
+        platformTx.executeWithoutResult(status -> {
+            ConfigChangeAudit audit = ConfigChangeAudit.builder()
+                    .actorUserId(user.getId())
+                    .actorEmail(user.getEmail())
+                    .actorRole(ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN)
+                    .targetTenantId(tenant.getId())
+                    .scope(CONFIG_AUTH_AUDIT_SCOPE)
+                    .action(CONFIG_AUTH_OTP_BYPASSED_ACTION)
+                    .beforeJson(null)
+                    .afterJson(null)
+                    .reason(reason)
+                    .correlationId(MDC.get("correlationId"))
+                    .build();
+            configChangeAuditRepository.save(audit);
+        });
+    }
+
+    private static String sha256Hex(String value) {
+        if (value == null) {
+            return "";
+        }
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(md.digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            return "unavailable";
+        }
     }
 
     private record PlatformLoginOtpResult(String otpCode, String sessionToken) {

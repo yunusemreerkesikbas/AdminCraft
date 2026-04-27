@@ -17,9 +17,11 @@ import com.backend.presentation.dto.request.impex.ImpExRequest;
 import com.backend.application.service.impex.ImpExService;
 import com.backend.domain.exception.ImpExInvalidScriptException;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.RequestUtils;
 
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,14 +40,16 @@ public class ImpExController {
     @PostMapping("/execute")
     public ResponseEntity<ApiResponse<ImpExResult>> execute(
             @Valid @RequestBody ImpExRequest request,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
+            HttpServletRequest httpRequest) {
 
         Locale locale = Locale.forLanguageTag(languageCode);
+        String clientIp = RequestUtils.getClientIpAddress(httpRequest);
 
         try {
             log.info("ImpEx execute request received");
 
-            ImpExResult result = impExService.execute(request.sqlContent(), locale);
+            ImpExResult result = impExService.execute(request.sqlContent(), locale, clientIp);
 
             if (result.failedStatements() > 0) {
                 String message = messageSource.getMessage(

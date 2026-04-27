@@ -2,11 +2,14 @@ package com.backend.infrastructure.tenant;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,13 +38,16 @@ public class TenantFilter extends OncePerRequestFilter {
   private final TenantContext tenantContext;
   private final TenantPlatformRepository tenantRepository;
   private final MultiTenantConnectionProvider connectionProvider;
+  private final boolean trustForwardedHost;
 
   public TenantFilter(TenantContext tenantContext,
       TenantPlatformRepository tenantRepository,
-      MultiTenantConnectionProvider connectionProvider) {
+      MultiTenantConnectionProvider connectionProvider,
+      @Value("${app.tenant.trust-forwarded-host:false}") boolean trustForwardedHost) {
     this.tenantContext = tenantContext;
     this.tenantRepository = tenantRepository;
     this.connectionProvider = connectionProvider;
+    this.trustForwardedHost = trustForwardedHost;
   }
 
   @Override
@@ -83,15 +89,18 @@ public class TenantFilter extends OncePerRequestFilter {
       }
 
       if (isConfigAdminEndpoint(path)) {
+        // SEC-106: when the caller carries a tenant-bound JWT, enforce that the
+        // X-Tenant-ID header refers to the same tenant. Anonymous and SUPER_ADMIN
+        // callers keep the existing pass-through behaviour.
+        if (!isSuperAdmin && rejectIfTenantHeaderMismatchesJwt(request, response, auth)) {
+          return;
+        }
         filterChain.doFilter(request, response);
         return;
       }
 
-      if (path.startsWith("/api/impex") && isSuperAdmin) {
-        log.warn("ImpEx bypass for superAdmin - path: {}", path);
-        filterChain.doFilter(request, response);
-        return;
-      }
+      // SEC-002: ImpEx bypass removed. SUPER_ADMIN must also send X-Tenant-ID header.
+      // Platform-DB seed data is applied via Flyway migrations, not via ImpEx at runtime.
 
       Tenant tenant = resolveTenantFromHeaders(request);
       if (tenant == null) {
@@ -104,6 +113,7 @@ public class TenantFilter extends OncePerRequestFilter {
           if (path.startsWith("/api/auth/login")
               || path.startsWith("/api/auth/refresh")
               || path.startsWith("/api/auth/logout")
+              || path.startsWith("/api/auth/forgot-password")
               || path.startsWith("/api/auth/verify-otp")) {
             filterChain.doFilter(request, response);
             return;
@@ -118,6 +128,17 @@ public class TenantFilter extends OncePerRequestFilter {
         log.warn("Inactive tenant access attempt: tenantId={}", tenant.getId());
         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant not active");
         return;
+      }
+
+      // SEC-003: cross-check JWT tenantId against the resolved tenant. SUPER_ADMIN is
+      // platform-wide and exempt; anonymous public-tenant traffic also has no JWT tenant.
+      if (!isSuperAdmin) {
+        Long jwtTenantId = extractJwtTenantId(auth);
+        if (jwtTenantId != null && !jwtTenantId.equals(tenant.getId())) {
+          log.warn("Tenant mismatch: jwtTenantId={} headerTenantId={}", jwtTenantId, tenant.getId());
+          response.sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant mismatch");
+          return;
+        }
       }
 
       tenantContext.setTenantId(String.valueOf(tenant.getId()));
@@ -183,36 +204,17 @@ public class TenantFilter extends OncePerRequestFilter {
   }
 
   private Tenant resolveTenantFromHostname(HttpServletRequest request) {
-    // Try multiple sources for hostname (Angular proxy loses original host)
+    // SEC-006: hostname-based resolution must rely only on trusted sources.
+    // Origin/Referer headers are attacker-controlled (any browser/client can spoof
+    // them) and were dropped to prevent cross-tenant resolution.
     String hostname = null;
 
-    // 1. Check X-Forwarded-Host header (reverse proxy standard)
-    String forwardedHost = request.getHeader("X-Forwarded-Host");
+    String forwardedHost = trustForwardedHost ? request.getHeader("X-Forwarded-Host") : null;
     if (forwardedHost != null && !forwardedHost.isBlank()) {
-      hostname = forwardedHost.split(",")[0].trim(); // Take first if multiple
+      hostname = forwardedHost.split(",")[0].trim();
       log.debug("Using X-Forwarded-Host: {}", hostname);
     }
 
-    // 2. Check Origin header (browser sends this on CORS/fetch requests)
-    if (hostname == null) {
-      String origin = request.getHeader("Origin");
-      if (origin != null && !origin.isBlank()) {
-        hostname = extractHostFromUrl(origin);
-        log.debug("Using Origin header: {}", hostname);
-      }
-    }
-
-    // 3. Check Referer header (browser sends this for resource requests like
-    // images)
-    if (hostname == null) {
-      String referer = request.getHeader("Referer");
-      if (referer != null && !referer.isBlank()) {
-        hostname = extractHostFromUrl(referer);
-        log.debug("Using Referer header: {}", hostname);
-      }
-    }
-
-    // 4. Fallback to serverName
     if (hostname == null) {
       hostname = request.getServerName();
     }
@@ -221,9 +223,6 @@ public class TenantFilter extends OncePerRequestFilter {
       return null;
     }
 
-    // Extract subdomain from hostname
-    // e.g. tenant1.example.com -> tenant1
-    // e.g. tenant1.localhost -> tenant1
     String subdomain = null;
     int firstDot = hostname.indexOf('.');
     if (firstDot > 0) {
@@ -240,16 +239,64 @@ public class TenantFilter extends OncePerRequestFilter {
     return null;
   }
 
-  private String extractHostFromUrl(String url) {
-    if (url == null || url.isBlank()) {
+  /**
+   * SEC-003: read the {@code tenantId} claim that {@link com.backend.infrastructure.security.JwtAuthenticationFilter}
+   * stored in the authentication details map. Returns {@code null} when the caller
+   * is anonymous or the claim is absent (e.g. SUPER_ADMIN access tokens).
+   */
+  private Long extractJwtTenantId(Authentication auth) {
+    if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
       return null;
+    }
+    Object details = auth.getDetails();
+    if (!(details instanceof Map<?, ?> map)) {
+      return null;
+    }
+    Object claim = map.get("tenantId");
+    if (claim == null) {
+      return null;
+    }
+    if (claim instanceof Number number) {
+      return number.longValue();
     }
     try {
-      return new java.net.URI(url).getHost();
-    } catch (Exception e) {
-      log.warn("Failed to extract host from URL: {}", url);
+      return Long.parseLong(claim.toString());
+    } catch (NumberFormatException ex) {
+      log.warn("JWT tenantId claim is not a number: {}", claim);
       return null;
     }
+  }
+
+  /**
+   * SEC-106: enforce that the {@code X-Tenant-ID} header (when supplied) matches the
+   * JWT tenantId for non-SUPER_ADMIN callers on bypass paths that skip full tenant
+   * resolution (e.g. config admin). Returns {@code true} after writing 403, in which
+   * case the caller must abort the filter chain.
+   */
+  private boolean rejectIfTenantHeaderMismatchesJwt(HttpServletRequest request,
+      HttpServletResponse response, Authentication auth) throws IOException {
+    Long jwtTenantId = extractJwtTenantId(auth);
+    if (jwtTenantId == null) {
+      return false;
+    }
+    String headerValue = request.getHeader(TENANT_ID_HEADER);
+    if (headerValue == null || headerValue.isBlank()) {
+      return false;
+    }
+    try {
+      Long headerTenantId = Long.parseLong(headerValue);
+      if (!jwtTenantId.equals(headerTenantId)) {
+        log.warn("Tenant mismatch on bypass path: jwtTenantId={} headerTenantId={}",
+            jwtTenantId, headerTenantId);
+        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant mismatch");
+        return true;
+      }
+    } catch (NumberFormatException ex) {
+      log.warn("Invalid tenant header on bypass path: {}", headerValue);
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid tenant identifier");
+      return true;
+    }
+    return false;
   }
 
   private boolean isPublicNoTenantRequired(String path) {

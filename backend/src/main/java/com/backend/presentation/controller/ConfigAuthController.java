@@ -19,8 +19,8 @@ import com.backend.domain.exception.InvalidTokenException;
 import com.backend.presentation.dto.request.config.ConfigLoginRequest;
 import com.backend.presentation.dto.request.config.ConfigRefreshTokenRequest;
 import com.backend.presentation.dto.request.config.ConfigVerifyOtpRequest;
-import com.backend.presentation.dto.response.config.ConfigAuthChallengeResponse;
 import com.backend.presentation.dto.response.config.ConfigAuthResponse;
+import com.backend.presentation.dto.response.config.ConfigLoginResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.RequestUtils;
 
@@ -44,13 +44,13 @@ public class ConfigAuthController {
     private final MessageSource messageSource;
 
     @PostMapping("/login")
-    @Operation(summary = "Config login", description = "Authenticates user for config panel and starts OTP challenge")
+    @Operation(summary = "Config login", description = "Authenticates user for config panel and returns a session or starts OTP challenge")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OTP challenge created"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Login accepted"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid credentials or account locked"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
     })
-    public ResponseEntity<ApiResponse<ConfigAuthChallengeResponse>> login(
+    public ResponseEntity<ApiResponse<ConfigLoginResponse>> login(
             @Valid @RequestBody ConfigLoginRequest request,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
             @RequestHeader(value = "X-Tenant-Subdomain", required = false) String subdomain,
@@ -65,8 +65,9 @@ public class ConfigAuthController {
                     RequestUtils.getClientIpAddress(httpRequest),
                     RequestUtils.getUserAgent(httpRequest));
 
-            String message = messageSource.getMessage("auth.2fa.otp.sent", null, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.ok(ApiResponse.success(message, ConfigAuthChallengeResponse.from(result)));
+            String messageKey = result.requiresOtp() ? "auth.2fa.otp.sent" : "auth.login.successful";
+            String message = messageSource.getMessage(messageKey, null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, ConfigLoginResponse.from(result)));
         } catch (AccountLockedException ex) {
             String message = messageSource.getMessage("auth.account.locked",
                     new Object[] { ex.getRemainingMinutes() },

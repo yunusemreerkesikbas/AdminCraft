@@ -1,0 +1,75 @@
+<spa-dialog
+    [title]="'admin.platform.contactRequests.detail.title' | transloco"
+    [subtitle]="data.fullName"
+    [size]="'lg'"
+    [showSubmit]="false"
+    [cancelLabel]="'admin.common.close'"
+    (closed)="close()"
+    (cancelled)="close()"
+>
+    <div class="spa-contact-request-detail grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div class="spa-contact-request-detail__field">
+            <p class="spa-contact-request-detail__label">
+                {{ 'admin.platform.contactRequests.fields.fullName' | transloco }}
+            </p>
+            <p class="spa-contact-request-detail__value">{{ data.fullName }}</p>
+        </div>
+
+        <div class="spa-contact-request-detail__field">
+            <p class="spa-contact-request-detail__label">
+                {{ 'admin.platform.contactRequests.fields.subject' | transloco }}
+            </p>
+            <p class="spa-contact-request-detail__value">{{ data.subject }}</p>
+        </div>
+
+        <div class="spa-contact-request-detail__field">
+            <p class="spa-contact-request-detail__label">
+                {{ 'admin.platform.contactRequests.fields.locale' | transloco }}
+            </p>
+            <p class="spa-contact-request-detail__value">{{ data.locale }}</p>
+        </div>
+
+        <div class="spa-contact-request-detail__field">
+            <p class="spa-contact-request-detail__label">
+                {{ 'admin.platform.contactRequests.fields.source' | transloco }}
+            </p>
+            <p class="spa-contact-request-detail__value">{{ data.source }}</p>
+        </div>
+
+        <div class="spa-contact-request-detail__field">
+            <p class="spa-contact-request-detail__label">
+                {{ 'admin.platform.contactRequests.fields.clientIp' | transloco }}
+            </p>
+            <p class="spa-contact-request-detail__value">
+                {{ data.clientIp || '-' }}
+            </p>
+        </div>
+
+        <div class="spa-contact-request-detail__field">
+            <p class="spa-contact-request-detail__label">
+                {{ 'admin.platform.contactRequests.fields.userAgent' | transloco }}
+            </p>
+            <p class="spa-contact-request-detail__value">
+                {{ data.userAgent || '-' }}
+            </p>
+        </div>
+
+        <div class="spa-contact-request-detail__field sm:col-span-2">
+            <p class="spa-contact-request-detail__label">
+                {{ 'admin.platform.contactRequests.fields.createdAt' | transloco }}
+            </p>
+            <p class="spa-contact-request-detail__value">
+                {{ data.createdAt | date: 'medium' }}
+            </p>
+        </div>
+
+        <div class="spa-contact-request-detail__field sm:col-span-2">
+            <p class="spa-contact-request-detail__label">
+                {{ 'admin.platform.contactRequests.fields.message' | transloco }}
+            </p>
+            <div class="spa-contact-request-detail__message">
+                {{ data.message }}
+            </div>
+        </div>
+    </div>
+</spa-dialog>

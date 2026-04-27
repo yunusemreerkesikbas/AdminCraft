@@ -55,6 +55,7 @@ app:
     admin-url: ${APP_FRONTEND_ADMIN_URL:https://app.craftive.io}
   tenant:
     auto-sync-on-startup: true
+    trust-forwarded-host: ${TENANT_TRUST_FORWARDED_HOST:false}
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}
   email:
     from-address: ${EMAIL_FROM_ADDRESS:noreply@craftive.io}

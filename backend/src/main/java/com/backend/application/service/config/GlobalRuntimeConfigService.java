@@ -21,4 +21,8 @@ public interface GlobalRuntimeConfigService {
     Boolean getGa4AnalyticsEnabled();
 
     Boolean getSeoInsightsEnabled();
+
+    Boolean getOtpBypassEnabled();
+
+    String getOtpBypassCodeDecrypted();
 }

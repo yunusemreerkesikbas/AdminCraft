@@ -46,4 +46,33 @@ class OtpPropertiesTest {
 
         assertThat(properties.getBypassCode()).isNull();
     }
+
+    @Test
+    @DisplayName("SEC-001: stage profile with empty bypass code keeps bypass disabled")
+    void validateBypassCode_ShouldKeepNull_InStageWhenEnvNotSet() {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setActiveProfiles("stage");
+        OtpProperties properties = new OtpProperties(environment);
+        // Simulates application-stage.yml: bypass-code: ${OTP_BYPASS_CODE:}
+        // When OTP_BYPASS_CODE env is not set, Spring binds an empty string.
+        properties.setBypassCode("");
+
+        properties.validateBypassCode();
+
+        // Empty bypass code must stay disabled — no default 123456 fallback.
+        assertThat(properties.getBypassCode()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("SEC-001: dev profile with null bypass code keeps bypass disabled")
+    void validateBypassCode_ShouldKeepNull_InDevWhenEnvNotSet() {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setActiveProfiles("dev");
+        OtpProperties properties = new OtpProperties(environment);
+        properties.setBypassCode(null);
+
+        properties.validateBypassCode();
+
+        assertThat(properties.getBypassCode()).isNull();
+    }
 }

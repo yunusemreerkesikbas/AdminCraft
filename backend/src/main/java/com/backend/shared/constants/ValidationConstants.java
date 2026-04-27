@@ -268,6 +268,17 @@ public final class ValidationConstants {
     public static final String MSG_MEDIA_CODE_PATTERN = "{validation.media.code.pattern}";
 
     // ============================================================================
+    // PUBLIC CONTACT (tenant storefront contact form)
+    // ============================================================================
+
+    public static final int CONTACT_FULL_NAME_MAX_LENGTH = 255;
+    public static final int CONTACT_SUBJECT_MAX_LENGTH = 255;
+    public static final int CONTACT_MESSAGE_MAX_LENGTH = 5000;
+    public static final int CONTACT_LOCALE_MIN_LENGTH = 2;
+    public static final int CONTACT_LOCALE_MAX_LENGTH = 10;
+    public static final String CONTACT_LOCALE_PATTERN = "^[a-zA-Z]{2,10}(-[a-zA-Z]{2,10})?$";
+
+    // ============================================================================
     // RECAPTCHA
     // ============================================================================
 
@@ -282,9 +293,11 @@ public final class ValidationConstants {
     
     /**
      * reCAPTCHA Token Pattern
-     * - Alphanumeric with underscores and hyphens
+     * - Opaque Google token
+     * - Accept any visible ASCII character except spaces/control chars
      */
-    public static final String RECAPTCHA_TOKEN_PATTERN = "^[A-Za-z0-9_-]+$";
+    public static final String RECAPTCHA_TOKEN_PATTERN = "^[\\x21-\\x7E]+$";
+    public static final String RECAPTCHA_TOKEN_OPTIONAL_PATTERN = "^(|[\\x21-\\x7E]+)$";
     public static final int RECAPTCHA_TOKEN_MAX_LENGTH = 4096;
     
     /**

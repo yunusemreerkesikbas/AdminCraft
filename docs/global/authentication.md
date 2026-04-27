@@ -89,7 +89,7 @@ If the workspace field is non-empty, the form operates in **tenant mode** (forgo
 
 `superAdminSelectedTenantId` and `craftive-user-language-preference` remain in `localStorage` as well (super admin tenant selection and language preference are safe to share across tabs).
 
-> **Config panel** (`/config`) uses a separate `config_console_auth` key in `localStorage` with its own access/refresh token pair and token-refresh logic — independent of the main auth session.
+> **Config panel** (`/config`) uses a separate `config_console_auth` key in `localStorage` with its own access/refresh token pair and token-refresh logic — independent of the main auth session. Tenant-side config OTP is controlled by `app.config-auth.otp-enabled` / `CONFIG_AUTH_OTP_ENABLED` (defaults to **`true`** in `application.yml`). **`CONFIG_SUPER_ADMIN` platform login always requires email OTP after password** regardless of that flag. See [`../modules/config-control-panel.md`](../modules/config-control-panel.md) for session semantics and audit notes.
 
 ## API Endpoints
 
@@ -343,7 +343,7 @@ Set-Cookie: craftive_rt=eyJ...; HttpOnly; Secure; SameSite=Strict; Path=/api/aut
 | Max Attempts | 5 | All |
 | Request Rate Limit | 3 per 5 minutes | All |
 | Rate Limit Cleanup | Every 5 minutes | All |
-| Bypass Code | `123456` | Dev + Stage (auto-disabled in prod) |
+| Bypass Code (`OTP_BYPASS_CODE`) | unset / empty by default | Optional: only honored when Spring active profiles include **`dev` or `stage`** (`OtpProperties` clears the value at startup for other profiles). Never commit a weak bypass. |
 
 Configuration in `application.yml`:
 ```yaml
@@ -352,14 +352,15 @@ app:
     length: 6
     expiry-seconds: 300
     max-attempts: 5
-    bypass-code: null  # Set to "123456" in dev/stage profiles
+    bypass-code: ${OTP_BYPASS_CODE:}  # optional; dev/stage only (see OtpProperties)
 ```
 
 **Security Notes**:
 - OTP codes are stored as SHA-256 hashes (never plaintext)
-- Bypass code is automatically disabled outside `dev` and `stage` profiles via `@PostConstruct` validation
+- **Main auth OTP** (`OtpServiceImpl.validateOtp`): optional global-runtime bypass (`/config` keys) and env bypass are evaluated **only when `prod` is not** an active profile; bypass compares use constant-time equality on UTF-8 bytes.
+- **`OtpProperties` startup:** a non-blank `bypass-code` is cleared (set to null) unless the process runs with `dev` or `stage` profile — extra guard beyond documentation-only defaults.
 - Rate limiting: Max 3 OTP requests per email per 5-minute window (returns HTTP 429)
-- The same shared bypass code applies to both standard auth 2FA and `/config` OTP verification because both flows read `OtpConfig`
+- **Config panel** (`verifyPlatformOtp`): reads the same `app.otp.bypass-code` binding after the startup guard above; combined with **mandatory** platform config OTP, keep bypass unset in shared environments.
 
 ---
 
@@ -414,15 +415,20 @@ Secure password reset flow using email tokens.
 ### Flow
 
 ```
-1. POST /api/auth/forgot-password { "email": "user@example.com" }
+1. POST /api/auth/forgot-password
+   Headers: X-Tenant-Subdomain: acme (or X-Tenant-ID / tenant hostname)
+   Body: { "email": "user@example.com" }
    └── Generate token, send email
    └── Response: { "result": "SUCCESS", "message": "Reset link sent" }
+   └── Invalid/missing tenant identifiers return the same generic response without sending mail
 
 2. User clicks email link → Frontend reset-password page
+   └── Tenant context required: X-Tenant-Subdomain: acme (or tenant hostname / subdomain query)
    └── GET /api/auth/verify-reset-token?token=abc123
    └── Response: { "valid": true, "email": "u***@example.com" }
 
 3. POST /api/auth/reset-password
+   Headers: X-Tenant-Subdomain: acme (or X-Tenant-ID / tenant hostname)
    {
      "token": "abc123",
      "password": "NewPass123!",
@@ -541,7 +547,7 @@ CREATE TABLE verification_tokens (
 | Provider | Usage | Configuration |
 |----------|-------|---------------|
 | `smtp` | Production | JavaMailSender with SMTP credentials |
-| `console` | Development | Logs email content to console |
+| `console` | Development | Logs dispatch status only; does not log reset links or tokens |
 
 ### Email Templates
 
@@ -579,7 +585,7 @@ app:
 app:
   email:
     provider: console
-    log-content: true
+    log-content: false
 ```
 
 ---
@@ -695,6 +701,7 @@ setPassword():
 ```typescript
 sendResetLink():
   - Validate email format
+  - Resolve tenant subdomain from `?subdomain`, saved tenant context, or tenant hostname
   - Call authService.forgotPassword(email, subdomain, recaptchaToken)
   - Show backend `response.message` (or fallback i18n)
   - Reset form

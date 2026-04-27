@@ -103,25 +103,25 @@ INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, 
 SELECT seed.uuid, seed.uid, c.id, seed.language, seed.title, seed.subtitle, seed.description, 'PUBLISHED', NOW(), NOW()
 FROM (
   SELECT 'a6210001-0000-4000-8000-000000000001' AS uuid, 'MulayimAboutHeroComponentTr' AS uid, 'MulayimAboutHeroComponent' AS component_uid, 'TR' AS language,
-    'Beni tanıyın' AS title,
-    'Neler oluyor' AS subtitle,
-    'Seçili işler, görsel anlatılar ve dijital üretim pratiğim üzerine kısa bir bakış.' AS description
+    'Atölyeyi tanıyın' AS title,
+    'Ahmet Mülayim' AS subtitle,
+    'Logo, kurumsal kimlik, sosyal medya ve kampanya görselleri üreten grafik tasarım pratiği.' AS description
   UNION ALL SELECT 'a6210002-0000-4000-8000-000000000002', 'MulayimAboutHeroComponentEn', 'MulayimAboutHeroComponent', 'EN',
-    'Get to know me',
-    'What is up',
-    'A short look at selected work, visual stories and my digital production practice.'
+    'Meet the studio',
+    'Ahmet Mülayim',
+    'Graphic design practice for logo, identity, social media and campaign visuals.'
   UNION ALL SELECT 'a6210003-0000-4000-8000-000000000003', 'MulayimAboutIntroComponentTr', 'MulayimAboutIntroComponent', 'TR',
-    'Biraz',
-    'Hakkımda',
-    'Merhaba, ben Ahmet Mülayim. Markalar, kampanyalar ve kişisel projeler için görsel dili güçlü, kullanımı net dijital işler tasarlıyorum.
+    'Ne yapıyoruz',
+    'Grafik tasarım hizmetleri',
+    'Ahmet Mülayim, markaların görsel kimliğini daha net ve akılda kalıcı hale getirmek için çalışır.
 
-Detaylara dikkat eden, iyi fikirleri sade arayüzlere dönüştüren ve her projede kalıcı bir iz bırakmayı hedefleyen bir üretim yaklaşımım var.'
+Logo tasarımından kurumsal kimliğe, sosyal medya içeriklerinden web ve kampanya görsellerine kadar her projede markanın sektörünü, hedef kitlesini ve kullanım alanlarını birlikte ele alır.'
   UNION ALL SELECT 'a6210004-0000-4000-8000-000000000004', 'MulayimAboutIntroComponentEn', 'MulayimAboutIntroComponent', 'EN',
-    'Something',
-    'About me',
-    'Hi, I am Ahmet Mulayim. I design clear digital work with strong visual language for brands, campaigns and personal projects.
+    'What we do',
+    'Graphic design services',
+    'Ahmet Mülayim helps brands build clearer and more memorable visual identities.
 
-My practice is built on attention to detail, turning good ideas into simple interfaces and leaving a lasting mark on every project.'
+From logo design and corporate identity to social media content, web design and campaign visuals, each project is shaped around the brand’s sector, audience and real usage needs.'
   UNION ALL SELECT 'a6210005-0000-4000-8000-000000000005', 'MulayimAboutPortfolioMarqueeTr', 'MulayimAboutPortfolioMarquee', 'TR',
     NULL, NULL, NULL
   UNION ALL SELECT 'a6210006-0000-4000-8000-000000000006', 'MulayimAboutPortfolioMarqueeEn', 'MulayimAboutPortfolioMarquee', 'EN',
@@ -143,11 +143,8 @@ INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, 
 SELECT seed.uuid, seed.uid, c.id, seed.sort_order, TRUE, NULL, 'PUBLISHED', NOW(), NOW()
 FROM (
   SELECT 'a6220001-0000-4000-8000-000000000001' AS uuid, 'MulayimAboutHeroPrimary' AS uid, 'MulayimAboutHeroComponent' AS component_uid, 0 AS sort_order
-  UNION ALL SELECT 'a6220002-0000-4000-8000-000000000002', 'MulayimAboutIntroMedia1', 'MulayimAboutIntroComponent', 0
-  UNION ALL SELECT 'a6220003-0000-4000-8000-000000000003', 'MulayimAboutIntroMedia2', 'MulayimAboutIntroComponent', 1
-  UNION ALL SELECT 'a6220004-0000-4000-8000-000000000004', 'MulayimAboutIntroMedia3', 'MulayimAboutIntroComponent', 2
-  UNION ALL SELECT 'a6220005-0000-4000-8000-000000000005', 'MulayimAboutIntroList1', 'MulayimAboutIntroComponent', 3
-  UNION ALL SELECT 'a6220006-0000-4000-8000-000000000006', 'MulayimAboutIntroList2', 'MulayimAboutIntroComponent', 4
+  UNION ALL SELECT 'a6220005-0000-4000-8000-000000000005', 'MulayimAboutIntroList1', 'MulayimAboutIntroComponent', 0
+  UNION ALL SELECT 'a6220006-0000-4000-8000-000000000006', 'MulayimAboutIntroList2', 'MulayimAboutIntroComponent', 1
   UNION ALL SELECT 'a6220007-0000-4000-8000-000000000007', 'MulayimAboutPortfolioImage1', 'MulayimAboutPortfolioMarquee', 0
   UNION ALL SELECT 'a6220008-0000-4000-8000-000000000008', 'MulayimAboutPortfolioImage2', 'MulayimAboutPortfolioMarquee', 1
   UNION ALL SELECT 'a6220009-0000-4000-8000-000000000009', 'MulayimAboutPortfolioImage3', 'MulayimAboutPortfolioMarquee', 2
@@ -169,43 +166,25 @@ INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, descript
 SELECT seed.uuid, seed.uid, e.id, seed.language, seed.title, seed.description, 'PUBLISHED', seed.custom_data, NOW(), NOW(), NOW()
 FROM (
   SELECT 'a6230001-0000-4000-8000-000000000001' AS uuid, 'MulayimAboutHeroPrimaryTr' AS uid, 'MulayimAboutHeroPrimary' AS entry_uid, 'TR' AS language,
-    'Hero görseli' AS title,
-    'Beni ve seçili çalışmalarımı daha yakından tanıyın.' AS description,
-    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'CV Indir', 'buttonUrl', '#MulayimAboutIntroComponent', 'supportingText', 'Biraz daha yakından', 'scrollTarget', 'MulayimAboutIntroComponent') AS custom_data
+    'Atölye görseli' AS title,
+    'Grafik tasarım yaklaşımını ve seçili marka işlerini daha yakından inceleyin.' AS description,
+    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'Projeleri İncele', 'buttonUrl', '/portfolio', 'supportingText', 'Logo, kimlik ve kampanya işleri', 'scrollTarget', 'MulayimAboutIntroComponent') AS custom_data
   UNION ALL SELECT 'a6230002-0000-4000-8000-000000000002', 'MulayimAboutHeroPrimaryEn', 'MulayimAboutHeroPrimary', 'EN',
-    'Hero image',
-    'Get closer to my selected work and personal practice.',
-    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'Download CV', 'buttonUrl', '#MulayimAboutIntroComponent', 'supportingText', 'A little closer', 'scrollTarget', 'MulayimAboutIntroComponent')
-  UNION ALL SELECT 'a6230003-0000-4000-8000-000000000003', 'MulayimAboutIntroMedia1Tr', 'MulayimAboutIntroMedia1', 'TR',
-    'Portre', NULL,
-    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'introLabel', 'Merhaba')
-  UNION ALL SELECT 'a6230004-0000-4000-8000-000000000004', 'MulayimAboutIntroMedia1En', 'MulayimAboutIntroMedia1', 'EN',
-    'Portrait', NULL,
-    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'introLabel', 'Hi')
-  UNION ALL SELECT 'a6230005-0000-4000-8000-000000000005', 'MulayimAboutIntroMedia2Tr', 'MulayimAboutIntroMedia2', 'TR',
-    'Stüdyo detayı', NULL,
-    JSON_OBJECT('mediaUid', 'mulayim-about-portfolio-1')
-  UNION ALL SELECT 'a6230006-0000-4000-8000-000000000006', 'MulayimAboutIntroMedia2En', 'MulayimAboutIntroMedia2', 'EN',
-    'Studio detail', NULL,
-    JSON_OBJECT('mediaUid', 'mulayim-about-portfolio-1')
-  UNION ALL SELECT 'a6230007-0000-4000-8000-000000000007', 'MulayimAboutIntroMedia3Tr', 'MulayimAboutIntroMedia3', 'TR',
-    'Seçili iş', NULL,
-    JSON_OBJECT('mediaUid', 'mulayim-about-portfolio-2')
-  UNION ALL SELECT 'a6230008-0000-4000-8000-000000000008', 'MulayimAboutIntroMedia3En', 'MulayimAboutIntroMedia3', 'EN',
-    'Selected work', NULL,
-    JSON_OBJECT('mediaUid', 'mulayim-about-portfolio-2')
+    'Studio image',
+    'Explore the studio’s graphic design approach and selected brand work.',
+    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'View Projects', 'buttonUrl', '/portfolio', 'supportingText', 'Logo, identity and campaign work', 'scrollTarget', 'MulayimAboutIntroComponent')
   UNION ALL SELECT 'a6230009-0000-4000-8000-000000000009', 'MulayimAboutIntroList1Tr', 'MulayimAboutIntroList1', 'TR',
-    'Ne yapıyorum', NULL,
-    JSON_OBJECT('items', JSON_ARRAY('Sanat yönetimi', 'Markalaşma', 'İçerik üretimi', 'Arayüz tasarımı', 'Hareket tasarımı'))
+    'Hizmetler', NULL,
+    JSON_OBJECT('items', JSON_ARRAY('Logo tasarım ve kurumsal kimlik', 'Sosyal medya yönetimi', 'Web tasarım', 'Katalog ve broşür tasarımı', 'Açık hava ve fuar tasarımı'))
   UNION ALL SELECT 'a6230010-0000-4000-8000-000000000010', 'MulayimAboutIntroList1En', 'MulayimAboutIntroList1', 'EN',
-    'What I do', NULL,
-    JSON_OBJECT('items', JSON_ARRAY('Art direction', 'Branding', 'Content production', 'Interface design', 'Motion design'))
+    'Services', NULL,
+    JSON_OBJECT('items', JSON_ARRAY('Logo design and corporate identity', 'Social media management', 'Web design', 'Catalog and brochure design', 'Outdoor and exhibition design'))
   UNION ALL SELECT 'a6230011-0000-4000-8000-000000000011', 'MulayimAboutIntroList2Tr', 'MulayimAboutIntroList2', 'TR',
     'Odak alanları', NULL,
-    JSON_OBJECT('items', JSON_ARRAY('Portfolio deneyimleri', 'Kampanya görselleri', 'Dijital ürün anlatıları', 'Responsive tasarım', 'Görsel sistemler'))
+    JSON_OBJECT('items', JSON_ARRAY('Promosyon ve ambalaj tasarımı', 'Prodüksiyon hizmeti', 'Özel günler ve kampanya tasarımı', 'Video içerik tasarımı', 'Marka görsel sistemi'))
   UNION ALL SELECT 'a6230012-0000-4000-8000-000000000012', 'MulayimAboutIntroList2En', 'MulayimAboutIntroList2', 'EN',
     'Focus areas', NULL,
-    JSON_OBJECT('items', JSON_ARRAY('Portfolio experiences', 'Campaign visuals', 'Digital product narratives', 'Responsive design', 'Visual systems'))
+    JSON_OBJECT('items', JSON_ARRAY('Promotional and packaging design', 'Production services', 'Seasonal and campaign design', 'Video content design', 'Brand visual systems'))
   UNION ALL SELECT 'a6230013-0000-4000-8000-000000000013', 'MulayimAboutPortfolioImage1Tr', 'MulayimAboutPortfolioImage1', 'TR',
     NULL, NULL,
     JSON_OBJECT('mediaUid', 'mulayim-about-portfolio-1', 'altText', 'Mulayim portfolio görseli 1')
@@ -250,7 +229,7 @@ ON DUPLICATE KEY UPDATE
   robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'a6250001-0000-4000-8000-000000000001', 'about-tr', p.id, 'TR', 'Hakkımda', 'Hakkımda', '/about', 'PUBLISHED'
+SELECT 'a6250001-0000-4000-8000-000000000001', 'about-tr', p.id, 'TR', 'Hakkında', 'Ahmet Mülayim Hakkında', '/about', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about'
 ON DUPLICATE KEY UPDATE
@@ -260,7 +239,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'a6250002-0000-4000-8000-000000000002', 'about-en', p.id, 'EN', 'About', 'About', '/about', 'PUBLISHED'
+SELECT 'a6250002-0000-4000-8000-000000000002', 'about-en', p.id, 'EN', 'About', 'About Ahmet Mülayim', '/about', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about'
 ON DUPLICATE KEY UPDATE
@@ -303,19 +282,13 @@ ON DUPLICATE KEY UPDATE
 -- 9. SLOT_COMPONENTS
 -- ============================================================
 
-UPDATE slot_components sc
-JOIN page_slots ps ON ps.id = sc.slot_id
-JOIN components c ON c.id = sc.component_id
-SET sc.is_visible = FALSE
-WHERE ps.uid IN ('about-TopContentSlot', 'about-BodyContentSlot', 'about-SideContentSlot')
-  AND c.uid NOT IN ('MulayimAboutHeroComponent', 'MulayimAboutIntroComponent', 'MulayimAboutPortfolioMarquee');
-
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
 SELECT ps.id, c.id, seed.sort_order, TRUE, NOW()
 FROM (
   SELECT 'about-TopContentSlot' AS slot_uid, 'MulayimAboutHeroComponent' AS component_uid, 0 AS sort_order
   UNION ALL SELECT 'about-BodyContentSlot', 'MulayimAboutIntroComponent', 0
-  UNION ALL SELECT 'about-BodyContentSlot', 'MulayimAboutPortfolioMarquee', 1
+  UNION ALL SELECT 'about-BodyContentSlot', 'PortfolioPageBrandStrip', 1
+  UNION ALL SELECT 'about-BodyContentSlot', 'MulayimAboutPortfolioMarquee', 2
 ) seed
 JOIN page_slots ps ON ps.uid = seed.slot_uid
 JOIN components c ON c.uid = seed.component_uid

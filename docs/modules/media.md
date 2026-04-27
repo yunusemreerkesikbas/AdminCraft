@@ -131,6 +131,7 @@ Linked usages:
 
 - `linked-components` is driven by responsive media assignments.
 - Component-level bindings and entry-level bindings are both returned by the backend.
+- Same component/entry responsive usages are grouped into one item with `componentLabel`, optional `entryLabel`, and `linkTypes` objects (`code`, `label`) so admin clients do not duplicate grouping or display-label rules.
 - Legacy string fields such as `customFields.mediaUid` can still exist, but new CMS media linking should prefer responsive media binding.
 
 ### Media UID alignment for seeded content

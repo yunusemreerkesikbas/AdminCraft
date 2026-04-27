@@ -200,12 +200,16 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                         i18n.setTitle(e.getValue().title());
                     i18n.setDescription(e.getValue().description());
 
-                    if (e.getValue().dynamicFields() != null) {
+                    if (e.getValue().dynamicFields() != null && !e.getValue().dynamicFields().isEmpty()) {
                         try {
                             i18n.setCustomData(objectMapper.writeValueAsString(e.getValue().dynamicFields()));
                         } catch (Exception ex) {
+                            log.error("Failed to serialize custom fields for entryId={}, language={}", id, e.getKey(),
+                                    ex);
                             throw new RuntimeException("Failed to serialize custom fields", ex);
                         }
+                    } else {
+                        i18n.setCustomData(null);
                     }
 
                     return entryI18nRepository.save(i18n);

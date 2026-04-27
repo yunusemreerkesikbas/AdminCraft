@@ -12,7 +12,10 @@ Source of truth: [`backend/src/main/java/com/backend/infrastructure/tenant/Tenan
   - `X-Tenant-ID`
   - `X-Tenant-Subdomain`
 - Fallback to hostname-based resolution:
-  - `X-Forwarded-Host` → `Origin` → `Referer` → `request.getServerName()`
+  - `X-Forwarded-Host` only when `app.tenant.trust-forwarded-host=true`
+  - `request.getServerName()`
+
+`Origin` and `Referer` are not used for tenant resolution because they are client-controlled. `X-Forwarded-Host` is also client-spoofable unless a trusted reverse proxy strips and rewrites it, so the default is `app.tenant.trust-forwarded-host=false`.
 
 If the tenant cannot be resolved for a tenant-scoped endpoint, the request is rejected.
 
@@ -44,7 +47,9 @@ These endpoints bypass tenant resolution entirely (see `isPublicNoTenantRequired
 
 Auth note:
 
-- `/api/auth/login`, `/api/auth/refresh`, and `/api/auth/verify-otp` are also allowed without tenant context, but through a dedicated branch in `TenantFilter` (not via `isPublicNoTenantRequired()`).
+- `/api/auth/login`, `/api/auth/refresh`, `/api/auth/verify-otp`, and `/api/auth/forgot-password` are also allowed without tenant context, but through a dedicated branch in `TenantFilter` (not via `isPublicNoTenantRequired()`).
+- `/api/auth/forgot-password` still sends reset mail only when the application service resolves an active tenant from headers or existing context; invalid/missing tenant identifiers return the generic password-reset response for anti-enumeration.
+- `/api/auth/reset-password`, `/api/auth/verify-reset-token`, and `/api/auth/set-initial-password` are unauthenticated but still tenant-scoped. They require a resolved tenant via `X-Tenant-ID`, `X-Tenant-Subdomain`, or trusted hostname.
 
 **Note:** `/api/cms/config` is **not** in this list. It requires tenant resolution (via `X-Tenant-Subdomain` header) but no authentication. It is used by `ConfigFlagsService` at app startup to load tenant config properties (`config_properties` table).
 
@@ -83,11 +88,12 @@ Role checks are enforced by:
 
 All other endpoints require a resolved tenant, and run with tenant DB context.
 
+**Unauthenticated but tenant-scoped:** `POST /api/public/contact-requests` has no JWT but still flows through normal tenant resolution (headers / hostname). It is **not** listed under “Public, no tenant required”.
+
 This includes ImpEx:
 
-- `POST /api/impex/execute` executes against the active tenant database.
-- `TENANT_ADMIN` users: require a resolved tenant context (`X-Tenant-ID` or `X-Tenant-Subdomain` header).
-- `SUPER_ADMIN` users: bypass tenant resolution entirely — `TenantFilter` short-circuits before tenant lookup and emits a `WARN` audit log: `ImpEx bypass for superAdmin - path: {path}`. This allows SUPER_ADMIN to run ImpEx against the platform DB directly without a tenant header.
+- `POST /api/impex/execute` executes against the **active tenant database only**. Every caller, including `SUPER_ADMIN`, must have a resolved tenant context (`X-Tenant-ID` or `X-Tenant-Subdomain`, or trusted hostname resolution). There is **no** ImpEx execution path against `platform_management` at runtime; platform seed data is applied via Flyway migrations or DBA tooling.
+- `TENANT_ADMIN` and `SUPER_ADMIN` both require the same tenant resolution invariants before ImpEx runs.
 
 ## Correlation IDs
 

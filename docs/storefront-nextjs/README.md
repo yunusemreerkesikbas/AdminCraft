@@ -188,6 +188,9 @@ The landing page depends on tenant-scoped content imports. Theme-owned page temp
 10. Import `backend/src/main/resources/impex/theme/liko/service_page.sql` (optional) if the tenant should have a sample Service page at `/{lang}/service`.
 11. For assets not covered by the seed, either bind them via the admin `Bind` dialog or use responsive media assignments directly on the component/entry.
 
+Mulayim follows a shorter theme path:
+`base_site_settings.sql` -> `base_media_formats.sql` -> `base_product_types.sql` -> `theme/mulayim/mulayim_foundation.sql` -> media upload -> `theme/mulayim/portfolio_homepage.sql` -> `theme/mulayim/portfolio_page.sql` -> `theme/mulayim/portfolio_detail_pages.sql`.
+
 If these imports are missing or partial, homepage can render incomplete sections because the storefront resolves strictly from CMS payload.
 
 #### Header and footer

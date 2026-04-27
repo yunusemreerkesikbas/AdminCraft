@@ -32,7 +32,7 @@ public record PlatformPublicDemoRequestSubmitRequest(
     String locale,
 
     @Size(max = ValidationConstants.RECAPTCHA_TOKEN_MAX_LENGTH)
-    @Pattern(regexp = "^(|[A-Za-z0-9_-]+)$", message = "validation.recaptcha.token.invalid")
+    @Pattern(regexp = ValidationConstants.RECAPTCHA_TOKEN_OPTIONAL_PATTERN, message = "validation.recaptcha.token.invalid")
     String recaptchaToken
 ) {
 
