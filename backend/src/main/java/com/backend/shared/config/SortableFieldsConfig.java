@@ -137,6 +137,19 @@ public final class SortableFieldsConfig {
                         SortOptionDto.of("email,asc", "admin.sort.emailAsc"),
                         SortOptionDto.of("email,desc", "admin.sort.emailDesc"));
 
+        public static final Set<String> CONTACT_REQUEST_ALLOWED_FIELDS = Set.of(
+                        "createdAt", "fullName", "subject", "locale", "source");
+
+        public static final String CONTACT_REQUEST_DEFAULT_SORT = "createdAt,desc";
+
+        public static final List<SortOptionDto> CONTACT_REQUEST_SORT_OPTIONS = List.of(
+                        SortOptionDto.defaultOption("createdAt,desc", "admin.sort.newest"),
+                        SortOptionDto.of("createdAt,asc", "admin.sort.oldest"),
+                        SortOptionDto.of("fullName,asc", "admin.sort.nameAsc"),
+                        SortOptionDto.of("fullName,desc", "admin.sort.nameDesc"),
+                        SortOptionDto.of("subject,asc", "admin.sort.titleAsc"),
+                        SortOptionDto.of("subject,desc", "admin.sort.titleDesc"));
+
         public static final Set<String> SITE_ACTIVITY_ALLOWED_FIELDS = Set.of(
                         "createdAt");
 
@@ -183,6 +196,7 @@ public final class SortableFieldsConfig {
                         "User", USER_ALLOWED_FIELDS,
                         "MailSubscriber", MAIL_SUBSCRIBER_ALLOWED_FIELDS,
                         "DemoRequest", DEMO_REQUEST_ALLOWED_FIELDS,
+                        "ContactRequest", CONTACT_REQUEST_ALLOWED_FIELDS,
                         "Tenant", TENANT_ALLOWED_FIELDS);
 
         public static final Map<String, List<SortOptionDto>> ENTITY_SORT_OPTIONS = Map.of(
@@ -194,6 +208,7 @@ public final class SortableFieldsConfig {
                         "User", USER_SORT_OPTIONS,
                         "MailSubscriber", MAIL_SUBSCRIBER_SORT_OPTIONS,
                         "DemoRequest", DEMO_REQUEST_SORT_OPTIONS,
+                        "ContactRequest", CONTACT_REQUEST_SORT_OPTIONS,
                         "Tenant", TENANT_SORT_OPTIONS);
 
         public static final Map<String, String> ENTITY_DEFAULT_SORT = Map.of(
@@ -205,5 +220,6 @@ public final class SortableFieldsConfig {
                         "User", USER_DEFAULT_SORT,
                         "MailSubscriber", MAIL_SUBSCRIBER_DEFAULT_SORT,
                         "DemoRequest", DEMO_REQUEST_DEFAULT_SORT,
+                        "ContactRequest", CONTACT_REQUEST_DEFAULT_SORT,
                         "Tenant", TENANT_DEFAULT_SORT);
 }

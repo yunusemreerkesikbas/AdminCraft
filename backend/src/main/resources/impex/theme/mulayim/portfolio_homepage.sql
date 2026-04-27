@@ -110,9 +110,9 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200001-0000-4000-8000-000000000001', 'IntroBannerBlockTr', c.id, 'TR',
-  'Klasik Grid',
-  'Ahmet Mulayim',
-  'Detaylara dikkat eden, cuma akşamı biralarını seven ve evrende iz bırakmayı hedefleyen farklı disiplinlerden bir ekibiz.',
+  'Grafik tasarım',
+  'Ahmet Mülayim',
+  'Logo, kurumsal kimlik ve kampanya görselleriyle markalar için net işler tasarlıyoruz.',
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'IntroBannerBlock'
 ON DUPLICATE KEY UPDATE
@@ -124,9 +124,9 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200002-0000-4000-8000-000000000002', 'IntroBannerBlockEn', c.id, 'EN',
-  'Classic Grid',
-  'Ahmet Mulayim',
-  'We are a diverse team that works with a deep attention to detail, enjoys beers on Friday nights and aspires to leave a dent in the universe.',
+  'Graphic design',
+  'Ahmet Mülayim',
+  'Clear logo, identity and campaign visuals for memorable brands.',
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'IntroBannerBlock'
 ON DUPLICATE KEY UPDATE
@@ -162,8 +162,8 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200005-0000-4000-8000-000000000005', 'StatementCtaBlockTr', c.id, 'TR',
-  'DIJITAL TASARIM DENEYIMI',
-  'YARATICI STUDIO',
+  'GÖRSEL KİMLİK',
+  'LOGO VE KAMPANYA TASARIMI',
   NULL,
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StatementCtaBlock'
@@ -176,8 +176,8 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200006-0000-4000-8000-000000000006', 'StatementCtaBlockEn', c.id, 'EN',
-  'DIGITAL DESIGN EXPERIENCE',
-  'CREATIVE STUDIO',
+  'VISUAL IDENTITY',
+  'LOGO AND CAMPAIGN DESIGN',
   NULL,
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StatementCtaBlock'
@@ -221,50 +221,50 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT seed.uuid, seed.uid, e.id, seed.language, seed.title, seed.description, 'PUBLISHED', seed.custom_data, NOW(), NOW(), NOW()
 FROM (
-  SELECT 'f6400001-0000-4000-8000-000000000001' AS uuid, 'PortfolioCard01Tr' AS uid, 'PortfolioCard01' AS entry_uid, 'TR' AS language, 'Lectus' AS title, '2024' AS description,
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/lectus', 'category', 'Concept') AS custom_data
-  UNION ALL SELECT 'f6400002-0000-4000-8000-000000000002', 'PortfolioCard01En', 'PortfolioCard01', 'EN', 'Lectus', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/lectus', 'category', 'Concept')
+  SELECT 'f6400001-0000-4000-8000-000000000001' AS uuid, 'PortfolioCard01Tr' AS uid, 'PortfolioCard01' AS entry_uid, 'TR' AS language, 'Babil Sanat Logo & Kurumsal Kimlik' AS title, 'Logo Tasarım ve Kurumsal Kimlik' AS description,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Kurumsal Kimlik') AS custom_data
+  UNION ALL SELECT 'f6400002-0000-4000-8000-000000000002', 'PortfolioCard01En', 'PortfolioCard01', 'EN', 'Babil Sanat Logo & Corporate Identity', 'Logo and Corporate Identity',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Identity')
 
-  UNION ALL SELECT 'f6400003-0000-4000-8000-000000000003', 'PortfolioCard02Tr', 'PortfolioCard02', 'TR', 'The Stage', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'linkUrl', '/portfolio/the-stage', 'category', 'Branding')
-  UNION ALL SELECT 'f6400004-0000-4000-8000-000000000004', 'PortfolioCard02En', 'PortfolioCard02', 'EN', 'The Stage', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'linkUrl', '/portfolio/the-stage', 'category', 'Branding')
+  UNION ALL SELECT 'f6400003-0000-4000-8000-000000000003', 'PortfolioCard02Tr', 'PortfolioCard02', 'TR', 'Tufanlar Tohumculuk Logo', 'Logo Tasarımı',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'linkUrl', '/portfolio/tufanlar-tohumculuk-logo', 'category', 'Logo Tasarımı')
+  UNION ALL SELECT 'f6400004-0000-4000-8000-000000000004', 'PortfolioCard02En', 'PortfolioCard02', 'EN', 'Tufanlar Tohumculuk Logo', 'Logo Design',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'linkUrl', '/portfolio/tufanlar-tohumculuk-logo', 'category', 'Logo Design')
 
-  UNION ALL SELECT 'f6400005-0000-4000-8000-000000000005', 'PortfolioCard03Tr', 'PortfolioCard03', 'TR', 'Art Direction', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/art-direction', 'category', 'Branding')
-  UNION ALL SELECT 'f6400006-0000-4000-8000-000000000006', 'PortfolioCard03En', 'PortfolioCard03', 'EN', 'Art Direction', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/art-direction', 'category', 'Branding')
+  UNION ALL SELECT 'f6400005-0000-4000-8000-000000000005', 'PortfolioCard03Tr', 'PortfolioCard03', 'TR', 'Kns Dış Ticaret Danışmanlık Logo', 'Logo Tasarımı',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/kns-dis-ticaret-danismanlik-logo', 'category', 'Logo Tasarımı')
+  UNION ALL SELECT 'f6400006-0000-4000-8000-000000000006', 'PortfolioCard03En', 'PortfolioCard03', 'EN', 'Kns Foreign Trade Consultancy Logo', 'Logo Design',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/kns-dis-ticaret-danismanlik-logo', 'category', 'Logo Design')
 
-  UNION ALL SELECT 'f6400007-0000-4000-8000-000000000007', 'PortfolioCard04Tr', 'PortfolioCard04', 'TR', 'Petit Navire', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/petit-navire', 'category', 'Branding')
-  UNION ALL SELECT 'f6400008-0000-4000-8000-000000000008', 'PortfolioCard04En', 'PortfolioCard04', 'EN', 'Petit Navire', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/petit-navire', 'category', 'Branding')
+  UNION ALL SELECT 'f6400007-0000-4000-8000-000000000007', 'PortfolioCard04Tr', 'PortfolioCard04', 'TR', 'Armin Besi Logo', 'Logo Tasarımı',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/armin-besi-logo', 'category', 'Logo Tasarımı')
+  UNION ALL SELECT 'f6400008-0000-4000-8000-000000000008', 'PortfolioCard04En', 'PortfolioCard04', 'EN', 'Armin Besi Logo', 'Logo Design',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/armin-besi-logo', 'category', 'Logo Design')
 
-  UNION ALL SELECT 'f6400009-0000-4000-8000-000000000009', 'PortfolioCard05Tr', 'PortfolioCard05', 'TR', 'Big dream', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/big-dream', 'category', 'Branding')
-  UNION ALL SELECT 'f6400010-0000-4000-8000-000000000010', 'PortfolioCard05En', 'PortfolioCard05', 'EN', 'Big dream', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/big-dream', 'category', 'Branding')
+  UNION ALL SELECT 'f6400009-0000-4000-8000-000000000009', 'PortfolioCard05Tr', 'PortfolioCard05', 'TR', 'Işık Ticaret Askeri Malzeme Logo', 'Logo Revizyonu',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/isik-ticaret-askeri-malzeme-logo', 'category', 'Logo Tasarımı')
+  UNION ALL SELECT 'f6400010-0000-4000-8000-000000000010', 'PortfolioCard05En', 'PortfolioCard05', 'EN', 'Işık Ticaret Military Equipment Logo', 'Logo Refresh',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/isik-ticaret-askeri-malzeme-logo', 'category', 'Logo Design')
 
-  UNION ALL SELECT 'f6400011-0000-4000-8000-000000000011', 'PortfolioCard06Tr', 'PortfolioCard06', 'TR', 'The Stage', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/the-stage-2', 'category', 'Branding')
-  UNION ALL SELECT 'f6400012-0000-4000-8000-000000000012', 'PortfolioCard06En', 'PortfolioCard06', 'EN', 'The Stage', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/the-stage-2', 'category', 'Branding')
+  UNION ALL SELECT 'f6400011-0000-4000-8000-000000000011', 'PortfolioCard06Tr', 'PortfolioCard06', 'TR', 'Köktaş İnşaat Logo ve Kartvizit', 'Logo ve Kartvizit',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/koktas-i-nsaat-logo-ve-kartvizit', 'category', 'Kurumsal Kimlik')
+  UNION ALL SELECT 'f6400012-0000-4000-8000-000000000012', 'PortfolioCard06En', 'PortfolioCard06', 'EN', 'Köktaş İnşaat Logo and Business Card', 'Logo and Business Card',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/koktas-i-nsaat-logo-ve-kartvizit', 'category', 'Corporate Identity')
 
-  UNION ALL SELECT 'f6400013-0000-4000-8000-000000000013', 'PortfolioCard07Tr', 'PortfolioCard07', 'TR', 'Big dream', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/big-dream-2', 'category', 'Creative')
-  UNION ALL SELECT 'f6400014-0000-4000-8000-000000000014', 'PortfolioCard07En', 'PortfolioCard07', 'EN', 'Big dream', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/big-dream-2', 'category', 'Creative')
+  UNION ALL SELECT 'f6400013-0000-4000-8000-000000000013', 'PortfolioCard07Tr', 'PortfolioCard07', 'TR', 'Hasça Kuruyemiş - Kahve Logo Tasarımı', 'Logo Tasarımı',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/hasca-kuruyemis-kahve-logo-tasarimi', 'category', 'Logo Tasarımı')
+  UNION ALL SELECT 'f6400014-0000-4000-8000-000000000014', 'PortfolioCard07En', 'PortfolioCard07', 'EN', 'Hasça Nuts and Coffee Logo Design', 'Logo Design',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/hasca-kuruyemis-kahve-logo-tasarimi', 'category', 'Logo Design')
 
-  UNION ALL SELECT 'f6400015-0000-4000-8000-000000000015', 'PortfolioCard08Tr', 'PortfolioCard08', 'TR', 'Big dream', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/big-dream-3', 'category', 'Creative')
-  UNION ALL SELECT 'f6400016-0000-4000-8000-000000000016', 'PortfolioCard08En', 'PortfolioCard08', 'EN', 'Big dream', '2024',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/big-dream-3', 'category', 'Creative')
+  UNION ALL SELECT 'f6400015-0000-4000-8000-000000000015', 'PortfolioCard08Tr', 'PortfolioCard08', 'TR', 'Şen Turistik Logo Tasarımı', 'Logo Tasarımı',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Tasarımı')
+  UNION ALL SELECT 'f6400016-0000-4000-8000-000000000016', 'PortfolioCard08En', 'PortfolioCard08', 'EN', 'Şen Turistik Logo Design', 'Logo Design',
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Design')
 
   UNION ALL SELECT 'f6400017-0000-4000-8000-000000000017', 'StatementCtaActionTr', 'StatementCtaAction', 'TR', NULL, NULL,
-    JSON_OBJECT('buttonText', 'Iletisime Gec', 'buttonUrl', '/contact')
+    JSON_OBJECT('buttonText', 'İletişime Geç', 'buttonUrl', '/contact')
   UNION ALL SELECT 'f6400018-0000-4000-8000-000000000018', 'StatementCtaActionEn', 'StatementCtaAction', 'EN', NULL, NULL,
-    JSON_OBJECT('buttonText', 'Get in Touch', 'buttonUrl', '/contact')
+    JSON_OBJECT('buttonText', 'Contact', 'buttonUrl', '/contact')
 ) seed
 JOIN component_entries e ON e.uid = seed.entry_uid
 ON DUPLICATE KEY UPDATE
@@ -291,7 +291,7 @@ ON DUPLICATE KEY UPDATE
   robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT UUID(), 'homepage-tr', p.id, 'TR', 'Anasayfa', 'Klasik Grid', '/', 'PUBLISHED'
+SELECT UUID(), 'homepage-tr', p.id, 'TR', 'Anasayfa', 'Ahmet Mülayim | Grafik Tasarım', '/', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'homepage'
 ON DUPLICATE KEY UPDATE
@@ -301,7 +301,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT UUID(), 'homepage-en', p.id, 'EN', 'Homepage', 'Classic Grid', '/', 'PUBLISHED'
+SELECT UUID(), 'homepage-en', p.id, 'EN', 'Homepage', 'Ahmet Mülayim | Graphic Design', '/', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'homepage'
 ON DUPLICATE KEY UPDATE
@@ -361,22 +361,6 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 -- 9. SLOT_COMPONENTS
 -- ============================================================
-
-UPDATE slot_components sc
-JOIN page_slots ps ON ps.id = sc.slot_id
-JOIN components c ON c.id = sc.component_id
-SET sc.is_visible = FALSE
-WHERE ps.uid IN (
-  'homepage-Section1Slot',
-  'homepage-Section2Slot',
-  'homepage-Section3Slot',
-  'homepage-Section4Slot',
-  'homepage-Section5Slot',
-  'homepage-Section6Slot',
-  'homepage-Section7Slot',
-  'homepage-Section8Slot'
-)
-  AND c.uid NOT IN ('IntroBannerBlock', 'PortfolioCardGrid', 'StatementCtaBlock');
 
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
 SELECT ps.id, c.id, 0, TRUE, NOW()
@@ -442,6 +426,12 @@ INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, crea
 SELECT ps.id, c.id, 0, TRUE, NOW()
 FROM page_slots ps, components c
 WHERE ps.uid = 'homepage-Section2Slot' AND c.uid = 'PortfolioCardGrid'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 1, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section2Slot' AND c.uid = 'PortfolioPageBrandStrip'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
 
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)

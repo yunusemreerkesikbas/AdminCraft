@@ -282,9 +282,11 @@ public final class ValidationConstants {
     
     /**
      * reCAPTCHA Token Pattern
-     * - Alphanumeric with underscores and hyphens
+     * - Opaque Google token
+     * - Accept any visible ASCII character except spaces/control chars
      */
-    public static final String RECAPTCHA_TOKEN_PATTERN = "^[A-Za-z0-9_-]+$";
+    public static final String RECAPTCHA_TOKEN_PATTERN = "^[\\x21-\\x7E]+$";
+    public static final String RECAPTCHA_TOKEN_OPTIONAL_PATTERN = "^(|[\\x21-\\x7E]+)$";
     public static final int RECAPTCHA_TOKEN_MAX_LENGTH = 4096;
     
     /**

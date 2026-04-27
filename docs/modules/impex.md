@@ -241,10 +241,13 @@ The `base/` folder now contains only theme-neutral catalogs and optional non-the
 4. theme/mulayim/mulayim_foundation.sql  — theme-owned page templates, template slots, shared chrome components, navigation
 5. [upload media via Admin UI]           — upload port-1.jpg through port-8.jpg, logo.png, logo-white.png
 6. theme/mulayim/portfolio_homepage.sql  — homepage IntroBannerBlock, PortfolioCardGrid, StatementCtaBlock, Section1-Section3 slot wiring, media UID alignment
+7. theme/mulayim/portfolio_page.sql      — /portfolio listing page hero and filterable 4-column grid
+8. theme/mulayim/portfolio_detail_pages.sql — all /portfolio/{slug} detail pages using PortfolioDetailPageTemplate and PortfolioDetailsComponent
 ```
 
 Mulayim foundation/homepage scripts include their required generic component type seeds. Running `base_component_types.sql` and `base_entry_field_definitions.sql` first is still safe, but not required for the Mulayim path.
 The Mulayim homepage intentionally defines only `Section1`, `Section2`, and `Section3`. Additional vertical content can be added by binding more components into an existing section slot with a higher `sort_order`.
+Mulayim also defines `PortfolioDetailPageTemplate` with a single `MainContent` slot for gallery-first project detail pages.
 
 Platform sample data remains separate:
 

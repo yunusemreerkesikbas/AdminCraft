@@ -11,7 +11,8 @@ INSERT INTO component_types (uuid, uid, name, category, is_navigation_aware, cre
 VALUES
   (UUID(), 'NavigationComponent', 'Navigation Component', 'navigation', TRUE, NOW(), NOW()),
   (UUID(), 'CMSLinkComponent', 'CTA Button', 'cta', FALSE, NOW(), NOW()),
-  (UUID(), 'CMSParagraphComponent', 'Paragraph', 'content', FALSE, NOW(), NOW())
+  (UUID(), 'CMSParagraphComponent', 'Paragraph', 'content', FALSE, NOW(), NOW()),
+  (UUID(), 'BrandLogosStripComponent', 'Brand Logos Strip', 'content', FALSE, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   category = VALUES(category),
@@ -30,7 +31,8 @@ VALUES
   ('m1000004-0000-4000-8000-000000000004', 'ProductDetailsPageTemplate', FALSE, TRUE),
   ('m1000005-0000-4000-8000-000000000005', 'SearchResultsPageTemplate', FALSE, TRUE),
   ('m1000006-0000-4000-8000-000000000006', 'ErrorPageTemplate', FALSE, TRUE),
-  ('m1000007-0000-4000-8000-000000000007', 'NotFoundPageTemplate', FALSE, TRUE)
+  ('m1000007-0000-4000-8000-000000000007', 'NotFoundPageTemplate', FALSE, TRUE),
+  ('m1000008-0000-4000-8000-000000000008', 'PortfolioDetailPageTemplate', FALSE, TRUE)
 ON DUPLICATE KEY UPDATE
   is_system = VALUES(is_system),
   is_active = VALUES(is_active);
@@ -53,6 +55,8 @@ JOIN (
   UNION ALL SELECT 'm1100012-0000-4000-8000-000000000012', 'ErrorPageTemplateEn', 'ErrorPageTemplate', 'EN', 'Error Page Template', 'Used for generic error pages'
   UNION ALL SELECT 'm1100013-0000-4000-8000-000000000013', 'NotFoundPageTemplateTr', 'NotFoundPageTemplate', 'TR', 'Bulunamadi Sayfasi Sablonu', '404 sayfasi icin kullanilir'
   UNION ALL SELECT 'm1100014-0000-4000-8000-000000000014', 'NotFoundPageTemplateEn', 'NotFoundPageTemplate', 'EN', 'Not Found Page Template', 'Used for 404 pages'
+  UNION ALL SELECT 'm1100015-0000-4000-8000-000000000015', 'PortfolioDetailPageTemplateTr', 'PortfolioDetailPageTemplate', 'TR', 'Portfolyo Detay Sablonu', 'Portfolyo detay sayfalari icin kullanilir'
+  UNION ALL SELECT 'm1100016-0000-4000-8000-000000000016', 'PortfolioDetailPageTemplateEn', 'PortfolioDetailPageTemplate', 'EN', 'Portfolio Detail Page Template', 'Used for portfolio detail pages'
 ) data ON data.template_uid = pt.uid
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
@@ -91,6 +95,7 @@ JOIN (
   UNION ALL SELECT 'm1200028-0000-4000-8000-000000000028', 'SearchResultsPageFooterSlot', 'SearchResultsPageTemplate', 'Footer', 'BOTTOM', 99, FALSE
   UNION ALL SELECT 'm1200029-0000-4000-8000-000000000029', 'ErrorPageMiddleSlot', 'ErrorPageTemplate', 'MiddleContent', 'CENTER', 0, TRUE
   UNION ALL SELECT 'm1200030-0000-4000-8000-000000000030', 'NotFoundPageMiddleSlot', 'NotFoundPageTemplate', 'MiddleContent', 'CENTER', 0, TRUE
+  UNION ALL SELECT 'm1200031-0000-4000-8000-000000000031', 'PortfolioDetailMainContentSlot', 'PortfolioDetailPageTemplate', 'MainContent', 'CENTER', 0, TRUE
 ) data ON data.template_uid = pt.uid
 ON DUPLICATE KEY UPDATE
   slot_name = VALUES(slot_name),
@@ -115,6 +120,7 @@ JOIN (
   UNION ALL SELECT 'm1300006-0000-4000-8000-000000000006', 'StorefrontFooterOfficeLinks', 'CMSLinkComponent', 'Storefront Footer Office Links', 2, TRUE, 'footer-office-links', JSON_OBJECT('layoutRole', 'footer.officeLinks')
   UNION ALL SELECT 'm1300007-0000-4000-8000-000000000007', 'StorefrontFooterNewsletter', 'CMSLinkComponent', 'Storefront Footer Newsletter', 3, TRUE, 'footer-newsletter', JSON_OBJECT('layoutRole', 'footer.newsletter')
   UNION ALL SELECT 'm1300008-0000-4000-8000-000000000008', 'StorefrontFooterSocialLinks', 'CMSLinkComponent', 'Storefront Footer Social Links', 4, FALSE, 'footer-social-links', JSON_OBJECT('layoutRole', 'footer.socialLinks')
+  UNION ALL SELECT 'm1300010-0000-4000-8000-000000000010', 'PortfolioPageBrandStrip', 'BrandLogosStripComponent', 'Mulayim Shared Brand Strip', 0, TRUE, 'mulayim-shared-brand-strip', NULL
 ) data ON data.type_uid = ct.uid
 ON DUPLICATE KEY UPDATE
   component_type_id = VALUES(component_type_id),
@@ -132,22 +138,24 @@ FROM components c
 JOIN (
   SELECT 'm1400001-0000-4000-8000-000000000001' AS uuid, 'StorefrontHeaderMainNavigationTr' AS uid, 'StorefrontHeaderMainNavigation' AS component_uid, 'TR' AS language, 'Ana Menu' AS title, NULL AS description
   UNION ALL SELECT 'm1400002-0000-4000-8000-000000000002', 'StorefrontHeaderMainNavigationEn', 'StorefrontHeaderMainNavigation', 'EN', 'Main Menu', NULL
-  UNION ALL SELECT 'm1400017-0000-4000-8000-000000000017', 'StorefrontHeaderIntroBlockTr', 'StorefrontHeaderIntroBlock', 'TR', 'Merhaba!', 'Secili projeler, marka anlatilari ve yeni is birlikleri icin bize ulasin.'
-  UNION ALL SELECT 'm1400018-0000-4000-8000-000000000018', 'StorefrontHeaderIntroBlockEn', 'StorefrontHeaderIntroBlock', 'EN', 'Hello!', 'Reach out for selected projects, brand stories and new collaborations.'
+  UNION ALL SELECT 'm1400017-0000-4000-8000-000000000017', 'StorefrontHeaderIntroBlockTr', 'StorefrontHeaderIntroBlock', 'TR', 'Ahmet Mülayim', 'Logo, kimlik ve kampanya işleri.'
+  UNION ALL SELECT 'm1400018-0000-4000-8000-000000000018', 'StorefrontHeaderIntroBlockEn', 'StorefrontHeaderIntroBlock', 'EN', 'Ahmet Mülayim', 'Logo, identity and campaign work.'
   UNION ALL SELECT 'm1400003-0000-4000-8000-000000000003', 'StorefrontHeaderSocialLinksTr', 'StorefrontHeaderSocialLinks', 'TR', 'Sosyal', NULL
   UNION ALL SELECT 'm1400004-0000-4000-8000-000000000004', 'StorefrontHeaderSocialLinksEn', 'StorefrontHeaderSocialLinks', 'EN', 'Social', NULL
   UNION ALL SELECT 'm1400005-0000-4000-8000-000000000005', 'StorefrontHeaderContactInfoTr', 'StorefrontHeaderContactInfo', 'TR', 'Iletisim', NULL
   UNION ALL SELECT 'm1400006-0000-4000-8000-000000000006', 'StorefrontHeaderContactInfoEn', 'StorefrontHeaderContactInfo', 'EN', 'Contact', NULL
-  UNION ALL SELECT 'm1400007-0000-4000-8000-000000000007', 'StorefrontFooterBrandBlockTr', 'StorefrontFooterBrandBlock', 'TR', 'Ahmet Mulayim', 'Secili calismalari ve gorsel anlatilari bir araya getiren portfolio deneyimi.'
-  UNION ALL SELECT 'm1400008-0000-4000-8000-000000000008', 'StorefrontFooterBrandBlockEn', 'StorefrontFooterBrandBlock', 'EN', 'Ahmet Mulayim', 'A portfolio experience bringing selected work and visual storytelling together.'
+  UNION ALL SELECT 'm1400007-0000-4000-8000-000000000007', 'StorefrontFooterBrandBlockTr', 'StorefrontFooterBrandBlock', 'TR', 'Ahmet Mülayim', 'Markalar için logo, kurumsal kimlik ve kampanya tasarımları.'
+  UNION ALL SELECT 'm1400008-0000-4000-8000-000000000008', 'StorefrontFooterBrandBlockEn', 'StorefrontFooterBrandBlock', 'EN', 'Ahmet Mülayim', 'Logo, identity and campaign design for brands.'
   UNION ALL SELECT 'm1400009-0000-4000-8000-000000000009', 'StorefrontFooterSitemapNavigationTr', 'StorefrontFooterSitemapNavigation', 'TR', 'Site Haritasi', NULL
   UNION ALL SELECT 'm1400010-0000-4000-8000-000000000010', 'StorefrontFooterSitemapNavigationEn', 'StorefrontFooterSitemapNavigation', 'EN', 'Sitemap', NULL
   UNION ALL SELECT 'm1400011-0000-4000-8000-000000000011', 'StorefrontFooterOfficeLinksTr', 'StorefrontFooterOfficeLinks', 'TR', 'Baglantilar', NULL
   UNION ALL SELECT 'm1400012-0000-4000-8000-000000000012', 'StorefrontFooterOfficeLinksEn', 'StorefrontFooterOfficeLinks', 'EN', 'Links', NULL
-  UNION ALL SELECT 'm1400013-0000-4000-8000-000000000013', 'StorefrontFooterNewsletterTr', 'StorefrontFooterNewsletter', 'TR', 'Bulten', NULL
+  UNION ALL SELECT 'm1400013-0000-4000-8000-000000000013', 'StorefrontFooterNewsletterTr', 'StorefrontFooterNewsletter', 'TR', 'Yeni işler', NULL
   UNION ALL SELECT 'm1400014-0000-4000-8000-000000000014', 'StorefrontFooterNewsletterEn', 'StorefrontFooterNewsletter', 'EN', 'Newsletter', NULL
   UNION ALL SELECT 'm1400015-0000-4000-8000-000000000015', 'StorefrontFooterSocialLinksTr', 'StorefrontFooterSocialLinks', 'TR', 'Sosyal', NULL
   UNION ALL SELECT 'm1400016-0000-4000-8000-000000000016', 'StorefrontFooterSocialLinksEn', 'StorefrontFooterSocialLinks', 'EN', 'Social', NULL
+  UNION ALL SELECT 'm1400019-0000-4000-8000-000000000019', 'PortfolioPageBrandStripTr', 'PortfolioPageBrandStrip', 'TR', 'Çalışılan markalar', NULL
+  UNION ALL SELECT 'm1400020-0000-4000-8000-000000000020', 'PortfolioPageBrandStripEn', 'PortfolioPageBrandStrip', 'EN', 'Brands worked with', NULL
 ) data ON data.component_uid = c.uid
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
@@ -155,6 +163,21 @@ ON DUPLICATE KEY UPDATE
   description = VALUES(description),
   status = VALUES(status),
   updated_at = NOW();
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BrandLogosStripComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'altText', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BrandLogosStripComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'linkUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BrandLogosStripComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 
 INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, style_classes, status, created_at, updated_at)
 SELECT data.uuid, data.uid, c.id, data.sort_order, data.is_visible, NULL, 'PUBLISHED', NOW(), NOW()
@@ -191,8 +214,8 @@ JOIN (
   UNION ALL SELECT 'm1600019-0000-4000-8000-000000000019', 'StorefrontHeaderContactInfoEntry2En', 'StorefrontHeaderContactInfoEntry2', 'EN', 'www.ahmetmulayim.com', JSON_OBJECT('linkUrl', 'https://www.ahmetmulayim.com', 'target', '_blank')
   UNION ALL SELECT 'm1600001-0000-4000-8000-000000000001', 'StorefrontFooterOfficeLinksEntry1Tr', 'StorefrontFooterOfficeLinksEntry1', 'TR', 'www.ahmetmulayim.com', JSON_OBJECT('linkUrl', 'https://www.ahmetmulayim.com', 'target', '_blank')
   UNION ALL SELECT 'm1600002-0000-4000-8000-000000000002', 'StorefrontFooterOfficeLinksEntry1En', 'StorefrontFooterOfficeLinksEntry1', 'EN', 'www.ahmetmulayim.com', JSON_OBJECT('linkUrl', 'https://www.ahmetmulayim.com', 'target', '_blank')
-  UNION ALL SELECT 'm1600003-0000-4000-8000-000000000003', 'StorefrontFooterNewsletterEntry1Tr', 'StorefrontFooterNewsletterEntry1', 'TR', NULL, JSON_OBJECT('inputPlaceholder', 'E-posta adresiniz', 'buttonLabel', 'Abone Ol')
-  UNION ALL SELECT 'm1600004-0000-4000-8000-000000000004', 'StorefrontFooterNewsletterEntry1En', 'StorefrontFooterNewsletterEntry1', 'EN', NULL, JSON_OBJECT('inputPlaceholder', 'Enter your email', 'buttonLabel', 'Subscribe')
+  UNION ALL SELECT 'm1600003-0000-4000-8000-000000000003', 'StorefrontFooterNewsletterEntry1Tr', 'StorefrontFooterNewsletterEntry1', 'TR', NULL, JSON_OBJECT('inputPlaceholder', 'E-posta adresiniz', 'buttonLabel', 'Haberdar Ol')
+  UNION ALL SELECT 'm1600004-0000-4000-8000-000000000004', 'StorefrontFooterNewsletterEntry1En', 'StorefrontFooterNewsletterEntry1', 'EN', NULL, JSON_OBJECT('inputPlaceholder', 'Enter your email', 'buttonLabel', 'Get Updates')
 ) data ON data.entry_uid = e.uid
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
@@ -236,10 +259,12 @@ FROM navigation_nodes n
 JOIN (
   SELECT 'm1900001-0000-4000-8000-000000000001' AS uuid, 'LandingMainNavHomeEntry' AS uid, 'LandingMainNavNode' AS node_uid, '/' AS url, 0 AS sort_order
   UNION ALL SELECT 'm1900005-0000-4000-8000-000000000005', 'LandingMainNavAboutEntry', 'LandingMainNavNode', '/about', 1
-  UNION ALL SELECT 'm1900002-0000-4000-8000-000000000002', 'LandingMainNavSearchEntry', 'LandingMainNavNode', '/search', 2
+  UNION ALL SELECT 'm1900007-0000-4000-8000-000000000007', 'LandingMainNavPortfolioEntry', 'LandingMainNavNode', '/portfolio', 2
+  UNION ALL SELECT 'm1900009-0000-4000-8000-000000000009', 'LandingMainNavContactEntry', 'LandingMainNavNode', '/contact', 3
   UNION ALL SELECT 'm1900003-0000-4000-8000-000000000003', 'LandingFooterHomeEntry', 'LandingFooterNavNode', '/', 0
   UNION ALL SELECT 'm1900006-0000-4000-8000-000000000006', 'LandingFooterAboutEntry', 'LandingFooterNavNode', '/about', 1
-  UNION ALL SELECT 'm1900004-0000-4000-8000-000000000004', 'LandingFooterSearchEntry', 'LandingFooterNavNode', '/search', 2
+  UNION ALL SELECT 'm1900008-0000-4000-8000-000000000008', 'LandingFooterPortfolioEntry', 'LandingFooterNavNode', '/portfolio', 2
+  UNION ALL SELECT 'm1900010-0000-4000-8000-000000000010', 'LandingFooterContactEntry', 'LandingFooterNavNode', '/contact', 3
 ) data ON data.node_uid = n.uid
 ON DUPLICATE KEY UPDATE
   node_id = VALUES(node_id),
@@ -260,18 +285,27 @@ JOIN (
   UNION ALL SELECT 'm1950002-0000-4000-8000-000000000002', 'm1951002-0000-4000-8000-000000000002', 'LandingMainNavHomeEntry', 'EN', 'Home'
   UNION ALL SELECT 'm1950009-0000-4000-8000-000000000009', 'm1951009-0000-4000-8000-000000000009', 'LandingMainNavAboutEntry', 'TR', 'Hakkımda'
   UNION ALL SELECT 'm1950010-0000-4000-8000-000000000010', 'm1951010-0000-4000-8000-000000000010', 'LandingMainNavAboutEntry', 'EN', 'About'
-  UNION ALL SELECT 'm1950003-0000-4000-8000-000000000003', 'm1951003-0000-4000-8000-000000000003', 'LandingMainNavSearchEntry', 'TR', 'Arama'
-  UNION ALL SELECT 'm1950004-0000-4000-8000-000000000004', 'm1951004-0000-4000-8000-000000000004', 'LandingMainNavSearchEntry', 'EN', 'Search'
+  UNION ALL SELECT 'm1950013-0000-4000-8000-000000000013', 'm1951013-0000-4000-8000-000000000013', 'LandingMainNavPortfolioEntry', 'TR', 'Projeler'
+  UNION ALL SELECT 'm1950014-0000-4000-8000-000000000014', 'm1951014-0000-4000-8000-000000000014', 'LandingMainNavPortfolioEntry', 'EN', 'Portfolio'
+  UNION ALL SELECT 'm1950017-0000-4000-8000-000000000017', 'm1951017-0000-4000-8000-000000000017', 'LandingMainNavContactEntry', 'TR', 'İletişim'
+  UNION ALL SELECT 'm1950018-0000-4000-8000-000000000018', 'm1951018-0000-4000-8000-000000000018', 'LandingMainNavContactEntry', 'EN', 'Contact'
   UNION ALL SELECT 'm1950005-0000-4000-8000-000000000005', 'm1951005-0000-4000-8000-000000000005', 'LandingFooterHomeEntry', 'TR', 'Anasayfa'
   UNION ALL SELECT 'm1950006-0000-4000-8000-000000000006', 'm1951006-0000-4000-8000-000000000006', 'LandingFooterHomeEntry', 'EN', 'Home'
   UNION ALL SELECT 'm1950011-0000-4000-8000-000000000011', 'm1951011-0000-4000-8000-000000000011', 'LandingFooterAboutEntry', 'TR', 'Hakkımda'
   UNION ALL SELECT 'm1950012-0000-4000-8000-000000000012', 'm1951012-0000-4000-8000-000000000012', 'LandingFooterAboutEntry', 'EN', 'About'
-  UNION ALL SELECT 'm1950007-0000-4000-8000-000000000007', 'm1951007-0000-4000-8000-000000000007', 'LandingFooterSearchEntry', 'TR', 'Arama'
-  UNION ALL SELECT 'm1950008-0000-4000-8000-000000000008', 'm1951008-0000-4000-8000-000000000008', 'LandingFooterSearchEntry', 'EN', 'Search'
+  UNION ALL SELECT 'm1950015-0000-4000-8000-000000000015', 'm1951015-0000-4000-8000-000000000015', 'LandingFooterPortfolioEntry', 'TR', 'Projeler'
+  UNION ALL SELECT 'm1950016-0000-4000-8000-000000000016', 'm1951016-0000-4000-8000-000000000016', 'LandingFooterPortfolioEntry', 'EN', 'Portfolio'
+  UNION ALL SELECT 'm1950019-0000-4000-8000-000000000019', 'm1951019-0000-4000-8000-000000000019', 'LandingFooterContactEntry', 'TR', 'İletişim'
+  UNION ALL SELECT 'm1950020-0000-4000-8000-000000000020', 'm1951020-0000-4000-8000-000000000020', 'LandingFooterContactEntry', 'EN', 'Contact'
 ) data ON data.entry_uid = e.uid
 ON DUPLICATE KEY UPDATE
   link_name = VALUES(link_name),
   updated_at = NOW();
+
+UPDATE navigation_entries
+SET is_visible = FALSE,
+    updated_at = NOW()
+WHERE uid IN ('LandingMainNavSearchEntry', 'LandingFooterSearchEntry');
 
 UPDATE components c
 JOIN navigation_nodes n ON n.uid = 'LandingMainNavNode'
@@ -305,7 +339,7 @@ ON DUPLICATE KEY UPDATE
   robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'm2100001-0000-4000-8000-000000000001', 'search-page-tr', p.id, 'TR', 'Arama', 'Arama', '/search', 'PUBLISHED'
+SELECT 'm2100001-0000-4000-8000-000000000001', 'search-page-tr', p.id, 'TR', 'Arama', 'Site Arama | Ahmet Mülayim', '/search', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'search-page'
 ON DUPLICATE KEY UPDATE
@@ -315,7 +349,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'm2100002-0000-4000-8000-000000000002', 'search-page-en', p.id, 'EN', 'Search', 'Search', '/search', 'PUBLISHED'
+SELECT 'm2100002-0000-4000-8000-000000000002', 'search-page-en', p.id, 'EN', 'Search', 'Site Search | Ahmet Mülayim', '/search', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'search-page'
 ON DUPLICATE KEY UPDATE

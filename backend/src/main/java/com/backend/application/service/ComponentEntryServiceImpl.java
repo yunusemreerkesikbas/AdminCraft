@@ -178,6 +178,8 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                     .orElseThrow(() -> new IllegalArgumentException(
                             "ResponsiveMediaSet not found: " + request.responsiveMediaId()));
             entry.setResponsiveMedia(mediaSet);
+        } else {
+            entry.setResponsiveMedia(null);
         }
 
         ComponentEntry savedEntry = entryRepository.save(entry);
@@ -200,12 +202,14 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                         i18n.setTitle(e.getValue().title());
                     i18n.setDescription(e.getValue().description());
 
-                    if (e.getValue().dynamicFields() != null) {
+                    if (e.getValue().dynamicFields() != null && !e.getValue().dynamicFields().isEmpty()) {
                         try {
                             i18n.setCustomData(objectMapper.writeValueAsString(e.getValue().dynamicFields()));
                         } catch (Exception ex) {
                             throw new RuntimeException("Failed to serialize custom fields", ex);
                         }
+                    } else {
+                        i18n.setCustomData(null);
                     }
 
                     return entryI18nRepository.save(i18n);

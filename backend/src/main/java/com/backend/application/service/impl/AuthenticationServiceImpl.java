@@ -757,19 +757,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String ipAddress, String userAgent, Language language) {
         log.info("Password reset requested");
 
+        boolean hasTenantIdentifier = tenantId != null || (subdomain != null && !subdomain.isBlank());
         Tenant tenant = resolveTenant(tenantId, subdomain);
+        if (tenant == null && !hasTenantIdentifier) {
+            tenant = resolveTenantFromContext();
+        }
         if (tenant == null) {
             log.warn("Tenant not found for password reset request");
             return;
         }
 
+        Tenant resolvedTenant = tenant;
         try {
-            tenantContext.setTenantId(String.valueOf(tenant.getId()));
-            tenantContext.setTenantDbName(tenant.getDatabaseName());
+            tenantContext.setTenantId(String.valueOf(resolvedTenant.getId()));
+            tenantContext.setTenantDbName(resolvedTenant.getDatabaseName());
+            tenantContext.setSubdomain(resolvedTenant.getSubdomain());
 
-            // Populate MDC for logging context
-            MDC.put("tenantId", String.valueOf(tenant.getId()));
-            MDC.put("tenantDb", tenant.getDatabaseName());
+            MDC.put("tenantId", String.valueOf(resolvedTenant.getId()));
+            MDC.put("tenantDb", resolvedTenant.getDatabaseName());
             MDC.put("correlationId", UUID.randomUUID().toString());
 
             TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
@@ -781,7 +786,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 }
 
                 var tokenResult = otpService.createPasswordResetToken(user, ipAddress, userAgent);
-                emailService.sendPasswordResetEmail(email, tokenResult.plainToken(), tenant.getSubdomain(), language);
+                emailService.sendPasswordResetEmail(email, tokenResult.plainToken(), resolvedTenant.getSubdomain(), language);
 
                 log.info("Password reset email sent for userId: {}", user.getId());
             });
@@ -1010,9 +1015,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private Tenant resolveTenant(Long tenantId, String subdomain) {
         if (tenantId != null) {
-            return tenantRepository.findById(tenantId)
+            Tenant tenant = tenantRepository.findById(tenantId)
                     .filter(t -> t.getStatus() == TenantStatus.ACTIVE)
                     .orElse(null);
+            if (tenant == null || subdomain == null || subdomain.isBlank()) {
+                return tenant;
+            }
+            if (!tenant.getSubdomain().equalsIgnoreCase(subdomain.trim())) {
+                log.warn("Tenant ID and subdomain mismatch for auth request");
+                return null;
+            }
+            return tenant;
         }
         if (subdomain != null && !subdomain.isBlank()) {
             return tenantRepository.findBySubdomain(subdomain.trim().toLowerCase())
@@ -1020,6 +1033,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElse(null);
         }
         return null;
+    }
+
+    private Tenant resolveTenantFromContext() {
+        if (!tenantContext.isSet()) {
+            return null;
+        }
+
+        String tenantId = tenantContext.getTenantId();
+        if (tenantId == null || tenantId.isBlank()) {
+            return null;
+        }
+
+        try {
+            return tenantRepository.findById(Long.parseLong(tenantId))
+                    .filter(t -> t.getStatus() == TenantStatus.ACTIVE)
+                    .orElse(null);
+        } catch (NumberFormatException ex) {
+            log.warn("Invalid tenantId format in tenant context: '{}'", tenantId);
+            return null;
+        }
     }
 
     private String maskEmail(String email) {

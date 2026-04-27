@@ -89,7 +89,7 @@ If the workspace field is non-empty, the form operates in **tenant mode** (forgo
 
 `superAdminSelectedTenantId` and `craftive-user-language-preference` remain in `localStorage` as well (super admin tenant selection and language preference are safe to share across tabs).
 
-> **Config panel** (`/config`) uses a separate `config_console_auth` key in `localStorage` with its own access/refresh token pair and token-refresh logic — independent of the main auth session.
+> **Config panel** (`/config`) uses a separate `config_console_auth` key in `localStorage` with its own access/refresh token pair and token-refresh logic — independent of the main auth session. Config panel OTP is controlled separately by `app.config-auth.otp-enabled` / `CONFIG_AUTH_OTP_ENABLED` and is disabled by default.
 
 ## API Endpoints
 
@@ -359,7 +359,7 @@ app:
 - OTP codes are stored as SHA-256 hashes (never plaintext)
 - Bypass code is automatically disabled outside `dev` and `stage` profiles via `@PostConstruct` validation
 - Rate limiting: Max 3 OTP requests per email per 5-minute window (returns HTTP 429)
-- The same shared bypass code applies to both standard auth 2FA and `/config` OTP verification because both flows read `OtpConfig`
+- The same shared bypass code applies to both standard auth 2FA and `/config` OTP verification because both flows read `OtpConfig`; `/config` only uses OTP when `app.config-auth.otp-enabled=true`
 
 ---
 
@@ -414,15 +414,20 @@ Secure password reset flow using email tokens.
 ### Flow
 
 ```
-1. POST /api/auth/forgot-password { "email": "user@example.com" }
+1. POST /api/auth/forgot-password
+   Headers: X-Tenant-Subdomain: acme (or X-Tenant-ID / tenant hostname)
+   Body: { "email": "user@example.com" }
    └── Generate token, send email
    └── Response: { "result": "SUCCESS", "message": "Reset link sent" }
+   └── Invalid/missing tenant identifiers return the same generic response without sending mail
 
 2. User clicks email link → Frontend reset-password page
+   └── Tenant context required: X-Tenant-Subdomain: acme (or tenant hostname / subdomain query)
    └── GET /api/auth/verify-reset-token?token=abc123
    └── Response: { "valid": true, "email": "u***@example.com" }
 
 3. POST /api/auth/reset-password
+   Headers: X-Tenant-Subdomain: acme (or X-Tenant-ID / tenant hostname)
    {
      "token": "abc123",
      "password": "NewPass123!",
@@ -541,7 +546,7 @@ CREATE TABLE verification_tokens (
 | Provider | Usage | Configuration |
 |----------|-------|---------------|
 | `smtp` | Production | JavaMailSender with SMTP credentials |
-| `console` | Development | Logs email content to console |
+| `console` | Development | Logs dispatch status only; does not log reset links or tokens |
 
 ### Email Templates
 
@@ -579,7 +584,7 @@ app:
 app:
   email:
     provider: console
-    log-content: true
+    log-content: false
 ```
 
 ---
@@ -695,6 +700,7 @@ setPassword():
 ```typescript
 sendResetLink():
   - Validate email format
+  - Resolve tenant subdomain from `?subdomain`, saved tenant context, or tenant hostname
   - Call authService.forgotPassword(email, subdomain, recaptchaToken)
   - Show backend `response.message` (or fallback i18n)
   - Reset form

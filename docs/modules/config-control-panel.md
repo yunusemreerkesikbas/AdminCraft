@@ -6,7 +6,7 @@ Config Control Panel provides a storefront-independent recovery and runtime conf
 
 Current scope:
 
-- password + OTP authentication for config operations
+- password authentication for config operations, with optional email OTP controlled by backend flag
 - tenant reCAPTCHA management (recovery from storefront lockout)
 - tenant GA4 property management for dashboard analytics snapshot
 - tenant Search Console property management for overview SEO snapshot
@@ -196,12 +196,13 @@ Role-based behavior:
 
 Session behavior:
 
-- every fresh `/config` login still requires password + email OTP
-- in `dev` and `stage`, the shared OTP bypass code `123456` is accepted for config OTP verification
+- by default, fresh `/config` login requires password only and returns config tokens immediately
+- email OTP can be re-enabled with backend flag `app.config-auth.otp-enabled=true` (`CONFIG_AUTH_OTP_ENABLED=true`)
+- when config OTP is enabled in `dev` and `stage`, the shared OTP bypass code `123456` is accepted for config OTP verification
 - tenant config logins can resolve tenant context from the `subdomain` query param (`/config?subdomain={tenantSubdomain}`)
-- `CONFIG_TENANT_ADMIN` receives access + refresh tokens after OTP verification
+- `CONFIG_TENANT_ADMIN` receives access + refresh tokens after password login, or after OTP verification when OTP is enabled
 - tenant config sessions can silently refresh in the same browser when the access token expires
-- `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, login + OTP is required again
+- `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, a fresh login is required again
 
 Frontend session management:
 
@@ -229,15 +230,15 @@ Invariants:
 
 ### Super admin: switch auth/recovery email runtime behavior
 
-1. Open `/config` and complete login + OTP with super admin account.
+1. Open `/config` and complete login with super admin account. If `app.config-auth.otp-enabled=true`, complete OTP as well.
 2. Call `GET /api/config/admin/global/properties`.
 3. Update allowed keys via `PUT /api/config/admin/global/properties/{key}` with `reason`.
 4. Runtime behavior applies without redeploy/restart.
-5. If the config access token expires, repeat login + OTP.
+5. If the config access token expires, repeat login. If `app.config-auth.otp-enabled=true`, repeat OTP as well.
 
 ### Tenant admin: rotate reCAPTCHA keys safely
 
-1. Open `/config?subdomain={tenantSubdomain}` and complete login + OTP.
+1. Open `/config?subdomain={tenantSubdomain}` and complete login. If `app.config-auth.otp-enabled=true`, complete OTP as well.
 2. Call `GET /api/config/admin/properties` to load the managed tenant reCAPTCHA keys even if no explicit override exists yet.
 3. Update `security.recaptcha.enabled`, `security.recaptcha.site_key`, and `security.recaptcha.secret_key` as needed.
 4. Tenant reCAPTCHA runtime now reads only from `config_properties`; `sites` table values are not used by Config Panel or storefront public config.

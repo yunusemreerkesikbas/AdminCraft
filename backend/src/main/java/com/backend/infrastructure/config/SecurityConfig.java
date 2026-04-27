@@ -53,8 +53,10 @@ public class SecurityConfig {
                                                 .requestMatchers("/platform/public/newsletter/**").permitAll() // Platform public newsletter
                                                 .requestMatchers("/platform/public/demo-requests").permitAll() // Landing demo requests
                                                 .requestMatchers("/health/**").permitAll() // Health check endpoints
-                                                .requestMatchers("/actuator/**").permitAll() // Actuator endpoints for
-                                                                                             // monitoring
+                                                .requestMatchers("/actuator/health").permitAll() // Liveness probe (no details)
+                                                .requestMatchers("/actuator/**").hasRole("SUPER_ADMIN") // SEC-005: gate all
+                                                                                                        // other actuator
+                                                                                                        // endpoints
                                                 .requestMatchers("/public/**").permitAll() // Public API endpoints
                                                 .requestMatchers("/cms/**").permitAll() // CMS Delivery API (public)
                                                 .requestMatchers("/media/files/**").permitAll() // Media file downloads

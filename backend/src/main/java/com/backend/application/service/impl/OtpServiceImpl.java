@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.service.OtpService;
+import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.entity.User;
 import com.backend.domain.entity.VerificationToken;
 import com.backend.domain.enums.TokenStatus;
@@ -36,6 +37,7 @@ public class OtpServiceImpl implements OtpService {
     private final PasswordResetProperties passwordResetProperties;
     private final EmailVerificationProperties emailVerificationProperties;
     private final TenantContextPort tenantContext;
+    private final GlobalRuntimeConfigService globalRuntimeConfigService;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -162,8 +164,15 @@ public class OtpServiceImpl implements OtpService {
     @Override
     @Transactional("tenantTransactionManager")
     public boolean validateOtp(String tokenHash, String otpCode) {
+        if (Boolean.TRUE.equals(globalRuntimeConfigService.isOtpBypassEnabled())) {
+            String configBypassCode = globalRuntimeConfigService.getOtpBypassCodeDecrypted();
+            if (configBypassCode != null && otpCode.equals(configBypassCode)) {
+                log.warn("OTP bypass via config panel used — audit this access");
+                return true;
+            }
+        }
         if (otpProperties.getBypassCode() != null && otpCode.equals(otpProperties.getBypassCode())) {
-            log.info("OTP bypass code used");
+            log.info("OTP bypass code (env var) used");
             return true;
         }
 

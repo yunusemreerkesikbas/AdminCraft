@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.backend.application.config.ConfigAuthProperties;
 import com.backend.application.dto.config.ConfigAuthChallengeResult;
 import com.backend.application.dto.config.ConfigAuthResult;
+import com.backend.application.dto.config.ConfigLoginResult;
 import com.backend.application.dto.config.ConfigPrincipal;
 import com.backend.application.service.EmailService;
 import com.backend.application.service.OtpService;
@@ -59,12 +61,13 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
     private final PasswordEncoder passwordEncoder;
     private final JwtProviderPort jwtProviderPort;
     private final OtpConfig otpConfig;
+    private final ConfigAuthProperties configAuthProperties;
 
     @Qualifier("tenantTransactionManager")
     private final PlatformTransactionManager tenantTransactionManager;
 
     @Override
-    public ConfigAuthChallengeResult login(String email, String password, Long tenantId, String subdomain,
+    public ConfigLoginResult login(String email, String password, Long tenantId, String subdomain,
             String ipAddress, String userAgent) {
         if (isPlatformRequest(tenantId, subdomain)) {
             return loginPlatformAdmin(email, password, ipAddress, userAgent);
@@ -155,7 +158,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         }
     }
 
-    private ConfigAuthChallengeResult loginTenantAdmin(String email, String password, Long tenantId, String subdomain,
+    private ConfigLoginResult loginTenantAdmin(String email, String password, Long tenantId, String subdomain,
             String ipAddress, String userAgent) {
         Tenant tenant = resolveTenant(tenantId, subdomain);
 
@@ -191,23 +194,29 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                     throw new InvalidCredentialsException();
                 }
 
-                OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
-                Language language = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
-                emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), language);
+                if (configAuthProperties.otpEnabled()) {
+                    OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
+                    Language language = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
+                    emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), language);
 
-                return new ConfigAuthChallengeResult(
-                        otpResult.sessionToken(),
-                        user.getEmail(),
-                        tenant.getId(),
-                        tenant.getSubdomain(),
-                        ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN);
+                    return ConfigLoginResult.challenge(new ConfigAuthChallengeResult(
+                            otpResult.sessionToken(),
+                            user.getEmail(),
+                            tenant.getId(),
+                            tenant.getSubdomain(),
+                            ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN));
+                }
+
+                user.recordSuccessfulLogin(ipAddress);
+                userRepository.save(user);
+                return ConfigLoginResult.session(createTenantAuthResult(user, tenant));
             });
         } finally {
             clearTenantContext();
         }
     }
 
-    private ConfigAuthChallengeResult loginPlatformAdmin(String email, String password, String ipAddress,
+    private ConfigLoginResult loginPlatformAdmin(String email, String password, String ipAddress,
             String userAgent) {
         PlatformAdminUser admin = platformAdminUserRepository
                 .findByEmailAndIsActiveTrue(email)
@@ -226,15 +235,21 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
             throw new InvalidCredentialsException();
         }
 
-        PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
-        emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), resolvePlatformLanguage());
+        if (configAuthProperties.otpEnabled()) {
+            PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
+            emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), resolvePlatformLanguage());
 
-        return new ConfigAuthChallengeResult(
-                otpResult.sessionToken(),
-                admin.getEmail(),
-                null,
-                "admin",
-                ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN);
+            return ConfigLoginResult.challenge(new ConfigAuthChallengeResult(
+                    otpResult.sessionToken(),
+                    admin.getEmail(),
+                    null,
+                    "admin",
+                    ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN));
+        }
+
+        admin.recordSuccessfulLogin(ipAddress);
+        platformAdminUserRepository.save(admin);
+        return ConfigLoginResult.session(createPlatformAuthResult(admin));
     }
 
     private ConfigAuthResult verifyTenantOtp(String pendingToken, String otpCode, Long tenantId, String subdomain,
@@ -322,6 +337,55 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         admin.recordSuccessfulLogin(ipAddress);
         platformAdminUserRepository.save(admin);
 
+        long issuedAt = System.currentTimeMillis();
+        String accessToken = jwtProviderPort.createAccessToken(
+                admin.getEmail(),
+                ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN,
+                admin.getId(),
+                null);
+
+        return new ConfigAuthResult(
+                accessToken,
+                null,
+                "Bearer",
+                jwtProviderPort.getAccessTokenExpiration() / 1000,
+                issuedAt,
+                admin.getId(),
+                admin.getEmail(),
+                admin.getFullName(),
+                ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN,
+                null,
+                "admin");
+    }
+
+    private ConfigAuthResult createTenantAuthResult(User user, Tenant tenant) {
+        long issuedAt = System.currentTimeMillis();
+        String accessToken = jwtProviderPort.createAccessToken(
+                user.getEmail(),
+                ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                user.getId(),
+                tenant.getId());
+        String refreshToken = jwtProviderPort.createRefreshToken(
+                user.getEmail(),
+                ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                user.getId(),
+                tenant.getId());
+
+        return new ConfigAuthResult(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtProviderPort.getAccessTokenExpiration() / 1000,
+                issuedAt,
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                tenant.getId(),
+                tenant.getSubdomain());
+    }
+
+    private ConfigAuthResult createPlatformAuthResult(PlatformAdminUser admin) {
         long issuedAt = System.currentTimeMillis();
         String accessToken = jwtProviderPort.createAccessToken(
                 admin.getEmail(),

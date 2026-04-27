@@ -1,6 +1,10 @@
 package com.backend.application.service.impl.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -91,6 +95,131 @@ class ConfigGlobalPropertiesAdminServiceImplTest {
                 .thenReturn(Optional.of(property));
 
         assertThat(service.getSeoInsightsEnabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("listProperties should include OTP bypass keys with defaults")
+    void listProperties_ShouldIncludeOtpBypassKeysWithDefaults() {
+        List<ConfigPropertyResult> result = service.listProperties(superAdminPrincipal());
+
+        assertThat(result).extracting(ConfigPropertyResult::key)
+                .contains("platform.security.otp.bypass.enabled", "platform.security.otp.bypass.code");
+
+        ConfigPropertyResult enabled = result.stream()
+                .filter(item -> "platform.security.otp.bypass.enabled".equals(item.key()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(enabled.value()).isEqualTo("false");
+        assertThat(enabled.secret()).isFalse();
+
+        ConfigPropertyResult code = result.stream()
+                .filter(item -> "platform.security.otp.bypass.code".equals(item.key()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(code.value()).isNull();
+        assertThat(code.secret()).isTrue();
+    }
+
+    @Test
+    @DisplayName("isOtpBypassEnabled should return true when override is true")
+    void isOtpBypassEnabled_ShouldReturnTrueWhenOverrideTrue() {
+        PlatformConfigProperty property = new PlatformConfigProperty();
+        property.setConfigKey("platform.security.otp.bypass.enabled");
+        property.setConfigValue("true");
+
+        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.enabled"))
+                .thenReturn(Optional.of(property));
+
+        assertThat(service.isOtpBypassEnabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("isOtpBypassEnabled should return false when no override exists")
+    void isOtpBypassEnabled_ShouldReturnFalseWhenNoOverride() {
+        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.enabled"))
+                .thenReturn(Optional.empty());
+
+        assertThat(service.isOtpBypassEnabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("getOtpBypassCodeDecrypted should decrypt stored value")
+    void getOtpBypassCodeDecrypted_ShouldDecryptStoredValue() {
+        PlatformConfigProperty property = new PlatformConfigProperty();
+        property.setConfigKey("platform.security.otp.bypass.code");
+        property.setConfigValue("ENC:xyz");
+
+        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.code"))
+                .thenReturn(Optional.of(property));
+        when(encryptionService.decrypt("ENC:xyz")).thenReturn("plain-bypass-code");
+
+        assertThat(service.getOtpBypassCodeDecrypted()).isEqualTo("plain-bypass-code");
+    }
+
+    @Test
+    @DisplayName("getOtpBypassCodeDecrypted should return null when no override exists")
+    void getOtpBypassCodeDecrypted_ShouldReturnNullWhenNoOverride() {
+        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.code"))
+                .thenReturn(Optional.empty());
+
+        assertThat(service.getOtpBypassCodeDecrypted()).isNull();
+    }
+
+    @Test
+    @DisplayName("upsertProperty should encrypt OTP bypass code value")
+    void upsertProperty_ShouldEncryptOtpBypassCode() {
+        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.code"))
+                .thenReturn(Optional.empty());
+        when(encryptionService.encrypt("super-secret-code"))
+                .thenReturn("ENC:super-secret-code");
+        when(propertyRepository.save(any(PlatformConfigProperty.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        service.upsertProperty(superAdminPrincipal(),
+                "platform.security.otp.bypass.code",
+                "super-secret-code",
+                true,
+                "rotation");
+
+        verify(encryptionService).encrypt("super-secret-code");
+    }
+
+    @Test
+    @DisplayName("upsertProperty should reject OTP bypass code shorter than 6 characters")
+    void upsertProperty_ShouldRejectShortOtpBypassCode() {
+        assertThatThrownBy(() -> service.upsertProperty(superAdminPrincipal(),
+                "platform.security.otp.bypass.code",
+                "abc",
+                true,
+                "test"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OTP bypass code");
+
+        verify(encryptionService, never()).encrypt(any());
+    }
+
+    @Test
+    @DisplayName("upsertProperty should reject invalid OTP bypass enabled value")
+    void upsertProperty_ShouldRejectInvalidOtpBypassEnabled() {
+        assertThatThrownBy(() -> service.upsertProperty(superAdminPrincipal(),
+                "platform.security.otp.bypass.enabled",
+                "yes",
+                false,
+                "test"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("OTP bypass enabled");
+    }
+
+    @Test
+    @DisplayName("upsertProperty should reject OTP bypass code without secret flag")
+    void upsertProperty_ShouldRejectOtpBypassCodeWithoutSecretFlag() {
+        assertThatThrownBy(() -> service.upsertProperty(superAdminPrincipal(),
+                "platform.security.otp.bypass.code",
+                "valid-code-123",
+                false,
+                "test"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Secret flag must be true");
     }
 
     private ConfigPrincipal superAdminPrincipal() {
