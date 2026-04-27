@@ -34,7 +34,7 @@ import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
-import { Subject, take, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'spa-sign-in',
@@ -85,7 +85,9 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
     readonly showOtpFormSig = computed(() => this.requires2FASig());
 
     ngOnInit(): void {
-        const routeSubdomain = this.#activatedRoute.snapshot.queryParamMap.get('subdomain');
+        const routeSubdomain = this.#tenantContext.normalizeSubdomain(
+            this.#activatedRoute.snapshot.queryParamMap.get('subdomain')
+        );
         if (routeSubdomain) {
             this.#tenantContext.setSubdomain(routeSubdomain);
             this.#router.navigate([], {
@@ -95,8 +97,10 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
                 replaceUrl: true,
             });
         }
-        const subdomain = routeSubdomain ?? this.#tenantContext.getCurrentSubdomain();
-        const tenantSubdomain = subdomain && subdomain !== 'admin' ? subdomain : '';
+        const subdomain =
+            routeSubdomain ?? this.#tenantContext.getCurrentSubdomain();
+        const tenantSubdomain =
+            subdomain && subdomain !== 'admin' ? subdomain : '';
         this.isPlatformHostSig.set(!tenantSubdomain);
 
         this.signInForm = this.#formBuilder.group({
@@ -123,12 +127,17 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             ],
             trustDevice: [false],
         });
-
     }
 
     async #getRecaptchaToken(): Promise<string | undefined> {
-        const enabled = this.#configFlags.flag('security.recaptcha.enabled', false);
-        const siteKey = this.#configFlags.flag('security.recaptcha.site_key', '');
+        const enabled = this.#configFlags.flag(
+            'security.recaptcha.enabled',
+            false
+        );
+        const siteKey = this.#configFlags.flag(
+            'security.recaptcha.site_key',
+            ''
+        );
         if (!enabled || !siteKey) return undefined;
 
         return await this.#recaptchaService.execute('login', siteKey);
@@ -142,7 +151,10 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
         }
         this.signInForm.disable();
 
-        const workspace = this.signInForm.get('workspace')?.value?.trim() ?? '';
+        const workspace =
+            this.#tenantContext.normalizeSubdomain(
+                this.signInForm.get('workspace')?.value
+            ) ?? '';
         if (workspace) {
             this.#tenantContext.setSubdomain(workspace);
         }
@@ -150,7 +162,9 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
         try {
             const credentials = {
                 ...this.signInForm.value,
-                deviceFingerprint: await this.#deviceFingerprintService.getDeviceFingerprint(),
+                workspace,
+                deviceFingerprint:
+                    await this.#deviceFingerprintService.getDeviceFingerprint(),
                 recaptchaToken: await this.#getRecaptchaToken(),
                 rememberMe: this.signInForm.get('rememberMe')?.value ?? false,
             };
@@ -203,8 +217,11 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             pendingToken: pending.pendingToken,
             otpCode: this.otpForm.get('otpCode')?.value,
             trustDevice,
-            deviceFingerprint: await this.#deviceFingerprintService.getDeviceFingerprint(),
-            deviceName: this.isPlatformHostSig() ? undefined : this.#deviceFingerprintService.getDeviceName(),
+            deviceFingerprint:
+                await this.#deviceFingerprintService.getDeviceFingerprint(),
+            deviceName: this.isPlatformHostSig()
+                ? undefined
+                : this.#deviceFingerprintService.getDeviceName(),
             tenantId: pending.tenantId,
             subdomain: pending.subdomain,
         };

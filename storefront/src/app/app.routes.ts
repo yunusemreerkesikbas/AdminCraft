@@ -248,6 +248,15 @@ export const appRoutes: Route[] = [
                     ).then((m) => m.SpaDemoRequestsListComponent),
             },
             {
+                path: 'contact-requests',
+                canActivate: [tenantUserGuard, moduleGuard],
+                data: { requiredModule: 'core' },
+                loadComponent: () =>
+                    import(
+                        'app/modules/admin/custom/contact-requests/contact-requests-list.component'
+                    ).then((m) => m.SpaContactRequestsListComponent),
+            },
+            {
                 path: 'platform-mail',
                 canActivate: [superAdminGuard],
                 children: [

@@ -154,21 +154,15 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         };
     }
 
-    #resolveResponsiveMediaId(): Observable<number | undefined> {
+    #resolveResponsiveMediaId(): Observable<number | null | undefined> {
         const mediaValue = this.generalForm.value.responsiveMedia;
         const currentSetId = this.data.entry?.responsiveMedia?.id;
 
-        const desktopMediaId =
-            typeof mediaValue?.desktopMedia === 'number'
-                ? mediaValue.desktopMedia
-                : mediaValue?.desktopMedia?.id;
-        const mobileMediaId =
-            typeof mediaValue?.mobileMedia === 'number'
-                ? mediaValue.mobileMedia
-                : mediaValue?.mobileMedia?.id;
+        const desktopMediaId = this.#extractMediaId(mediaValue?.desktopMedia);
+        const mobileMediaId = this.#extractMediaId(mediaValue?.mobileMedia);
 
         if (!desktopMediaId && !mobileMediaId) {
-            return of(undefined);
+            return of(this.data.mode === 'edit' ? null : undefined);
         }
 
         const request = {
@@ -185,6 +179,16 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
                 .createResponsiveMedia(request)
                 .pipe(map((set) => set.id));
         }
+    }
+
+    #extractMediaId(media: unknown): number | undefined {
+        if (media == null) return undefined;
+        if (typeof media === 'number' && !Number.isNaN(media)) return media;
+        if (typeof media === 'object' && 'id' in media) {
+            const id = (media as { id: unknown }).id;
+            return typeof id === 'number' && !Number.isNaN(id) ? id : undefined;
+        }
+        return undefined;
     }
 
     protected buildI18nForm(lang: string): FormGroup {
@@ -313,6 +317,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
     #buildCompositeTranslations(): Record<string, any> {
         const translations: Record<string, any> = {};
         const baseFields = ['title', 'description'];
+        const shouldClearLegacyMediaUid = !this.#hasSelectedMedia();
 
         this.languages.forEach((lang) => {
             const formData = this.i18nForms[lang].value;
@@ -321,6 +326,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             Object.keys(formData).forEach((key) => {
                 if (
                     !baseFields.includes(key) &&
+                    !(shouldClearLegacyMediaUid && key === 'mediaUid') &&
                     formData[key] !== null &&
                     formData[key] !== ''
                 ) {
@@ -339,5 +345,13 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         });
 
         return translations;
+    }
+
+    #hasSelectedMedia(): boolean {
+        const mediaValue = this.generalForm.value.responsiveMedia;
+        return (
+            !!this.#extractMediaId(mediaValue?.desktopMedia) ||
+            !!this.#extractMediaId(mediaValue?.mobileMedia)
+        );
     }
 }

@@ -76,9 +76,11 @@ export class TenantContextService {
     getCurrentSubdomain(): string | null {
         const current = this.#tenantSig();
         if (current?.subdomain) {
-            return current.subdomain;
+            return this.normalizeSubdomain(current.subdomain);
         }
-        return localStorage.getItem(this.#STORAGE_KEYS.subdomain);
+        return this.normalizeSubdomain(
+            localStorage.getItem(this.#STORAGE_KEYS.subdomain)
+        );
     }
 
     getCurrentTenantId(): number | null {
@@ -95,9 +97,10 @@ export class TenantContextService {
     }
 
     setSubdomain(subdomain: string): void {
-        if (subdomain) {
-            localStorage.setItem(this.#STORAGE_KEYS.subdomain, subdomain);
-            this.#subdomainSig.set(subdomain);
+        const normalized = this.normalizeSubdomain(subdomain);
+        if (normalized) {
+            localStorage.setItem(this.#STORAGE_KEYS.subdomain, normalized);
+            this.#subdomainSig.set(normalized);
         }
     }
 
@@ -219,7 +222,7 @@ export class TenantContextService {
 
     extractSubdomainFromHost(): string | null {
         const params = new URLSearchParams(window.location.search);
-        const querySubdomain = params.get('subdomain');
+        const querySubdomain = this.normalizeSubdomain(params.get('subdomain'));
         if (querySubdomain && this.isValidSubdomain(querySubdomain)) {
             return querySubdomain;
         }
@@ -229,11 +232,15 @@ export class TenantContextService {
             return 'admin';
         }
         const parts = hostname.split('.');
-        const subdomain = parts[0];
+        const subdomain = this.normalizeSubdomain(parts[0]);
 
         // Platform admin panel hosts:
         //   admin.localhost, app.craftive.io (prod), s1-app.craftive.io (stage)
-        if (subdomain === 'admin' || subdomain === 'app' || subdomain === 's1-app') {
+        if (
+            subdomain === 'admin' ||
+            subdomain === 'app' ||
+            subdomain === 's1-app'
+        ) {
             return 'admin';
         }
 
@@ -256,7 +263,12 @@ export class TenantContextService {
         return pattern.test(subdomain);
     }
 
-initializeFromHostname(): void {
+    normalizeSubdomain(subdomain: string | null | undefined): string | null {
+        const normalized = subdomain?.trim().toLowerCase();
+        return normalized || null;
+    }
+
+    initializeFromHostname(): void {
         const subdomain = this.extractSubdomainFromHost();
         if (subdomain) {
             this.setSubdomain(subdomain);
