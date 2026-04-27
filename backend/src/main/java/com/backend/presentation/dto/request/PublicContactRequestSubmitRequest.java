@@ -9,20 +9,20 @@ import jakarta.validation.constraints.Size;
 
 public record PublicContactRequestSubmitRequest(
     @NotBlank
-    @Size(max = 255)
+    @Size(max = ValidationConstants.CONTACT_FULL_NAME_MAX_LENGTH)
     String fullName,
 
     @NotBlank
-    @Size(max = 255)
+    @Size(max = ValidationConstants.CONTACT_SUBJECT_MAX_LENGTH)
     String subject,
 
     @NotBlank
-    @Size(max = 5000)
+    @Size(max = ValidationConstants.CONTACT_MESSAGE_MAX_LENGTH)
     String message,
 
     @NotBlank
-    @Size(min = 2, max = 10)
-    @Pattern(regexp = "^[a-zA-Z]{2,10}(-[a-zA-Z]{2,10})?$", message = "validation.locale.invalid")
+    @Size(min = ValidationConstants.CONTACT_LOCALE_MIN_LENGTH, max = ValidationConstants.CONTACT_LOCALE_MAX_LENGTH)
+    @Pattern(regexp = ValidationConstants.CONTACT_LOCALE_PATTERN, message = "validation.locale.invalid")
     String locale,
 
     @Size(max = ValidationConstants.RECAPTCHA_TOKEN_MAX_LENGTH)
@@ -30,14 +30,33 @@ public record PublicContactRequestSubmitRequest(
     String recaptchaToken
 ) {
 
+    public PublicContactRequestSubmitRequest {
+        fullName = trim(fullName);
+        subject = trim(subject);
+        message = trim(message);
+        locale = trim(locale);
+        recaptchaToken = normalizeRecaptcha(recaptchaToken);
+    }
+
     public ContactRequestSubmitCommand toCommand(String clientIp, String userAgent) {
         return new ContactRequestSubmitCommand(
                 fullName,
                 subject,
                 message,
                 locale,
-                recaptchaToken != null && recaptchaToken.isBlank() ? null : recaptchaToken,
+                recaptchaToken,
                 clientIp,
                 userAgent);
+    }
+
+    private static String trim(String value) {
+        return value == null ? null : value.trim();
+    }
+
+    private static String normalizeRecaptcha(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

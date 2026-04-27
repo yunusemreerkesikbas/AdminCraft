@@ -2,7 +2,7 @@
 
 ## Purpose
 
-ImpEx provides an on-demand SQL execution interface for `TENANT_ADMIN` users (tenant DB) and `SUPER_ADMIN` users (tenant DB when a tenant is selected, or **platform DB** when no tenant is selected). It allows bulk data seeding (pages, slots, components, i18n records, or platform data) via the Admin UI without manual DB access or provisioning hooks. Inspired by SAP Hybris HAC ImpEx, but SQL-native instead of CSV.
+ImpEx provides an on-demand SQL execution interface for `TENANT_ADMIN` and `SUPER_ADMIN` users against the **currently resolved tenant database only**. It allows bulk data seeding (pages, slots, components, i18n records, etc.) via the Admin UI without manual DB access or provisioning hooks. Inspired by SAP Hybris HAC ImpEx, but SQL-native instead of CSV. Platform-wide data changes belong in **Flyway** (`db/platform`) or controlled DBA processes, not ImpEx.
 
 Execution is **manual only** — there is no automatic trigger on provisioning or tenant creation.
 
@@ -79,11 +79,13 @@ Executes a SQL script submitted in the request body.
 Execution pipeline:
 
 1. Validate `-- #CRAFTIVE_IMPEX` marker — throws `ImpExInvalidScriptException` if missing.
-2. Split content on `;`, strip comment lines (`--`) and blank lines per statement.
-3. For each statement: check against allowed/blocked keyword whitelist.
-4. Execute via `JdbcTemplate.update()` — `JdbcTemplate` uses the active tenant `DataSource` already set by `TenantFilter`.
-5. Soft-fail: a failing statement is recorded in `results` but does not stop execution of the remaining statements.
-6. Derive `status` (`"SUCCESS"` / `"PARTIAL"`) from the failed count.
+2. Reject MySQL conditional comments (`/*! ... */`) that can smuggle DDL/DML past naive checks.
+3. Strip SQL comments (line and block) **before** splitting on semicolons, then split on unquoted `;`.
+4. For each statement: check blocked keywords, allowed statement prefixes, and **sensitive-table** rules (deny-list on resolved table name, including quoted/schema-qualified targets).
+5. Execute via `JdbcTemplate.update()` against the tenant `DataSource` from `TenantContext` (tenant must be resolved for all roles).
+6. Soft-fail: a failing statement is recorded in `results` but does not stop execution of the remaining statements.
+7. Derive `status` (`"SUCCESS"` / `"PARTIAL"`) from the failed count.
+8. In `finally`, write a row to platform `impex_audit` (truncated SQL, correlation id, client IP, counts, duration) — failures to persist audit are logged but do not roll back tenant DML already applied.
 
 ---
 
@@ -161,12 +163,14 @@ UI flow:
 ## Security & Tenant Isolation
 
 - **Auth:** `TENANT_ADMIN` or `SUPER_ADMIN` role required (`@PreAuthorize("hasAnyRole('TENANT_ADMIN','SUPER_ADMIN')")`).
-- **SUPER_ADMIN usage:** Platform admins access ImpEx from the **Platform → ImpEx** menu. If no tenant is selected, SQL runs against the **platform** database (e.g. for `seed_mail_marketing_platform.sql`). If a tenant is selected, SQL runs against that tenant's database.
-- **Tenant isolation:** `TenantFilter` sets the active tenant `DataSource` before the request reaches the controller. `JdbcTemplate` executes against that tenant's database — no cross-tenant leakage is possible.
+- **SUPER_ADMIN usage:** Platform admins use **Platform → ImpEx** with an explicit **tenant workspace** (same headers / hostname rules as other tenant APIs). SQL always runs on that tenant's database; there is no “no tenant selected → platform DB” path.
+- **Tenant isolation:** `TenantFilter` resolves the tenant before the request reaches the controller. `ImpExServiceImpl` requires a non-blank tenant DB name and obtains a `DataSource` from `MultiTenantConnectionProvider` — no cross-tenant leakage at the JDBC level.
 - **No tenant_id columns:** Consistent with the database-per-tenant model; isolation is at the connection level.
 - **Statement whitelist:** DML writes are restricted to `INSERT` and `UPDATE`. DDL and destructive operations are blocked at the service layer regardless of role.
+- **Sensitive tables:** Updates/inserts targeting a configured deny-list of logical table names (e.g. identity and security tables) are rejected even when the SQL uses schema-qualified or backtick-quoted identifiers.
 - **Size limit:** `sqlContent` is capped at 100 000 characters (`@Size(max = 100_000)`).
 - **Error truncation:** JDBC error messages are truncated at 500 characters before being stored in `StatementResult.errorMessage`.
+- **Rate limiting:** Controller-level Resilience4j limits apply (see `application.yml`); multi-replica caveats remain an ops concern.
 
 ---
 
@@ -190,7 +194,7 @@ When `status` is `"PARTIAL"`, inspect `results` where `success: false`:
 - Common cause: FK violation (referenced `uid` does not exist yet) — fix ordering of statements.
 - Blocked statement: `errorMessage` starts with `"Operation not allowed"` — remove or replace the statement.
 
-> **Semicolons in SQL comments:** The ImpEx parser splits statements on `;`. A semicolon inside a `--` comment (e.g. `-- (6 uploaded; 7th slot empty)`) is treated as a statement terminator, splitting the next `UPDATE` into an invalid fragment. **Never use `;` inside comment text** — use `,` or `-` instead.
+> **Semicolons and comments:** The pipeline strips line (`--`) and block (`/* */`) comments before splitting on unquoted `;`, which avoids most historical “semicolon inside a comment line” splits. Prefer avoiding `;` inside comment text anyway for readability and tooling compatibility.
 
 ### Adding a new script pattern
 
@@ -249,9 +253,7 @@ Mulayim foundation/homepage scripts include their required generic component typ
 The Mulayim homepage intentionally defines only `Section1`, `Section2`, and `Section3`. Additional vertical content can be added by binding more components into an existing section slot with a higher `sort_order`.
 Mulayim also defines `PortfolioDetailPageTemplate` with a single `MainContent` slot for gallery-first project detail pages.
 
-Platform sample data remains separate:
-
-- `base/base_mail_marketing_platform.sql` — platform DB sample data, run only from Platform → ImpEx with no tenant selected
+Platform sample data (e.g. mail-marketing platform seeds) must be applied with **DBA / migration tooling** against `platform_management`, not via ImpEx in the application (ImpEx is tenant-scoped only).
 
 ### Folder layout
 
@@ -293,7 +295,7 @@ These alignment statements are idempotent:
 
 ### Platform reference script
 
-`base/base_mail_marketing_platform.sql` is version-controlled under `backend/src/main/resources/impex/` for platform DB sample data. **SUPER_ADMIN** can execute it via the Admin UI: open **Platform → ImpEx**, do **not** select a tenant, paste the script and run. The backend runs it against the platform database.
+`base/base_mail_marketing_platform.sql` (if present) is a **reference** script for operators who apply SQL directly to `platform_management`. It is **not** executed through the Admin ImpEx UI against the platform database.
 
 ### What remains in Flyway (R__ repeatable migrations)
 

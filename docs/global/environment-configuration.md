@@ -40,6 +40,12 @@ Multi-environment setup for Craftive with dev, stage, and prod configurations.
 3. **Credentials**: Dev uses defaults, Stage/Prod require environment variables
 4. **No defaults for sensitive values in Stage/Prod**: `JWT_SECRET`, `DB_USERNAME`, `DB_PASSWORD` must be set
 5. **Reverse proxy / client IP**: Base `application.yml` sets `server.forward-headers-strategy: framework` so `Forwarded` / `X-Forwarded-*` are honored and `HttpServletRequest.getRemoteAddr()` reflects the client when Traefik, Cloudflare, or similar sets those headers. Ensure the proxy overwrites or sanitizes `X-Forwarded-For` to prevent spoofing on direct-to-app access.
+6. **Public contact abuse + header trust** (`app.security.*` in `application.yml`):
+   - `trust-cf-connecting-ip` (`APP_SECURITY_TRUST_CF_CONNECTING_IP`) — when `true`, `CF-Connecting-IP` may be used for client IP only together with your proxy story; default `false`.
+   - `trusted-proxy-cidrs` — optional list of CIDRs for `getRemoteAddr()` that may send `CF-Connecting-IP`.
+   - `public-contact-per-ip-per-minute` / `public-contact-per-tenant-per-minute` — rate limits for `POST /public/contact-requests`.
+   - `contact-request-retention-days` / `contact-request-retention-job-enabled` — scheduled purge of old `contact_requests` rows (`APP_CONTACT_REQUEST_RETENTION_*` env overrides).
+7. **Config Control Panel OTP** — `app.config-auth.otp-enabled` defaults to **`true`** (`CONFIG_AUTH_OTP_ENABLED`); tenant config can still be set password-only by explicit env override (audited). `OTP_BYPASS_CODE` defaults to **empty** in YAML; do not set weak values in shared environments.
 
 #### Tenant runtime configuration (Config Control Panel)
 
@@ -64,6 +70,8 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
   - `platform.security.recaptcha.enabled`
   - `platform.security.recaptcha.site_key`
   - `platform.security.recaptcha.secret_key` (encrypted)
+  - `platform.security.otp.bypass.enabled`
+  - `platform.security.otp.bypass.code` (encrypted)
 - `security.recaptcha.threshold` stays in platform settings (not runtime-managed in Config Panel)
 - Resolution precedence for these keys:
   1. `platform_config_properties` override

@@ -41,9 +41,10 @@ public class ContactRequestServiceImpl implements ContactRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ContactRequestAdminDto> getPage(Pageable pageable, String search) {
+    public Page<ContactRequestAdminDto> getPage(Pageable pageable, String search, String locale) {
         String term = search != null && !search.isBlank() ? search.trim() : null;
-        return repository.search(term, pageable).map(this::toDto);
+        String localeFilter = locale != null && !locale.isBlank() ? locale.trim() : null;
+        return repository.search(term, localeFilter, pageable).map(this::toDto);
     }
 
     private ContactRequestAdminDto toDto(ContactRequest entity) {
@@ -72,12 +73,13 @@ public class ContactRequestServiceImpl implements ContactRequestService {
     }
 
     private static String truncate(String value, int maxLen) {
-        if (value == null || value.isEmpty()) {
+        if (value == null || value.isBlank()) {
             return null;
         }
-        if (value.length() <= maxLen) {
-            return value;
+        String trimmed = value.trim();
+        if (trimmed.length() > maxLen || trimmed.contains(",")) {
+            return null;
         }
-        return value.substring(0, maxLen);
+        return trimmed;
     }
 }

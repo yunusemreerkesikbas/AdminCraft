@@ -863,18 +863,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElseThrow(() -> new UserNotFoundException(userId));
 
             String subdomain = tenantContext.getSubdomain();
-            if (subdomain == null) {
-                String tenantId = tenantContext.getTenantId();
-                if (tenantId != null) {
-                    try {
-                        long tenantIdLong = Long.parseLong(tenantId);
-                        Tenant tenant = tenantRepository.findById(tenantIdLong).orElse(null);
-                        if (tenant != null) {
-                            subdomain = tenant.getSubdomain();
-                        }
-                    } catch (NumberFormatException ex) {
-                        log.warn("Invalid tenantId format in tenant context: '{}'", tenantId);
-                    }
+            if (subdomain == null || subdomain.isBlank()) {
+                Tenant ctxTenant = resolveTenantFromContext();
+                if (ctxTenant != null && ctxTenant.getSubdomain() != null) {
+                    subdomain = ctxTenant.getSubdomain();
                 }
             }
 
@@ -1021,7 +1013,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (tenant == null || subdomain == null || subdomain.isBlank()) {
                 return tenant;
             }
-            if (!tenant.getSubdomain().equalsIgnoreCase(subdomain.trim())) {
+            String inputSubdomain = subdomain.trim();
+            String tenantSubdomain = tenant.getSubdomain();
+            if (tenantSubdomain == null || !inputSubdomain.equalsIgnoreCase(tenantSubdomain)) {
                 log.warn("Tenant ID and subdomain mismatch for auth request");
                 return null;
             }

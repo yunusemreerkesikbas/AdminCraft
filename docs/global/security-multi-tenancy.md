@@ -88,11 +88,12 @@ Role checks are enforced by:
 
 All other endpoints require a resolved tenant, and run with tenant DB context.
 
+**Unauthenticated but tenant-scoped:** `POST /api/public/contact-requests` has no JWT but still flows through normal tenant resolution (headers / hostname). It is **not** listed under “Public, no tenant required”.
+
 This includes ImpEx:
 
-- `POST /api/impex/execute` executes against the active tenant database.
-- `TENANT_ADMIN` users: require a resolved tenant context (`X-Tenant-ID` or `X-Tenant-Subdomain` header).
-- `SUPER_ADMIN` users: bypass tenant resolution entirely — `TenantFilter` short-circuits before tenant lookup and emits a `WARN` audit log: `ImpEx bypass for superAdmin - path: {path}`. This allows SUPER_ADMIN to run ImpEx against the platform DB directly without a tenant header.
+- `POST /api/impex/execute` executes against the **active tenant database only**. Every caller, including `SUPER_ADMIN`, must have a resolved tenant context (`X-Tenant-ID` or `X-Tenant-Subdomain`, or trusted hostname resolution). There is **no** ImpEx execution path against `platform_management` at runtime; platform seed data is applied via Flyway migrations or DBA tooling.
+- `TENANT_ADMIN` and `SUPER_ADMIN` both require the same tenant resolution invariants before ImpEx runs.
 
 ## Correlation IDs
 

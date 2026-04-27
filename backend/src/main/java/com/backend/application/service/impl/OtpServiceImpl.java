@@ -5,10 +5,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,7 @@ public class OtpServiceImpl implements OtpService {
     private final EmailVerificationProperties emailVerificationProperties;
     private final TenantContextPort tenantContext;
     private final GlobalRuntimeConfigService globalRuntimeConfigService;
+    private final Environment environment;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -164,14 +167,15 @@ public class OtpServiceImpl implements OtpService {
     @Override
     @Transactional("tenantTransactionManager")
     public boolean validateOtp(String tokenHash, String otpCode) {
-        if (Boolean.TRUE.equals(globalRuntimeConfigService.isOtpBypassEnabled())) {
+        if (!isProductionProfile() && Boolean.TRUE.equals(globalRuntimeConfigService.getOtpBypassEnabled())) {
             String configBypassCode = globalRuntimeConfigService.getOtpBypassCodeDecrypted();
-            if (configBypassCode != null && otpCode.equals(configBypassCode)) {
+            if (configBypassCode != null && constantTimeEquals(otpCode, configBypassCode)) {
                 log.warn("OTP bypass via config panel used — audit this access");
                 return true;
             }
         }
-        if (otpProperties.getBypassCode() != null && otpCode.equals(otpProperties.getBypassCode())) {
+        if (!isProductionProfile() && otpProperties.getBypassCode() != null
+                && constantTimeEquals(otpCode, otpProperties.getBypassCode())) {
             log.info("OTP bypass code (env var) used");
             return true;
         }
@@ -279,5 +283,18 @@ public class OtpServiceImpl implements OtpService {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(7);
         tokenRepository.deleteExpiredTokens(cutoff, cutoff);
         log.info("Cleaned up expired tokens older than {}", cutoff);
+    }
+
+    private boolean isProductionProfile() {
+        return Arrays.asList(environment.getActiveProfiles()).contains("prod");
+    }
+
+    private static boolean constantTimeEquals(String a, String b) {
+        if (a == null || b == null) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                a.getBytes(StandardCharsets.UTF_8),
+                b.getBytes(StandardCharsets.UTF_8));
     }
 }

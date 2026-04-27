@@ -36,19 +36,21 @@ public class JwtPropertiesValidator {
                     "JWT secret must be configured. Set JWT_SECRET environment variable or app.jwt.secret.");
         }
 
-        int byteLength = secret.getBytes(StandardCharsets.UTF_8).length;
-        if (byteLength < MIN_SECRET_BYTES) {
-            throw new IllegalStateException(
-                    "JWT secret must be at least " + MIN_SECRET_BYTES
-                            + " bytes (512 bits) for HS512; provided " + byteLength + " bytes.");
-        }
-
         boolean isDevProfile = Arrays.stream(environment.getActiveProfiles())
                 .anyMatch(DEV_PROFILES::contains);
-        if (!isDevProfile && secret.startsWith(DEV_PLACEHOLDER_PREFIX)) {
+        boolean isDevPlaceholder = secret.startsWith(DEV_PLACEHOLDER_PREFIX);
+
+        if (!isDevProfile && isDevPlaceholder) {
             throw new IllegalStateException(
                     "JWT_SECRET environment variable is required outside dev profile; "
                             + "the dev placeholder must never be used in stage/prod.");
+        }
+
+        int byteLength = secret.getBytes(StandardCharsets.UTF_8).length;
+        if (!(isDevProfile && isDevPlaceholder) && byteLength < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "JWT secret must be at least " + MIN_SECRET_BYTES
+                            + " bytes (512 bits) for HS512; provided " + byteLength + " bytes.");
         }
 
         if (jwtProperties.getExpiration() < MIN_ACCESS_EXPIRATION_MS) {

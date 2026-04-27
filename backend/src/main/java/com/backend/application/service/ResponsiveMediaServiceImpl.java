@@ -2,6 +2,7 @@ package com.backend.application.service;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -310,7 +311,7 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
     String code = linkType.name();
     return new MediaLinkedComponentUsageLinkTypeResponse(
         code,
-        code.replace("RESPONSIVE_", "").toLowerCase(java.util.Locale.ROOT));
+        code.replace("RESPONSIVE_", "").toLowerCase(Locale.ROOT));
   }
 
   private record LinkedUsageTarget(Long componentId, Long entryId) {

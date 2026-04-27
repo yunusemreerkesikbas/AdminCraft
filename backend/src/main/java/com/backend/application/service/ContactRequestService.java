@@ -10,5 +10,5 @@ public interface ContactRequestService {
 
     void submit(ContactRequestSubmitCommand command);
 
-    Page<ContactRequestAdminDto> getPage(Pageable pageable, String search);
+    Page<ContactRequestAdminDto> getPage(Pageable pageable, String search, String locale);
 }

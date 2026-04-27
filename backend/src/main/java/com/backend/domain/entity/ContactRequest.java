@@ -16,6 +16,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * Tenant-scoped contact form submission. PII fields are excluded from {@link Object#toString()}
+ * to reduce accidental leakage in logs. Rows older than the configured retention window may be
+ * removed by the scheduled contact-request retention job.
+ */
 @Entity
 @Table(name = "contact_requests")
 @Getter
@@ -30,12 +35,14 @@ public class ContactRequest {
     private Long id;
 
     @Column(name = "full_name", nullable = false, length = 255)
+    @ToString.Exclude
     private String fullName;
 
     @Column(name = "subject", nullable = false, length = 255)
     private String subject;
 
     @Column(name = "message", nullable = false, columnDefinition = "TEXT")
+    @ToString.Exclude
     private String message;
 
     @Column(name = "locale", nullable = false, length = 10)
@@ -45,9 +52,11 @@ public class ContactRequest {
     private String source = "contact_page";
 
     @Column(name = "client_ip", length = 45)
+    @ToString.Exclude
     private String clientIp;
 
     @Column(name = "user_agent", length = 500)
+    @ToString.Exclude
     private String userAgent;
 
     @Column(name = "created_at", nullable = false, updatable = false)

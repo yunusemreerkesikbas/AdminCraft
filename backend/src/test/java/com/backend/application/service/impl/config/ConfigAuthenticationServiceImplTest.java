@@ -2,6 +2,7 @@ package com.backend.application.service.impl.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,16 +27,21 @@ import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
+import com.backend.domain.enums.TokenType;
 import com.backend.domain.enums.UserRole;
 import com.backend.domain.port.JwtProviderPort;
 import com.backend.domain.port.OtpConfig;
 import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.port.TenantContextPort;
+import com.backend.domain.repository.ConfigChangeAuditRepository;
 import com.backend.domain.repository.PlatformAdminUserRepository;
 import com.backend.domain.repository.PlatformVerificationTokenRepository;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
 import com.backend.domain.repository.VerificationTokenRepository;
+import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 @ExtendWith(MockitoExtension.class)
 class ConfigAuthenticationServiceImplTest {
@@ -79,6 +85,14 @@ class ConfigAuthenticationServiceImplTest {
     @Mock
     private PlatformTransactionManager tenantTransactionManager;
 
+    @Mock
+    private PlatformTransactionManager platformTransactionManager;
+
+    @Mock
+    private ConfigChangeAuditRepository configChangeAuditRepository;
+
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     @Test
     void loginTenantAdminReturnsSessionWithoutOtpWhenConfigOtpDisabled() {
         ConfigAuthenticationServiceImpl service = service(false);
@@ -86,6 +100,8 @@ class ConfigAuthenticationServiceImplTest {
         User user = tenantAdmin();
         when(tenantRepository.findBySubdomain("acme")).thenReturn(Optional.of(tenant));
         when(tenantTransactionManager.getTransaction(any(TransactionDefinition.class)))
+                .thenReturn(new SimpleTransactionStatus());
+        when(platformTransactionManager.getTransaction(any(TransactionDefinition.class)))
                 .thenReturn(new SimpleTransactionStatus());
         when(userRepository.findByEmail("admin@acme.test")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("secret", "hash")).thenReturn(true);
@@ -118,6 +134,7 @@ class ConfigAuthenticationServiceImplTest {
         verify(otpService, never()).createLoginOtpToken(any(), any(), any());
         verify(emailService, never()).sendOtpEmail(any(), any(), any());
         verify(userRepository).save(user);
+        verify(configChangeAuditRepository).save(any());
     }
 
     @Test
@@ -152,7 +169,7 @@ class ConfigAuthenticationServiceImplTest {
     }
 
     @Test
-    void loginPlatformAdminReturnsSessionWithoutOtpWhenConfigOtpDisabled() {
+    void loginPlatformAdminAlwaysReturnsOtpChallenge() {
         ConfigAuthenticationServiceImpl service = service(false);
         PlatformAdminUser admin = PlatformAdminUser.builder()
                 .id(99L)
@@ -165,12 +182,14 @@ class ConfigAuthenticationServiceImplTest {
         when(platformAdminUserRepository.findByEmailAndIsActiveTrue("root@craftive.test"))
                 .thenReturn(Optional.of(admin));
         when(passwordEncoder.matches("secret", "hash")).thenReturn(true);
-        when(jwtProviderPort.createAccessToken(
-                "root@craftive.test",
-                ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN,
-                99L,
-                null)).thenReturn("platform-access-token");
-        when(jwtProviderPort.getAccessTokenExpiration()).thenReturn(86_400_000L);
+        when(otpService.generateOtp()).thenReturn("123456");
+        when(otpService.hashToken(any(String.class))).thenReturn("hashed");
+        when(otpConfig.getExpirySeconds()).thenReturn(300);
+        when(otpConfig.getMaxAttempts()).thenReturn(5);
+        PlatformSettings settings = new PlatformSettings();
+        settings.setDefaultLanguage("TR");
+        when(platformSettingsPort.getSingleton()).thenReturn(settings);
+        when(platformVerificationTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         var result = service.login(
                 "root@craftive.test",
@@ -180,15 +199,14 @@ class ConfigAuthenticationServiceImplTest {
                 "127.0.0.1",
                 "agent");
 
-        assertThat(result.requiresOtp()).isFalse();
-        assertThat(result.challenge()).isNull();
-        assertThat(result.session()).isNotNull();
-        assertThat(result.session().accessToken()).isEqualTo("platform-access-token");
-        assertThat(result.session().refreshToken()).isNull();
-        assertThat(result.session().role()).isEqualTo(ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN);
-        verify(otpService, never()).generateOtp();
-        verify(emailService, never()).sendOtpEmail(any(), any(), any());
-        verify(platformAdminUserRepository).save(admin);
+        assertThat(result.requiresOtp()).isTrue();
+        assertThat(result.session()).isNull();
+        assertThat(result.challenge()).isNotNull();
+        verify(emailService).sendOtpEmail(eq("root@craftive.test"), eq("123456"), eq(Language.TR));
+        verify(otpService).generateOtp();
+        verify(platformVerificationTokenRepository).revokeAllActiveTokensForAdmin(99L, TokenType.LOGIN_OTP);
+        verify(jwtProviderPort, never()).createAccessToken(any(), any(), any(), any());
+        verify(platformAdminUserRepository, never()).save(admin);
     }
 
     private ConfigAuthenticationServiceImpl service(boolean otpEnabled) {
@@ -206,7 +224,10 @@ class ConfigAuthenticationServiceImplTest {
                 jwtProviderPort,
                 otpConfig,
                 new ConfigAuthProperties(otpEnabled),
-                tenantTransactionManager);
+                configChangeAuditRepository,
+                meterRegistry,
+                tenantTransactionManager,
+                platformTransactionManager);
     }
 
     private Tenant activeTenant() {

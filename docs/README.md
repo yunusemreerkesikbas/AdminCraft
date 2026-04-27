@@ -63,6 +63,7 @@ Platform features are not tenant modules, but they are critical for operating th
 Public APIs are still tenant-scoped (resolved by tenant headers/hostname), but **do not require authentication**.
 
 - CMS delivery (`/api/cms/**`): [`modules/cms-delivery.md`](modules/cms-delivery.md)
+- Tenant public contact ingest (`POST /api/public/contact-requests`): [`modules/cms-delivery.md`](modules/cms-delivery.md#public-contact-requests) — reCAPTCHA when enabled, optional `CF-Connecting-IP` trust and per-IP / per-tenant rate limits via `app.security.*` (see [`global/environment-configuration.md`](global/environment-configuration.md))
 
 **Platform public (no tenant context)** — used by the marketing `landing/` site and CMS tooling, not tenant databases:
 

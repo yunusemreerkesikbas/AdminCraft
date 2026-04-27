@@ -6,7 +6,7 @@ Config Control Panel provides a storefront-independent recovery and runtime conf
 
 Current scope:
 
-- password authentication for config operations, with optional email OTP controlled by backend flag
+- password authentication for config operations, plus **email OTP** for `CONFIG_SUPER_ADMIN` always after password; for `CONFIG_TENANT_ADMIN` OTP is **on by default** and can be disabled only via explicit env override (see `app.config-auth.otp-enabled`)
 - tenant reCAPTCHA management (recovery from storefront lockout)
 - tenant GA4 property management for dashboard analytics snapshot
 - tenant Search Console property management for overview SEO snapshot
@@ -79,6 +79,8 @@ Global runtime whitelist (CONFIG_SUPER_ADMIN):
 - `platform.security.recaptcha.enabled` (`true` | `false`)
 - `platform.security.recaptcha.site_key`
 - `platform.security.recaptcha.secret_key` (encrypted)
+- `platform.security.otp.bypass.enabled` (`true` | `false`) — dev/stage convenience only; **ignored for OTP bypass semantics when Spring `prod` profile is active** (see `OtpServiceImpl`)
+- `platform.security.otp.bypass.code` (encrypted; minimum length enforced on write) — same prod guard as above
 
 Note: `security.recaptcha.threshold` remains in platform settings and is not managed from Config Panel.
 Namespace invariant: tenant `security.recaptcha.*` and platform `platform.security.recaptcha.*` are isolated and never cross-read.
@@ -196,13 +198,14 @@ Role-based behavior:
 
 Session behavior:
 
-- by default, fresh `/config` login requires password only and returns config tokens immediately
-- email OTP can be re-enabled with backend flag `app.config-auth.otp-enabled=true` (`CONFIG_AUTH_OTP_ENABLED=true`)
-- when config OTP is enabled in `dev` and `stage`, the shared OTP bypass code `123456` is accepted for config OTP verification
-- tenant config logins can resolve tenant context from the `subdomain` query param (`/config?subdomain={tenantSubdomain}`)
-- `CONFIG_TENANT_ADMIN` receives access + refresh tokens after password login, or after OTP verification when OTP is enabled
-- tenant config sessions can silently refresh in the same browser when the access token expires
-- `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, a fresh login is required again
+- `app.config-auth.otp-enabled` defaults to **`true`** in `application.yml` (override with `CONFIG_AUTH_OTP_ENABLED=false` only when you accept password-only tenant config sessions and have compensating controls).
+- **`CONFIG_SUPER_ADMIN` (platform `/config` login):** after a valid password, the backend **always** issues an email OTP challenge; completing `POST /api/config/auth/verify-otp` returns the access token (no password-only platform config session).
+- **`CONFIG_TENANT_ADMIN`:** when OTP is enabled, password login returns a challenge; after OTP verification, access + refresh tokens are issued. When OTP is **disabled**, password-only login is allowed and the backend records **audit + metrics** for that path (see `ConfigAuthenticationServiceImpl`).
+- Tenant context for config login can be supplied via the `subdomain` query param (`/config?subdomain={tenantSubdomain}`).
+- Tenant config sessions can silently refresh in the same browser when the access token expires (`POST /api/config/auth/refresh`).
+- `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, a fresh login (including OTP) is required again.
+- **Tenant / main auth OTP** (`OtpServiceImpl`): global runtime bypass and `OTP_BYPASS_CODE` env bypass are **disabled when the Spring `prod` profile is active** (constant-time compare elsewhere).
+- **Config panel platform OTP** (`verifyPlatformOtp` in `ConfigAuthenticationServiceImpl`): still honors `OTP_BYPASS_CODE` when non-blank, independent of profile — **leave unset in production** unless you explicitly accept that risk.
 
 Frontend session management:
 

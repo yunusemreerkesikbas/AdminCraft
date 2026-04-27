@@ -47,6 +47,13 @@ app:
   tenant:
     auto-sync-on-startup: ${TENANT_AUTO_SYNC:true}
     trust-forwarded-host: ${TENANT_TRUST_FORWARDED_HOST:false}
+  security:
+    trust-cf-connecting-ip: ${APP_SECURITY_TRUST_CF_CONNECTING_IP:false}
+    trusted-proxy-cidrs: []
+    public-contact-per-ip-per-minute: ${APP_SECURITY_PUBLIC_CONTACT_PER_IP:10}
+    public-contact-per-tenant-per-minute: ${APP_SECURITY_PUBLIC_CONTACT_PER_TENANT:120}
+    contact-request-retention-days: ${APP_CONTACT_REQUEST_RETENTION_DAYS:90}
+    contact-request-retention-job-enabled: ${APP_CONTACT_REQUEST_RETENTION_JOB:true}
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}
   email:
     enabled: ${EMAIL_ENABLED:true}
@@ -60,7 +67,7 @@ app:
     max-attempts: ${OTP_MAX_ATTEMPTS:5}
     bypass-code: ${OTP_BYPASS_CODE:}
   config-auth:
-    otp-enabled: ${CONFIG_AUTH_OTP_ENABLED:false}
+    otp-enabled: ${CONFIG_AUTH_OTP_ENABLED:true}
   password-reset:
     expiry-seconds: ${PASSWORD_RESET_EXPIRY_SECONDS:3600}
   email-verification:

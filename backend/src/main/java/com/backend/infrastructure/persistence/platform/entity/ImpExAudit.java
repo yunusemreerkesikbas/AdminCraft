@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -21,7 +22,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(schema = "platform_management", name = "impex_audit")
+@Table(
+        schema = "platform_management",
+        name = "impex_audit",
+        indexes = @Index(name = "idx_impex_audit_correlation", columnList = "correlation_id,executed_at"))
 public class ImpExAudit {
 
     @Id

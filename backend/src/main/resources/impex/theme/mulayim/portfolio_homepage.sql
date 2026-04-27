@@ -3,17 +3,17 @@
 -- Run via Admin UI /{lang}/impex after theme/mulayim/mulayim_foundation.sql and after media uploads.
 -- Seeds the homepage body using the portfolio-grid-col-4 source layout.
 -- Shared header and footer chrome remain foundation-owned.
+-- Foundation owns globally reusable component types and field definitions, including BigTextCtaComponent.
 -- Idempotent: safe to run multiple times.
 
 -- ============================================================
--- 1. COMPONENT TYPES
+-- 1. HOMEPAGE COMPONENT TYPES
 -- ============================================================
 
 INSERT INTO component_types (uuid, uid, name, category, is_navigation_aware, created_at, updated_at)
 VALUES
   (UUID(), 'SimpleBannerComponent', 'Banner', 'hero', FALSE, NOW(), NOW()),
-  (UUID(), 'FeatureCardComponent', 'Card', 'feature', FALSE, NOW(), NOW()),
-  (UUID(), 'BigTextCtaComponent', 'Big Text CTA', 'content', FALSE, NOW(), NOW())
+  (UUID(), 'FeatureCardComponent', 'Card', 'feature', FALSE, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   category = VALUES(category),
@@ -52,16 +52,6 @@ ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
 SELECT ct.id, 'category', 'TEXT', NOW()
 FROM component_types ct WHERE ct.uid = 'FeatureCardComponent'
-ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
-
-INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
-SELECT ct.id, 'buttonText', 'TEXT', NOW()
-FROM component_types ct WHERE ct.uid = 'BigTextCtaComponent'
-ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
-
-INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
-SELECT ct.id, 'buttonUrl', 'TEXT', NOW()
-FROM component_types ct WHERE ct.uid = 'BigTextCtaComponent'
 ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 
 -- ============================================================

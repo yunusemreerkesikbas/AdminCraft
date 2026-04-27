@@ -16,6 +16,7 @@ import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 import com.backend.application.dto.impex.ImpExResult;
@@ -53,10 +54,12 @@ public class ImpExServiceImpl implements ImpExService {
     // SEC-100: tables that hold authn/authz/tenancy state and must never be mutated via ImpEx.
     private static final Set<String> SENSITIVE_TABLES = Set.of(
         "users", "platform_admin_users", "tenants", "tenant_modules",
-        "config_property", "platform_settings", "platform_refresh_tokens"
+        "config_properties", "platform_settings", "platform_refresh_tokens"
     );
+    /** Captures full first table reference (quoted identifiers and schema.table segments). */
     private static final Pattern DML_TARGET_TABLE = Pattern.compile(
-        "^\\s*(?:INSERT\\s+INTO|UPDATE)\\s+[`\"]?([\\w.]+)[`\"]?",
+        "^\\s*(?:INSERT(?:\\s+IGNORE)?\\s+INTO|UPDATE(?:\\s+IGNORE)?)\\s+"
+            + "((?:`[^`]+`|[\"][^\"]+\"|\\w+)(?:\\s*\\.\\s*(?:`[^`]+`|[\"][^\"]+\"|\\w+))*)",
         Pattern.CASE_INSENSITIVE);
 
     private final MultiTenantConnectionProvider multiTenantConnectionProvider;
@@ -153,7 +156,8 @@ public class ImpExServiceImpl implements ImpExService {
     private String safeCurrentUserRole() {
         try {
             return securityHelper.isSuperAdmin() ? "SUPER_ADMIN" : "TENANT_ADMIN";
-        } catch (Exception ignored) {
+        } catch (AccessDeniedException | AuthenticationException ex) {
+            log.warn("ImpEx audit: unable to resolve actor role", ex);
             return null;
         }
     }
@@ -416,8 +420,23 @@ public class ImpExServiceImpl implements ImpExService {
         if (!m.find()) {
             return null;
         }
-        String raw = m.group(1).toLowerCase(Locale.ROOT);
-        String tableName = raw.contains(".") ? raw.substring(raw.lastIndexOf('.') + 1) : raw;
-        return SENSITIVE_TABLES.contains(tableName) ? tableName : null;
+        String ref = m.group(1).trim();
+        String[] parts = ref.split("\\s*\\.\\s*");
+        String last = parts[parts.length - 1];
+        last = stripSqlIdentifierQuotes(last).toLowerCase(Locale.ROOT);
+        return SENSITIVE_TABLES.contains(last) ? last : null;
+    }
+
+    static String stripSqlIdentifierQuotes(String id) {
+        if (id == null) {
+            return "";
+        }
+        String s = id.trim();
+        while (s.length() >= 2
+                && ((s.charAt(0) == '`' && s.charAt(s.length() - 1) == '`')
+                        || (s.charAt(0) == '"' && s.charAt(s.length() - 1) == '"'))) {
+            s = s.substring(1, s.length() - 1).trim();
+        }
+        return s;
     }
 }

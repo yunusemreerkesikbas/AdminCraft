@@ -1,12 +1,24 @@
 # Backend Security Audit — 2026-04-25
 
 **Scope**: `backend/` (Spring Boot 3.3.5, Java 21, multi-tenant: `platform_management` + `ac_subdomain_{id}`)
-**Branch**: `feature/CMS-224`
+**Branch**: `feature/CMS-224` · **Tracked in**: PR #297
 **Katmanlar**: OWASP Top 10 (kod düzeyi) · Multi-tenant izolasyon · Runtime/config güvenliği
 **Yöntem**: 3 paralel `Explore` agent + 1 `code-reviewer` agent + manuel `Read` doğrulama
 **Bulgu sayısı**: **P0: 5** · **P1: 14** · **P2: 11** · **P3: 9**
 
 > Kapsam dışı: dependency/CVE taraması, frontend (Angular/Next.js), deployment (Cloudflare/Traefik/DigitalOcean). Frontend gerekirse ayrı raporda.
+
+### Güncelleme — PR #297 (kod durumu)
+
+Bu belge **2026-04-25** tarihli kod incelemesinin **tarihsel** kaydıdır; aşağıdaki maddeler sonradan uygulanan sertleştirmelerle **kısmen veya tamamen** kapanmış veya mimari olarak değişmiş olabilir. Güncel davranış için `docs/global/security-multi-tenancy.md`, `docs/modules/impex.md`, `docs/modules/config-control-panel.md`, `docs/global/environment-configuration.md` ve ilgili Spring sınıflarına bakın.
+
+- **SEC-001 (OTP bypass):** `OTP_BYPASS_CODE` için boş YAML varsayılanı; `prod` profilinde `OtpServiceImpl` içinde hem panel hem env bypass yollarının devre dışı bırakılması; sabit süreli karşılaştırma; global bypass kodu politikası (`ConfigGlobalPropertiesAdminServiceImpl`).
+- **SEC-002 / platform ImpEx:** `TenantFilter` ve `ImpExServiceImpl` — SUPER_ADMIN dahil **zorunlu tenant bağlamı**; platform veritabanına ImpEx ile düşme kaldırıldı.
+- **SEC-100:** Hassas tablolar için deny-list ve şema/tırnaklı tablo adı çözümlemesi.
+- **SEC-101:** Yorum temizleme + güvenli ayırıcı mantığı (koda bakın).
+- **SEC-103:** `impex_audit` kalıcı kayıt + `correlation_id` indeks migrasyonu.
+- **SEC-114 (IP):** Kiracı herkese açık iletişim uç noktasında `CF-Connecting-IP` için `app.security.*` yapılandırması ve hız sınırları.
+- **Hâlâ açık / ayrı iş** örnekleri: SEC-105 (config admin PATCH rate-limit), SEC-107 (platform demo-requests), çoklu replika için cluster-bilinçli rate limit, medya magic-byte vb. — bu rapordaki öncelik tablosu güncellenmemiştir.
 
 ---
 

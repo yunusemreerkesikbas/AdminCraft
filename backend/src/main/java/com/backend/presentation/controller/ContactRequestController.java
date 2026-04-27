@@ -42,7 +42,8 @@ public class ContactRequestController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String sort,
-            @RequestParam(required = false) @Size(max = 200) String search) {
+            @RequestParam(required = false) @Size(max = 200) String search,
+            @RequestParam(required = false) @Size(max = 10) String locale) {
         String effectiveSort = SortParseUtil.getEffectiveSortCode(
                 sort,
                 SortableFieldsConfig.CONTACT_REQUEST_DEFAULT_SORT);
@@ -51,7 +52,7 @@ public class ContactRequestController {
                 SortableFieldsConfig.CONTACT_REQUEST_ALLOWED_FIELDS,
                 SortableFieldsConfig.CONTACT_REQUEST_DEFAULT_SORT);
         var pageable = PageRequest.of(page, size, sortObj);
-        var dataPage = contactRequestService.getPage(pageable, search);
+        var dataPage = contactRequestService.getPage(pageable, search, locale);
         SortConfig sortConfig = SortConfig.of(effectiveSort, SortableFieldsConfig.CONTACT_REQUEST_SORT_OPTIONS);
         PageableResponse<ContactRequestAdminDto> body = PageableResponse.from(dataPage, sortConfig);
         return ResponseEntity.ok(ApiResponse.success(message("contact.requests.fetched"), body));

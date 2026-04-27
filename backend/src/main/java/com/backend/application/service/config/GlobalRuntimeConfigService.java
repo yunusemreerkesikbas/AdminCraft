@@ -22,7 +22,7 @@ public interface GlobalRuntimeConfigService {
 
     Boolean getSeoInsightsEnabled();
 
-    Boolean isOtpBypassEnabled();
+    Boolean getOtpBypassEnabled();
 
     String getOtpBypassCodeDecrypted();
 }

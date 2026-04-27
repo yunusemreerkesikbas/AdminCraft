@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.slf4j.MDC;
+
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.core.env.Environment;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -95,17 +97,19 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private static final String DEFAULT_SEO_INSIGHTS_ENABLED = "false";
     private static final String DEFAULT_RECAPTCHA_ENABLED = "false";
     private static final String DEFAULT_OTP_BYPASS_ENABLED = "false";
-    private static final int OTP_BYPASS_CODE_MIN_LENGTH = 6;
+    private static final int OTP_BYPASS_CODE_MIN_LENGTH = 16;
     private static final int OTP_BYPASS_CODE_MAX_LENGTH = 64;
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private static final Pattern RECAPTCHA_KEY_PATTERN = Pattern.compile(ValidationConstants.RECAPTCHA_KEY_PATTERN);
+    private static final Pattern OTP_BYPASS_ENTROPY_PATTERN = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$");
 
     private final PlatformConfigPropertyRepository propertyRepository;
     private final ConfigChangeAuditRepository auditRepository;
     private final ObjectMapper objectMapper;
     private final Environment environment;
     private final EncryptionServicePort encryptionService;
+    private final MeterRegistry meterRegistry;
 
     @Override
     @Transactional(readOnly = true)
@@ -295,7 +299,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
 
     @Override
     @Transactional(readOnly = true)
-    public Boolean isOtpBypassEnabled() {
+    public Boolean getOtpBypassEnabled() {
         String configured = resolveConfiguredValue(KEY_OTP_BYPASS_ENABLED);
         if (!StringUtils.hasText(configured)) {
             return false;
@@ -306,6 +310,9 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     @Override
     @Transactional(readOnly = true)
     public String getOtpBypassCodeDecrypted() {
+        if (!Boolean.TRUE.equals(getOtpBypassEnabled())) {
+            return null;
+        }
         String configured = resolveConfiguredValue(KEY_OTP_BYPASS_CODE);
         if (!StringUtils.hasText(configured)) {
             return null;
@@ -314,6 +321,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             return encryptionService.decrypt(configured);
         } catch (Exception e) {
             log.warn("Failed to decrypt OTP bypass code");
+            meterRegistry.counter("config.otp_bypass_decrypt_failures").increment();
             return null;
         }
     }
@@ -420,6 +428,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
                             "OTP bypass code must be between " + OTP_BYPASS_CODE_MIN_LENGTH
                                     + " and " + OTP_BYPASS_CODE_MAX_LENGTH + " characters");
                 }
+                assertStrongOtpBypassCode(normalized);
                 return normalized;
             }
             default -> throw new IllegalArgumentException("Config key is not allowed: " + key);
@@ -509,6 +518,21 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
         return KEY_RECAPTCHA_SECRET_KEY.equals(key)
                 || KEY_EMAIL_POSTMARK_SERVER_TOKEN.equals(key)
                 || KEY_OTP_BYPASS_CODE.equals(key);
+    }
+
+    private static void assertStrongOtpBypassCode(String normalized) {
+        if (!OTP_BYPASS_ENTROPY_PATTERN.matcher(normalized).matches()) {
+            throw new IllegalArgumentException(
+                    "OTP bypass code must include uppercase, lowercase, and digit characters");
+        }
+        if (normalized.chars().distinct().count() < 4) {
+            throw new IllegalArgumentException("OTP bypass code has insufficient character diversity");
+        }
+        char first = normalized.charAt(0);
+        boolean allSame = normalized.chars().allMatch(c -> c == first);
+        if (allSame) {
+            throw new IllegalArgumentException("OTP bypass code must not consist of a single repeated character");
+        }
     }
 
     private void assertSuperAdmin(ConfigPrincipal principal) {

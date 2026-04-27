@@ -26,6 +26,8 @@ import com.backend.domain.repository.ConfigChangeAuditRepository;
 import com.backend.domain.repository.PlatformConfigPropertyRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 @ExtendWith(MockitoExtension.class)
 class ConfigGlobalPropertiesAdminServiceImplTest {
 
@@ -38,16 +40,20 @@ class ConfigGlobalPropertiesAdminServiceImplTest {
     @Mock
     private EncryptionServicePort encryptionService;
 
+    private SimpleMeterRegistry meterRegistry;
+
     private ConfigGlobalPropertiesAdminServiceImpl service;
 
     @BeforeEach
     void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
         service = new ConfigGlobalPropertiesAdminServiceImpl(
                 propertyRepository,
                 auditRepository,
                 new ObjectMapper(),
                 new MockEnvironment(),
-                encryptionService);
+                encryptionService,
+                meterRegistry);
     }
 
     @Test
@@ -121,8 +127,8 @@ class ConfigGlobalPropertiesAdminServiceImplTest {
     }
 
     @Test
-    @DisplayName("isOtpBypassEnabled should return true when override is true")
-    void isOtpBypassEnabled_ShouldReturnTrueWhenOverrideTrue() {
+    @DisplayName("getOtpBypassEnabled should return true when override is true")
+    void getOtpBypassEnabled_ShouldReturnTrueWhenOverrideTrue() {
         PlatformConfigProperty property = new PlatformConfigProperty();
         property.setConfigKey("platform.security.otp.bypass.enabled");
         property.setConfigValue("true");
@@ -130,21 +136,27 @@ class ConfigGlobalPropertiesAdminServiceImplTest {
         when(propertyRepository.findByConfigKey("platform.security.otp.bypass.enabled"))
                 .thenReturn(Optional.of(property));
 
-        assertThat(service.isOtpBypassEnabled()).isTrue();
+        assertThat(service.getOtpBypassEnabled()).isTrue();
     }
 
     @Test
-    @DisplayName("isOtpBypassEnabled should return false when no override exists")
-    void isOtpBypassEnabled_ShouldReturnFalseWhenNoOverride() {
+    @DisplayName("getOtpBypassEnabled should return false when no override exists")
+    void getOtpBypassEnabled_ShouldReturnFalseWhenNoOverride() {
         when(propertyRepository.findByConfigKey("platform.security.otp.bypass.enabled"))
                 .thenReturn(Optional.empty());
 
-        assertThat(service.isOtpBypassEnabled()).isFalse();
+        assertThat(service.getOtpBypassEnabled()).isFalse();
     }
 
     @Test
-    @DisplayName("getOtpBypassCodeDecrypted should decrypt stored value")
+    @DisplayName("getOtpBypassCodeDecrypted should decrypt stored value when bypass enabled")
     void getOtpBypassCodeDecrypted_ShouldDecryptStoredValue() {
+        PlatformConfigProperty enabled = new PlatformConfigProperty();
+        enabled.setConfigKey("platform.security.otp.bypass.enabled");
+        enabled.setConfigValue("true");
+        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.enabled"))
+                .thenReturn(Optional.of(enabled));
+
         PlatformConfigProperty property = new PlatformConfigProperty();
         property.setConfigKey("platform.security.otp.bypass.code");
         property.setConfigValue("ENC:xyz");
@@ -157,9 +169,19 @@ class ConfigGlobalPropertiesAdminServiceImplTest {
     }
 
     @Test
+    @DisplayName("getOtpBypassCodeDecrypted should return null when bypass disabled even if code exists")
+    void getOtpBypassCodeDecrypted_ShouldReturnNullWhenBypassDisabled() {
+        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.enabled"))
+                .thenReturn(Optional.of(newDisabledBypassProperty()));
+
+        assertThat(service.getOtpBypassCodeDecrypted()).isNull();
+        verify(encryptionService, never()).decrypt(any());
+    }
+
+    @Test
     @DisplayName("getOtpBypassCodeDecrypted should return null when no override exists")
     void getOtpBypassCodeDecrypted_ShouldReturnNullWhenNoOverride() {
-        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.code"))
+        when(propertyRepository.findByConfigKey("platform.security.otp.bypass.enabled"))
                 .thenReturn(Optional.empty());
 
         assertThat(service.getOtpBypassCodeDecrypted()).isNull();
@@ -170,26 +192,26 @@ class ConfigGlobalPropertiesAdminServiceImplTest {
     void upsertProperty_ShouldEncryptOtpBypassCode() {
         when(propertyRepository.findByConfigKey("platform.security.otp.bypass.code"))
                 .thenReturn(Optional.empty());
-        when(encryptionService.encrypt("super-secret-code"))
+        when(encryptionService.encrypt("StrongBypassCode12345"))
                 .thenReturn("ENC:super-secret-code");
         when(propertyRepository.save(any(PlatformConfigProperty.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
         service.upsertProperty(superAdminPrincipal(),
                 "platform.security.otp.bypass.code",
-                "super-secret-code",
+                "StrongBypassCode12345",
                 true,
                 "rotation");
 
-        verify(encryptionService).encrypt("super-secret-code");
+        verify(encryptionService).encrypt("StrongBypassCode12345");
     }
 
     @Test
-    @DisplayName("upsertProperty should reject OTP bypass code shorter than 6 characters")
+    @DisplayName("upsertProperty should reject OTP bypass code shorter than minimum")
     void upsertProperty_ShouldRejectShortOtpBypassCode() {
         assertThatThrownBy(() -> service.upsertProperty(superAdminPrincipal(),
                 "platform.security.otp.bypass.code",
-                "abc",
+                "Short1Aa",
                 true,
                 "test"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -208,6 +230,8 @@ class ConfigGlobalPropertiesAdminServiceImplTest {
                 "test"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("OTP bypass enabled");
+
+        verify(encryptionService, never()).encrypt(any());
     }
 
     @Test
@@ -215,11 +239,20 @@ class ConfigGlobalPropertiesAdminServiceImplTest {
     void upsertProperty_ShouldRejectOtpBypassCodeWithoutSecretFlag() {
         assertThatThrownBy(() -> service.upsertProperty(superAdminPrincipal(),
                 "platform.security.otp.bypass.code",
-                "valid-code-123",
+                "StrongBypassCode12345",
                 false,
                 "test"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Secret flag must be true");
+
+        verify(encryptionService, never()).encrypt(any());
+    }
+
+    private static PlatformConfigProperty newDisabledBypassProperty() {
+        PlatformConfigProperty p = new PlatformConfigProperty();
+        p.setConfigKey("platform.security.otp.bypass.enabled");
+        p.setConfigValue("false");
+        return p;
     }
 
     private ConfigPrincipal superAdminPrincipal() {

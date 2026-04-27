@@ -10,6 +10,7 @@ Requests are still **tenant-scoped** via tenant resolution (subdomain/header/hos
 - CMS content delivery: [`backend/src/main/java/com/backend/presentation/controller/CmsDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/CmsDeliveryController.java)
 - CMS media delivery: [`backend/src/main/java/com/backend/presentation/controller/CmsMediaDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/CmsMediaDeliveryController.java)
 - CMS product + category delivery: [`backend/src/main/java/com/backend/presentation/controller/ProductCmsDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/ProductCmsDeliveryController.java)
+- Public tenant contact: [`backend/src/main/java/com/backend/presentation/controller/TenantPublicContactRequestController.java`](../../backend/src/main/java/com/backend/presentation/controller/TenantPublicContactRequestController.java)
 
 ## Endpoints
 
@@ -100,6 +101,19 @@ Note:
 ## Rate limiting
 
 `CmsDeliveryController` and `CmsMediaDeliveryController` have **no application-level rate limiter**. These are high-traffic public endpoints — a global counter would affect all legitimate users equally. If rate limiting is needed, apply it as a **per-IP Traefik middleware** at the infrastructure level.
+
+The tenant **public contact** endpoint (below) is different: it uses **Resilience4j-backed limits** in the application (`app.security.public-contact-per-ip-per-minute` and `app.security.public-contact-per-tenant-per-minute`).
+
+## Public contact requests
+
+Base path: `/api/public/contact-requests` (still under servlet context `/api`).
+
+- `POST /api/public/contact-requests` — accepts [`PublicContactRequestSubmitRequest`](../../backend/src/main/java/com/backend/presentation/dto/request/PublicContactRequestSubmitRequest.java); persists a `contact_requests` row; optional Google reCAPTCHA when tenant + platform policy require it (`recaptchaToken` may be absent when reCAPTCHA is disabled).
+- **Client IP:** Prefer `X-Forwarded-For` / framework forward-header strategy for resolved client IP. Header `CF-Connecting-IP` is used **only** when `app.security.trust-cf-connecting-ip=true` and optional `app.security.trusted-proxy-cidrs` match `getRemoteAddr()` — default is do-not-trust to avoid off-Cloudflare spoofing.
+- **Abuse:** Exceeding per-IP or per-tenant limits returns **HTTP 429** with a localized `ApiResponse.message`.
+- **Retention:** Old rows can be purged by a scheduled job when `app.security.contact-request-retention-job-enabled=true`; see tenant Flyway under `db/tenant/core` for index/retention migrations.
+
+Admin listing for the same entity lives under authenticated tenant APIs (Site Dashboard / contact module), not in this public delivery doc.
 
 ## Response contract (high level)
 

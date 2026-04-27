@@ -268,6 +268,17 @@ public final class ValidationConstants {
     public static final String MSG_MEDIA_CODE_PATTERN = "{validation.media.code.pattern}";
 
     // ============================================================================
+    // PUBLIC CONTACT (tenant storefront contact form)
+    // ============================================================================
+
+    public static final int CONTACT_FULL_NAME_MAX_LENGTH = 255;
+    public static final int CONTACT_SUBJECT_MAX_LENGTH = 255;
+    public static final int CONTACT_MESSAGE_MAX_LENGTH = 5000;
+    public static final int CONTACT_LOCALE_MIN_LENGTH = 2;
+    public static final int CONTACT_LOCALE_MAX_LENGTH = 10;
+    public static final String CONTACT_LOCALE_PATTERN = "^[a-zA-Z]{2,10}(-[a-zA-Z]{2,10})?$";
+
+    // ============================================================================
     // RECAPTCHA
     // ============================================================================
 

@@ -19,7 +19,7 @@ class ImpExSensitiveTableTest {
             "INSERT INTO platform_admin_users (id) VALUES (1) | platform_admin_users",
             "UPDATE tenants SET status='ACTIVE' WHERE id=1 | tenants",
             "UPDATE tenant_modules SET enabled=1 WHERE id=1 | tenant_modules",
-            "INSERT INTO config_property (k, v) VALUES ('a', 'b') | config_property",
+            "INSERT INTO config_properties (k, v) VALUES ('a', 'b') | config_properties",
             "UPDATE platform_settings SET value='x' WHERE name='y' | platform_settings",
             "UPDATE platform_refresh_tokens SET revoked_at=NULL WHERE id=1 | platform_refresh_tokens"
     })
@@ -46,6 +46,16 @@ class ImpExSensitiveTableTest {
             "  insert  into  Tenants  (id)  values  (1)   | tenants"
     })
     void sensitiveTableTarget_handlesQuotingSchemaPrefixAndCase(String sql, String expected) {
+        assertThat(ImpExServiceImpl.sensitiveTableTarget(sql)).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "UPDATE `db`.`users` SET role='X' WHERE id=1 | users",
+            "INSERT INTO `db`.`platform_refresh_tokens` (id) VALUES (1) | platform_refresh_tokens",
+            "UPDATE `ac_tenant_1`.`users` SET x=1 | users"
+    })
+    void sensitiveTableTarget_blocksQuotedSchemaQualifiedSensitiveTables(String sql, String expected) {
         assertThat(ImpExServiceImpl.sensitiveTableTarget(sql)).isEqualTo(expected);
     }
 

@@ -89,7 +89,7 @@ If the workspace field is non-empty, the form operates in **tenant mode** (forgo
 
 `superAdminSelectedTenantId` and `craftive-user-language-preference` remain in `localStorage` as well (super admin tenant selection and language preference are safe to share across tabs).
 
-> **Config panel** (`/config`) uses a separate `config_console_auth` key in `localStorage` with its own access/refresh token pair and token-refresh logic — independent of the main auth session. Config panel OTP is controlled separately by `app.config-auth.otp-enabled` / `CONFIG_AUTH_OTP_ENABLED` and is disabled by default.
+> **Config panel** (`/config`) uses a separate `config_console_auth` key in `localStorage` with its own access/refresh token pair and token-refresh logic — independent of the main auth session. Tenant-side config OTP is controlled by `app.config-auth.otp-enabled` / `CONFIG_AUTH_OTP_ENABLED` (defaults to **`true`** in `application.yml`). **`CONFIG_SUPER_ADMIN` platform login always requires email OTP after password** regardless of that flag. See [`../modules/config-control-panel.md`](../modules/config-control-panel.md) for session semantics and audit notes.
 
 ## API Endpoints
 
@@ -343,7 +343,7 @@ Set-Cookie: craftive_rt=eyJ...; HttpOnly; Secure; SameSite=Strict; Path=/api/aut
 | Max Attempts | 5 | All |
 | Request Rate Limit | 3 per 5 minutes | All |
 | Rate Limit Cleanup | Every 5 minutes | All |
-| Bypass Code | `123456` | Dev + Stage (auto-disabled in prod) |
+| Bypass Code (`OTP_BYPASS_CODE`) | unset / empty by default | Optional: only honored when Spring active profiles include **`dev` or `stage`** (`OtpProperties` clears the value at startup for other profiles). Never commit a weak bypass. |
 
 Configuration in `application.yml`:
 ```yaml
@@ -352,14 +352,15 @@ app:
     length: 6
     expiry-seconds: 300
     max-attempts: 5
-    bypass-code: null  # Set to "123456" in dev/stage profiles
+    bypass-code: ${OTP_BYPASS_CODE:}  # optional; dev/stage only (see OtpProperties)
 ```
 
 **Security Notes**:
 - OTP codes are stored as SHA-256 hashes (never plaintext)
-- Bypass code is automatically disabled outside `dev` and `stage` profiles via `@PostConstruct` validation
+- **Main auth OTP** (`OtpServiceImpl.validateOtp`): optional global-runtime bypass (`/config` keys) and env bypass are evaluated **only when `prod` is not** an active profile; bypass compares use constant-time equality on UTF-8 bytes.
+- **`OtpProperties` startup:** a non-blank `bypass-code` is cleared (set to null) unless the process runs with `dev` or `stage` profile — extra guard beyond documentation-only defaults.
 - Rate limiting: Max 3 OTP requests per email per 5-minute window (returns HTTP 429)
-- The same shared bypass code applies to both standard auth 2FA and `/config` OTP verification because both flows read `OtpConfig`; `/config` only uses OTP when `app.config-auth.otp-enabled=true`
+- **Config panel** (`verifyPlatformOtp`): reads the same `app.otp.bypass-code` binding after the startup guard above; combined with **mandatory** platform config OTP, keep bypass unset in shared environments.
 
 ---
 

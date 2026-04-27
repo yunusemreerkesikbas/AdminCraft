@@ -2,6 +2,7 @@
 -- Mulayim theme foundation
 -- Run via Admin UI /{lang}/impex before theme/mulayim/portfolio_homepage.sql
 -- Seeds theme-owned page templates, template slots, shared shell chrome, minimal navigation and search page
+-- Owns globally reusable Mulayim component capabilities, including BigTextCtaComponent
 
 -- ============================================================
 -- 0. REQUIRED COMPONENT TYPES
@@ -12,7 +13,8 @@ VALUES
   (UUID(), 'NavigationComponent', 'Navigation Component', 'navigation', TRUE, NOW(), NOW()),
   (UUID(), 'CMSLinkComponent', 'CTA Button', 'cta', FALSE, NOW(), NOW()),
   (UUID(), 'CMSParagraphComponent', 'Paragraph', 'content', FALSE, NOW(), NOW()),
-  (UUID(), 'BrandLogosStripComponent', 'Brand Logos Strip', 'content', FALSE, NOW(), NOW())
+  (UUID(), 'BrandLogosStripComponent', 'Brand Logos Strip', 'content', FALSE, NOW(), NOW()),
+  (UUID(), 'BigTextCtaComponent', 'Big Text CTA', 'content', FALSE, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   category = VALUES(category),
@@ -120,7 +122,7 @@ JOIN (
   UNION ALL SELECT 'm1300006-0000-4000-8000-000000000006', 'StorefrontFooterOfficeLinks', 'CMSLinkComponent', 'Storefront Footer Office Links', 2, TRUE, 'footer-office-links', JSON_OBJECT('layoutRole', 'footer.officeLinks')
   UNION ALL SELECT 'm1300007-0000-4000-8000-000000000007', 'StorefrontFooterNewsletter', 'CMSLinkComponent', 'Storefront Footer Newsletter', 3, TRUE, 'footer-newsletter', JSON_OBJECT('layoutRole', 'footer.newsletter')
   UNION ALL SELECT 'm1300008-0000-4000-8000-000000000008', 'StorefrontFooterSocialLinks', 'CMSLinkComponent', 'Storefront Footer Social Links', 4, FALSE, 'footer-social-links', JSON_OBJECT('layoutRole', 'footer.socialLinks')
-  UNION ALL SELECT 'm1300010-0000-4000-8000-000000000010', 'PortfolioPageBrandStrip', 'BrandLogosStripComponent', 'Mulayim Shared Brand Strip', 0, TRUE, 'mulayim-shared-brand-strip', NULL
+  UNION ALL SELECT 'm1300010-0000-4000-8000-000000000010', 'PortfolioPageBrandStrip', 'BrandLogosStripComponent', 'Mulayim Shared Brand Strip', 0, TRUE, 'mulayim-shared-brand-strip', JSON_OBJECT('layoutRole', 'shared.brandStrip')
 ) data ON data.type_uid = ct.uid
 ON DUPLICATE KEY UPDATE
   component_type_id = VALUES(component_type_id),
@@ -177,6 +179,16 @@ ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
 SELECT ct.id, 'linkUrl', 'TEXT', NOW()
 FROM component_types ct WHERE ct.uid = 'BrandLogosStripComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonText', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BigTextCtaComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BigTextCtaComponent'
 ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 
 INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, style_classes, status, created_at, updated_at)
@@ -301,11 +313,6 @@ JOIN (
 ON DUPLICATE KEY UPDATE
   link_name = VALUES(link_name),
   updated_at = NOW();
-
-UPDATE navigation_entries
-SET is_visible = FALSE,
-    updated_at = NOW()
-WHERE uid IN ('LandingMainNavSearchEntry', 'LandingFooterSearchEntry');
 
 UPDATE components c
 JOIN navigation_nodes n ON n.uid = 'LandingMainNavNode'

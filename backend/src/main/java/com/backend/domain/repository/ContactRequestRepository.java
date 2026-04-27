@@ -9,5 +9,5 @@ public interface ContactRequestRepository {
 
     ContactRequest save(ContactRequest entity);
 
-    Page<ContactRequest> search(String search, Pageable pageable);
+    Page<ContactRequest> search(String search, String locale, Pageable pageable);
 }
