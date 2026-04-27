@@ -6,6 +6,12 @@ export interface ConfigAuthChallengeResponse {
     role: string;
 }
 
+export interface ConfigLoginResponse {
+    requiresOtp: boolean;
+    challenge: ConfigAuthChallengeResponse | null;
+    session: ConfigAuthResponse | null;
+}
+
 export interface ConfigAuthResponse {
     accessToken: string;
     refreshToken: string | null;

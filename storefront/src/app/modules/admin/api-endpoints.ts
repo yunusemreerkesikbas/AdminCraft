@@ -99,6 +99,9 @@ export const SPA_ENDPOINTS_CONFIG = {
     publicNewsletterSubscribe: 'public/newsletter/subscribe',
     publicNewsletterConfirm: 'public/newsletter/confirm',
     publicNewsletterUnsubscribe: 'public/newsletter/unsubscribe',
+    contactRequests: 'contact-requests',
+    contactRequestById: 'contact-requests/${id}',
+    publicContactRequests: 'public/contact-requests',
 
     // ----- SITE DASHBOARD -----
     siteOverview: 'sites/overview',

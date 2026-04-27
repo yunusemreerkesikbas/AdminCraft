@@ -239,30 +239,37 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
     }
 
     protected usageTrackBy(index: number, usage: MediaLinkedUsage): string {
-        return this.usageKey(usage);
+        return this.usageGroupKey(usage);
     }
 
-    protected usageKey(usage: MediaLinkedUsage): string {
-        return `${usage.componentId}-${usage.entryId ?? 'component'}-${usage.linkType}`;
+    protected usageGroupKey(usage: MediaLinkedUsage): string {
+        return `${usage.componentId}-${usage.entryId ?? 'component'}`;
     }
 
-    protected usagePrimaryLabel(usage: MediaLinkedUsage): string {
-        return usage.componentUid || usage.componentName || `#${usage.componentId}`;
+    protected isDeletingUsage(
+        usage: MediaLinkedUsage,
+        linkTypeCode: string
+    ): boolean {
+        return (
+            this.deletingLinkedUsageSig() ===
+            this.usageLinkKey(usage, linkTypeCode)
+        );
     }
 
-    protected usageEntryLabel(usage: MediaLinkedUsage): string | null {
-        if (!usage.entryId) {
-            return null;
-        }
-
-        return usage.entryUid || usage.entryTitle || `#${usage.entryId}`;
+    protected isDeletingAnyUsage(usage: MediaLinkedUsage): boolean {
+        return usage.linkTypes.some((linkType) =>
+            this.isDeletingUsage(usage, linkType.code)
+        );
     }
 
-    protected isDeletingUsage(usage: MediaLinkedUsage): boolean {
-        return this.deletingLinkedUsageSig() === this.usageKey(usage);
+    protected usageLinkKey(
+        usage: MediaLinkedUsage,
+        linkTypeCode: string
+    ): string {
+        return `${this.usageGroupKey(usage)}-${linkTypeCode}`;
     }
 
-    deleteLinkedUsage(usage: MediaLinkedUsage): void {
+    deleteLinkedUsage(usage: MediaLinkedUsage, linkTypeCode: string): void {
         const mediaId = this.data?.media?.id;
         if (!mediaId) return;
 
@@ -278,14 +285,18 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
                     return;
                 }
 
-                this.deletingLinkedUsageSig.set(this.usageKey(usage));
+                this.deletingLinkedUsageSig.set(
+                    this.usageLinkKey(usage, linkTypeCode)
+                );
                 this.mediaService
-                    .unlinkMedia(mediaId, usage)
+                    .unlinkMedia(mediaId, usage, linkTypeCode)
                     .pipe(take(1))
                     .subscribe({
                         next: (response) => {
                             this.deletingLinkedUsageSig.set(null);
-                            this.#notificationService.success(response.message!);
+                            this.#notificationService.success(
+                                response.message ?? 'admin.common.success.deleted'
+                            );
                             this.reloadDetails();
                         },
                         error: (err) => {

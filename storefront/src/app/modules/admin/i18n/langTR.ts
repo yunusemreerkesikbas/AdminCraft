@@ -2145,6 +2145,7 @@ export const langTR = {
             platformSettings: 'Platform Ayarları',
             platformMail: 'Platform Mail',
             platformDemoRequests: 'Demo talepleri',
+            contactRequests: 'İletişim talepleri',
             tenantManagement: 'Tenant Yönetimi',
         },
         tenants: {
@@ -2385,6 +2386,27 @@ export const langTR = {
                     fullName: 'Ad Soyad',
                     email: 'E-posta',
                     phone: 'Telefon',
+                    message: 'Mesaj',
+                    locale: 'Dil',
+                    source: 'Kaynak',
+                    clientIp: 'IP',
+                    userAgent: 'Tarayıcı',
+                    createdAt: 'Gönderim',
+                },
+            },
+            contactRequests: {
+                title: 'Contact talepleri',
+                subtitle: 'Contact sayfasından gelen mesajlar',
+                searchPlaceholder: 'Ad, konu veya mesaja göre ara',
+                detail: {
+                    title: 'İletişim talep detayı',
+                },
+                grid: {
+                    noData: 'Henüz iletişim talebi yok',
+                },
+                fields: {
+                    fullName: 'Ad Soyad',
+                    subject: 'Konu',
                     message: 'Mesaj',
                     locale: 'Dil',
                     source: 'Kaynak',

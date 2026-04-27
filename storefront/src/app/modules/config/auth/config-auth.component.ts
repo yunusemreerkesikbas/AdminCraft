@@ -21,6 +21,7 @@ import { ConfigConsoleService } from '../console/config-console.service';
 import {
     ConfigAuthChallengeResponse,
     ConfigAuthResponse,
+    ConfigLoginResponse,
     ConfigTokenState,
 } from '../console/config-console.types';
 import { fuseAnimations } from '@fuse/animations';
@@ -88,14 +89,28 @@ export class ConfigAuthComponent {
         const { email, password } = this.loginForm.getRawValue();
 
         this.#service.login(email!, password!, subdomain).subscribe({
-            next: (response: ApiResponse<ConfigAuthChallengeResponse>) => {
+            next: (response: ApiResponse<ConfigLoginResponse>) => {
                 this.loadingSig.set(false);
                 if (response.result !== 'SUCCESS' || !response.data) {
                     this.errorSig.set(response.message ?? null);
                     return;
                 }
                 this.messageSig.set(response.message ?? null);
-                this.challengeReceived.emit(response.data);
+                if (response.data.requiresOtp) {
+                    if (!response.data.challenge) {
+                        this.errorSig.set(this.#transloco.translate('admin.common.errors.unexpected'));
+                        return;
+                    }
+                    this.challengeReceived.emit(response.data.challenge);
+                    return;
+                }
+
+                if (!response.data.session) {
+                    this.errorSig.set(this.#transloco.translate('admin.common.errors.unexpected'));
+                    return;
+                }
+
+                this.authenticated.emit(this.#toTokenState(response.data.session));
             },
             error: (error) => {
                 this.loadingSig.set(false);
@@ -128,20 +143,7 @@ export class ConfigAuthComponent {
                         this.errorSig.set(response.message ?? null);
                         return;
                     }
-                    const tokenState: ConfigTokenState = {
-                        accessToken: response.data.accessToken,
-                        refreshToken: response.data.refreshToken,
-                        tokenType: response.data.tokenType,
-                        expiresIn: response.data.expiresIn,
-                        userId: response.data.userId,
-                        email: response.data.email,
-                        fullName: response.data.fullName,
-                        role: response.data.role,
-                        tenantId: response.data.tenantId,
-                        subdomain: response.data.subdomain,
-                        issuedAt: response.data.issuedAt,
-                    };
-                    this.authenticated.emit(tokenState);
+                    this.authenticated.emit(this.#toTokenState(response.data));
                 },
                 error: (error) => {
                     this.loadingSig.set(false);
@@ -155,5 +157,21 @@ export class ConfigAuthComponent {
         this.messageSig.set(null);
         this.otpForm.reset();
         this.cancelOtp.emit();
+    }
+
+    #toTokenState(response: ConfigAuthResponse): ConfigTokenState {
+        return {
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+            tokenType: response.tokenType,
+            expiresIn: response.expiresIn,
+            userId: response.userId,
+            email: response.email,
+            fullName: response.fullName,
+            role: response.role,
+            tenantId: response.tenantId,
+            subdomain: response.subdomain,
+            issuedAt: response.issuedAt,
+        };
     }
 }

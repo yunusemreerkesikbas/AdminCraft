@@ -16,10 +16,11 @@ const TENANT_SPECIFIC_EXCEPTIONS: readonly string[] = [
 const AUTH_ENDPOINTS: readonly string[] = [
   'auth/login',
   'auth/refresh',
-  'auth/forgotPassword',
-  'auth/resetPassword',
-  'auth/verifyOtp',
-  'auth/setInitialPassword',
+  'auth/forgot-password',
+  'auth/reset-password',
+  'auth/verify-reset-token',
+  'auth/verify-email-token',
+  'auth/set-initial-password',
   'auth/verify-otp'
 ] as const;
 const CONFIG_ENDPOINTS: readonly string[] = [
@@ -47,16 +48,26 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
             return next(req);
         }
     }
+    if (req.headers.has('X-Tenant-ID') || req.headers.has('X-Tenant-Subdomain')) {
+        return next(req);
+    }
+
     const user = userService.user();
+    const isAuthEndpoint = AUTH_ENDPOINTS.some((endpoint) =>
+        req.url.includes(endpoint)
+    );
     let subdomain = tenantContext.getCurrentSubdomain();
-    if (!subdomain && AUTH_ENDPOINTS.some((endpoint) => req.url.includes(endpoint))) {
+    if (!subdomain && isAuthEndpoint) {
         subdomain = tenantContext.extractSubdomainFromHost();
         if (subdomain === 'admin') subdomain = null;
     }
     const contextTenantId = tenantContext.getCurrentTenantId();
-    const effectiveTenantId = user?.role !== 'SUPER_ADMIN' && user?.tenantId
-        ? user.tenantId
-        : contextTenantId;
+    const effectiveTenantId =
+        isAuthEndpoint && subdomain
+            ? null
+            : user?.role !== 'SUPER_ADMIN' && user?.tenantId
+              ? user.tenantId
+              : contextTenantId;
 
     if (!subdomain && effectiveTenantId == null) {
         return next(req);

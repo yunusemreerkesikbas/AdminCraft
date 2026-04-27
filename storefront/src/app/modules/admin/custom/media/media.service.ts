@@ -122,10 +122,10 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         return this.api.post<ApiResponse<void>>('mediaBind', request, { mediaId });
     }
 
-    unlinkMedia(mediaId: number, usage: MediaLinkedUsage): Observable<ApiResponse<void>> {
+    unlinkMedia(mediaId: number, usage: MediaLinkedUsage, linkTypeCode: string): Observable<ApiResponse<void>> {
         const queryParams: Record<string, string | number> = {
             componentId: usage.componentId,
-            linkType: usage.linkType,
+            linkType: linkTypeCode,
         };
 
         if (usage.entryId != null) {

@@ -69,6 +69,10 @@
                             <a
                                 class="text-md font-medium text-primary-500 hover:underline"
                                 [routerLink]="['/forgot-password']"
+                                [queryParams]="{
+                                    subdomain:
+                                        signInForm.get('workspace')?.value?.trim()?.toLowerCase()
+                                }"
                                 >{{ 'auth.signIn.forgotPassword' | transloco }}
                             </a>
                         </div>

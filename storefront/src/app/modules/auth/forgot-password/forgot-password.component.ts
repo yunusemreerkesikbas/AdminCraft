@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, inject, signal } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    OnInit,
+    ViewChild,
+    ViewEncapsulation,
+    inject,
+    signal,
+} from '@angular/core';
 import {
     FormsModule,
     NgForm,
@@ -9,16 +17,16 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TenantContextService } from '@core/tenant';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { TranslocoModule } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { ConfigFlagsService } from 'app/core/config/config-flags.service';
 import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
-import { finalize, Subject, take } from 'rxjs';
+import { finalize, take } from 'rxjs';
 
 @Component({
     selector: 'spa-forgot-password',
@@ -38,16 +46,15 @@ import { finalize, Subject, take } from 'rxjs';
         SpaInputComponent,
     ],
 })
-export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
+export class AuthForgotPasswordComponent implements OnInit {
     @ViewChild('forgotPasswordNgForm') forgotPasswordNgForm: NgForm;
 
     #authService = inject(AuthService);
     #configFlags = inject(ConfigFlagsService);
     #formBuilder = inject(UntypedFormBuilder);
     #tenantContext = inject(TenantContextService);
-    #translocoService = inject(TranslocoService);
     #recaptchaService = inject(RecaptchaService);
-    #destroySubject = new Subject<void>();
+    #activatedRoute = inject(ActivatedRoute);
 
     forgotPasswordForm: UntypedFormGroup;
 
@@ -68,7 +75,58 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         const siteKey = this.#configFlags.flag('security.recaptcha.site_key', '');
         if (!enabled || !siteKey) return undefined;
 
-        return await this.#recaptchaService.execute('forgot_password', siteKey);
+        try {
+            return await this.#recaptchaService.execute('forgot_password', siteKey);
+        } catch {
+            return undefined;
+        }
+    }
+
+    #resolveSubdomain(): string | null {
+        const hostSubdomain = this.#resolveHostnameSubdomain();
+        if (hostSubdomain && hostSubdomain !== 'admin') {
+            this.#tenantContext.setSubdomain(hostSubdomain);
+            return hostSubdomain;
+        }
+
+        const routeSubdomain =
+            this.#tenantContext.normalizeSubdomain(
+                this.#activatedRoute.snapshot.queryParamMap.get('subdomain')
+            );
+        if (
+            routeSubdomain &&
+            routeSubdomain !== 'admin' &&
+            this.#tenantContext.isValidSubdomain(routeSubdomain)
+        ) {
+            this.#tenantContext.setSubdomain(routeSubdomain);
+            return routeSubdomain;
+        }
+
+        const currentSubdomain = this.#tenantContext.getCurrentSubdomain();
+        if (currentSubdomain && currentSubdomain !== 'admin') {
+            return currentSubdomain;
+        }
+
+        return null;
+    }
+
+    #resolveHostnameSubdomain(): string | null {
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost') {
+            return null;
+        }
+
+        const subdomain = this.#tenantContext.normalizeSubdomain(
+            hostname.split('.')[0]
+        );
+        if (!subdomain) {
+            return null;
+        }
+        if (subdomain === 'admin' || subdomain === 'app' || subdomain === 's1-app') {
+            return null;
+        }
+
+        return this.#tenantContext.isValidSubdomain(subdomain) ? subdomain : null;
     }
 
     async sendResetLink(): Promise<void> {
@@ -79,49 +137,33 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         this.forgotPasswordForm.disable();
         this.showAlertSig.set(false);
 
-        try {
-            const recaptchaToken = await this.#getRecaptchaToken();
-            const email = this.forgotPasswordForm.get('email').value;
-            const subdomain = this.#tenantContext.subdomain();
+        const email = this.forgotPasswordForm.get('email').value;
+        const subdomain = this.#resolveSubdomain();
+        const recaptchaToken = await this.#getRecaptchaToken();
 
-            this.#authService
-                .forgotPassword(email, subdomain, recaptchaToken)
-                .pipe(
-                    take(1),
-                    finalize(() => {
-                        this.forgotPasswordForm.enable();
-                        this.forgotPasswordNgForm.resetForm();
-                        this.showAlertSig.set(true);
-                    })
-                )
-                .subscribe({
-                    next: (response) => {
-                        this.alertSig.set({
-                            type: 'success',
-                            message: response?.message
-                                || this.#translocoService.translate('auth.forgotPassword.alerts.success'),
-                        });
-                    },
-                    error: (error) => {
-                        this.alertSig.set({
-                            type: 'error',
-                            message: error?.error?.message
-                                || this.#translocoService.translate('auth.forgotPassword.alerts.error'),
-                        });
-                    }
-                });
-        } catch (error) {
-            this.forgotPasswordForm.enable();
-            this.showAlertSig.set(true);
-            this.alertSig.set({
-                type: 'error',
-                message: this.#translocoService.translate('auth.forgotPassword.alerts.error'),
+        this.#authService
+            .forgotPassword(email, subdomain ?? undefined, recaptchaToken)
+            .pipe(
+                take(1),
+                finalize(() => {
+                    this.forgotPasswordForm.enable();
+                    this.forgotPasswordNgForm.resetForm();
+                    this.showAlertSig.set(true);
+                })
+            )
+            .subscribe({
+                next: (response) => {
+                    this.alertSig.set({
+                        type: 'success',
+                        message: response?.message ?? '',
+                    });
+                },
+                error: (error) => {
+                    this.alertSig.set({
+                        type: 'error',
+                        message: error?.error?.message ?? '',
+                    });
+                }
             });
-        }
-    }
-
-    ngOnDestroy(): void {
-        this.#destroySubject.next();
-        this.#destroySubject.complete();
     }
 }

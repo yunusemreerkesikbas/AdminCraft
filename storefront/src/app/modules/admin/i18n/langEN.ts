@@ -2166,6 +2166,7 @@ export const langEN = {
             platformSettings: 'Platform Settings',
             platformMail: 'Platform Mail',
             platformDemoRequests: 'Demo requests',
+            contactRequests: 'Contact requests',
             tenantManagement: 'Tenant Management',
         },
         tenants: {
@@ -2405,6 +2406,27 @@ export const langEN = {
                     fullName: 'Name',
                     email: 'Email',
                     phone: 'Phone',
+                    message: 'Message',
+                    locale: 'Locale',
+                    source: 'Source',
+                    clientIp: 'IP',
+                    userAgent: 'User agent',
+                    createdAt: 'Submitted',
+                },
+            },
+            contactRequests: {
+                title: 'Contact requests',
+                subtitle: 'Messages submitted from the contact page',
+                searchPlaceholder: 'Search by name, subject or message',
+                detail: {
+                    title: 'Contact request details',
+                },
+                grid: {
+                    noData: 'No contact requests yet',
+                },
+                fields: {
+                    fullName: 'Name',
+                    subject: 'Subject',
                     message: 'Message',
                     locale: 'Locale',
                     source: 'Source',

@@ -5,8 +5,8 @@ import { environment } from '@environments/environment';
 import { Observable } from 'rxjs';
 import {
     ConfigAuditItem,
-    ConfigAuthChallengeResponse,
     ConfigAuthResponse,
+    ConfigLoginResponse,
     ConfigProperty,
     ConfigRecaptchaState,
     PatchRecaptchaPayload,
@@ -25,9 +25,9 @@ export class ConfigConsoleService {
         password: string,
         subdomain: string | null,
         tenantId?: number | null
-    ): Observable<ApiResponse<ConfigAuthChallengeResponse>> {
+    ): Observable<ApiResponse<ConfigLoginResponse>> {
         const headers = this.#tenantHeaders(subdomain, tenantId);
-        return this.#http.post<ApiResponse<ConfigAuthChallengeResponse>>(
+        return this.#http.post<ApiResponse<ConfigLoginResponse>>(
             `${this.#baseUrl}/config/auth/login`,
             { email, password, subdomain, tenantId },
             { headers }

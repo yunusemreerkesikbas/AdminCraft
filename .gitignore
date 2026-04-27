@@ -112,4 +112,3 @@ backend/.m2/
 storefront/tmpclaude-*
 storefront-nextjs/.next-dev-*.log
 storefront-nextjs/dev-server*.log
-liko-next-js/
