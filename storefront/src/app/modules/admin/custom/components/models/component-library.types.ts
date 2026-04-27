@@ -180,6 +180,8 @@ export interface ComponentCompositeResponse {
     translations: Record<Language, ComponentI18nContentDto>;
 }
 
+export type { BulkDeleteError, BulkDeleteRequest, BulkDeleteResult } from '@core/crud/bulk-delete.types';
+
 // ==================== Component Entry Composite Types ====================
 
 export interface ComponentEntryI18nRequest {

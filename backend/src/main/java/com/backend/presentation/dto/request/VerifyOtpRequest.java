@@ -26,5 +26,7 @@ public record VerifyOtpRequest(
 
         Long tenantId,
 
-        String subdomain
+        String subdomain,
+
+        Boolean rememberMe
 ) {}

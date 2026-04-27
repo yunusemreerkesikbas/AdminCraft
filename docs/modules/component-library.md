@@ -66,6 +66,7 @@ Endpoints:
 - `GET /api/components/{id}` (supports `?include=translations`)
 - `PUT /api/components/{id}`
 - `DELETE /api/components/{id}`
+- `POST /api/components/bulk-delete` (body `{ "ids": [...] }`, max **100** IDs; **200** + `ApiResponse.SUCCESS` with localized summary in `message` and `data` `{ requestedCount, deletedIds, failedIds, errors[] }` for partial or full success; **422** + `ApiResponse.ERROR` + `message` only when **every** ID fails; `errors[]` entries expose safe `code` + localized `message`, not raw exception text)
 - `POST /api/components/composite`
 - `GET /api/components/{id}/composite`
 - `PUT /api/components/{id}/composite`
@@ -148,6 +149,8 @@ Admin UI behavior notes:
 
 - Backend-driven success/error notifications are shown directly from `ApiResponse.message`; frontend transloco fallback keys are kept only for client-side-only states such as empty state, loading info, or system-type guards.
 - Delete actions in component and component-entry lists use the shared confirmation pattern (`ConfirmationService` → `SpaGenericModalComponent`) instead of `window.confirm`.
+- **Component list** (`list/component-list.component.ts`): multi-select with a left checkbox column and header “select all on **current page**” (server-side pagination). **Delete selected** uses `POST /api/components/bulk-delete`; the runner still supports a sequential `DELETE /api/components/{id}` fallback if a screen wires only `deleteOne$`. Toasts use **`ApiResponse.message`** from the bulk response (or the error body on **422** all-failed). Selection is cleared after each successful list reload. `VIEWER` users do not see checkboxes or delete actions (read-only list).
+- **Page template list** (`templates/list/page-template-list.component.ts`): same selection pattern; **Delete selected** uses `POST /api/page-templates/bulk-delete` with the same **200 / 422** contract and server-authored `message` in the admin UI.
 
 ## Security & tenant isolation
 

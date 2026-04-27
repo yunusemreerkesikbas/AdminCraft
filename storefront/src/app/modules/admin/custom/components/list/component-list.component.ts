@@ -1,25 +1,30 @@
-import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     computed,
+    effect,
     EventEmitter,
     inject,
     Input,
+    OnChanges,
     OnDestroy,
     OnInit,
     Output,
     signal,
+    SimpleChanges,
     TemplateRef,
     ViewChild,
     ViewEncapsulation,
 } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
+import { BaseSelectablePaginatedListComponent, BulkDeleteRunnerService } from '@core/crud';
+import { UserService } from '@core/user/user.service';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import {
@@ -31,8 +36,10 @@ import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginat
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { VIEWER_ROLE } from '@shared/constants';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
 import { take, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { ComponentEditDialogComponent } from '../component-edit-dialog/component-edit-dialog.component';
 import {
     ComponentDetailDto,
@@ -52,10 +59,11 @@ const DIALOG_CONFIG = {
     selector: 'spa-component-list',
     standalone: true,
     imports: [
-        CommonModule,
+        NgClass,
         FormsModule,
         ReactiveFormsModule,
         MatButtonModule,
+        MatCheckboxModule,
         MatIconModule,
         MatPaginatorModule,
         TranslocoModule,
@@ -70,12 +78,12 @@ const DIALOG_CONFIG = {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ComponentListComponent
-    extends BasePaginatedListComponent<
+    extends BaseSelectablePaginatedListComponent<
         ComponentDto,
         CreateComponentRequest,
         UpdateComponentRequest
     >
-    implements OnInit, OnDestroy
+    implements OnInit, OnDestroy, OnChanges
 {
     @Input() mode: 'admin' | 'picker' = 'admin';
     @Output() componentSelected = new EventEmitter<ComponentDto>();
@@ -86,15 +94,30 @@ export class ComponentListComponent
     visibleTemplate!: TemplateRef<any>;
     @ViewChild('pickerActionsTemplate', { static: true })
     pickerActionsTemplate!: TemplateRef<any>;
+    @ViewChild('headerSelectAllTemplate', { static: true })
+    headerSelectAllTemplate!: TemplateRef<void>;
+    @ViewChild('rowCheckboxTemplate', { static: true })
+    rowCheckboxTemplate!: TemplateRef<any>;
 
     #matDialog = inject(MatDialog);
     #confirmationService = inject(ConfirmationService);
     #notificationService = inject(NotificationService);
+    #bulkDeleteRunner = inject(BulkDeleteRunnerService);
     #languageContextService = inject(LanguageContextService);
+    #userService = inject(UserService);
     protected override service = inject(ComponentLibraryService);
     protected override store = inject(ComponentStore);
     protected override defaultSort = 'createdAt,desc';
     protected override defaultPageSize = 20;
+
+    protected readonly isViewerSig = computed(
+        () => this.#userService.user()?.role === VIEWER_ROLE
+    );
+
+    readonly #syncColumnsWithRole = effect(() => {
+        void this.isViewerSig();
+        this.#rebuildColumns();
+    });
 
     protected componentTypesSig = signal<ComponentTypeDto[]>([]);
     protected typesLoadingSig = signal<boolean>(false);
@@ -106,22 +129,22 @@ export class ComponentListComponent
 
     protected columns: GridColumn<ComponentDto>[] = [];
 
-    protected actions: GridAction<ComponentDto>[] = [
-        {
-            icon: 'heroicons_outline:pencil-square',
-            label: 'admin.common.edit',
-            action: 'edit',
-        },
-        {
-            icon: 'heroicons_outline:trash',
-            label: 'admin.common.delete',
-            action: 'delete',
-            color: 'warn',
-        },
-    ];
+    protected actions: GridAction<ComponentDto>[] = [];
 
     protected override onInit(): void {
-        this.columns = [
+        this.#rebuildColumns();
+        this.#loadComponentTypes();
+        this.#setupSearchDebounce();
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes['mode']) {
+            this.#rebuildColumns();
+        }
+    }
+
+    #rebuildColumns(): void {
+        const baseColumns: GridColumn<ComponentDto>[] = [
             {
                 key: 'info',
                 label: 'admin.common.grid.uid',
@@ -146,8 +169,111 @@ export class ComponentListComponent
             },
         ];
 
-        this.#loadComponentTypes();
-        this.#setupSearchDebounce();
+        if (this.mode === 'admin' && !this.isViewerSig()) {
+            this.columns = [
+                {
+                    key: 'select',
+                    label: '',
+                    type: 'custom',
+                    width: '52px',
+                    cssClass: 'flex items-center justify-center',
+                    headerTemplate: this.headerSelectAllTemplate,
+                    template: this.rowCheckboxTemplate,
+                },
+                ...baseColumns,
+            ];
+        } else {
+            this.columns = baseColumns;
+        }
+
+        this.actions = [
+            {
+                icon: 'heroicons_outline:pencil-square',
+                label: 'admin.common.edit',
+                action: 'edit',
+                show: () => !this.isViewerSig(),
+            },
+            {
+                icon: 'heroicons_outline:trash',
+                label: 'admin.common.delete',
+                action: 'delete',
+                color: 'warn',
+                show: () => !this.isViewerSig(),
+            },
+        ];
+    }
+
+    protected showSelectionUi(): boolean {
+        return this.mode === 'admin' && !this.isViewerSig();
+    }
+
+    protected pageSelectionState(): {
+        allSelected: boolean;
+        indeterminate: boolean;
+    } {
+        return super.pageSelectionState();
+    }
+
+    protected onToggleSelectAllOnPage(event: {
+        checked: boolean;
+    }): void {
+        this.toggleSelectAllOnPage(event.checked);
+    }
+
+    protected onRowCheckboxChange(component: ComponentDto): void {
+        this.store.toggleSelected(component.id);
+    }
+
+    protected deleteSelectedComponents(): void {
+        if (this.isViewerSig()) {
+            return;
+        }
+        const ids = [...this.store.selectedIdsSig()];
+        if (ids.length === 0) {
+            return;
+        }
+        this.#confirmationService
+            .confirm(
+                'admin.components.bulkDeleteConfirmTitle',
+                'admin.components.bulkDeleteConfirmMessage',
+                'admin.common.actions.confirm',
+                'warning',
+                { count: ids.length }
+            )
+            .pipe(take(1))
+            .subscribe((confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
+                this.store.setLoading(true);
+                this.#bulkDeleteRunner
+                    .run(ids, {
+                        bulkDelete$: () =>
+                            this.service.bulkDeleteComponentsWithResponse(ids).pipe(take(1)),
+                        deleteOne$: (id) =>
+                            this.service.deleteComponentWithResponse(id),
+                    })
+                    .pipe(
+                        finalize(() => this.store.setLoading(false)),
+                        takeUntil(this.destroy$)
+                    )
+                    .subscribe({
+                        next: (result) => {
+                            if (result.message) {
+                                this.#notificationService.success(result.message);
+                            }
+                            this.store.clearSelection();
+                            this.loadItems();
+                        },
+                        error: (error) => {
+                            const msg =
+                                error?.error?.message ??
+                                error?.message ??
+                                '';
+                            this.#notificationService.alert(msg);
+                        },
+                    });
+            });
     }
 
     #setupSearchDebounce(): void {
@@ -175,6 +301,10 @@ export class ComponentListComponent
             });
     }
 
+    protected override onLoadSuccess(_items: ComponentDto[]): void {
+        this.store.clearSelection();
+    }
+
     protected override onLoadError(error: any): void {
         this.#notificationService.alert(error?.error?.message ?? '');
     }
@@ -198,6 +328,9 @@ export class ComponentListComponent
     }
 
     createComponent(): void {
+        if (this.isViewerSig()) {
+            return;
+        }
         if (!this.canCreateComponent()) {
             if (this.typesLoadingSig()) {
                 this.#notificationService.info(
@@ -235,6 +368,9 @@ export class ComponentListComponent
     }
 
     protected editComponent(componentId: number): void {
+        if (this.isViewerSig()) {
+            return;
+        }
         this.store.setLoading(true);
         this.service
             .getComponentDetail(componentId)
@@ -277,6 +413,9 @@ export class ComponentListComponent
     }
 
     protected deleteComponent(componentId: number): void {
+        if (this.isViewerSig()) {
+            return;
+        }
         this.#confirmationService
             .confirm('admin.common.delete', 'admin.components.confirmDelete')
             .pipe(take(1))

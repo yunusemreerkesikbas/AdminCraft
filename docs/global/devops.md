@@ -472,6 +472,30 @@ jobs:
 
 Adjust `TENANT`, organization, and optional custom domains per repository.
 
+#### Canonical redirect (apex → www)
+
+When the tenant has a custom domain with an apex redirect (e.g. `ahmetmulayim.com` → `www.ahmetmulayim.com`), pass a 6th argument to the deploy script:
+
+```bash
+bash /opt/craftive/scripts/deploy-tenant-storefront.sh \
+  prod mulayim "$IMAGE" \
+  www.ahmetmulayim.com "ahmetmulayim.com" "www.ahmetmulayim.com"
+# arg4: primary_domain (canonical — served directly)
+# arg5: extra_domains_csv (apex — will 301 → canonical)
+# arg6: canonical_host (triggers redirect middleware)
+```
+
+The script generates a Traefik `redirectregex` middleware that issues a permanent 301 redirect for every domain in `extra_domains_csv` that differs from `canonical_host`. The canonical router routes traffic normally; a separate redirect router handles the apex. Both domains get their own Let's Encrypt certificate via HTTP-01.
+
+In the prod workflow, wire this via the `deploy-tenant-storefront.sh` call:
+
+```yaml
+script: |
+  bash /opt/craftive/scripts/deploy-tenant-storefront.sh \
+    prod ${{ env.TENANT }} "$IMAGE" \
+    www.ahmetmulayim.com "ahmetmulayim.com" "www.ahmetmulayim.com"
+```
+
 If the tenant storefront also needs Search Console HTML tag verification, define `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` in that tenant repository's own tracked storefront env or equivalent build config. This is tenant-repo concern, not platform repo concern.
 
 ### First-time server setup

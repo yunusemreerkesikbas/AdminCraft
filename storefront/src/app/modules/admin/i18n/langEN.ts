@@ -190,6 +190,8 @@ export const langEN = {
                 select: 'Select',
                 remove: 'Remove',
                 sync: 'Sync',
+                deleteSelected: 'Delete selected',
+                selectAllOnPage: 'Select all on this page',
             },
             messages: {
                 operationSuccess: 'Operation successful',
@@ -657,6 +659,8 @@ export const langEN = {
             actions: {
                 create: 'Create Template',
                 createFirst: 'Create First Template',
+                deleteSelected: 'Delete selected',
+                selectAllOnPage: 'Select all on this page',
             },
             messages: {
                 noTemplates: 'No page templates found.',
@@ -668,10 +672,14 @@ export const langEN = {
                 updateFailed: 'Failed to update page template',
                 deleteSuccess: 'Page template deleted successfully',
                 deleteFailed: 'Failed to delete page template',
+                bulkDeleteSuccess: 'Selected page templates deleted successfully',
                 loadFailed: 'Failed to load page templates',
                 systemTemplateCannotModify: 'Cannot modify system template: {{templateUid}}',
             },
             confirmDelete: 'Are you sure you want to delete "{{name}}"?',
+            bulkDeleteConfirmTitle: 'Delete selected page templates',
+            bulkDeleteConfirmMessage:
+                'Delete {{count}} selected page template(s)? This cannot be undone.',
         },
         media: {
             title: 'Media Library',
@@ -699,6 +707,9 @@ export const langEN = {
             orBrowse: 'or browse your computer',
             maxFileSize: 'Max file size: 10MB',
             searchPlaceholder: 'Search media...',
+            bulkDeleteConfirmTitle: 'Delete selected media',
+            bulkDeleteConfirmMessage:
+                'Delete {{count}} selected file(s)? This cannot be undone.',
             addMore: 'Add More',
             uploading: 'Uploading',
             selectedFiles: 'Selected Files',
@@ -1709,6 +1720,11 @@ export const langEN = {
             selectComponent: 'Select Component',
             noComponents: 'No components yet',
             confirmDelete: 'Are you sure you want to delete this component?',
+            bulkDeleteConfirmTitle: 'Delete selected components',
+            bulkDeleteConfirmMessage:
+                'Delete {{count}} selected component(s)? This cannot be undone.',
+            deleteSelected: 'Delete selected',
+            selectAllOnPage: 'Select all on this page',
             fields: {
                 type: 'Type',
                 category: 'Category',
@@ -2679,6 +2695,8 @@ export const langEN = {
             title: 'Sign in',
             demoInfo:
                 'You are viewing Craftive. Sign in to open the admin workspace.',
+            workspace: 'Workspace',
+            workspacePlaceholder: 'your-company',
             emailLabel: 'Email address',
             passwordLabel: 'Password',
             rememberMe: 'Remember me',
@@ -2702,9 +2720,14 @@ export const langEN = {
             signUp: 'Sign up',
             alreadyHaveAccount: 'Already have an account?',
             emailLabel: 'Email address',
+            emailPlaceholder: 'name@company.com',
             passwordLabel: 'Password',
+            passwordPlaceholder: 'Enter your password',
             confirmPasswordLabel: 'Confirm Password',
+            confirmPasswordPlaceholder: 'Re-enter your password',
             fullNameLabel: 'Full name',
+            fullNamePlaceholder: 'Your full name',
+            otpPlaceholder: '6-digit code',
             companyLabel: 'Company',
             errors: {
                 emailRequired: 'Email address is required',
@@ -2717,7 +2740,7 @@ export const langEN = {
                 title1: 'Modular foundation',
                 title2: 'tenant by tenant',
                 description:
-                    'Craftive delivers modular project solutions: a reusable platform with isolated tenant databases, rich CMS modules, and headless delivery when you need it.',
+                    'Craftive helps you deliver tailored digital projects faster with reusable building blocks that adapt to each customer.',
                 communityStat:
                     'Content, catalog, and marketing operations on one adaptable base.',
             },
@@ -2771,7 +2794,7 @@ export const langEN = {
                 title1: 'Welcome to',
                 title2: 'Craftive',
                 description:
-                    'Complete your invitation by setting a password. You will access your tenant workspace on our modular, isolated platform.',
+                    'Set your password to access your workspace and start running your website, catalog, and campaigns from one place.',
             },
             errors: {
                 tokenMissing: 'Invalid or missing verification token.',

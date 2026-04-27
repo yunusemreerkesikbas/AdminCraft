@@ -12,7 +12,7 @@ import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { User } from 'app/core/user/user.types';
 import { NotificationService } from 'app/shared/notifications/notification.service';
-import { catchError, Observable, of, switchMap } from 'rxjs';
+import { catchError, finalize, Observable, of, shareReplay, switchMap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -36,20 +36,15 @@ export class AuthService {
     readonly #tenantContext = inject(TenantContextService);
     readonly #notificationService = inject(NotificationService);
 
-    #getDisplayName(name?: string | null): string {
-        const trimmed = (name ?? '').trim();
-        if (trimmed && !trimmed.includes('@')) {
-            return trimmed;
-        }
-        return 'Admin';
-    }
+    #accessTokenSig = signal<string>('');
+    #refreshInProgress: Observable<boolean> | null = null;
 
     #setAccessToken(token: string): void {
-        sessionStorage.setItem('accessToken', token);
+        this.#accessTokenSig.set(token);
     }
 
     #getAccessToken(): string {
-        return sessionStorage.getItem('accessToken') ?? '';
+        return this.#accessTokenSig();
     }
 
     getAccessToken(): string {
@@ -138,12 +133,10 @@ export class AuthService {
 
         this.#storeUserAndTenantInfo(response);
 
-        const displayName = this.#getDisplayName(response.fullName);
-
         const user: User = {
             id: response.userId,
             email: response.email,
-            name: displayName,
+            name: response.fullName ?? response.email,
             role: response.role,
             tenantId: response.tenantId,
             preferredLanguage: response.preferredLanguage,
@@ -164,7 +157,6 @@ export class AuthService {
         return this.#apiClient.post<LoginResponse>('login', credentials).pipe(
             switchMap((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
-                    // Check if 2FA is required
                     if (response.data.requires2FA) {
                         this.#requires2FASig.set(true);
                         this.#twoFactorPendingSig.set({
@@ -173,9 +165,7 @@ export class AuthService {
                             tenantId: response.data.tenantId,
                             subdomain: response.data.subdomain,
                         });
-                        this.#notificationService.info(
-                            'Two-factor authentication required. Please check your email for the verification code.'
-                        );
+                        this.#notificationService.info(response.message ?? '');
                         return of('requires2FA' as const);
                     }
                     return this.#completeSignIn(
@@ -214,9 +204,7 @@ export class AuthService {
                         response.message
                     );
                 } else {
-                    this.#notificationService.alert(
-                        response.message || 'OTP verification failed'
-                    );
+                    this.#notificationService.alert(response.message ?? '');
                     return of(false);
                 }
             }),
@@ -240,11 +228,10 @@ export class AuthService {
         this.#setAccessToken(data.accessToken);
         this.#authenticatedSig.set(true);
         this.#storeUserAndTenantInfo(data);
-        const displayName = this.#getDisplayName(data.fullName);
         const user: User = {
             id: data.userId,
             email: data.email,
-            name: displayName,
+            name: data.fullName ?? data.email,
             role: data.role,
             tenantId: data.tenantId,
             preferredLanguage: data.preferredLanguage,
@@ -259,10 +246,6 @@ export class AuthService {
             switchMap(() => {
                 this.#notificationService.success(message);
                 return of(true);
-            }),
-            catchError(() => {
-                this.#notificationService.success(message); // Still success auth-wise
-                return of(true);
             })
         );
     }
@@ -270,22 +253,21 @@ export class AuthService {
     signInUsingToken(): Observable<boolean> {
         try {
             const token = this.#getAccessToken();
-            if (token) {
+            if (token && !AuthUtils.isTokenExpired(token)) {
                 const decoded = AuthUtils.decodeToken(token);
                 if (decoded) {
                     this.#authenticatedSig.set(true);
                     const storedName = (() => {
                         try {
-                            return sessionStorage.getItem('userFullName');
+                            return localStorage.getItem('userFullName');
                         } catch {
                             return null;
                         }
                     })();
-                    const displayName = this.#getDisplayName(storedName);
                     const user: User = {
                         id: decoded.userId || 0,
                         email: decoded.sub,
-                        name: displayName,
+                        name: storedName ?? decoded.sub,
                         role: decoded.role,
                         tenantId: decoded.tenantId || 0,
                     };
@@ -294,7 +276,7 @@ export class AuthService {
                         .initializeTenantContext(user)
                         .pipe(
                             switchMap(() => of(true)),
-                            catchError(() => of(true))
+                            catchError(() => of(false))
                         );
                 }
             }
@@ -307,20 +289,32 @@ export class AuthService {
     }
 
     signOut(): Observable<any> {
-        sessionStorage.removeItem('accessToken');
+        this.#setAccessToken('');
         this.#clearUserAndTenantInfo();
         this.#authenticatedSig.set(false);
         this.#userService.clear();
-        return of(true);
+        return this.#apiClient.custom('POST', 'logout', {});
     }
 
-    signUp(user: {
-        name: string;
-        email: string;
-        password: string;
-        company: string;
-    }): Observable<any> {
-        return this.#apiClient.post('login', user);
+    refresh(): Observable<boolean> {
+        if (!this.#refreshInProgress) {
+            this.#refreshInProgress = this.#apiClient
+                .custom<LoginResponse>('POST', 'refresh', {})
+                .pipe(
+                    switchMap((response) => {
+                        if (response.result === 'SUCCESS' && response.data?.accessToken) {
+                            this.#setAccessToken(response.data.accessToken);
+                            this.#authenticatedSig.set(true);
+                            return of(true);
+                        }
+                        return of(false);
+                    }),
+                    catchError(() => of(false)),
+                    finalize(() => { this.#refreshInProgress = null; }),
+                    shareReplay(1)
+                );
+        }
+        return this.#refreshInProgress;
     }
 
     unlockSession(credentials: {
@@ -335,40 +329,38 @@ export class AuthService {
             return of(true);
         }
         const token = this.#getAccessToken();
-        if (!token) {
-            return of(false);
+        if (token && !AuthUtils.isTokenExpired(token)) {
+            return this.signInUsingToken();
         }
-        if (AuthUtils.isTokenExpired(token)) {
-            return of(false);
-        }
-        return this.signInUsingToken();
+        return this.refresh().pipe(
+            switchMap((refreshed) => (refreshed ? this.signInUsingToken() : of(false)))
+        );
     }
 
     #storeUserAndTenantInfo(data: LoginResponseData): void {
         try {
             if (data.userId) {
-                sessionStorage.setItem('userId', data.userId.toString());
+                localStorage.setItem('userId', data.userId.toString());
             }
             if (data.tenantId) {
-                sessionStorage.setItem('tenantId', data.tenantId.toString());
+                localStorage.setItem('tenantId', data.tenantId.toString());
             }
             if (data.subdomain) {
                 const subdomain = data.subdomain;
-                sessionStorage.setItem('currentTenantSubdomain', subdomain);
+                localStorage.setItem('currentTenantSubdomain', subdomain);
             }
-            const displayName = this.#getDisplayName(data.fullName);
-            if (displayName) {
-                sessionStorage.setItem('userFullName', displayName);
+            if (data.fullName) {
+                localStorage.setItem('userFullName', data.fullName);
             }
         } catch (error) {}
     }
 
     #clearUserAndTenantInfo(): void {
         try {
-            sessionStorage.removeItem('userId');
-            sessionStorage.removeItem('tenantId');
-            sessionStorage.removeItem('currentTenantSubdomain');
-            sessionStorage.removeItem('userFullName');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('tenantId');
+            localStorage.removeItem('currentTenantSubdomain');
+            localStorage.removeItem('userFullName');
         } catch (error) {}
     }
 }

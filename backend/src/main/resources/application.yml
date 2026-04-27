@@ -9,6 +9,11 @@ app:
     secret: ${JWT_SECRET:MyVerySecureJWTSecretKeyForCraftiveApplication2024WithMoreThan32Characters!}
     expiration: ${JWT_EXPIRATION:86400000}
     refreshExpiration: ${JWT_REFRESH_EXPIRATION:604800000}
+    cookie:
+      name: craftive_rt
+      path: /api/auth
+      secure: false
+      same-site: Strict
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
     admin-url: ${APP_FRONTEND_ADMIN_URL:http://localhost:4200}
@@ -40,7 +45,7 @@ app:
     allowed-origin-patterns:
       - http://*.localhost:4200
   tenant:
-    auto-sync-on-startup: ${TENANT_AUTO_SYNC:false}
+    auto-sync-on-startup: ${TENANT_AUTO_SYNC:true}
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}
   email:
     enabled: ${EMAIL_ENABLED:true}

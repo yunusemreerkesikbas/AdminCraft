@@ -23,7 +23,13 @@
         >
             @for (col of visibleColumns(); track col.key) {
                 <div [class]="col.cssClass">
-                    {{ col.label | transloco }}
+                    @if (col.headerTemplate) {
+                        <ng-container
+                            *ngTemplateOutlet="col.headerTemplate"
+                        ></ng-container>
+                    } @else {
+                        {{ col.label | transloco }}
+                    }
                 </div>
             }
             <div class="text-right">

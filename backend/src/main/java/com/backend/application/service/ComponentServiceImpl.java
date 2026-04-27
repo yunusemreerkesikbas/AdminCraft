@@ -8,15 +8,24 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.request.ComponentCreateRequest;
 import com.backend.application.dto.request.ComponentI18nCommand;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
+import com.backend.application.dto.response.BulkDeleteResultResponse;
+import com.backend.application.support.BulkDeleteExceptionMapper;
 import com.backend.application.dto.response.ComponentCompositeResponse;
 import com.backend.application.dto.response.ComponentListItemResponse;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
@@ -61,6 +70,30 @@ public class ComponentServiceImpl implements ComponentService {
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
     private final SiteActivityPublisher activityPublisher;
     private final SecurityHelper securityHelper;
+    private final MessageSource messageSource;
+    @Qualifier("tenantTransactionManager")
+    private final PlatformTransactionManager tenantTransactionManager;
+
+    private TransactionTemplate requiresNewTx;
+
+    @PostConstruct
+    void initRequiresNewTx() {
+        requiresNewTx = new TransactionTemplate(tenantTransactionManager);
+        requiresNewTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
+
+    private void deleteInNewTransaction(Long id) {
+        requiresNewTx.execute(status -> {
+            Component component = componentRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Component", id));
+            String componentName = component.getName() != null ? component.getName() : component.getUid();
+            componentMediaLinkSyncService.removeComponentResponsiveLinks(id);
+            componentRepository.delete(component);
+            activityPublisher.publishComponentEvent(id, componentName, ActivityAction.DELETED,
+                    securityHelper.getCurrentUserIdOrNull(), null, null);
+            return null;
+        });
+    }
 
     @Override
     @Transactional
@@ -195,16 +228,28 @@ public class ComponentServiceImpl implements ComponentService {
     }
 
     @Override
-    @Transactional
     public void deleteComponent(Long id) {
-        Component component = componentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Component", id));
-        String componentName = component.getName() != null ? component.getName() : component.getUid();
+        deleteInNewTransaction(id);
+    }
 
-        componentMediaLinkSyncService.removeComponentResponsiveLinks(id);
-        componentRepository.delete(component);
-        activityPublisher.publishComponentEvent(id, componentName, ActivityAction.DELETED,
-                securityHelper.getCurrentUserIdOrNull(), null, null);
+    @Override
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public BulkDeleteResultResponse bulkDeleteComponents(List<Long> ids) {
+        List<Long> deletedIds = new ArrayList<>();
+        List<Long> failedIds = new ArrayList<>();
+        List<BulkDeleteResultResponse.BulkDeleteError> errors = new ArrayList<>();
+
+        for (Long id : ids) {
+            try {
+                deleteInNewTransaction(id);
+                deletedIds.add(id);
+            } catch (Exception ex) {
+                failedIds.add(id);
+                errors.add(BulkDeleteExceptionMapper.toError(id, ex, messageSource));
+            }
+        }
+
+        return new BulkDeleteResultResponse(ids.size(), deletedIds, failedIds, errors);
     }
 
     @Override

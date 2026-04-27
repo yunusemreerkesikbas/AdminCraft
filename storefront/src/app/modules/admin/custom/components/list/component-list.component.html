@@ -8,7 +8,7 @@
     @if (mode === 'admin') {
         <admin-page-header
             [title]="'admin.components.title'"
-            [showCreateButton]="true"
+            [showCreateButton]="!isViewerSig()"
             [createButtonText]="'admin.common.create'"
             [isLoading]="store.isLoading()"
             (createClick)="createComponent()"
@@ -17,6 +17,17 @@
             (search)="searchInputControl.setValue($event)"
         >
             <ng-container actions>
+                @if (showSelectionUi() && store.selectedCountSig() > 0) {
+                    <button
+                        mat-stroked-button
+                        color="warn"
+                        type="button"
+                        (click)="deleteSelectedComponents()"
+                    >
+                        {{ 'admin.common.actions.deleteSelected' | transloco }}
+                        ({{ store.selectedCountSig() }})
+                    </button>
+                }
                 @if (availableSortsSig().length > 0) {
                     <spa-admin-sort-dropdown
                         [availableSorts]="availableSortsSig()"
@@ -34,7 +45,9 @@
             <spa-admin-grid
                 [items]="paginatedItemsSig()"
                 [columns]="columns"
-                [actions]="mode === 'admin' ? actions : []"
+                [actions]="
+                    mode === 'admin' && !isViewerSig() ? actions : []
+                "
                 [actionsTemplate]="
                     mode === 'picker' ? pickerActionsTemplate : undefined
                 "
@@ -82,8 +95,30 @@
 
 <ng-template #visibleTemplate let-component>
     <div class="inline-flex items-center text-sm font-medium">
-        {{ component.isVisibl }}
+        {{ component.isVisible }}
     </div>
+</ng-template>
+
+<ng-template #headerSelectAllTemplate>
+    @if (showSelectionUi() && paginatedItemsSig().length > 0) {
+        <mat-checkbox
+            [checked]="pageSelectionState().allSelected"
+            [indeterminate]="pageSelectionState().indeterminate"
+            (change)="onToggleSelectAllOnPage($event)"
+            (click)="$event.stopPropagation()"
+            [attr.aria-label]="
+                'admin.common.actions.selectAllOnPage' | transloco
+            "
+        ></mat-checkbox>
+    }
+</ng-template>
+
+<ng-template #rowCheckboxTemplate let-component>
+    <mat-checkbox
+        [checked]="store.isSelected(component.id)"
+        (change)="onRowCheckboxChange(component)"
+        (click)="$event.stopPropagation()"
+    ></mat-checkbox>
 </ng-template>
 
 <ng-template #pickerActionsTemplate let-component>
