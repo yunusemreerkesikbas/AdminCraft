@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCommand;
 import com.backend.application.command.PageTemplateCommands.CreateTemplateSlotCommand;
 import com.backend.application.command.PageTemplateCommands.UpdatePageTemplateCommand;
+import com.backend.application.dto.response.BulkDeleteResultResponse;
 import com.backend.application.dto.request.CreatePageTemplateRequest;
 import com.backend.application.dto.request.CreateTemplateSlotRequest;
 import com.backend.application.dto.request.PageTemplateI18nRequest;
@@ -36,6 +37,7 @@ import com.backend.application.dto.template.TemplateSlotDto;
 import com.backend.application.service.PageTemplateI18nService;
 import com.backend.application.service.PageTemplateService;
 import com.backend.domain.enums.Language;
+import com.backend.presentation.dto.request.BulkDeleteRequest;
 import com.backend.presentation.dto.response.PageTemplateResponse;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SortConfig;
@@ -50,7 +52,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/page-templates")
 @RequiredArgsConstructor
@@ -149,6 +153,33 @@ public class PageTemplateController {
       @PathVariable @NotNull @Min(1) Long id) {
     pageTemplateService.delete(id);
     return ResponseEntity.ok(ApiResponse.success("Template deleted successfully", null));
+  }
+
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PostMapping("/bulk-delete")
+  public ResponseEntity<ApiResponse<BulkDeleteResultResponse>> bulkDeleteTemplates(
+      @Valid @RequestBody BulkDeleteRequest request,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+    try {
+      BulkDeleteResultResponse result = pageTemplateService.bulkDeletePageTemplates(request.ids());
+      int requested = request.ids().size();
+      if (result.deletedIds().isEmpty() && result.failedIds().size() == requested && requested > 0) {
+        String allFailedMsg = messageSource.getMessage("pageTemplate.bulk.delete.allFailed", null,
+            Locale.forLanguageTag(lang));
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+            .body(ApiResponse.success(allFailedMsg, result));
+      }
+      String successMessage = messageSource.getMessage("pageTemplate.bulk.delete.success",
+          new Object[] { result.deletedIds().size(), result.failedIds().size() },
+          Locale.forLanguageTag(lang));
+      return ResponseEntity.ok(ApiResponse.success(successMessage, result));
+    } catch (Exception ex) {
+      log.error("Error bulk deleting templates: {}", ex.getMessage(), ex);
+      String msg = messageSource.getMessage("pageTemplate.bulk.delete.error", null,
+          Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(ApiResponse.error(msg));
+    }
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")

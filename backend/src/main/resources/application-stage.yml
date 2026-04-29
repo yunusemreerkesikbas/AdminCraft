@@ -48,12 +48,13 @@ app:
   jwt:
     secret: ${JWT_SECRET}
   otp:
-    bypass-code: ${OTP_BYPASS_CODE:123456}
+    bypass-code: ${OTP_BYPASS_CODE:}
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:https://s1-%s.craftive.io}
     admin-url: ${APP_FRONTEND_ADMIN_URL:https://s1-app.craftive.io}
   tenant:
     auto-sync-on-startup: true
+    trust-forwarded-host: ${TENANT_TRUST_FORWARDED_HOST:false}
   platform-domain: ${PLATFORM_DOMAIN:s1.craftive.io}
   email:
     log-content: false

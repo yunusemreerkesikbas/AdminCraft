@@ -243,8 +243,8 @@ export interface ResponsiveMediaResponse {
 }
 
 export interface ResponsiveMediaRequest {
-    desktopMediaId: number;
-    mobileMediaId: number;
+    desktopMediaId?: number | null;
+    mobileMediaId?: number | null;
 }
 
 export type MediaBindTargetType = 'COMPONENT' | 'ENTRY';
@@ -256,15 +256,22 @@ export interface MediaBindRequest {
     responsiveTarget?: MediaBindResponsiveTarget;
 }
 
+export interface MediaLinkedUsageLinkType {
+    code: string;
+    label: string;
+}
+
 export interface MediaLinkedUsage {
     componentId: number;
     componentUid?: string;
     componentName?: string;
+    componentLabel: string;
     componentTypeName?: string;
     entryId?: number | null;
     entryUid?: string | null;
     entrySortOrder?: number | null;
     entryTitle?: string | null;
-    linkType: string;
+    entryLabel?: string | null;
+    linkTypes: MediaLinkedUsageLinkType[];
     responsiveSetId?: number | null;
 }

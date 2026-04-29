@@ -16,7 +16,9 @@ public record LoginRequest(
 
         @Size(max = ValidationConstants.RECAPTCHA_TOKEN_MAX_LENGTH, message = "validation.recaptcha.token.size")
         @Pattern(regexp = ValidationConstants.RECAPTCHA_TOKEN_PATTERN, message = "validation.recaptcha.token.invalid")
-        String recaptchaToken) {
+        String recaptchaToken,
+
+        Boolean rememberMe) {
     public LoginRequest {
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");

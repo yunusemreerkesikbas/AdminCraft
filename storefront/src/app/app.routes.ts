@@ -46,7 +46,6 @@ export const appRoutes: Route[] = [
     {
         path: '',
         canActivate: [NoAuthGuard],
-        canActivateChild: [NoAuthGuard],
         component: LayoutComponent,
         data: {
             layout: 'empty',
@@ -84,11 +83,6 @@ export const appRoutes: Route[] = [
                 path: 'sign-in',
                 loadChildren: () =>
                     import('app/modules/auth/sign-in/sign-in.routes'),
-            },
-            {
-                path: 'sign-up',
-                loadChildren: () =>
-                    import('app/modules/auth/sign-up/sign-up.routes'),
             },
         ],
     },
@@ -252,6 +246,15 @@ export const appRoutes: Route[] = [
                     import(
                         'app/modules/admin/custom/demo-requests/demo-requests-list.component'
                     ).then((m) => m.SpaDemoRequestsListComponent),
+            },
+            {
+                path: 'contact-requests',
+                canActivate: [tenantUserGuard, moduleGuard],
+                data: { requiredModule: 'core' },
+                loadComponent: () =>
+                    import(
+                        'app/modules/admin/custom/contact-requests/contact-requests-list.component'
+                    ).then((m) => m.SpaContactRequestsListComponent),
             },
             {
                 path: 'platform-mail',

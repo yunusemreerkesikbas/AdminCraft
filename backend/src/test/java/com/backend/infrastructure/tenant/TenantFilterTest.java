@@ -11,7 +11,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +63,7 @@ class TenantFilterTest {
 
   @BeforeEach
   void setUp() {
-    tenantFilter = new TenantFilter(tenantContext, tenantRepository, connectionProvider);
+    tenantFilter = new TenantFilter(tenantContext, tenantRepository, connectionProvider, false);
   }
 
   @Test
@@ -177,6 +179,7 @@ class TenantFilterTest {
         .id(1L)
         .databaseName("ac_tenant_1")
         .status("ACTIVE")
+        .defaultLanguage("TR")
         .build();
 
     when(request.getRequestURI()).thenReturn("/api/pages");
@@ -202,6 +205,7 @@ class TenantFilterTest {
         .id(1L)
         .databaseName("ac_tenant_1")
         .status("ACTIVE")
+        .defaultLanguage("TR")
         .build();
 
     when(request.getRequestURI()).thenReturn("/api/pages");
@@ -228,6 +232,7 @@ class TenantFilterTest {
         .id(1L)
         .databaseName("ac_tenant_1")
         .status("ACTIVE")
+        .defaultLanguage("TR")
         .build();
 
     when(request.getRequestURI()).thenReturn("/api/pages");
@@ -320,6 +325,198 @@ class TenantFilterTest {
     verify(filterChain).doFilter(request, response);
     verify(tenantContext, never()).setTenantId(anyString());
     SecurityContextHolder.clearContext();
+  }
+
+  // SEC-003: cross-check JWT tenantId against the resolved tenant from headers.
+
+  @Test
+  void shouldReturnForbiddenWhenJwtTenantIdMismatchesHeaderTenant() throws Exception {
+    Tenant tenantTwo = activeTenant(2L, "ac_tenant_2");
+    when(request.getRequestURI()).thenReturn("/api/sites");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn("2");
+    when(tenantRepository.findById(2L)).thenReturn(Optional.of(tenantTwo));
+    mockTenantBoundUser("ROLE_TENANT_ADMIN", 1L);
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant mismatch");
+    verify(filterChain, never()).doFilter(request, response);
+    verify(tenantContext, never()).setTenantId(anyString());
+    verify(connectionProvider, never()).warmUpConnectionPool(anyString());
+    SecurityContextHolder.clearContext();
+  }
+
+  @Test
+  void shouldAllowSuperAdminToAccessAnyTenantHeader() throws Exception {
+    Tenant tenantTwo = activeTenant(2L, "ac_tenant_2");
+    when(request.getRequestURI()).thenReturn("/api/sites");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn("2");
+    when(tenantRepository.findById(2L)).thenReturn(Optional.of(tenantTwo));
+    doNothing().when(connectionProvider).warmUpConnectionPool("ac_tenant_2");
+    mockTenantBoundSuperAdmin(null);
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(response, never()).sendError(anyInt(), anyString());
+    verify(tenantContext).setTenantId("2");
+    SecurityContextHolder.clearContext();
+  }
+
+  @Test
+  void shouldAllowAnonymousPublicTrafficWithoutCrossCheck() throws Exception {
+    Tenant tenantTwo = activeTenant(2L, "ac_tenant_2");
+    when(request.getRequestURI()).thenReturn("/api/cms/site");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn("2");
+    when(tenantRepository.findById(2L)).thenReturn(Optional.of(tenantTwo));
+    doNothing().when(connectionProvider).warmUpConnectionPool("ac_tenant_2");
+    // No SecurityContext authentication — simulates anonymous public storefront call.
+    SecurityContextHolder.clearContext();
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(response, never()).sendError(anyInt(), anyString());
+    verify(tenantContext).setTenantId("2");
+  }
+
+  // SEC-106: bypass paths (e.g. /api/config/admin) must enforce JWT/header tenant
+  // alignment when both are present.
+
+  @Test
+  void shouldReturnForbiddenOnConfigAdminWhenJwtTenantMismatchesHeader() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/config/admin/security/recaptcha");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn("99");
+    mockTenantBoundUser("ROLE_CONFIG_TENANT_ADMIN", 1L);
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant mismatch");
+    verify(filterChain, never()).doFilter(request, response);
+    SecurityContextHolder.clearContext();
+  }
+
+  @Test
+  void shouldAllowConfigAdminWhenJwtTenantMatchesHeader() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/config/admin/security/recaptcha");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn("1");
+    mockTenantBoundUser("ROLE_CONFIG_TENANT_ADMIN", 1L);
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    verify(response, never()).sendError(anyInt(), anyString());
+    SecurityContextHolder.clearContext();
+  }
+
+  // SEC-006: hostname fallback must ignore Origin/Referer (attacker-controlled).
+
+  @Test
+  void shouldIgnoreOriginHeaderWhenResolvingTenantFromHostname() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/cms/site");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-Subdomain")).thenReturn(null);
+    when(request.getHeader("X-Forwarded-Host")).thenReturn(null);
+    when(request.getHeader("Origin")).thenReturn("https://victim.craftive.io");
+    when(request.getServerName()).thenReturn("localhost");
+    SecurityContextHolder.clearContext();
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    // Origin must NOT be used to look up a tenant.
+    verify(tenantRepository, never()).findBySubdomain("victim");
+    verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
+  }
+
+  @Test
+  void shouldAllowForgotPasswordWithoutResolvedTenant() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/auth/forgot-password");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-Subdomain")).thenReturn(null);
+    when(request.getHeader("X-Forwarded-Host")).thenReturn(null);
+    when(request.getServerName()).thenReturn("localhost");
+    SecurityContextHolder.clearContext();
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    verify(response, never()).sendError(anyInt(), anyString());
+  }
+
+  @Test
+  void shouldIgnoreForwardedHostWhenTrustForwardedHostDisabled() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/cms/site");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-Subdomain")).thenReturn(null);
+    when(request.getHeader("X-Forwarded-Host")).thenReturn("victim.craftive.io");
+    when(request.getServerName()).thenReturn("localhost");
+    SecurityContextHolder.clearContext();
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(tenantRepository, never()).findBySubdomain("victim");
+    verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
+  }
+
+  @Test
+  void shouldResolveForwardedHostWhenTrustForwardedHostEnabled() throws Exception {
+    tenantFilter = new TenantFilter(tenantContext, tenantRepository, connectionProvider, true);
+    Tenant activeTenant = activeTenant(1L, "ac_tenant_1");
+    when(request.getRequestURI()).thenReturn("/api/cms/site");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-Subdomain")).thenReturn(null);
+    when(request.getHeader("X-Forwarded-Host")).thenReturn("tenant.craftive.io");
+    when(request.getServerName()).thenReturn("localhost");
+    when(tenantRepository.findBySubdomain("tenant")).thenReturn(Optional.of(activeTenant));
+    doNothing().when(connectionProvider).warmUpConnectionPool("ac_tenant_1");
+    SecurityContextHolder.clearContext();
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(tenantContext).setTenantId("1");
+    verify(filterChain).doFilter(request, response);
+  }
+
+  private Tenant activeTenant(long id, String dbName) {
+    return Tenant.builder()
+        .id(id)
+        .databaseName(dbName)
+        .status("ACTIVE")
+        .defaultLanguage("TR")
+        .build();
+  }
+
+  private void mockTenantBoundUser(String role, Long tenantId) {
+    SecurityContextHolder.setContext(securityContext);
+    org.springframework.security.core.Authentication authMock =
+        mock(org.springframework.security.core.Authentication.class);
+    when(securityContext.getAuthentication()).thenReturn(authMock);
+    when(authMock.isAuthenticated()).thenReturn(true);
+    doReturn(List.of(new SimpleGrantedAuthority(role))).when(authMock).getAuthorities();
+    Map<String, Object> details = new HashMap<>();
+    details.put("tenantId", tenantId);
+    when(authMock.getDetails()).thenReturn(details);
+  }
+
+  private void mockTenantBoundSuperAdmin(Long tenantId) {
+    SecurityContextHolder.setContext(securityContext);
+    org.springframework.security.core.Authentication authMock =
+        mock(org.springframework.security.core.Authentication.class);
+    when(securityContext.getAuthentication()).thenReturn(authMock);
+    when(authMock.isAuthenticated()).thenReturn(true);
+    doReturn(List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))).when(authMock).getAuthorities();
+    if (tenantId != null) {
+      Map<String, Object> details = new HashMap<>();
+      details.put("tenantId", tenantId);
+      when(authMock.getDetails()).thenReturn(details);
+    }
   }
 
   private void givenRequestUri(String uri) {

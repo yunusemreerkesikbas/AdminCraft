@@ -23,6 +23,11 @@ public class JwtProviderPortImpl implements JwtProviderPort {
     }
 
     @Override
+    public String createRefreshToken(String email, String role, Long userId, Long tenantId, boolean rememberMe) {
+        return jwtTokenProvider.createRefreshToken(email, role, userId, tenantId, rememberMe);
+    }
+
+    @Override
     public boolean validateToken(String token) {
         return jwtTokenProvider.validateToken(token);
     }
@@ -60,5 +65,15 @@ public class JwtProviderPortImpl implements JwtProviderPort {
     @Override
     public long getRefreshTokenExpiration() {
         return jwtTokenProvider.getRefreshTokenExpiration();
+    }
+
+    @Override
+    public long getRefreshTokenExpiration(boolean rememberMe) {
+        return jwtTokenProvider.getRefreshTokenExpiration(rememberMe);
+    }
+
+    @Override
+    public boolean isRememberMeToken(String token) {
+        return jwtTokenProvider.isRememberMeToken(token);
     }
 }

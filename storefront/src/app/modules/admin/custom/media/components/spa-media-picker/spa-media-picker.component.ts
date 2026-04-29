@@ -233,6 +233,49 @@ export class SpaMediaPickerComponent implements ControlValueAccessor {
         this.#updateValue(newValue);
     }
 
+    removeResponsiveSlot(
+        type: string,
+        index?: number,
+        event?: Event
+    ): void {
+        event?.stopPropagation();
+        if (this.isDisabled() || !this.responsive) return;
+        if (type !== 'desktop' && type !== 'mobile') return;
+
+        if (this.multiple) {
+            if (index === undefined) return;
+            const currentList =
+                (this.value() as ResponsiveMediaResponse[]) || [];
+            const item = currentList[index];
+            if (!item) return;
+
+            const newList = [...currentList];
+            newList[index] = this.#clearResponsiveMediaSlot(item, type);
+            this.#updateValue(newList);
+            return;
+        }
+
+        const currentItem =
+            (this.value() as ResponsiveMediaResponse) || {
+                desktopMedia: null,
+                mobileMedia: null,
+            };
+        const nextItem = this.#clearResponsiveMediaSlot(currentItem, type);
+        this.#updateValue(
+            nextItem.desktopMedia || nextItem.mobileMedia ? nextItem : null
+        );
+    }
+
+    #clearResponsiveMediaSlot(
+        item: any,
+        type: 'desktop' | 'mobile'
+    ): any {
+        return {
+            ...item,
+            [type === 'desktop' ? 'desktopMedia' : 'mobileMedia']: null,
+        };
+    }
+
     drop(event: CdkDragDrop<any[]>): void {
         if (this.isDisabled() || !this.multiple) return;
 

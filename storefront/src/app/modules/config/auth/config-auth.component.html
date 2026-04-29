@@ -35,18 +35,20 @@
                     <spa-input
                         [label]="'config.auth.emailLabel' | transloco"
                         type="email"
-                        [styleClasses]="'w-full'"
+                        [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="email"
+                        [placeholder]="'auth.common.emailPlaceholder' | transloco"
                     ></spa-input>
 
                     <spa-input
                         #passwordCmp
                         [label]="'config.auth.passwordLabel' | transloco"
                         [type]="'password'"
-                        [styleClasses]="'w-full'"
+                        [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="password"
+                        [placeholder]="'auth.common.passwordPlaceholder' | transloco"
                     >
                         <button
                             mat-icon-button
@@ -114,9 +116,10 @@
                     <spa-input
                         [label]="'config.auth.otpLabel' | transloco"
                         type="text"
-                        [styleClasses]="'w-full'"
+                        [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="otpCode"
+                        [placeholder]="'auth.common.otpPlaceholder' | transloco"
                         [maxLength]="6"
                         inputmode="numeric"
                         pattern="[0-9]*"

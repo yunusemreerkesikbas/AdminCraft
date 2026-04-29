@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 
+import com.backend.application.service.PublicContactRateLimitExceededException;
 import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.ContentCannotBePublishedException;
 import com.backend.domain.exception.DuplicateEntityException;
@@ -338,6 +339,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleRequestNotPermitted(RequestNotPermitted ex) {
         String correlationId = MDC.get("correlationId");
         log.warn("[{}] Rate limiter rejected request: {}", correlationId, ex.getMessage());
+        String message = getMessage("rate.limit.exceeded");
+        return new ResponseEntity<>(ApiResponse.error(message), HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(PublicContactRateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<?>> handlePublicContactRateLimit(PublicContactRateLimitExceededException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Public contact rate limit exceeded", correlationId);
         String message = getMessage("rate.limit.exceeded");
         return new ResponseEntity<>(ApiResponse.error(message), HttpStatus.TOO_MANY_REQUESTS);
     }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@core/crud/api.types';
+import { ApiResponse, BulkDeleteResult } from '@core/crud';
 import { CrudEndpoints, CrudHttpService } from '@core/crud/crud-http.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -122,10 +122,10 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         return this.api.post<ApiResponse<void>>('mediaBind', request, { mediaId });
     }
 
-    unlinkMedia(mediaId: number, usage: MediaLinkedUsage): Observable<ApiResponse<void>> {
+    unlinkMedia(mediaId: number, usage: MediaLinkedUsage, linkTypeCode: string): Observable<ApiResponse<void>> {
         const queryParams: Record<string, string | number> = {
             componentId: usage.componentId,
-            linkType: usage.linkType,
+            linkType: linkTypeCode,
         };
 
         if (usage.entryId != null) {
@@ -137,6 +137,10 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
 
     deleteMediaWithResponse(id: number): Observable<ApiResponse<void>> {
         return this.api.delete<ApiResponse<void>>('mediaById', { id });
+    }
+
+    bulkDeleteMediaWithResponse(ids: number[]): Observable<ApiResponse<BulkDeleteResult>> {
+        return this.api.post<ApiResponse<BulkDeleteResult>>('mediaBulkDelete', { ids });
     }
 
     getLinkedComponents(mediaId: number): Observable<MediaLinkedUsage[]> {

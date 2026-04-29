@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.slf4j.MDC;
+
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.core.env.Environment;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,9 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
 
     private static final String KEY_EMAIL_POSTMARK_SERVER_TOKEN = "app.email.postmark.server-token";
 
+    private static final String KEY_OTP_BYPASS_ENABLED = "platform.security.otp.bypass.enabled";
+    private static final String KEY_OTP_BYPASS_CODE = "platform.security.otp.bypass.code";
+
     private static final Set<String> ALLOWED_KEYS = Set.of(
             KEY_EMAIL_PROVIDER,
             KEY_EMAIL_FROM_ADDRESS,
@@ -64,7 +69,9 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             KEY_SEO_INSIGHTS_ENABLED,
             KEY_RECAPTCHA_ENABLED,
             KEY_RECAPTCHA_SITE_KEY,
-            KEY_RECAPTCHA_SECRET_KEY);
+            KEY_RECAPTCHA_SECRET_KEY,
+            KEY_OTP_BYPASS_ENABLED,
+            KEY_OTP_BYPASS_CODE);
 
     private static final List<String> ORDERED_KEYS = List.of(
             KEY_EMAIL_PROVIDER,
@@ -76,7 +83,9 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             KEY_SEO_INSIGHTS_ENABLED,
             KEY_RECAPTCHA_ENABLED,
             KEY_RECAPTCHA_SITE_KEY,
-            KEY_RECAPTCHA_SECRET_KEY);
+            KEY_RECAPTCHA_SECRET_KEY,
+            KEY_OTP_BYPASS_ENABLED,
+            KEY_OTP_BYPASS_CODE);
 
     private static final Set<String> ALLOWED_PROVIDER_VALUES = Set.of("console", "postmark");
 
@@ -87,15 +96,20 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private static final String DEFAULT_GA4_ENABLED = "false";
     private static final String DEFAULT_SEO_INSIGHTS_ENABLED = "false";
     private static final String DEFAULT_RECAPTCHA_ENABLED = "false";
+    private static final String DEFAULT_OTP_BYPASS_ENABLED = "false";
+    private static final int OTP_BYPASS_CODE_MIN_LENGTH = 16;
+    private static final int OTP_BYPASS_CODE_MAX_LENGTH = 64;
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private static final Pattern RECAPTCHA_KEY_PATTERN = Pattern.compile(ValidationConstants.RECAPTCHA_KEY_PATTERN);
+    private static final Pattern OTP_BYPASS_ENTROPY_PATTERN = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$");
 
     private final PlatformConfigPropertyRepository propertyRepository;
     private final ConfigChangeAuditRepository auditRepository;
     private final ObjectMapper objectMapper;
     private final Environment environment;
     private final EncryptionServicePort encryptionService;
+    private final MeterRegistry meterRegistry;
 
     @Override
     @Transactional(readOnly = true)
@@ -283,6 +297,35 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
         return Boolean.parseBoolean(configured.trim().toLowerCase());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean getOtpBypassEnabled() {
+        String configured = resolveConfiguredValue(KEY_OTP_BYPASS_ENABLED);
+        if (!StringUtils.hasText(configured)) {
+            return false;
+        }
+        return Boolean.parseBoolean(configured.trim().toLowerCase());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getOtpBypassCodeDecrypted() {
+        if (!Boolean.TRUE.equals(getOtpBypassEnabled())) {
+            return null;
+        }
+        String configured = resolveConfiguredValue(KEY_OTP_BYPASS_CODE);
+        if (!StringUtils.hasText(configured)) {
+            return null;
+        }
+        try {
+            return encryptionService.decrypt(configured);
+        } catch (Exception e) {
+            log.warn("Failed to decrypt OTP bypass code");
+            meterRegistry.counter("config.otp_bypass_decrypt_failures").increment();
+            return null;
+        }
+    }
+
     private ConfigPropertyResult toResult(String key, PlatformConfigProperty override) {
         String value = override != null && StringUtils.hasText(override.getConfigValue())
                 ? override.getConfigValue()
@@ -372,6 +415,22 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
                 }
                 return normalized;
             }
+            case KEY_OTP_BYPASS_ENABLED -> {
+                String bool = normalized.toLowerCase();
+                if (!"true".equals(bool) && !"false".equals(bool)) {
+                    throw new IllegalArgumentException("Invalid OTP bypass enabled value. Allowed values: true, false");
+                }
+                return bool;
+            }
+            case KEY_OTP_BYPASS_CODE -> {
+                if (normalized.length() < OTP_BYPASS_CODE_MIN_LENGTH || normalized.length() > OTP_BYPASS_CODE_MAX_LENGTH) {
+                    throw new IllegalArgumentException(
+                            "OTP bypass code must be between " + OTP_BYPASS_CODE_MIN_LENGTH
+                                    + " and " + OTP_BYPASS_CODE_MAX_LENGTH + " characters");
+                }
+                assertStrongOtpBypassCode(normalized);
+                return normalized;
+            }
             default -> throw new IllegalArgumentException("Config key is not allowed: " + key);
         }
     }
@@ -434,12 +493,16 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             case KEY_RECAPTCHA_ENABLED -> DEFAULT_RECAPTCHA_ENABLED;
             case KEY_RECAPTCHA_SITE_KEY, KEY_RECAPTCHA_SECRET_KEY -> null;
             case KEY_EMAIL_POSTMARK_SERVER_TOKEN -> null;
+            case KEY_OTP_BYPASS_ENABLED -> DEFAULT_OTP_BYPASS_ENABLED;
+            case KEY_OTP_BYPASS_CODE -> null;
             default -> environment.getProperty(key);
         };
     }
 
     private boolean isSecretKey(String key) {
-        return KEY_RECAPTCHA_SECRET_KEY.equals(key) || KEY_EMAIL_POSTMARK_SERVER_TOKEN.equals(key);
+        return KEY_RECAPTCHA_SECRET_KEY.equals(key)
+                || KEY_EMAIL_POSTMARK_SERVER_TOKEN.equals(key)
+                || KEY_OTP_BYPASS_CODE.equals(key);
     }
 
     private void validateSecretFlag(String key, boolean secret) {
@@ -452,7 +515,24 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     }
 
     private boolean shouldEncryptValue(String key) {
-        return KEY_RECAPTCHA_SECRET_KEY.equals(key) || KEY_EMAIL_POSTMARK_SERVER_TOKEN.equals(key);
+        return KEY_RECAPTCHA_SECRET_KEY.equals(key)
+                || KEY_EMAIL_POSTMARK_SERVER_TOKEN.equals(key)
+                || KEY_OTP_BYPASS_CODE.equals(key);
+    }
+
+    private static void assertStrongOtpBypassCode(String normalized) {
+        if (!OTP_BYPASS_ENTROPY_PATTERN.matcher(normalized).matches()) {
+            throw new IllegalArgumentException(
+                    "OTP bypass code must include uppercase, lowercase, and digit characters");
+        }
+        if (normalized.chars().distinct().count() < 4) {
+            throw new IllegalArgumentException("OTP bypass code has insufficient character diversity");
+        }
+        char first = normalized.charAt(0);
+        boolean allSame = normalized.chars().allMatch(c -> c == first);
+        if (allSame) {
+            throw new IllegalArgumentException("OTP bypass code must not consist of a single repeated character");
+        }
     }
 
     private void assertSuperAdmin(ConfigPrincipal principal) {

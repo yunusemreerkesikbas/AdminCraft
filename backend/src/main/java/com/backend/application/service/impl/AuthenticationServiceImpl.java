@@ -1,8 +1,14 @@
 package com.backend.application.service.impl;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HexFormat;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.time.LocalDateTime;
 
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,6 +25,8 @@ import com.backend.application.service.AuthenticationService;
 import com.backend.application.service.EmailService;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.TrustedDeviceService;
+import com.backend.domain.entity.PlatformRefreshToken;
+import com.backend.domain.entity.RefreshToken;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
 import com.backend.domain.entity.VerificationToken;
@@ -44,7 +52,9 @@ import com.backend.domain.port.JwtProviderPort;
 import com.backend.domain.port.OtpConfig;
 import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.repository.PlatformAdminUserRepository;
+import com.backend.domain.repository.PlatformRefreshTokenRepository;
 import com.backend.domain.repository.PlatformVerificationTokenRepository;
+import com.backend.domain.repository.RefreshTokenRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,32 +82,45 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final TrustedDeviceService trustedDeviceService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final OtpConfig otpConfig;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final PlatformRefreshTokenRepository platformRefreshTokenRepository;
 
     @Qualifier("tenantTransactionManager")
     private final PlatformTransactionManager tenantTransactionManager;
 
+    @Qualifier("platformTransactionManager")
+    private final PlatformTransactionManager platformTransactionManager;
+
     @Override
     public AuthResult authenticate(String email, String password, Long tenantId, String subdomain) {
+        return authenticate(email, password, tenantId, subdomain, null, null, null, false);
+    }
+
+    @Override
+    public AuthResult authenticate(String email, String password, Long tenantId, String subdomain,
+            String deviceFingerprint, String ipAddress, String userAgent) {
+        return authenticate(email, password, tenantId, subdomain, deviceFingerprint, ipAddress, userAgent, false);
+    }
+
+    @Override
+    public AuthResult authenticate(String email, String password, Long tenantId, String subdomain,
+            String deviceFingerprint, String ipAddress, String userAgent, boolean rememberMe) {
         log.info("Processing authentication request");
 
         if (tenantId != null) {
             log.debug("Using X-Tenant-ID based authentication: tenantId={}", tenantId);
-            return authenticateTenantUserById(email, password, tenantId);
+            return authenticateTenantUserById(email, password, tenantId, deviceFingerprint, ipAddress, userAgent, rememberMe);
         } else if (subdomain != null && !subdomain.trim().isEmpty()) {
             log.debug("Using subdomain-based authentication: subdomain={}", subdomain);
-            return authenticateTenantUserBySubdomain(email, password, subdomain);
+            return authenticateTenantUserBySubdomain(email, password, subdomain, deviceFingerprint, ipAddress, userAgent, rememberMe);
         } else {
             log.debug("Using platform admin authentication");
-            return authenticatePlatformAdmin(email, password, null, null);
+            return authenticatePlatformAdmin(email, password, ipAddress, userAgent, rememberMe);
         }
     }
 
-    private AuthResult authenticateTenantUserById(String email, String password, Long tenantId) {
-        return authenticateTenantUserById(email, password, tenantId, null, null, null);
-    }
-
     private AuthResult authenticateTenantUserById(String email, String password, Long tenantId,
-            String deviceFingerprint, String ipAddress, String userAgent) {
+            String deviceFingerprint, String ipAddress, String userAgent, boolean rememberMe) {
         try {
             Tenant tenant = tenantRepository.findById(tenantId)
                     .orElseThrow(() -> {
@@ -127,7 +150,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             return new InvalidCredentialsException();
                         });
 
-                return authenticateUser(user, password, tenant, deviceFingerprint, ipAddress, userAgent);
+                return authenticateUser(user, password, tenant, deviceFingerprint, ipAddress, userAgent, rememberMe);
             });
         } finally {
             tenantContext.clear();
@@ -138,17 +161,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    private AuthResult authenticateTenantUserBySubdomain(String email, String password, String subdomain) {
-        return authenticateTenantUserBySubdomain(email, password, subdomain, null, null, null);
-    }
-
     private AuthResult authenticateTenantUserBySubdomain(String email, String password, String subdomain,
-            String deviceFingerprint, String ipAddress, String userAgent) {
+            String deviceFingerprint, String ipAddress, String userAgent, boolean rememberMe) {
         try {
             String cleanSubdomain = subdomain.trim().toLowerCase();
             if ("admin".equals(cleanSubdomain)) {
                 log.debug("Subdomain 'admin' detected, redirecting to platform admin authentication");
-                return authenticatePlatformAdmin(email, password, ipAddress, userAgent);
+                return authenticatePlatformAdmin(email, password, ipAddress, userAgent, rememberMe);
             }
             Tenant tenant = tenantRepository.findBySubdomain(cleanSubdomain)
                     .orElseThrow(() -> {
@@ -172,7 +191,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             return new InvalidCredentialsException();
                         });
 
-                return authenticateUser(user, password, tenant, deviceFingerprint, ipAddress, userAgent);
+                return authenticateUser(user, password, tenant, deviceFingerprint, ipAddress, userAgent, rememberMe);
             });
         } finally {
             tenantContext.clear();
@@ -184,7 +203,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private AuthResult authenticateUser(User user, String password, Tenant tenant,
-            String deviceFingerprint, String ipAddress, String userAgent) {
+            String deviceFingerprint, String ipAddress, String userAgent, boolean rememberMe) {
 
         Long tenantId = tenant.getId();
         String subdomain = tenant.getSubdomain();
@@ -219,36 +238,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidCredentialsException();
         }
 
-        // Check if 2FA is required
         TwoFactorPolicy twoFactorPolicy = tenant.getTwoFactorPolicy();
         boolean requires2FA = twoFactorPolicy == TwoFactorPolicy.REQUIRED;
 
         if (requires2FA) {
-            // Check if device is trusted
             boolean deviceTrusted = deviceFingerprint != null && !deviceFingerprint.isBlank() &&
                     trustedDeviceService.isDeviceTrusted(user.getId(), deviceFingerprint);
 
             if (!deviceTrusted) {
                 log.info("2FA required for user: {}, generating OTP", maskEmail(user.getEmail()));
 
-                // Check rate limit before generating OTP
                 checkOtpRateLimit(user.getEmail());
 
-                // Generate OTP and session token, send OTP via email
                 OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
                 Language userLanguage = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
                 emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), userLanguage);
 
-                // Return response with session token (not the OTP)
                 return AuthResult.requiring2FA(user.getEmail(), otpResult.sessionToken(), subdomain, tenantId);
             } else {
                 log.info("Device trusted for user: {}, skipping 2FA", user.getId());
-                // Update last used time for trusted device
                 trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
             }
         }
 
-        // Reset failed login attempts on successful login
         user.recordSuccessfulLogin(ipAddress);
         userRepository.save(user);
         String accessToken = jwtProviderPort.createAccessToken(
@@ -260,7 +272,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getEmail(),
                 user.getRole().name(),
                 user.getId(),
-                tenantId);
+                tenantId,
+                rememberMe);
+
+        saveTenantRefreshToken(user, refreshToken, rememberMe);
 
         log.info("Authentication successful for userId: {}", user.getId());
 
@@ -268,16 +283,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 accessToken,
                 refreshToken,
                 "Bearer",
-                jwtProviderPort.getAccessTokenExpiration(),
+                jwtProviderPort.getAccessTokenExpiration() / 1000,
                 user.getId(),
                 user.getEmail(),
                 user.getFullName(),
                 user.getRole().name(),
                 subdomain,
-                tenantId);
+                tenantId,
+                rememberMe);
     }
 
-    private AuthResult authenticatePlatformAdmin(String email, String password, String ipAddress, String userAgent) {
+    private AuthResult authenticatePlatformAdmin(String email, String password, String ipAddress, String userAgent, boolean rememberMe) {
         PlatformAdminUser admin = platformAdminUserRepository
                 .findByEmailAndIsActiveTrue(email)
                 .orElseThrow(InvalidCredentialsException::new);
@@ -321,7 +337,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 admin.getEmail(),
                 "SUPER_ADMIN",
                 admin.getId(),
-                null);
+                null,
+                rememberMe);
+
+        savePlatformRefreshToken(admin.getId(), refreshToken, rememberMe);
 
         log.info("Authentication successful for platform admin userId: {}", admin.getId());
 
@@ -329,13 +348,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 accessToken,
                 refreshToken,
                 "Bearer",
-                jwtProviderPort.getAccessTokenExpiration(),
+                jwtProviderPort.getAccessTokenExpiration() / 1000,
                 admin.getId(),
                 admin.getEmail(),
                 admin.getFullName(),
                 "SUPER_ADMIN",
                 null,
-                null);
+                null,
+                rememberMe);
     }
 
     @Override
@@ -345,11 +365,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 !jwtProviderPort.isRefreshToken(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
         }
-        String email = jwtProviderPort.getEmailFromToken(refreshToken);
+
+        String tokenHash = hashRefreshToken(refreshToken);
         String role = jwtProviderPort.getRoleFromToken(refreshToken);
+        String email = jwtProviderPort.getEmailFromToken(refreshToken);
         Long tenantId = jwtProviderPort.getTenantIdFromToken(refreshToken);
 
         if ("SUPER_ADMIN".equals(role) && tenantId == null) {
+            boolean wasRememberMe = jwtProviderPort.isRememberMeToken(refreshToken);
             PlatformAdminUser admin = platformAdminUserRepository
                     .findByEmailAndIsActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException(email));
@@ -371,7 +394,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     admin.getEmail(),
                     "SUPER_ADMIN",
                     admin.getId(),
-                    null);
+                    null,
+                    wasRememberMe);
+
+            TransactionTemplate platformTxTemplate = new TransactionTemplate(platformTransactionManager);
+            platformTxTemplate.executeWithoutResult(status -> {
+                int revoked = platformRefreshTokenRepository.revokeByTokenHash(tokenHash);
+                if (revoked == 0) {
+                    throw new InvalidTokenException("Refresh token has been revoked or expired");
+                }
+                savePlatformRefreshToken(admin.getId(), newRefreshToken, wasRememberMe);
+            });
 
             log.info("Token refresh successful for platform admin: {}", admin.getEmail());
 
@@ -379,13 +412,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     newAccessToken,
                     newRefreshToken,
                     "Bearer",
-                    jwtProviderPort.getAccessTokenExpiration(),
+                    jwtProviderPort.getAccessTokenExpiration() / 1000,
                     admin.getId(),
                     admin.getEmail(),
                     admin.getFullName(),
                     "SUPER_ADMIN",
                     null,
-                    null);
+                    null,
+                    wasRememberMe);
         } else {
             if (tenantId == null) {
                 throw new InvalidTokenException("Tenant ID required for user refresh");
@@ -409,6 +443,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
                 TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
                 return transactionTemplate.execute(status -> {
+                    int revoked = refreshTokenRepository.revokeByTokenHash(tokenHash);
+                    if (revoked == 0) {
+                        throw new InvalidTokenException("Refresh token has been revoked or expired");
+                    }
+
                     User user = userRepository.findByEmail(email)
                             .orElseThrow(() -> new UserNotFoundException(email));
                     boolean refreshAllowed = user.getRole() == UserRole.TENANT_ADMIN
@@ -435,6 +474,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
                     }
 
+                    boolean wasRememberMe = jwtProviderPort.isRememberMeToken(refreshToken);
+
                     String newAccessToken = jwtProviderPort.createAccessToken(
                             user.getEmail(),
                             user.getRole().name(),
@@ -444,7 +485,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             user.getEmail(),
                             user.getRole().name(),
                             user.getId(),
-                            tenantId);
+                            tenantId,
+                            wasRememberMe);
+
+                    saveTenantRefreshToken(user, newRefreshToken, wasRememberMe);
 
                     log.info("Token refresh successful for userId: {}, tenantId: {}", user.getId(), tenantId);
 
@@ -452,13 +496,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             newAccessToken,
                             newRefreshToken,
                             "Bearer",
-                            jwtProviderPort.getAccessTokenExpiration(),
+                            jwtProviderPort.getAccessTokenExpiration() / 1000,
                             user.getId(),
                             user.getEmail(),
                             user.getFullName(),
                             user.getRole().name(),
                             tenant.getSubdomain(),
-                            tenantId);
+                            tenantId,
+                            wasRememberMe);
                 });
             } finally {
                 tenantContext.clear();
@@ -470,25 +515,50 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(String token) {
+    public void logout(String accessToken, String refreshToken) {
         log.info("Logging out user");
 
         try {
-            if (!jwtProviderPort.validateToken(token)) {
-                throw new InvalidTokenException("Invalid token");
-            }
-            String email = jwtProviderPort.getEmailFromToken(token);
-            String role = jwtProviderPort.getRoleFromToken(token);
-            Long tenantId = jwtProviderPort.getTenantIdFromToken(token);
-
-            if ("SUPER_ADMIN".equals(role) && tenantId == null) {
-                log.info("Logout successful for platform admin: {}", email);
-            } else {
-                log.info("Logout successful for user: {}", email);
+            if (accessToken != null && jwtProviderPort.validateToken(accessToken)) {
+                String role = jwtProviderPort.getRoleFromToken(accessToken);
+                Long userId = jwtProviderPort.getUserIdFromToken(accessToken);
+                if ("SUPER_ADMIN".equals(role)) {
+                    log.info("Logout for platform admin: userId={}", userId);
+                } else {
+                    log.info("Logout for user: userId={}", userId);
+                }
             }
         } catch (Exception ex) {
-            log.error("Error during logout: {}", ex.getMessage());
-            throw new InvalidTokenException("Logout failed");
+            log.warn("Could not validate access token during logout: {}",
+                    ex.getMessage() != null ? ex.getMessage().substring(0, Math.min(500, ex.getMessage().length())) : "null");
+        }
+
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            try {
+                String tokenHash = hashRefreshToken(refreshToken);
+                String role = jwtProviderPort.getRoleFromToken(refreshToken);
+                if ("SUPER_ADMIN".equals(role)) {
+                    platformRefreshTokenRepository.revokeByTokenHash(tokenHash);
+                    log.info("Platform refresh token revoked on logout");
+                } else {
+                    Long tenantId = jwtProviderPort.getTenantIdFromToken(refreshToken);
+                    if (tenantId != null) {
+                        Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+                        if (tenant != null) {
+                            try {
+                                tenantContext.setTenantId(String.valueOf(tenant.getId()));
+                                tenantContext.setTenantDbName(tenant.getDatabaseName());
+                                refreshTokenRepository.revokeByTokenHash(tokenHash);
+                                log.info("Refresh token revoked on logout");
+                            } finally {
+                                tenantContext.clear();
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.warn("Could not revoke refresh token during logout: {}", ex.getMessage());
+            }
         }
     }
 
@@ -508,31 +578,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthResult authenticate(String email, String password, Long tenantId, String subdomain,
-            String deviceFingerprint, String ipAddress, String userAgent) {
-        log.info("Processing authentication request with device info");
-
-        if (tenantId != null) {
-            log.debug("Using X-Tenant-ID based authentication: tenantId={}", tenantId);
-            return authenticateTenantUserById(email, password, tenantId, deviceFingerprint, ipAddress, userAgent);
-        } else if (subdomain != null && !subdomain.trim().isEmpty()) {
-            log.debug("Using subdomain-based authentication: subdomain={}", subdomain);
-            return authenticateTenantUserBySubdomain(email, password, subdomain, deviceFingerprint, ipAddress,
-                    userAgent);
-        } else {
-            log.debug("Using platform admin authentication");
-            return authenticatePlatformAdmin(email, password, ipAddress, userAgent);
-        }
-    }
-
-    @Override
     public AuthResult verifyOtp(String pendingToken, String otpCode, boolean trustDevice,
             String deviceFingerprint, String deviceName, String ipAddress, String userAgent,
-            Long tenantId, String subdomain) {
+            Long tenantId, String subdomain, boolean rememberMe) {
         log.info("Verifying OTP");
 
         if (isPlatformOtpRequest(tenantId, subdomain)) {
-            return verifyPlatformOtp(pendingToken, otpCode, ipAddress);
+            return verifyPlatformOtp(pendingToken, otpCode, ipAddress, rememberMe);
         }
 
         Tenant tenant = resolveTenant(tenantId, subdomain);
@@ -604,7 +656,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         user.getEmail(),
                         user.getRole().name(),
                         user.getId(),
-                        tenant.getId());
+                        tenant.getId(),
+                        rememberMe);
+
+                saveTenantRefreshToken(user, refreshToken, rememberMe);
 
                 log.info("OTP verification successful for userId: {}", user.getId());
 
@@ -612,13 +667,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         accessToken,
                         refreshToken,
                         "Bearer",
-                        jwtProviderPort.getAccessTokenExpiration(),
+                        jwtProviderPort.getAccessTokenExpiration() / 1000,
                         user.getId(),
                         user.getEmail(),
                         user.getFullName(),
                         user.getRole().name(),
                         tenant.getSubdomain(),
-                        tenant.getId());
+                        tenant.getId(),
+                        rememberMe);
             });
         } finally {
             tenantContext.clear();
@@ -629,7 +685,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Transactional("platformTransactionManager")
-    private AuthResult verifyPlatformOtp(String pendingToken, String otpCode, String ipAddress) {
+    public AuthResult verifyPlatformOtp(String pendingToken, String otpCode, String ipAddress, boolean rememberMe) {
         String tokenHash = otpService.hashToken(pendingToken);
         PlatformVerificationToken token = platformVerificationTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new InvalidTokenException("Invalid or expired OTP session"));
@@ -675,7 +731,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 admin.getEmail(),
                 "SUPER_ADMIN",
                 admin.getId(),
-                null);
+                null,
+                rememberMe);
+
+        savePlatformRefreshToken(admin.getId(), refreshToken, rememberMe);
 
         log.info("OTP verification successful for platform admin userId: {}", admin.getId());
 
@@ -683,13 +742,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 accessToken,
                 refreshToken,
                 "Bearer",
-                jwtProviderPort.getAccessTokenExpiration(),
+                jwtProviderPort.getAccessTokenExpiration() / 1000,
                 admin.getId(),
                 admin.getEmail(),
                 admin.getFullName(),
                 "SUPER_ADMIN",
                 null,
-                null);
+                null,
+                rememberMe);
     }
 
     @Override
@@ -697,19 +757,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String ipAddress, String userAgent, Language language) {
         log.info("Password reset requested");
 
+        boolean hasTenantIdentifier = tenantId != null || (subdomain != null && !subdomain.isBlank());
         Tenant tenant = resolveTenant(tenantId, subdomain);
+        if (tenant == null && !hasTenantIdentifier) {
+            tenant = resolveTenantFromContext();
+        }
         if (tenant == null) {
             log.warn("Tenant not found for password reset request");
             return;
         }
 
+        Tenant resolvedTenant = tenant;
         try {
-            tenantContext.setTenantId(String.valueOf(tenant.getId()));
-            tenantContext.setTenantDbName(tenant.getDatabaseName());
+            tenantContext.setTenantId(String.valueOf(resolvedTenant.getId()));
+            tenantContext.setTenantDbName(resolvedTenant.getDatabaseName());
+            tenantContext.setSubdomain(resolvedTenant.getSubdomain());
 
-            // Populate MDC for logging context
-            MDC.put("tenantId", String.valueOf(tenant.getId()));
-            MDC.put("tenantDb", tenant.getDatabaseName());
+            MDC.put("tenantId", String.valueOf(resolvedTenant.getId()));
+            MDC.put("tenantDb", resolvedTenant.getDatabaseName());
             MDC.put("correlationId", UUID.randomUUID().toString());
 
             TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
@@ -721,7 +786,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 }
 
                 var tokenResult = otpService.createPasswordResetToken(user, ipAddress, userAgent);
-                emailService.sendPasswordResetEmail(email, tokenResult.plainToken(), tenant.getSubdomain(), language);
+                emailService.sendPasswordResetEmail(email, tokenResult.plainToken(), resolvedTenant.getSubdomain(), language);
 
                 log.info("Password reset email sent for userId: {}", user.getId());
             });
@@ -798,18 +863,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElseThrow(() -> new UserNotFoundException(userId));
 
             String subdomain = tenantContext.getSubdomain();
-            if (subdomain == null) {
-                String tenantId = tenantContext.getTenantId();
-                if (tenantId != null) {
-                    try {
-                        long tenantIdLong = Long.parseLong(tenantId);
-                        Tenant tenant = tenantRepository.findById(tenantIdLong).orElse(null);
-                        if (tenant != null) {
-                            subdomain = tenant.getSubdomain();
-                        }
-                    } catch (NumberFormatException ex) {
-                        log.warn("Invalid tenantId format in tenant context: '{}'", tenantId);
-                    }
+            if (subdomain == null || subdomain.isBlank()) {
+                Tenant ctxTenant = resolveTenantFromContext();
+                if (ctxTenant != null && ctxTenant.getSubdomain() != null) {
+                    subdomain = ctxTenant.getSubdomain();
                 }
             }
 
@@ -884,7 +941,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Transactional("platformTransactionManager")
-    private PlatformLoginOtpResult createPlatformLoginOtpToken(
+    public PlatformLoginOtpResult createPlatformLoginOtpToken(
             PlatformAdminUser admin,
             String ipAddress,
             String userAgent) {
@@ -950,9 +1007,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private Tenant resolveTenant(Long tenantId, String subdomain) {
         if (tenantId != null) {
-            return tenantRepository.findById(tenantId)
+            Tenant tenant = tenantRepository.findById(tenantId)
                     .filter(t -> t.getStatus() == TenantStatus.ACTIVE)
                     .orElse(null);
+            if (tenant == null || subdomain == null || subdomain.isBlank()) {
+                return tenant;
+            }
+            String inputSubdomain = subdomain.trim();
+            String tenantSubdomain = tenant.getSubdomain();
+            if (tenantSubdomain == null || !inputSubdomain.equalsIgnoreCase(tenantSubdomain)) {
+                log.warn("Tenant ID and subdomain mismatch for auth request");
+                return null;
+            }
+            return tenant;
         }
         if (subdomain != null && !subdomain.isBlank()) {
             return tenantRepository.findBySubdomain(subdomain.trim().toLowerCase())
@@ -960,6 +1027,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElse(null);
         }
         return null;
+    }
+
+    private Tenant resolveTenantFromContext() {
+        if (!tenantContext.isSet()) {
+            return null;
+        }
+
+        String tenantId = tenantContext.getTenantId();
+        if (tenantId == null || tenantId.isBlank()) {
+            return null;
+        }
+
+        try {
+            return tenantRepository.findById(Long.parseLong(tenantId))
+                    .filter(t -> t.getStatus() == TenantStatus.ACTIVE)
+                    .orElse(null);
+        } catch (NumberFormatException ex) {
+            log.warn("Invalid tenantId format in tenant context: '{}'", tenantId);
+            return null;
+        }
     }
 
     private String maskEmail(String email) {
@@ -1035,5 +1122,43 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private record PlatformLoginOtpResult(String otpCode, String sessionToken) {
+    }
+
+    private String hashRefreshToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
+    }
+
+    private void saveTenantRefreshToken(User user, String rawToken, boolean rememberMe) {
+        long expirationMs = jwtProviderPort.getRefreshTokenExpiration(rememberMe);
+        LocalDateTime expiresAt = Instant.now()
+                .plusMillis(expirationMs)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+        RefreshToken record = RefreshToken.builder()
+                .userId(user.getId())
+                .tokenHash(hashRefreshToken(rawToken))
+                .expiresAt(expiresAt)
+                .build();
+        refreshTokenRepository.save(record);
+    }
+
+    private void savePlatformRefreshToken(Long adminId, String rawToken, boolean rememberMe) {
+        long expirationMs = jwtProviderPort.getRefreshTokenExpiration(rememberMe);
+        LocalDateTime expiresAt = Instant.now()
+                .plusMillis(expirationMs)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+        PlatformRefreshToken record = PlatformRefreshToken.builder()
+                .userId(adminId)
+                .tokenHash(hashRefreshToken(rawToken))
+                .expiresAt(expiresAt)
+                .build();
+        platformRefreshTokenRepository.save(record);
     }
 }

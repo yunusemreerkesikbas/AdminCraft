@@ -1,0 +1,46 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col overflow-hidden sm:absolute sm:inset-0 dark:bg-transparent"
+>
+    <admin-page-header
+        [title]="'admin.platform.contactRequests.title' | transloco"
+        [subtitle]="'admin.platform.contactRequests.subtitle' | transloco"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.platform.contactRequests.searchPlaceholder' | transloco"
+        (search)="onSearchInput($event)"
+        [isLoading]="store.isLoading()"
+    >
+        <ng-container actions>
+            <spa-admin-sort-dropdown
+                [availableSorts]="store.sortConfig()?.availableSorts || []"
+                [sortCode]="sortCodeSig()"
+                (sortChange)="onSortChange($event)"
+            >
+            </spa-admin-sort-dropdown>
+        </ng-container>
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="store.items()"
+                [columns]="columnsSig()"
+                [actions]="actionsSig()"
+                [isLoading]="store.isLoading()"
+                [emptyTitle]="'admin.platform.contactRequests.grid.noData' | transloco"
+                (actionClick)="onGridAction($event)"
+            >
+            </spa-admin-grid>
+        </div>
+
+        @if (store.totalElements() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [pageIndex]="pageIndexSig()"
+                [pageSize]="pageSizeSig()"
+                [length]="store.totalElements()"
+                (pageCallback)="onPageChange($event)"
+            >
+            </spa-admin-paginator>
+        }
+    </div>
+</div>

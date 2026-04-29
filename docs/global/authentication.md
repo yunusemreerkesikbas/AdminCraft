@@ -15,21 +15,81 @@ Craftive supports two login modes via the same endpoint:
 | OTP Service | [`backend/.../service/impl/OtpServiceImpl.java`](../../backend/src/main/java/com/backend/application/service/impl/OtpServiceImpl.java) |
 | Trusted Device Service | [`backend/.../service/impl/TrustedDeviceServiceImpl.java`](../../backend/src/main/java/com/backend/application/service/impl/TrustedDeviceServiceImpl.java) |
 | Verification Token Entity | [`backend/.../entity/VerificationToken.java`](../../backend/src/main/java/com/backend/domain/entity/VerificationToken.java) |
+| Refresh Token (tenant POJO) | [`backend/.../domain/entity/RefreshToken.java`](../../backend/src/main/java/com/backend/domain/entity/RefreshToken.java) |
+| Refresh Token (tenant JPA) | [`backend/.../repository/entity/RefreshTokenEntity.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/repository/entity/RefreshTokenEntity.java) |
+| Refresh Token (platform POJO) | [`backend/.../domain/entity/PlatformRefreshToken.java`](../../backend/src/main/java/com/backend/domain/entity/PlatformRefreshToken.java) |
+| Refresh Token Repository (tenant) | [`backend/.../domain/repository/RefreshTokenRepository.java`](../../backend/src/main/java/com/backend/domain/repository/RefreshTokenRepository.java) |
+| Refresh Token Repository (platform) | [`backend/.../domain/repository/PlatformRefreshTokenRepository.java`](../../backend/src/main/java/com/backend/domain/repository/PlatformRefreshTokenRepository.java) |
+| JWT Cookie Config | [`backend/.../security/JwtProperties.java`](../../backend/src/main/java/com/backend/infrastructure/security/JwtProperties.java) |
+| Angular Auth Service | [`storefront/.../auth/auth.service.ts`](../../storefront/src/app/core/auth/auth.service.ts) |
 | Email Templates | `backend/src/main/resources/templates/email/` |
 
 ## Admin SPA sign-in routing (`storefront/`)
 
-The Angular admin app applies `NoAuthGuard` to unauthenticated routes (including `/sign-in`). When `AuthService.check()` is true (valid JWT in session storage), opening `/sign-in` redirects to the default post-login destination: `/{lang}/site` for tenant users and `/{lang}/tenants` for `SUPER_ADMIN` (see `getAuthenticatedRedirectUrl` in `storefront/src/app/core/auth/auth.redirect.helper.ts`). Two cases still allow the sign-in page while authenticated: the `subdomain` query param differs from the current session subdomain (switching tenant), or the user is `SUPER_ADMIN` and a `subdomain` query is present (opening a tenant-scoped sign-in URL). Submitting the login form always calls the API so a new session can replace the existing one.
+The Angular admin app applies `NoAuthGuard` to unauthenticated routes (including `/sign-in`). When `AuthService.check()` is true (valid JWT in local storage), opening `/sign-in` redirects to the default post-login destination: `/{lang}/site` for tenant users and `/{lang}/tenants` for `SUPER_ADMIN` (see `getAuthenticatedRedirectUrl` in `storefront/src/app/core/auth/auth.redirect.helper.ts`). Two cases still allow the sign-in page while authenticated: the `subdomain` query param differs from the current session subdomain (switching tenant), or the user is `SUPER_ADMIN` and a `subdomain` query is present (opening a tenant-scoped sign-in URL). Submitting the login form always calls the API so a new session can replace the existing one.
 
 ### Platform URL context enforcement (`rootRedirectGuard`)
 
 `rootRedirectGuard` (root path `/`) also validates hostname context before redirecting an authenticated user. If the current hostname resolves to the platform admin host (`s1-app.craftive.io`, `app.craftive.io`, `admin.*`) via `TenantContextService.extractSubdomainFromHost()`, but the active session belongs to a non-`SUPER_ADMIN` user, the guard redirects to `/sign-in` instead of the tenant panel. This prevents a tenant session from leaking into the platform admin URL when multiple tabs are open.
 
-### Session storage isolation (multi-tab safety)
+### Token storage architecture
 
-All session-sensitive keys — `accessToken`, `userId`, `tenantId`, `currentTenantSubdomain`, `userFullName` — are stored in **`sessionStorage`** (tab-isolated). Each browser tab maintains its own independent session. Opening a new tab always starts unauthenticated.
+| Token | Storage | XSS risk | Notes |
+|-------|---------|----------|-------|
+| `accessToken` | Angular in-memory signal (`#accessTokenSig`) | None — not accessible via `localStorage` or `document.cookie` | Lost on page reload; restored via cookie-based refresh |
+| `refreshToken` | `HttpOnly; Secure; SameSite=Strict` cookie (`craftive_rt`) | None — JS cannot read HttpOnly cookies | Set/cleared by backend only; scoped to `/api/auth` path |
 
-`superAdminSelectedTenantId` and `craftive-user-language-preference` remain in `localStorage` (intentional: super admin tenant selection and language preference are safe to share across tabs).
+Non-sensitive keys stored in `localStorage` (UI use only): `userId`, `tenantId`, `currentTenantSubdomain`, `userFullName`. These are not security-sensitive.
+
+Sessions persist across browser tabs: opening a new tab triggers `AuthService.check()` → `refresh()` (cookie sent automatically) → `signInUsingToken()`.
+
+#### Cookie configuration
+
+```yaml
+# application.yml (dev)
+app:
+  jwt:
+    cookie:
+      name: craftive_rt
+      path: /api/auth
+      secure: false      # true in prod
+      same-site: Strict
+
+# application-prod.yml
+app:
+  jwt:
+    cookie:
+      secure: true
+```
+
+### Remember Me
+
+The sign-in form includes a **"Remember Me" checkbox** (i18n key `auth.signIn.rememberMe`).
+
+| State | Refresh Token TTL | Behavior |
+|-------|-------------------|----------|
+| Unchecked (default) | 7 days (`JWT_REFRESH_EXPIRATION`) | Standard session |
+| Checked | 30 days (`JWT_REMEMBER_ME_EXPIRATION`) | Extended session |
+
+The `rememberMe: boolean` field is sent in `POST /api/auth/login`. Backend uses it to set a longer refresh token TTL via `JwtTokenProvider.createRefreshToken(email, role, userId, tenantId, rememberMe)`.
+
+**Auto-refresh flow:**
+- `AuthService.check()`: if no in-memory accessToken → calls `AuthService.refresh()` → `POST /api/auth/refresh` (cookie sent automatically via `withCredentials: true`) → on success, new accessToken is stored in signal → `signInUsingToken()`
+- `error-redirect.interceptor`: on 401, always attempts refresh before redirecting to `/sign-in`. On success, retries the original request with the new access token. On failure, calls `signOut()` and redirects.
+- `auth.interceptor`: `/auth/refresh` is excluded from token injection logic. All requests include `withCredentials: true` so the cookie is sent cross-origin.
+
+The sign-in page determines the active tenant via an explicit **Workspace** input field (i18n key `auth.signIn.workspace`). The field is pre-filled from the following sources in priority order:
+
+1. `?subdomain` query parameter — stored to `localStorage` and removed from the URL (`replaceUrl: true`)
+2. `localStorage['currentTenantSubdomain']` — persisted from the previous session
+
+If the workspace field is non-empty, the form operates in **tenant mode** (forgot-password link and trust-device checkbox are visible). If left empty, the form operates in **platform admin mode** (no extra UI elements shown). `isPlatformHostSig` is updated reactively via a `valueChanges` subscription on the workspace control.
+
+`extractSubdomainFromHost()` is **not used** during sign-in — it is only used by `rootRedirectGuard` and `NoAuthGuard` for hostname-based context enforcement. This prevents `app.*` hostnames from incorrectly defaulting to the platform admin flow on single-URL deployments.
+
+`superAdminSelectedTenantId` and `craftive-user-language-preference` remain in `localStorage` as well (super admin tenant selection and language preference are safe to share across tabs).
+
+> **Config panel** (`/config`) uses a separate `config_console_auth` key in `localStorage` with its own access/refresh token pair and token-refresh logic — independent of the main auth session. Tenant-side config OTP is controlled by `app.config-auth.otp-enabled` / `CONFIG_AUTH_OTP_ENABLED` (defaults to **`true`** in `application.yml`). **`CONFIG_SUPER_ADMIN` platform login always requires email OTP after password** regardless of that flag. See [`../modules/config-control-panel.md`](../modules/config-control-panel.md) for session semantics and audit notes.
 
 ## API Endpoints
 
@@ -39,8 +99,8 @@ Base path: `/api/auth`
 |--------|------|-------------|---------------|
 | `POST` | `/login` | User login (may trigger 2FA) | No |
 | `POST` | `/verify-otp` | Verify OTP code for 2FA | No |
-| `POST` | `/refresh` | Refresh access token (may trigger 2FA if policy changed) | Bearer token |
-| `POST` | `/logout` | Logout user | Bearer token |
+| `POST` | `/refresh` | Refresh access token (may trigger 2FA if policy changed) | `craftive_rt` cookie |
+| `POST` | `/logout` | Logout user, revokes refresh token, clears cookie | Bearer accessToken + `craftive_rt` cookie |
 | `POST` | `/forgot-password` | Request password reset email | No |
 | `POST` | `/reset-password` | Reset password with token | No |
 | `GET` | `/verify-reset-token` | Validate reset token | No |
@@ -111,10 +171,23 @@ POST /api/auth/verify-otp
 
 ## Refresh Token
 
-Token refresh uses the Authorization header:
-- `Authorization: Bearer {refreshToken}`
+Token refresh uses the `craftive_rt` HttpOnly cookie — no request body or Authorization header is needed. The browser sends the cookie automatically when `withCredentials: true`.
 
-The refresh flow detects whether the token belongs to a platform admin or a tenant user and issues a new access token accordingly.
+```
+POST /api/auth/refresh
+Cookie: craftive_rt=<refreshToken>
+```
+
+The refresh flow:
+1. Reads `craftive_rt` cookie; returns 401 if absent
+2. Validates JWT signature and expiry
+3. Looks up token hash in DB (`refresh_tokens` / `platform_refresh_tokens`) and atomically revokes it (single UPDATE with `revokedAt IS NULL AND expiresAt > NOW()` — returns 0 if already used)
+4. Issues new accessToken (response body) + new refreshToken (new `Set-Cookie`)
+5. Detects role from token — routes to platform admin or tenant user path
+
+**Token rotation**: every successful refresh revokes the old token and issues a new one. A token used twice (race condition) is rejected.
+
+**DB-backed revocation**: logout and token rotation are durable — tokens are revoked in the database and cannot be reused even if the cookie is replayed.
 
 ### 2FA Policy Enforcement on Refresh
 
@@ -125,7 +198,7 @@ This means: a user who logged in while 2FA was `DISABLED`, then the admin enable
 **Headers**:
 | Header | Required | Description |
 |--------|----------|-------------|
-| `Authorization` | Yes | `Bearer {refreshToken}` |
+| `Cookie: craftive_rt` | Yes | Sent automatically by browser (`withCredentials: true`) |
 | `X-Device-Fingerprint` | No | SHA-256 device fingerprint (same value used at OTP verify) |
 
 **Response when 2FA required** (same shape as login):
@@ -189,18 +262,21 @@ POST /api/auth/login
 ### Login Response
 
 **Standard login (no 2FA)**:
-```json
+```
+HTTP/1.1 200 OK
+Set-Cookie: craftive_rt=eyJ...; HttpOnly; Secure; SameSite=Strict; Path=/api/auth; Max-Age=604800
+
 {
   "result": "SUCCESS",
   "data": {
     "accessToken": "eyJ...",
-    "refreshToken": "eyJ...",
     "tokenType": "Bearer",
-    "expiresIn": 3600
+    "expiresIn": 86400
   }
 }
 ```
 
+> `refreshToken` is **not** in the response body — it is set as an `HttpOnly` cookie by the backend. The frontend never reads it.
 > `expiresIn` is in **seconds** (OAuth2 standard). Frontend computes absolute expiry as `issuedAt + expiresIn * 1000` (ms).
 
 **2FA required**:
@@ -229,19 +305,26 @@ Request:
   "subdomain": "acme",
   "tenantId": 1,
   "trustDevice": true,
-  "deviceFingerprint": "sha256-hash"
+  "deviceFingerprint": "sha256-hash",
+  "rememberMe": true
 }
 
 Response (success):
+HTTP/1.1 200 OK
+Set-Cookie: craftive_rt=eyJ...; HttpOnly; Secure; SameSite=Strict; Path=/api/auth
+
 {
   "result": "SUCCESS",
   "data": {
     "accessToken": "eyJ...",
-    "refreshToken": "eyJ...",
+    "tokenType": "Bearer",
+    "expiresIn": 86400,
     ...
   }
 }
 ```
+
+**`rememberMe` propagation**: Pass the same value used during initial login. Backend uses it to set the refresh token TTL (7 days vs 30 days) and the `craftive_rt` cookie `Max-Age`.
 
 **Validation**:
 - `deviceFingerprint`: Max 128 chars, alphanumeric with underscore/hyphen only (`[A-Za-z0-9_-]*`)
@@ -260,7 +343,7 @@ Response (success):
 | Max Attempts | 5 | All |
 | Request Rate Limit | 3 per 5 minutes | All |
 | Rate Limit Cleanup | Every 5 minutes | All |
-| Bypass Code | `123456` | Dev + Stage (auto-disabled in prod) |
+| Bypass Code (`OTP_BYPASS_CODE`) | unset / empty by default | Optional: only honored when Spring active profiles include **`dev` or `stage`** (`OtpProperties` clears the value at startup for other profiles). Never commit a weak bypass. |
 
 Configuration in `application.yml`:
 ```yaml
@@ -269,14 +352,15 @@ app:
     length: 6
     expiry-seconds: 300
     max-attempts: 5
-    bypass-code: null  # Set to "123456" in dev/stage profiles
+    bypass-code: ${OTP_BYPASS_CODE:}  # optional; dev/stage only (see OtpProperties)
 ```
 
 **Security Notes**:
 - OTP codes are stored as SHA-256 hashes (never plaintext)
-- Bypass code is automatically disabled outside `dev` and `stage` profiles via `@PostConstruct` validation
+- **Main auth OTP** (`OtpServiceImpl.validateOtp`): optional global-runtime bypass (`/config` keys) and env bypass are evaluated **only when `prod` is not** an active profile; bypass compares use constant-time equality on UTF-8 bytes.
+- **`OtpProperties` startup:** a non-blank `bypass-code` is cleared (set to null) unless the process runs with `dev` or `stage` profile — extra guard beyond documentation-only defaults.
 - Rate limiting: Max 3 OTP requests per email per 5-minute window (returns HTTP 429)
-- The same shared bypass code applies to both standard auth 2FA and `/config` OTP verification because both flows read `OtpConfig`
+- **Config panel** (`verifyPlatformOtp`): reads the same `app.otp.bypass-code` binding after the startup guard above; combined with **mandatory** platform config OTP, keep bypass unset in shared environments.
 
 ---
 
@@ -331,15 +415,20 @@ Secure password reset flow using email tokens.
 ### Flow
 
 ```
-1. POST /api/auth/forgot-password { "email": "user@example.com" }
+1. POST /api/auth/forgot-password
+   Headers: X-Tenant-Subdomain: acme (or X-Tenant-ID / tenant hostname)
+   Body: { "email": "user@example.com" }
    └── Generate token, send email
    └── Response: { "result": "SUCCESS", "message": "Reset link sent" }
+   └── Invalid/missing tenant identifiers return the same generic response without sending mail
 
 2. User clicks email link → Frontend reset-password page
+   └── Tenant context required: X-Tenant-Subdomain: acme (or tenant hostname / subdomain query)
    └── GET /api/auth/verify-reset-token?token=abc123
    └── Response: { "valid": true, "email": "u***@example.com" }
 
 3. POST /api/auth/reset-password
+   Headers: X-Tenant-Subdomain: acme (or X-Tenant-ID / tenant hostname)
    {
      "token": "abc123",
      "password": "NewPass123!",
@@ -458,7 +547,7 @@ CREATE TABLE verification_tokens (
 | Provider | Usage | Configuration |
 |----------|-------|---------------|
 | `smtp` | Production | JavaMailSender with SMTP credentials |
-| `console` | Development | Logs email content to console |
+| `console` | Development | Logs dispatch status only; does not log reset links or tokens |
 
 ### Email Templates
 
@@ -496,7 +585,7 @@ app:
 app:
   email:
     provider: console
-    log-content: true
+    log-content: false
 ```
 
 ---
@@ -517,21 +606,26 @@ app:
 ### Sign-In Component (2FA)
 
 **Features**:
+- **Workspace field** (`auth.signIn.workspace`) — explicit tenant identification; pre-filled from `?subdomain` query param or localStorage
 - Standard email/password login
 - OTP verification form (shown when 2FA required)
 - Device fingerprint generation
-- "Trust this device" checkbox
+- "Trust this device" checkbox (tenant mode only)
+- Forgot password link (tenant mode only)
 - Auto-redirect after OTP verification
 
 **Flow**:
 ```typescript
-1. User enters credentials → signIn()
-2. If requires2FA === true:
+1. User fills Workspace field (or leaves empty for platform admin)
+2. User enters credentials → signIn()
+   - If workspace non-empty → tenantContext.setSubdomain(workspace) → tenant auth
+   - If workspace empty → no subdomain set → platform admin auth
+3. If requires2FA === true:
    - Show OTP form
    - User enters 6-digit code
-   - Optional: Check "Trust this device"
+   - Optional: Check "Trust this device" (tenant only)
    - Call verifyOtp()
-3. If successful → Redirect to dashboard
+4. If successful → Redirect to dashboard
 ```
 
 ### Reset Password Component
@@ -607,6 +701,7 @@ setPassword():
 ```typescript
 sendResetLink():
   - Validate email format
+  - Resolve tenant subdomain from `?subdomain`, saved tenant context, or tenant hostname
   - Call authService.forgotPassword(email, subdomain, recaptchaToken)
   - Show backend `response.message` (or fallback i18n)
   - Reset form
@@ -617,6 +712,18 @@ sendResetLink():
 **Location**: `storefront/src/app/core/auth/auth.service.ts`
 
 ```typescript
+// Session
+signIn(credentials): Observable<boolean | 'requires2FA'>
+signOut(): Observable<any>            // clears signal + calls POST /auth/logout (backend clears cookie)
+refresh(): Observable<boolean>        // POST /auth/refresh — cookie sent automatically, no body
+check(): Observable<boolean>          // in-memory token valid? → true; else → refresh() → signInUsingToken()
+getAccessToken(): string              // reads in-memory signal; empty string if not authenticated
+signInUsingToken(): Observable<boolean>
+
+// 2FA
+verifyOtp(request: VerifyOtpRequest): Observable<boolean>
+cancel2FA(): void
+
 // Password Reset
 forgotPassword(email: string, subdomain?: string, recaptchaToken?: string): Observable<any>
 verifyResetToken(token: string, subdomain?: string): Observable<any>
@@ -624,13 +731,14 @@ resetPassword(token: string, password: string, confirmPassword: string, subdomai
 
 // Email Verification
 verifyEmailToken(token: string, subdomain?: string): Observable<any>
-setInitialPassword(token: string, password: string, confirmPassword: string, subdomain?: string, recaptchaToken?: string): Observable<any>
+setInitialPassword(token: string, password: string, confirmPassword: string, ...): Observable<LoginResponse>
 // Returns ApiResponse<void> — no JWT. Redirect to sign-in after success.
 
-// 2FA
-signIn(credentials): Observable<boolean | 'requires2FA'>
-verifyOtp(request: VerifyOtpRequest): Observable<boolean>
-cancel2FA(): void
+// External (initial password flow — no signIn)
+completeSignInWithResponse(response: LoginResponseData): void
+
+// Lock-screen re-auth (idle session)
+unlockSession(credentials): Observable<any>
 ```
 
 ### Account Lock Handling (Frontend)
@@ -685,6 +793,19 @@ async generateDeviceFingerprint(): Promise<string> {
 
 ### Token Security
 
+**Access Token:**
+- Stored in Angular in-memory signal — not in `localStorage` or `document.cookie`
+- Lost on page reload; transparently restored via cookie-based refresh
+- XSS cannot steal it — no script can read a private class field signal
+
+**Refresh Token:**
+- Stored as `HttpOnly; Secure; SameSite=Strict` cookie (`craftive_rt`) scoped to `/api/auth`
+- `document.cookie` cannot read it — invisible to JavaScript
+- DB-backed revocation: every token is stored as a SHA-256 hash in `refresh_tokens` (tenant) / `platform_refresh_tokens` (platform) tables
+- Token rotation on every refresh: old token is atomically revoked, new one issued
+- Logout revokes the DB record and clears the cookie via `Max-Age=0`
+
+**Verification Tokens (OTP / Password Reset / Email Verify):**
 - All tokens stored as SHA-256 hashes in `token_hash` column
 - OTP codes (LOGIN_OTP, OPERATION_OTP): stored as SHA-256 hash in `target_value`
 - PASSWORD_RESET and EMAIL_VERIFY: `target_value` is `null` (plaintext never stored in DB)
@@ -692,6 +813,24 @@ async generateDeviceFingerprint(): Promise<string> {
 - Automatic expiry enforcement
 - Rate limiting on verification attempts (max 5)
 - Expired `ACTIVE` tokens are also cleaned up by the scheduled job (7-day grace window)
+
+**Refresh Token DB Schema (tenant):**
+```sql
+CREATE TABLE refresh_tokens (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    token_hash VARCHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    revoked_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_refresh_tokens PRIMARY KEY (id),
+    CONSTRAINT uq_refresh_tokens_hash UNIQUE (token_hash),
+    CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_refresh_tokens_hash (token_hash),
+    INDEX idx_refresh_tokens_user (user_id),
+    INDEX idx_refresh_tokens_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
 
 ### OTP Security
 

@@ -7,8 +7,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.backend.domain.entity.Media;
 import com.backend.application.dto.request.MediaBindRequest;
+import com.backend.application.dto.response.BulkDeleteResultResponse;
+import com.backend.domain.entity.Media;
 
 public interface MediaService {
 
@@ -44,6 +45,8 @@ public interface MediaService {
     Media updateMetadata(Long id, Boolean isPublic, List<String> tags);
 
     void delete(Long id);
+
+    BulkDeleteResultResponse bulkDeleteMedia(List<Long> ids);
 
     List<Media> findAll();
 

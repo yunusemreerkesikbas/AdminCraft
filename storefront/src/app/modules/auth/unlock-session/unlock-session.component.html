@@ -40,15 +40,20 @@
                 #unlockSessionNgForm="ngForm"
             >
                 <!-- Name field -->
-                <mat-form-field class="w-full">
+                <mat-form-field class="w-full mb-4">
                     <mat-label>
                         {{ 'auth.common.fullNameLabel' | transloco }}
                     </mat-label>
-                    <input id="name" matInput [formControlName]="'name'" />
+                    <input
+                        id="name"
+                        matInput
+                        [formControlName]="'name'"
+                        [placeholder]="'auth.common.fullNamePlaceholder' | transloco"
+                    />
                 </mat-form-field>
 
                 <!-- Password field -->
-                <mat-form-field class="w-full">
+                <mat-form-field class="w-full mb-4">
                     <mat-label>
                         {{ 'auth.common.passwordLabel' | transloco }}
                     </mat-label>
@@ -57,6 +62,7 @@
                         matInput
                         type="password"
                         [formControlName]="'password'"
+                        [placeholder]="'auth.common.passwordPlaceholder' | transloco"
                         #passwordField
                     />
                     <button

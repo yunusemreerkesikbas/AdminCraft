@@ -137,6 +137,19 @@ public final class SortableFieldsConfig {
                         SortOptionDto.of("email,asc", "admin.sort.emailAsc"),
                         SortOptionDto.of("email,desc", "admin.sort.emailDesc"));
 
+        public static final Set<String> CONTACT_REQUEST_ALLOWED_FIELDS = Set.of(
+                        "createdAt", "fullName", "subject", "locale", "source");
+
+        public static final String CONTACT_REQUEST_DEFAULT_SORT = "createdAt,desc";
+
+        public static final List<SortOptionDto> CONTACT_REQUEST_SORT_OPTIONS = List.of(
+                        SortOptionDto.defaultOption("createdAt,desc", "admin.sort.newest"),
+                        SortOptionDto.of("createdAt,asc", "admin.sort.oldest"),
+                        SortOptionDto.of("fullName,asc", "admin.sort.nameAsc"),
+                        SortOptionDto.of("fullName,desc", "admin.sort.nameDesc"),
+                        SortOptionDto.of("subject,asc", "admin.sort.titleAsc"),
+                        SortOptionDto.of("subject,desc", "admin.sort.titleDesc"));
+
         public static final Set<String> SITE_ACTIVITY_ALLOWED_FIELDS = Set.of(
                         "createdAt");
 
@@ -174,36 +187,39 @@ public final class SortableFieldsConfig {
         /**
          * Registry mapping entity names to their allowed fields.
          */
-        public static final Map<String, Set<String>> ENTITY_FIELDS = Map.of(
-                        "Media", MEDIA_ALLOWED_FIELDS,
-                        "NavigationNode", NAVIGATION_NODE_ALLOWED_FIELDS,
-                        "PageTemplate", PAGE_TEMPLATE_ALLOWED_FIELDS,
-                        "Component", COMPONENT_ALLOWED_FIELDS,
-                        "ComponentType", COMPONENT_TYPE_ALLOWED_FIELDS,
-                        "User", USER_ALLOWED_FIELDS,
-                        "MailSubscriber", MAIL_SUBSCRIBER_ALLOWED_FIELDS,
-                        "DemoRequest", DEMO_REQUEST_ALLOWED_FIELDS,
-                        "Tenant", TENANT_ALLOWED_FIELDS);
+        public static final Map<String, Set<String>> ENTITY_FIELDS = Map.ofEntries(
+                        Map.entry("Media", MEDIA_ALLOWED_FIELDS),
+                        Map.entry("NavigationNode", NAVIGATION_NODE_ALLOWED_FIELDS),
+                        Map.entry("PageTemplate", PAGE_TEMPLATE_ALLOWED_FIELDS),
+                        Map.entry("Component", COMPONENT_ALLOWED_FIELDS),
+                        Map.entry("ComponentType", COMPONENT_TYPE_ALLOWED_FIELDS),
+                        Map.entry("User", USER_ALLOWED_FIELDS),
+                        Map.entry("MailSubscriber", MAIL_SUBSCRIBER_ALLOWED_FIELDS),
+                        Map.entry("DemoRequest", DEMO_REQUEST_ALLOWED_FIELDS),
+                        Map.entry("ContactRequest", CONTACT_REQUEST_ALLOWED_FIELDS),
+                        Map.entry("Tenant", TENANT_ALLOWED_FIELDS));
 
-        public static final Map<String, List<SortOptionDto>> ENTITY_SORT_OPTIONS = Map.of(
-                        "Media", MEDIA_SORT_OPTIONS,
-                        "NavigationNode", NAVIGATION_NODE_SORT_OPTIONS,
-                        "PageTemplate", PAGE_TEMPLATE_SORT_OPTIONS,
-                        "Component", COMPONENT_SORT_OPTIONS,
-                        "ComponentType", COMPONENT_TYPE_SORT_OPTIONS,
-                        "User", USER_SORT_OPTIONS,
-                        "MailSubscriber", MAIL_SUBSCRIBER_SORT_OPTIONS,
-                        "DemoRequest", DEMO_REQUEST_SORT_OPTIONS,
-                        "Tenant", TENANT_SORT_OPTIONS);
+        public static final Map<String, List<SortOptionDto>> ENTITY_SORT_OPTIONS = Map.ofEntries(
+                        Map.entry("Media", MEDIA_SORT_OPTIONS),
+                        Map.entry("NavigationNode", NAVIGATION_NODE_SORT_OPTIONS),
+                        Map.entry("PageTemplate", PAGE_TEMPLATE_SORT_OPTIONS),
+                        Map.entry("Component", COMPONENT_SORT_OPTIONS),
+                        Map.entry("ComponentType", COMPONENT_TYPE_SORT_OPTIONS),
+                        Map.entry("User", USER_SORT_OPTIONS),
+                        Map.entry("MailSubscriber", MAIL_SUBSCRIBER_SORT_OPTIONS),
+                        Map.entry("DemoRequest", DEMO_REQUEST_SORT_OPTIONS),
+                        Map.entry("ContactRequest", CONTACT_REQUEST_SORT_OPTIONS),
+                        Map.entry("Tenant", TENANT_SORT_OPTIONS));
 
-        public static final Map<String, String> ENTITY_DEFAULT_SORT = Map.of(
-                        "Media", MEDIA_DEFAULT_SORT,
-                        "NavigationNode", NAVIGATION_NODE_DEFAULT_SORT,
-                        "PageTemplate", PAGE_TEMPLATE_DEFAULT_SORT,
-                        "Component", COMPONENT_DEFAULT_SORT,
-                        "ComponentType", COMPONENT_TYPE_DEFAULT_SORT,
-                        "User", USER_DEFAULT_SORT,
-                        "MailSubscriber", MAIL_SUBSCRIBER_DEFAULT_SORT,
-                        "DemoRequest", DEMO_REQUEST_DEFAULT_SORT,
-                        "Tenant", TENANT_DEFAULT_SORT);
+        public static final Map<String, String> ENTITY_DEFAULT_SORT = Map.ofEntries(
+                        Map.entry("Media", MEDIA_DEFAULT_SORT),
+                        Map.entry("NavigationNode", NAVIGATION_NODE_DEFAULT_SORT),
+                        Map.entry("PageTemplate", PAGE_TEMPLATE_DEFAULT_SORT),
+                        Map.entry("Component", COMPONENT_DEFAULT_SORT),
+                        Map.entry("ComponentType", COMPONENT_TYPE_DEFAULT_SORT),
+                        Map.entry("User", USER_DEFAULT_SORT),
+                        Map.entry("MailSubscriber", MAIL_SUBSCRIBER_DEFAULT_SORT),
+                        Map.entry("DemoRequest", DEMO_REQUEST_DEFAULT_SORT),
+                        Map.entry("ContactRequest", CONTACT_REQUEST_DEFAULT_SORT),
+                        Map.entry("Tenant", TENANT_DEFAULT_SORT));
 }

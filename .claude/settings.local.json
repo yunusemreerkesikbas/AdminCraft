@@ -65,7 +65,11 @@
       "Bash(npx tsc:*)",
       "Bash(node:*)",
       "Bash(mvn test:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(bash -n /c/Users/emreerkesikbas/Documents/Craftive/scripts/server/deploy-tenant-storefront.sh)",
+      "Bash(git show-ref *)",
+      "Bash(mvn *)",
+      "Bash(git stash *)"
     ],
     "deny": [],
     "ask": [],
@@ -79,6 +83,9 @@
     "tavily-remote-mcp",
     "memory",
     "executeautomation-playwright-server"
+  ],
+  "disabledMcpjsonServers": [
+    "AfterEffectsMCP"
   ],
   "hooks": {
     "PostToolUse": [

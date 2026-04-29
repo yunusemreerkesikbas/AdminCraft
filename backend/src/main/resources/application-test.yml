@@ -26,6 +26,8 @@ spring:
 app:
   tenant:
     auto-sync-on-startup: false # Disable for tests
+  security:
+    contact-request-retention-job-enabled: false
   cms:
     rate-limit:
       permits-per-minute: 10000.0

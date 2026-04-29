@@ -103,7 +103,7 @@ export interface CreateComponentEntryCompositeRequest {
     sortOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
-    responsiveMediaId?: number;
+    responsiveMediaId?: number | null;
     translations: Record<string, EntryI18nRequest>;
 }
 
@@ -111,7 +111,7 @@ export interface UpdateComponentEntryCompositeRequest {
     sortOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
-    responsiveMediaId?: number;
+    responsiveMediaId?: number | null;
     translations: Record<string, EntryI18nRequest>;
 }
 

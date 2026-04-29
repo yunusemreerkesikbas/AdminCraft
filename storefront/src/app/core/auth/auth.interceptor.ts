@@ -16,28 +16,26 @@ export const authInterceptor = (
 ): Observable<HttpEvent<unknown>> => {
     const authService = inject(AuthService);
     const configSession = inject(ConfigSessionService);
-    let newReq = req.clone();
+    let newReq = req.clone({ withCredentials: true });
     const isAuthEndpoint = req.url.includes('/auth/login') ||
         req.url.includes('/auth/signup') ||
         req.url.includes('/auth/forgot-password') ||
-        req.url.includes('/auth/reset-password');
+        req.url.includes('/auth/reset-password') ||
+        req.url.includes('/auth/refresh');
     const isConfigEndpoint = req.url.includes('/config/auth') || req.url.includes('/config/admin');
     const isConfigAdmin = req.url.includes('/config/admin');
 
     if (!isAuthEndpoint && !isConfigEndpoint && !req.headers.has('Authorization')) {
         const token = authService.getAccessToken();
         if (token && !AuthUtils.isTokenExpired(token)) {
-            newReq = req.clone({
-                headers: req.headers.set('Authorization', 'Bearer ' + token),
+            newReq = newReq.clone({
+                headers: newReq.headers.set('Authorization', 'Bearer ' + token),
             });
         }
     }
     return next(newReq).pipe(
         catchError((error) => {
             if (error instanceof HttpErrorResponse) {
-                if (error.status === 401 && !isAuthEndpoint && !isConfigEndpoint) {
-                    authService.signOut();
-                }
                 if (isConfigAdmin && (error.status === 401 || error.status === 403)) {
                     if (req.headers.has('X-Config-Refresh-Retry')) {
                         configSession.clearStoredSession();

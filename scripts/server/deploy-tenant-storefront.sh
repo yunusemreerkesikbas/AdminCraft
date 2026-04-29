@@ -3,15 +3,17 @@
 # deploy-tenant-storefront.sh — Deploy/Update Tenant Storefront (Stage/Prod)
 # =============================================================================
 # Usage:
-#   bash scripts/server/deploy-tenant-storefront.sh <stage|prod> <tenant_slug> <image_ref> [primary_domain] [extra_domains_csv]
+#   bash scripts/server/deploy-tenant-storefront.sh <stage|prod> <tenant_slug> <image_ref> [primary_domain] [extra_domains_csv] [canonical_host]
 #
 # Examples:
 #   bash scripts/server/deploy-tenant-storefront.sh stage democompany ghcr.io/craftive/democompany-storefront:stage-a3f9c12
-#   bash scripts/server/deploy-tenant-storefront.sh prod democompany ghcr.io/craftive/democompany-storefront:release-27.02.2026 democompany.com "www.democompany.com,democompany.craftive.io"
+#   bash scripts/server/deploy-tenant-storefront.sh prod democompany ghcr.io/craftive/democompany-storefront:release-27.02.2026 www.democompany.com "democompany.com" "www.democompany.com"
 #
 # Notes:
 #   - This script is designed to run on the target droplet.
 #   - Traefik must already be running in the same Docker network (craftive-network).
+#   - canonical_host: when set, extra_domains_csv entries that differ from it get a
+#     permanent 301 redirect to canonical_host (apex → www pattern).
 # =============================================================================
 
 set -euo pipefail
@@ -29,7 +31,7 @@ error() { echo -e "${RED}[x]${NC} $1"; exit 1; }
 usage() {
   cat <<'EOF'
 Usage:
-  bash scripts/server/deploy-tenant-storefront.sh <stage|prod> <tenant_slug> <image_ref> [primary_domain] [extra_domains_csv]
+  bash scripts/server/deploy-tenant-storefront.sh <stage|prod> <tenant_slug> <image_ref> [primary_domain] [extra_domains_csv] [canonical_host]
 
 Arguments:
   stage|prod        Target environment
@@ -39,6 +41,9 @@ Arguments:
                     - stage: s1-<tenant_slug>.craftive.io
                     - prod : <tenant_slug>.craftive.io
   extra_domains_csv Optional comma-separated extra domains.
+  canonical_host    Optional. When set, any extra domain that differs from canonical_host
+                    gets a Traefik 301 redirect to https://<canonical_host>. Use for
+                    apex → www redirect (e.g. canonical_host=www.example.com, extra=example.com).
 EOF
 }
 
@@ -49,6 +54,7 @@ TENANT_SLUG="$2"
 IMAGE_REF="$3"
 PRIMARY_DOMAIN="${4:-}"
 EXTRA_DOMAINS_CSV="${5:-}"
+CANONICAL_HOST="${6:-}"
 BASE_DOMAIN="${BASE_DOMAIN:-craftive.io}"
 
 [[ "${ENV}" != "stage" && "${ENV}" != "prod" ]] && error "Environment must be 'stage' or 'prod'."
@@ -108,7 +114,26 @@ build_host_rule() {
   printf '%s' "${rule}"
 }
 
-HOST_RULE="$(build_host_rule "${DOMAINS[@]}")"
+CANONICAL_HOST="$(echo "${CANONICAL_HOST}" | tr '[:upper:]' '[:lower:]' | xargs)"
+if [[ -n "${CANONICAL_HOST}" && -z "${DOMAIN_SET[${CANONICAL_HOST}]:-}" ]]; then
+  error "canonical_host '${CANONICAL_HOST}' must be one of the routed domains (primary or extra)."
+fi
+
+# Domains that should 301 → canonical (all non-canonical extra domains)
+REDIRECT_DOMAINS=()
+if [[ -n "${CANONICAL_HOST}" ]]; then
+  for domain in "${DOMAINS[@]}"; do
+    [[ "${domain}" != "${CANONICAL_HOST}" ]] && REDIRECT_DOMAINS+=("${domain}")
+  done
+fi
+
+# Main router: canonical host only (or all domains when no canonical set)
+if [[ -n "${CANONICAL_HOST}" ]]; then
+  MAIN_HOST_RULE="Host(\`${CANONICAL_HOST}\`)"
+else
+  MAIN_HOST_RULE="$(build_host_rule "${DOMAINS[@]}")"
+fi
+
 SERVICE_NAME="storefront-${TENANT_SLUG}"
 ROUTER_NAME="tenant-${ENV}-${TENANT_SLUG}"
 PROJECT_NAME="${ROUTER_NAME}"
@@ -116,6 +141,21 @@ TARGET_DIR="/opt/craftive/${ENV}/tenant-storefronts"
 COMPOSE_FILE="${TARGET_DIR}/${TENANT_SLUG}.yml"
 
 mkdir -p "${TARGET_DIR}"
+
+# Build redirect router labels (canonical 301 redirect for non-canonical domains)
+REDIRECT_LABELS=""
+if [[ "${#REDIRECT_DOMAINS[@]}" -gt 0 ]]; then
+  REDIRECT_HOST_RULE="$(build_host_rule "${REDIRECT_DOMAINS[@]}")"
+  REDIRECT_LABELS+="      traefik.http.middlewares.${ROUTER_NAME}-canonical.redirectregex.regex: \"^https?://[^/]+(.*)\"\n"
+  REDIRECT_LABELS+="      traefik.http.middlewares.${ROUTER_NAME}-canonical.redirectregex.replacement: \"https://${CANONICAL_HOST}\$\${1}\"\n"
+  REDIRECT_LABELS+="      traefik.http.middlewares.${ROUTER_NAME}-canonical.redirectregex.permanent: \"true\"\n"
+  REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.rule: \"${REDIRECT_HOST_RULE}\"\n"
+  REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.entrypoints: \"websecure\"\n"
+  REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.tls.certresolver: \"letsencrypt\"\n"
+  REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.middlewares: \"${ROUTER_NAME}-canonical@docker\"\n"
+  REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.priority: \"20\"\n"
+  REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.service: \"${ROUTER_NAME}@docker\"\n"
+fi
 
 cat > "${COMPOSE_FILE}" <<EOF
 services:
@@ -130,12 +170,12 @@ services:
       - craftive-network
     labels:
       traefik.enable: "true"
-      traefik.http.routers.${ROUTER_NAME}.rule: "${HOST_RULE}"
+      traefik.http.routers.${ROUTER_NAME}.rule: "${MAIN_HOST_RULE}"
       traefik.http.routers.${ROUTER_NAME}.entrypoints: "websecure"
       traefik.http.routers.${ROUTER_NAME}.tls.certresolver: "letsencrypt"
       traefik.http.routers.${ROUTER_NAME}.priority: "20"
       traefik.http.services.${ROUTER_NAME}.loadbalancer.server.port: "3000"
-
+$(printf '%b' "${REDIRECT_LABELS}")
 networks:
   craftive-network:
     external: true
@@ -153,4 +193,5 @@ echo "  Tenant      : ${TENANT_SLUG}"
 echo "  Image       : ${IMAGE_REF}"
 echo "  Project     : ${PROJECT_NAME}"
 echo "  Domains     : ${DOMAINS[*]}"
+[[ -n "${CANONICAL_HOST}" ]] && echo "  Canonical   : ${CANONICAL_HOST} (301 from: ${REDIRECT_DOMAINS[*]:-none})"
 

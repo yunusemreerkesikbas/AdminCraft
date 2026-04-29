@@ -1,6 +1,8 @@
 package com.backend.application.service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.delivery.ResponsiveMediaDeliveryResponse;
 import com.backend.application.dto.request.ResponsiveMediaRequest;
+import com.backend.application.dto.response.MediaLinkedComponentUsageLinkTypeResponse;
 import com.backend.application.dto.response.MediaLinkedComponentUsageResponse;
 import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.domain.entity.Component;
@@ -214,25 +217,44 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
           : componentEntryI18nRepository.findByEntryIdIn(entryIds).stream()
               .collect(Collectors.groupingBy(ComponentEntryI18n::getEntryId));
 
-      return links.stream()
-          .map(link -> {
+      Map<LinkedUsageTarget, List<ComponentMediaLink>> linksByTarget = links.stream()
+          .collect(Collectors.groupingBy(
+              link -> new LinkedUsageTarget(link.getComponentId(), link.getEntryId()),
+              LinkedHashMap::new,
+              Collectors.toList()));
+
+      return linksByTarget.values().stream()
+          .map(groupedLinks -> {
+            ComponentMediaLink link = groupedLinks.get(0);
             Component component = componentById.get(link.getComponentId());
             ComponentEntry entry = link.getEntryId() != null ? entryById.get(link.getEntryId()) : null;
             String componentTypeName = component != null
                 ? componentTypeNamesById.get(component.getComponentTypeId())
                 : null;
+            String entryTitle = entry != null ? resolveEntryTitle(entryI18nByEntryId.get(entry.getId())) : null;
+            List<MediaLinkedComponentUsageLinkTypeResponse> linkTypes = groupedLinks.stream()
+                .map(groupedLink -> toLinkedUsageLinkType(groupedLink.getLinkType()))
+                .distinct()
+                .toList();
+            Long responsiveSetId = groupedLinks.stream()
+                .map(ComponentMediaLink::getResponsiveSetId)
+                .filter(id -> id != null)
+                .findFirst()
+                .orElse(null);
 
             return new MediaLinkedComponentUsageResponse(
                 link.getComponentId(),
                 component != null ? component.getUid() : null,
                 component != null ? component.getName() : null,
+                resolveComponentLabel(link, component),
                 componentTypeName,
                 link.getEntryId(),
                 entry != null ? entry.getUid() : null,
                 entry != null ? entry.getSortOrder() : null,
-                entry != null ? resolveEntryTitle(entryI18nByEntryId.get(entry.getId())) : null,
-                link.getLinkType().name(),
-                link.getResponsiveSetId());
+                entryTitle,
+                resolveEntryLabel(link, entry, entryTitle),
+                linkTypes,
+                responsiveSetId);
           })
           .toList();
     } catch (Exception e) {
@@ -251,6 +273,48 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
         .filter(title -> title != null && !title.isBlank())
         .findFirst()
         .orElse(null);
+  }
+
+  private String resolveComponentLabel(ComponentMediaLink link, Component component) {
+    if (component == null) {
+      return "#" + link.getComponentId();
+    }
+
+    if (component.getUid() != null && !component.getUid().isBlank()) {
+      return component.getUid();
+    }
+
+    return component.getName() != null && !component.getName().isBlank()
+        ? component.getName()
+        : "#" + link.getComponentId();
+  }
+
+  private String resolveEntryLabel(ComponentMediaLink link, ComponentEntry entry, String entryTitle) {
+    if (link.getEntryId() == null) {
+      return null;
+    }
+
+    if (entry == null) {
+      return "#" + link.getEntryId();
+    }
+
+    if (entry.getUid() != null && !entry.getUid().isBlank()) {
+      return entry.getUid();
+    }
+
+    return entryTitle != null && !entryTitle.isBlank()
+        ? entryTitle
+        : "#" + link.getEntryId();
+  }
+
+  private MediaLinkedComponentUsageLinkTypeResponse toLinkedUsageLinkType(ComponentMediaLink.LinkType linkType) {
+    String code = linkType.name();
+    return new MediaLinkedComponentUsageLinkTypeResponse(
+        code,
+        code.replace("RESPONSIVE_", "").toLowerCase(Locale.ROOT));
+  }
+
+  private record LinkedUsageTarget(Long componentId, Long entryId) {
   }
 
   @Override
