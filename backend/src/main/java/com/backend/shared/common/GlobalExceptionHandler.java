@@ -290,7 +290,7 @@ public class GlobalExceptionHandler {
         String firstErrorMessage = null;
         for (var error : ex.getBindingResult().getAllErrors()) {
             String fieldName = error instanceof FieldError fe ? fe.getField() : error.getObjectName();
-            String errorMessage = getMessage(error.getDefaultMessage());
+            String errorMessage = resolveBindingErrorMessage(error);
             validationErrors.put(fieldName, errorMessage);
         }
         if (!validationErrors.isEmpty()) {
@@ -407,4 +407,12 @@ public class GlobalExceptionHandler {
         return getMessage(fallbackKey);
     }
 
+    private String resolveBindingErrorMessage(org.springframework.validation.ObjectError error) {
+        String defaultMessage = error.getDefaultMessage();
+        if (defaultMessage != null && !defaultMessage.isBlank()) {
+            return defaultMessage;
+        }
+
+        return "Validation failed";
+    }
 }

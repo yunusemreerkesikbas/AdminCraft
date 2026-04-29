@@ -129,9 +129,9 @@ export interface ComponentI18nDto {
 }
 
 export interface ComponentI18nRequest {
-    title?: string;
-    subtitle?: string;
-    description?: string;
+    title?: string | null;
+    subtitle?: string | null;
+    description?: string | null;
 }
 
 

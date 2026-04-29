@@ -1,5 +1,6 @@
 package com.backend.infrastructure.config;
 
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -13,6 +14,12 @@ import jakarta.validation.Validator;
  */
 @Configuration
 public class ValidationConfig {
+
+    private final MessageSource messageSource;
+
+    public ValidationConfig(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
     
     /**
      * Bean for method validation support.
@@ -34,6 +41,8 @@ public class ValidationConfig {
      */
     @Bean
     public Validator validator() {
-        return new LocalValidatorFactoryBean();
+        LocalValidatorFactoryBean validatorFactoryBean = new LocalValidatorFactoryBean();
+        validatorFactoryBean.setValidationMessageSource(messageSource);
+        return validatorFactoryBean;
     }
 }
