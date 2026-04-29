@@ -34,7 +34,7 @@ Executes a SQL script submitted in the request body.
 |--------|-----------|
 | `200 OK` | All statements succeeded (`status: "SUCCESS"`) |
 | `207 Multi-Status` | At least one statement failed (`status: "PARTIAL"`) |
-| `400 Bad Request` | Missing `-- #CRAFTIVE_IMPEX` marker |
+| `400 Bad Request` | Missing `-- #CRAFTIVE_IMPEX` marker, or script contains a MySQL conditional comment (`/*! ... */`) |
 | `500 Internal Server Error` | Unexpected execution error |
 
 **Response body** (`ApiResponse<ImpExResult>`):
@@ -169,7 +169,7 @@ UI flow:
 - **Statement whitelist:** DML writes are restricted to `INSERT` and `UPDATE`. DDL and destructive operations are blocked at the service layer regardless of role.
 - **Sensitive tables:** Updates/inserts targeting a configured deny-list of logical table names (e.g. identity and security tables) are rejected even when the SQL uses schema-qualified or backtick-quoted identifiers.
 - **Size limit:** `sqlContent` is capped at 100 000 characters (`@Size(max = 100_000)`).
-- **Error truncation:** JDBC error messages are truncated at 500 characters before being stored in `StatementResult.errorMessage`.
+- **Error sanitization (SEC-110):** Per-statement errors are classified by Spring `DataAccessException` subtype (`BadSqlGrammarException` → syntax, `DuplicateKeyException` → duplicate, `DataIntegrityViolationException` → constraint, generic `DataAccessException` → dataAccess) and returned as a localised category message. The MDC `correlationId` is appended as `(ref: <id>)` so operators can cross-reference the full stack trace in server logs. Raw JDBC messages (table names, column names, vendor error codes) never reach the client.
 - **Rate limiting:** Controller-level Resilience4j limits apply (see `application.yml`); multi-replica caveats remain an ops concern.
 
 ---
@@ -190,7 +190,7 @@ UI flow:
 
 When `status` is `"PARTIAL"`, inspect `results` where `success: false`:
 
-- `errorMessage` contains the truncated JDBC exception message.
+- `errorMessage` contains a localised category message (e.g. `"SQL syntax error"`, `"Duplicate key — record already exists"`) followed by `(ref: <correlationId>)`. The full JDBC detail is in the server log under that correlation ID.
 - Common cause: FK violation (referenced `uid` does not exist yet) — fix ordering of statements.
 - Blocked statement: `errorMessage` starts with `"Operation not allowed"` — remove or replace the statement.
 

@@ -145,7 +145,7 @@ POST /api/users
 PUT /api/users/{id}
 ```
 
-**Request Body**: `UpdateUserRequest` (partial update - all fields optional)
+**Request Body**: `UpdateUserRequest` (partial update — all fields optional)
 
 ```json
 {
@@ -155,6 +155,33 @@ PUT /api/users/{id}
   "isActive": false
 }
 ```
+
+**Note (SEC-109):** Role changes are **not** accepted through this endpoint. Any `role` field submitted in the body is silently ignored. Use the dedicated `PATCH /api/users/{id}/role` endpoint instead.
+
+### Update User Role (SEC-109)
+
+```
+PATCH /api/users/{id}/role
+```
+
+Requires `TENANT_ADMIN` role. Updates the role of a tenant user.
+
+**Request Body**: `UpdateUserRoleRequest`
+
+```json
+{
+  "role": "VIEWER"
+}
+```
+
+**Constraints**:
+- `role` is required; valid values: `TENANT_ADMIN`, `VIEWER`
+- A caller cannot change their own role (`id` must differ from the JWT subject).
+- `SUPER_ADMIN` cannot be assigned via this endpoint (platform-only role).
+
+**Response**: `204 No Content`
+
+**Security rationale:** Separating role changes from profile updates prevents mass-assignment vulnerabilities where an `UpdateUserRequest` body could silently elevate a user to an unintended role.
 
 ### Delete User
 

@@ -5,6 +5,23 @@ import { resolveCmsEndpoint } from "./lib/core/http/endpoints";
 import { isValidLocaleFormat } from "./lib/core/i18n/locale";
 
 /**
+ * Host header the browser used (reverse-proxy safe).
+ * Behind Traefik/Docker, `nextUrl.hostname` may reflect an internal target; `Host` /
+ * `X-Forwarded-Host` carry the public hostname used for TENANT_HOSTNAME checks.
+ */
+function getIncomingHostname(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-host");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim().split(":")[0].toLowerCase();
+  }
+  const host = request.headers.get("host");
+  if (host) {
+    return host.split(":")[0].toLowerCase();
+  }
+  return request.nextUrl.hostname.toLowerCase();
+}
+
+/**
  * Resolves the tenant subdomain for the incoming request.
  *
  * Reads TENANT_SUBDOMAIN env var (set per deployment).
@@ -38,7 +55,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Resolve tenant subdomain from hostname (dynamic) or env var (static).
-  const subdomain = resolveTenantSubdomain(request.nextUrl.hostname);
+  const subdomain = resolveTenantSubdomain(getIncomingHostname(request));
   if (!subdomain) {
     return new NextResponse(null, { status: 404 });
   }

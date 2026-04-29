@@ -1,5 +1,7 @@
 package com.backend.application.service.impl;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestServic
 
     private static final String RECAPTCHA_ACTION = "landing_demo_request";
     private static final int MESSAGE_PREVIEW_MAX_LEN = 120;
+    private static final int DEDUPE_WINDOW_MINUTES = 5;
 
     private final PlatformDemoRequestRepository repository;
     private final RecaptchaService recaptchaService;
@@ -34,14 +37,24 @@ public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestServic
     @Transactional("platformTransactionManager")
     public void submit(PlatformDemoRequestSubmitCommand command) {
         recaptchaService.verifyToken(command.recaptchaToken(), RECAPTCHA_ACTION);
+
+        String email = command.email().trim();
+        String clientIp = truncate(command.clientIp(), 45);
+        LocalDateTime dedupeWindow = LocalDateTime.now().minusMinutes(DEDUPE_WINDOW_MINUTES);
+        boolean isDuplicate = repository.hasRecentSubmission(email, clientIp, dedupeWindow);
+        if (isDuplicate) {
+            log.info("Demo request duplicate suppressed for email hash={}", email.hashCode());
+            return;
+        }
+
         PlatformDemoRequest entity = PlatformDemoRequest.builder()
                 .fullName(command.fullName().trim())
-                .email(command.email().trim())
+                .email(email)
                 .phone(command.phone() != null ? truncate(command.phone(), 40) : null)
                 .message(command.message().trim())
                 .locale(command.locale().trim())
                 .source("landing")
-                .clientIp(truncate(command.clientIp(), 45))
+                .clientIp(clientIp)
                 .userAgent(truncate(command.userAgent(), 500))
                 .build();
         repository.save(entity);

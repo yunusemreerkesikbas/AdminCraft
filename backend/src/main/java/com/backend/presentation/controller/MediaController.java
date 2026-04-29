@@ -54,6 +54,7 @@ import com.backend.presentation.dto.response.MediaVariantResponse;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SortConfig;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SecurityHelper;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -87,6 +88,7 @@ public class MediaController {
         private final MediaContainerService containerService;
         private final MediaProcessingService processingService;
         private final MessageSource messageSource;
+        private final SecurityHelper securityHelper;
 
         private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
         private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
@@ -365,27 +367,37 @@ public class MediaController {
 
         // ========== File Retrieval ==========
 
+        // SEC-009: @PreAuthorize removed — SecurityConfig already permits /media/files/**
+        // isPublic check enforced below before serving content
         @GetMapping("/files/{fileName:.+}")
-        @PreAuthorize("permitAll()")
-        @Operation(summary = "Download media file", description = "Downloads the physical file content. Public endpoint for serving images.")
+        @Operation(summary = "Download media file", description = "Serves public media files without authentication. Private media (isPublic=false) requires an authenticated request.")
         public ResponseEntity<byte[]> downloadFile(
                         @Parameter(description = "File name (UUID)", required = true) @PathVariable("fileName") String fileName,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
+                        Optional<Media> mediaOpt = mediaService.findByFileName(fileName);
+                        if (mediaOpt.isEmpty()) {
+                                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                        }
+                        Media media = mediaOpt.get();
+
+                        // SEC-009: private media requires an authenticated caller
+                        if (!Boolean.TRUE.equals(media.getIsPublic()) && !securityHelper.isAuthenticated()) {
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                        }
+
                         byte[] content = mediaService.getFileContent(fileName);
 
-                        Optional<Media> mediaOpt = mediaService.findByFileName(fileName);
                         MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-
-                        if (mediaOpt.isPresent() && mediaOpt.get().getMimeType() != null) {
+                        if (media.getMimeType() != null) {
                                 try {
-                                        mediaType = MediaType.parseMediaType(mediaOpt.get().getMimeType());
+                                        mediaType = MediaType.parseMediaType(media.getMimeType());
                                 } catch (Exception e) {
                                         log.warn("Invalid mime type for file {}: {}", fileName, e.getMessage());
                                 }
                         }
 
-                        // Cache for 30 days - media files are immutable (UUID-named)
+                        // Cache for 30 days — media files are immutable (UUID-named)
                         return ResponseEntity.ok()
                                         .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
                                         .contentType(mediaType)

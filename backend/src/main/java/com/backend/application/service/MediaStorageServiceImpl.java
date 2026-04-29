@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -26,7 +27,11 @@ public class MediaStorageServiceImpl implements MediaStorageService {
             "image/jpeg", new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF },
             "image/png", new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47 },
             "image/gif", new byte[] { 0x47, 0x49, 0x46, 0x38 },
-            "application/pdf", new byte[] { 0x25, 0x50, 0x44, 0x46 });
+            "application/pdf", new byte[] { 0x25, 0x50, 0x44, 0x46 },
+            "image/webp", new byte[] { 0x52, 0x49, 0x46, 0x46 }); // RIFF header
+
+    // SEC-111: video/audio lack a fixed offset-0 signature; skip magic-byte check for these only
+    private static final Set<String> MIME_TYPES_SKIP_MAGIC = Set.of("video/mp4", "audio/mpeg");
 
     @Override
     public String getPublicUrl(String filePath) {
@@ -140,17 +145,20 @@ public class MediaStorageServiceImpl implements MediaStorageService {
             return false;
         }
 
-        // Skip validation for mime types without defined magic bytes (allow by default)
+        // SEC-111: null mimeType cannot be trusted — deny
         if (mimeType == null) {
-            log.debug("Magic bytes validation skipped: mimeType is null");
-            return true;
+            log.warn("Magic bytes validation failed: mimeType is null");
+            return false;
         }
 
         byte[] expectedBytes = MAGIC_BYTES.get(mimeType.toLowerCase());
         if (expectedBytes == null) {
-            // No magic bytes defined for this type - allow it (configurable allowlist for
-            // future)
-            return true;
+            // SEC-111: deny unknown types; only skip magic check for explicitly listed types
+            if (MIME_TYPES_SKIP_MAGIC.contains(mimeType.toLowerCase())) {
+                return true;
+            }
+            log.warn("Magic bytes validation failed: no signature defined for type {}", mimeType);
+            return false;
         }
 
         // Validate magic bytes match

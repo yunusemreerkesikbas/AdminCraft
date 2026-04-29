@@ -38,7 +38,7 @@ Tenant access is rejected if the tenant status is not `ACTIVE` (see `TenantFilte
 
 These endpoints bypass tenant resolution entirely (see `isPublicNoTenantRequired()` in `TenantFilter`):
 
-- `/api/actuator/**`
+- `/api/actuator/health` (health check only — all other actuator endpoints require `ROLE_SUPER_ADMIN`, see SEC-005)
 - `/api/health/**`
 - `/api/config/auth/**`
 - `/api/platform/public/newsletter/**`
@@ -94,6 +94,35 @@ This includes ImpEx:
 
 - `POST /api/impex/execute` executes against the **active tenant database only**. Every caller, including `SUPER_ADMIN`, must have a resolved tenant context (`X-Tenant-ID` or `X-Tenant-Subdomain`, or trusted hostname resolution). There is **no** ImpEx execution path against `platform_management` at runtime; platform seed data is applied via Flyway migrations or DBA tooling.
 - `TENANT_ADMIN` and `SUPER_ADMIN` both require the same tenant resolution invariants before ImpEx runs.
+
+## Rate limiting
+
+Resilience4j rate limiter instances are configured in `application.yml` under `resilience4j.ratelimiter.instances`. All instances use `timeout-duration: 0s` (fail-fast, no queue). Exceeding a limit returns HTTP 429.
+
+| Instance name        | Endpoint(s)                                    | Limit        | Purpose |
+|----------------------|------------------------------------------------|--------------|---------|
+| `entryFieldDefinition` | `POST /api/entry-fields/definitions`         | 5 / 60 s     | Prevent bulk definition abuse |
+| `impexExecute`       | `POST /api/impex/execute`                      | 5 / 60 s     | Slow down mass DB manipulation |
+| `configAdmin`        | `PATCH /api/config/admin/security/recaptcha`   | 5 / 60 s     | SEC-105: prevent single-request reCAPTCHA disable |
+| `demoRequest`        | `POST /api/platform/public/demo-requests`      | 10 / 60 s    | SEC-107: mail-bomb protection on public ingest |
+
+Demo request deduplication (SEC-107): in addition to the global rate limit, the service suppresses duplicate submissions from the same email + IP within a 5-minute window. Suppressed requests return HTTP 200 with the standard success body (constant-time response — no enumeration signal).
+
+## HTTP security response headers (SEC-014/SEC-117)
+
+`SecurityConfig` applies the following headers to every API response:
+
+| Header | Value |
+|--------|-------|
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Content-Security-Policy` | `default-src 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https:` |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` (disabled on `dev` profile) |
+
+CSP note: The backend is a pure REST API — it does not serve HTML. The Angular admin panel and Next.js storefront receive their CSP at the Traefik / CDN layer. The backend CSP is a defence-in-depth measure for API responses.
+
+HSTS note: HSTS is active on `stage` and `prod` profiles only. On the `dev` profile (`localhost` HTTP) it is suppressed to avoid browser HSTS preload conflicts.
 
 ## Correlation IDs
 

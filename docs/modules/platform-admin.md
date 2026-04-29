@@ -127,6 +127,8 @@ Database table: `platform_demo_requests` (platform migration `V1.0.2__platform_d
 
 - `POST /api/platform/public/demo-requests` — Bean-validated JSON body: `fullName`, `email`, optional `phone`, `message`, `locale`, optional `recaptchaToken`. When platform reCAPTCHA is enabled, the backend verifies the token with action **`landing_demo_request`** (same family as `/api/platform/cms/config` for the site key). Success: `ApiResponse` with `message` = `platform.demo.request.submitted` and `data.followUpNote` = `platform.demo.request.submitted.note` (i18n via `Accept-Language`). Errors: `message` from validation or `recaptcha.verification.failed` (HTTP 400, `code` 400 on reCAPTCHA path).
 - Permitted in [`SecurityConfig`](../../backend/src/main/java/com/backend/infrastructure/config/SecurityConfig.java); excluded from tenant requirement in [`TenantFilter`](../../backend/src/main/java/com/backend/infrastructure/tenant/TenantFilter.java) (same pattern as newsletter).
+- **Rate limiting (SEC-107):** the endpoint is protected by the `demoRequest` Resilience4j limiter (10 requests / 60 s, fail-fast → HTTP 429).
+- **Deduplication (SEC-107):** if the same email + client IP submits again within 5 minutes, the request is silently discarded — no record is saved and no mail is sent. The response is still HTTP 200 with the standard success body (constant-time response to prevent enumeration).
 
 **Admin (`ROLE_SUPER_ADMIN`)**
 

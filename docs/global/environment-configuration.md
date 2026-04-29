@@ -300,6 +300,7 @@ npm run build:static
 | `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON` | GA4 service account JSON content | Yes, if GA4 dashboard reporting is enabled |
 | `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64` | Base64 alternative for GA4 service account JSON | Optional alternative |
 | `APP_SEO_CRUX_API_KEY` | CrUX History API key | Yes, if SEO insights performance snapshot is enabled |
+| `APP_MIGRATION_RE_ENCRYPT_SECRETS` | Set to `true` to trigger one-shot ECB→GCM secret re-encryption on startup (SEC-010). Run once on each environment after deploy, then remove or reset to `false`. The runner is idempotent — already-GCM values are skipped. | No (default: `false`) |
 
 ### Stage/Prod Observability and Edge
 

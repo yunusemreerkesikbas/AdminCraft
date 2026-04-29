@@ -20,6 +20,7 @@ import com.backend.domain.enums.UserRole;
 import com.backend.domain.exception.UserNotFoundException;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.UserRepository;
+import com.backend.shared.common.SecurityHelper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final OtpService otpService;
     private final TenantContextPort tenantContext;
+    private final SecurityHelper securityHelper;
 
     private String resolveFullName(String firstName, String lastName, String email) {
         boolean hasFirstName = firstName != null && !firstName.trim().isEmpty();
@@ -120,8 +122,7 @@ public class UserServiceImpl implements UserService {
             });
             user.setEmail(input.email());
         }
-        if (input.role() != null)
-            user.setRole(input.role());
+        // role field intentionally ignored here — use updateUserRole() (SEC-109)
         if (input.firstName() != null)
             user.setFirstName(input.firstName());
         if (input.lastName() != null)
@@ -143,6 +144,22 @@ public class UserServiceImpl implements UserService {
         User updatedUser = userRepository.save(user);
         log.info("User updated successfully with ID: {}", updatedUser.getId());
         return updatedUser;
+    }
+
+    @Override
+    public void updateUserRole(Long id, UserRole role) {
+        Long callerId = securityHelper.getCurrentUserIdOrNull();
+        if (id.equals(callerId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Cannot change own role");
+        }
+        if (role == UserRole.SUPER_ADMIN) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "SUPER_ADMIN role cannot be assigned via tenant API");
+        }
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        user.setRole(role);
+        userRepository.save(user);
+        log.info("Role updated to {} for user ID: {}", role, id);
     }
 
     @Override

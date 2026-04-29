@@ -1,5 +1,7 @@
 package com.backend.infrastructure.persistence.repository;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -26,5 +28,10 @@ public class PlatformDemoRequestPersistenceAdapter implements PlatformDemoReques
     @Override
     public Page<PlatformDemoRequest> search(String search, Pageable pageable) {
         return jpaRepository.search(search, pageable).map(mapper::toDomain);
+    }
+
+    @Override
+    public boolean hasRecentSubmission(String email, String clientIp, LocalDateTime since) {
+        return jpaRepository.existsByEmailAndClientIpAndCreatedAtAfter(email, clientIp, since);
     }
 }
