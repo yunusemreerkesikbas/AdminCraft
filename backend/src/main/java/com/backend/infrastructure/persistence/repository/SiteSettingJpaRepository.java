@@ -15,9 +15,9 @@ import com.backend.domain.enums.Language;
 public interface SiteSettingJpaRepository extends JpaRepository<SiteSetting, Long> {
 
   // Tenant-agnostic queries (database-per-tenant isolation)
-  Optional<SiteSetting> findBySettingKeyAndLanguage(String settingKey, Language language);
+  List<SiteSetting> findBySettingKeyAndLanguage(String settingKey, Language language);
 
-  Optional<SiteSetting> findBySettingKeyAndLanguageIsNull(String settingKey);
+  List<SiteSetting> findBySettingKeyAndLanguageIsNull(String settingKey);
 
   List<SiteSetting> findByLanguage(Language language);
 

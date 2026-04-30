@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -33,7 +34,9 @@ import com.backend.application.service.MediaI18nService;
 import com.backend.application.service.MediaProcessingService;
 import com.backend.application.service.MediaService;
 import com.backend.application.dto.request.MediaBindRequest;
+import com.backend.domain.enums.MediaUploadErrorCode;
 import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.domain.exception.MediaUploadValidationException;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.MediaContainer;
 import com.backend.domain.entity.MediaI18n;
@@ -52,26 +55,24 @@ import com.backend.presentation.dto.response.MediaVariantResponse;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SortConfig;
 import com.backend.shared.common.ApiResponse;
-import com.backend.shared.common.SecurityHelper;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Media controller for managing media files.
- * Phase 1-4 implementation with CRUD, i18n, and detail operations.
- */
 @RestController
 @RequestMapping("/media")
 @RequiredArgsConstructor
@@ -86,7 +87,8 @@ public class MediaController {
         private final MediaContainerService containerService;
         private final MediaProcessingService processingService;
         private final MessageSource messageSource;
-        private final SecurityHelper securityHelper;
+        private final ObjectMapper objectMapper;
+        private final Validator validator;
 
         private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
         private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
@@ -112,6 +114,8 @@ public class MediaController {
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.CREATED)
                                         .body(ApiResponse.success(message, MediaResponse.from(media)));
+                } catch (IllegalArgumentException ex) {
+                        return badRequestIllegalArgumentOnUpload(languageCode, ex, false);
                 } catch (Exception ex) {
                         log.error("Error uploading file: {}", ex.getMessage(), ex);
                         String message = buildOperationErrorMessage(languageCode, "media.upload.error",
@@ -134,10 +138,19 @@ public class MediaController {
 
                         Map<Language, MediaI18nRequest> translations = null;
                         if (translationsJson != null && !translationsJson.isEmpty()) {
-                                ObjectMapper mapper = new ObjectMapper();
-                                translations = mapper.readValue(translationsJson,
+                                translations = objectMapper.readValue(translationsJson,
                                                 new TypeReference<>() {
                                                 });
+                                Locale locale = Locale.forLanguageTag(languageCode);
+                                for (MediaI18nRequest i18n : translations.values()) {
+                                        Set<ConstraintViolation<MediaI18nRequest>> violations = validator.validate(i18n);
+                                        if (!violations.isEmpty()) {
+                                                String msgKey = violations.iterator().next().getMessage();
+                                                String resolvedMsg = messageSource.getMessage(msgKey, null, locale);
+                                                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                                                .body(ApiResponse.error(resolvedMsg));
+                                        }
+                                }
                         }
 
                         Media media = mediaService.uploadComposite(file, uploadedBy, translations);
@@ -146,6 +159,13 @@ public class MediaController {
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.CREATED)
                                         .body(ApiResponse.success(message, MediaResponse.from(media)));
+                } catch (IllegalArgumentException ex) {
+                        return badRequestIllegalArgumentOnUpload(languageCode, ex, true);
+                } catch (JsonProcessingException ex) {
+                        log.warn("Invalid translations JSON for composite media upload: {}", ex.getMessage());
+                        String detail = translationsJsonInvalidDetail(languageCode);
+                        return badRequestMediaUpload(languageCode, detail,
+                                        MediaUploadErrorCode.TRANSLATIONS_JSON_INVALID.name());
                 } catch (Exception ex) {
                         log.error("Error uploading composite media: {}", ex.getMessage(), ex);
                         String message = buildOperationErrorMessage(languageCode, "media.upload.error",
@@ -206,10 +226,6 @@ public class MediaController {
                 }
         }
 
-        /**
-         * Get all media with optional pagination, sorting, and search.
-         * Returns lightweight MediaListResponse with sortConfig for dynamic sort UI.
-         */
         @GetMapping
         @Operation(summary = "List all media", description = "Retrieves a paginated list of all media files with minimal data for grid display. Supports search across originalName and mimeType.")
         public ResponseEntity<ApiResponse<PageableResponse<MediaListResponse>>> getAllMedia(
@@ -255,9 +271,6 @@ public class MediaController {
                 }
         }
 
-        /**
-         * Update media metadata (public flag, tags).
-         */
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}")
         @Operation(summary = "Update media metadata", description = "Updates media properties like public status and tags.")
@@ -365,9 +378,6 @@ public class MediaController {
 
         // ========== i18n Operations ==========
 
-        /**
-         * Get i18n metadata for a media file.
-         */
         @GetMapping("/{id}/i18n/{language}")
         @Operation(summary = "Get media i18n", description = "Retrieves localized metadata (title, alt text, description) for a language.")
         public ResponseEntity<ApiResponse<MediaI18nResponse>> getI18n(
@@ -655,6 +665,30 @@ public class MediaController {
                                 variant.getPublicUrl());
         }
 
+        private ResponseEntity<ApiResponse<MediaResponse>> badRequestIllegalArgumentOnUpload(String languageCode,
+                        IllegalArgumentException ex, boolean compositeUpload) {
+                if (compositeUpload) {
+                        log.warn("Composite media upload validation failed: {}", ex.getMessage());
+                } else {
+                        log.warn("Media upload validation failed: {}", ex.getMessage());
+                }
+                String detail = resolveUploadValidationDetail(languageCode, ex);
+                String errorCode = ex instanceof MediaUploadValidationException mue ? mue.getErrorCode().name() : null;
+                return badRequestMediaUpload(languageCode, detail, errorCode);
+        }
+
+        private ResponseEntity<ApiResponse<MediaResponse>> badRequestMediaUpload(String languageCode,
+                        String resolvedDetail, String errorCodeOrNull) {
+                String message = messageSource.getMessage("media.upload.error",
+                                new Object[] { resolvedDetail }, Locale.forLanguageTag(languageCode));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(message, errorCodeOrNull));
+        }
+
+        private String translationsJsonInvalidDetail(String languageCode) {
+                return messageSource.getMessage("media.upload.reason.translationsJson", null,
+                                Locale.forLanguageTag(languageCode));
+        }
+
         private String buildOperationErrorMessage(String languageCode, String operationKey, String causeKey) {
                 return getMessage(languageCode, operationKey, getMessage(languageCode, causeKey));
         }
@@ -665,27 +699,113 @@ public class MediaController {
 
         private void validateFileUpload(MultipartFile file) {
                 if (file == null || file.isEmpty()) {
-                        throw new IllegalArgumentException("File cannot be null or empty");
+                        throw new MediaUploadValidationException(MediaUploadErrorCode.EMPTY_FILE);
                 }
                 if (file.getSize() > MAX_FILE_SIZE) {
-                        throw new IllegalArgumentException(
-                                        "File size exceeds maximum allowed size of " + (MAX_FILE_SIZE / 1024 / 1024)
-                                                        + "MB");
+                        throw new MediaUploadValidationException(MediaUploadErrorCode.FILE_TOO_LARGE,
+                                        MAX_FILE_SIZE / 1024 / 1024);
                 }
                 String contentType = file.getContentType();
-                if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
-                        throw new IllegalArgumentException("File type not allowed: " + contentType);
+                if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
+                        throw new MediaUploadValidationException(MediaUploadErrorCode.MIME_TYPE_NOT_ALLOWED,
+                                        contentType);
                 }
                 String originalFilename = file.getOriginalFilename();
                 if (originalFilename == null || originalFilename.trim().isEmpty()) {
-                        throw new IllegalArgumentException("File must have a valid filename");
+                        throw new MediaUploadValidationException(MediaUploadErrorCode.FILENAME_REQUIRED);
                 }
-                String filename = originalFilename.toLowerCase();
+                String filename = originalFilename.toLowerCase(Locale.ROOT);
                 if (filename.contains("..") || filename.contains("/") || filename.contains("\\") ||
                                 filename.endsWith(".exe") || filename.endsWith(".bat") || filename.endsWith(".cmd") ||
                                 filename.endsWith(".scr") || filename.endsWith(".js") || filename.endsWith(".vbs")) {
-                        throw new IllegalArgumentException(
-                                        "Filename contains invalid characters or dangerous extension");
+                        throw new MediaUploadValidationException(MediaUploadErrorCode.FILENAME_SECURITY_BLOCKED);
                 }
+        }
+
+        /**
+         * Maps validation failures to localized, user-facing explanations (problem + fix).
+         * Prefers stable {@link MediaUploadErrorCode} from {@link MediaUploadValidationException}.
+         */
+        private String resolveUploadValidationDetail(String languageCode, IllegalArgumentException ex) {
+                if (ex instanceof MediaUploadValidationException mue) {
+                        return resolveUploadValidationDetailFromCode(languageCode, mue);
+                }
+                return resolveUploadValidationDetailLegacy(languageCode, ex);
+        }
+
+        private String resolveUploadValidationDetailFromCode(String languageCode, MediaUploadValidationException ex) {
+                Locale locale = Locale.forLanguageTag(languageCode);
+                MediaUploadErrorCode code = ex.getErrorCode();
+                Object[] args = ex.getMessageArgs();
+                return switch (code) {
+                        case CONTENT_MISMATCH -> messageSource.getMessage("media.upload.reason.contentMismatch", null,
+                                        locale);
+                        case MIME_TYPE_NOT_ALLOWED -> messageSource.getMessage(
+                                        "media.upload.reason.typeNotAllowedDetail",
+                                        new Object[] { args.length > 0 ? String.valueOf(args[0]) : "" }, locale);
+                        case FILE_TOO_LARGE -> messageSource.getMessage("media.upload.reason.fileTooLarge", null,
+                                        locale);
+                        case EMPTY_FILE -> messageSource.getMessage("media.upload.reason.empty", null, locale);
+                        case INVALID_FILENAME_PATH -> messageSource.getMessage("media.upload.reason.invalidFilename",
+                                        null, locale);
+                        case EXTENSION_BLOCKED -> messageSource.getMessage("media.upload.reason.extensionBlocked",
+                                        new Object[] { args.length > 0 ? String.valueOf(args[0]) : "" }, locale);
+                        case FILENAME_SECURITY_BLOCKED -> messageSource.getMessage(
+                                        "media.upload.reason.invalidFilename", null, locale);
+                        case FILENAME_REQUIRED -> messageSource.getMessage("media.upload.reason.mustHaveFilename",
+                                        null, locale);
+                        case READ_FAILED -> messageSource.getMessage("media.upload.reason.readFailed", null, locale);
+                        case TRANSLATIONS_JSON_INVALID -> translationsJsonInvalidDetail(languageCode);
+                };
+        }
+
+        /**
+         * Fallback when {@link IllegalArgumentException} is not {@link MediaUploadValidationException}
+         * (legacy string matching).
+         */
+        private String resolveUploadValidationDetailLegacy(String languageCode, IllegalArgumentException ex) {
+                Locale locale = Locale.forLanguageTag(languageCode);
+                String msg = ex.getMessage();
+                if (msg == null || msg.isBlank()) {
+                        return messageSource.getMessage("media.upload.reason.unknown", null, locale);
+                }
+
+                if (msg.contains("File content does not match declared type")) {
+                        return messageSource.getMessage("media.upload.reason.contentMismatch", null, locale);
+                }
+                if (msg.contains("File type not allowed:")) {
+                        int idx = msg.indexOf("File type not allowed:");
+                        String suffix = msg.substring(idx + "File type not allowed:".length()).trim();
+                        return messageSource.getMessage("media.upload.reason.typeNotAllowedDetail",
+                                        new Object[] { suffix }, locale);
+                }
+                if (msg.contains("File size exceeds")) {
+                        return messageSource.getMessage("media.upload.reason.fileTooLarge", null, locale);
+                }
+                if (msg.contains("File is empty") || msg.contains("File cannot be null or empty")) {
+                        return messageSource.getMessage("media.upload.reason.empty", null, locale);
+                }
+                if (msg.contains("Invalid filename: path traversal")) {
+                        return messageSource.getMessage("media.upload.reason.invalidFilename", null, locale);
+                }
+                if (msg.contains("File extension blocked:")) {
+                        String ext = msg
+                                        .substring(msg.indexOf("File extension blocked:")
+                                                        + "File extension blocked:".length())
+                                        .trim();
+                        return messageSource.getMessage("media.upload.reason.extensionBlocked", new Object[] { ext },
+                                        locale);
+                }
+                if (msg.contains("Filename contains invalid") || msg.contains("dangerous extension")) {
+                        return messageSource.getMessage("media.upload.reason.invalidFilename", null, locale);
+                }
+                if (msg.contains("File must have a valid filename")) {
+                        return messageSource.getMessage("media.upload.reason.mustHaveFilename", null, locale);
+                }
+                if (msg.contains("Failed to read file content")) {
+                        return messageSource.getMessage("media.upload.reason.readFailed", null, locale);
+                }
+
+                return messageSource.getMessage("media.upload.reason.validationGeneric", new Object[] { msg }, locale);
         }
 }

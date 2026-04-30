@@ -1,8 +1,13 @@
 package com.backend.application.service;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
+
+import com.backend.domain.enums.MediaUploadErrorCode;
+import com.backend.domain.exception.MediaUploadValidationException;
 
 public interface MediaStorageService {
 
@@ -14,20 +19,44 @@ public interface MediaStorageService {
         String extension
     ) {}
 
+    record ValidationIssue(MediaUploadErrorCode code, List<Object> args) {
+        public static ValidationIssue of(MediaUploadErrorCode code, Object... messageArgs) {
+            if (messageArgs == null || messageArgs.length == 0) {
+                return new ValidationIssue(code, List.of());
+            }
+            // Arrays.asList allows null elements (e.g. null MIME client hint); List.of does not.
+            return new ValidationIssue(code, Arrays.asList(messageArgs));
+        }
+    }
+
     record ValidationResult(
         boolean valid,
-        List<String> errors
+        List<ValidationIssue> issues
     ) {
         public static ValidationResult success() {
             return new ValidationResult(true, List.of());
         }
 
-        public static ValidationResult failure(String... errors) {
-            return new ValidationResult(false, List.of(errors));
+        public static ValidationResult failure(List<ValidationIssue> issues) {
+            return new ValidationResult(false, List.copyOf(issues));
         }
 
-        public static ValidationResult failure(List<String> errors) {
-            return new ValidationResult(false, errors);
+        public static ValidationResult failure(ValidationIssue... issues) {
+            return new ValidationResult(false, List.of(issues));
+        }
+
+        public ValidationIssue primaryIssue() {
+            return issues().stream()
+                    .min(Comparator.comparingInt(i -> i.code().displayPriority()))
+                    .orElseThrow(() -> new IllegalStateException("No validation issues"));
+        }
+
+        public MediaUploadValidationException toUploadException() {
+            if (valid()) {
+                throw new IllegalStateException("No validation failure");
+            }
+            ValidationIssue primary = primaryIssue();
+            return new MediaUploadValidationException(primary.code(), primary.args());
         }
     }
 

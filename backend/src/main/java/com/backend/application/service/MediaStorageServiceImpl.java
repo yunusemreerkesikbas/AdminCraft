@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.application.config.StorageConfigProperties;
+import com.backend.application.service.MediaStorageService.ValidationIssue;
+import com.backend.application.service.MediaStorageService.ValidationResult;
+import com.backend.domain.enums.MediaUploadErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +40,7 @@ public class MediaStorageServiceImpl implements MediaStorageService {
     public StoredFileResult store(MultipartFile file, String folder) {
         ValidationResult validation = validate(file);
         if (!validation.valid()) {
-            throw new IllegalArgumentException(String.join(", ", validation.errors()));
+            throw validation.toUploadException();
         }
 
         String originalName = file.getOriginalFilename();
@@ -83,43 +86,42 @@ public class MediaStorageServiceImpl implements MediaStorageService {
 
     @Override
     public ValidationResult validate(MultipartFile file) {
-        List<String> errors = new ArrayList<>();
+        List<ValidationIssue> issues = new ArrayList<>();
 
         if (file == null || file.isEmpty()) {
-            errors.add("File is empty");
-            return ValidationResult.failure(errors);
+            return ValidationResult.failure(ValidationIssue.of(MediaUploadErrorCode.EMPTY_FILE));
         }
 
         if (!isValidFileSize(file.getSize())) {
-            errors.add("File size exceeds maximum allowed: " + properties.getMaxFileSize() + " bytes");
+            issues.add(ValidationIssue.of(MediaUploadErrorCode.FILE_TOO_LARGE, properties.getMaxFileSize()));
         }
 
         String mimeType = file.getContentType();
         if (!isValidMimeType(mimeType)) {
-            errors.add("File type not allowed: " + mimeType);
+            issues.add(ValidationIssue.of(MediaUploadErrorCode.MIME_TYPE_NOT_ALLOWED, mimeType));
         }
 
         String fileName = file.getOriginalFilename();
         if (fileName != null) {
             if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
-                errors.add("Invalid filename: path traversal detected");
+                issues.add(ValidationIssue.of(MediaUploadErrorCode.INVALID_FILENAME_PATH));
             }
 
             String extension = getExtension(fileName).toLowerCase();
             if (properties.getBlockedExtensions().contains(extension)) {
-                errors.add("File extension blocked: " + extension);
+                issues.add(ValidationIssue.of(MediaUploadErrorCode.EXTENSION_BLOCKED, extension));
             }
         }
 
         try {
             if (!validateMagicBytes(file.getBytes(), mimeType)) {
-                errors.add("File content does not match declared type");
+                issues.add(ValidationIssue.of(MediaUploadErrorCode.CONTENT_MISMATCH));
             }
         } catch (IOException e) {
-            errors.add("Failed to read file content");
+            issues.add(ValidationIssue.of(MediaUploadErrorCode.READ_FAILED));
         }
 
-        return errors.isEmpty() ? ValidationResult.success() : ValidationResult.failure(errors);
+        return issues.isEmpty() ? ValidationResult.success() : ValidationResult.failure(issues);
     }
 
     @Override

@@ -193,24 +193,9 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                     if (i18n.getId() == null) {
                         i18n.setEntryId(id);
                         i18n.setLanguage(e.getKey());
-
                     }
 
-                    if (e.getValue().title() != null)
-                        i18n.setTitle(e.getValue().title());
-                    i18n.setDescription(e.getValue().description());
-
-                    if (e.getValue().dynamicFields() != null && !e.getValue().dynamicFields().isEmpty()) {
-                        try {
-                            i18n.setCustomData(objectMapper.writeValueAsString(e.getValue().dynamicFields()));
-                        } catch (Exception ex) {
-                            log.error("Failed to serialize custom fields for entryId={}, language={}", id, e.getKey(),
-                                    ex);
-                            throw new RuntimeException("Failed to serialize custom fields", ex);
-                        }
-                    } else {
-                        i18n.setCustomData(null);
-                    }
+                    applyUpdateTranslation(i18n, e.getValue(), id, e.getKey());
 
                     return entryI18nRepository.save(i18n);
                 })
@@ -315,6 +300,39 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
             log.error("Failed to parse custom data json (length: {})",
                     json != null ? json.length() : 0, e);
             return java.util.Collections.emptyMap();
+        }
+    }
+
+    private void applyUpdateTranslation(
+            ComponentEntryI18n i18n,
+            com.backend.application.dto.request.EntryI18nUpdateCommand command,
+            Long entryId,
+            Language language) {
+        if (command == null) {
+            return;
+        }
+
+        if (command.hasTitle()) {
+            i18n.setTitle(command.title());
+        }
+        if (command.hasDescription()) {
+            i18n.setDescription(command.description());
+        }
+        if (command.hasDynamicFields()) {
+            i18n.setCustomData(serializeDynamicFields(command.dynamicFields(), entryId, language));
+        }
+    }
+
+    private String serializeDynamicFields(Map<String, Object> dynamicFields, Long entryId, Language language) {
+        if (dynamicFields == null || dynamicFields.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return objectMapper.writeValueAsString(dynamicFields);
+        } catch (Exception ex) {
+            log.error("Failed to serialize custom fields for entryId={}, language={}", entryId, language, ex);
+            throw new RuntimeException("Failed to serialize custom fields", ex);
         }
     }
 }

@@ -4,7 +4,7 @@ import com.backend.domain.enums.ComponentStatus;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateComponentEntryRequest(
-    @NotNull(message = "validation.component.id.required")
+    @NotNull(message = "{validation.component.id.required}")
     Long componentId,
 
     Integer sortOrder,
@@ -12,6 +12,5 @@ public record CreateComponentEntryRequest(
     String styleClasses,
     ComponentStatus status
 ) {}
-
 
 

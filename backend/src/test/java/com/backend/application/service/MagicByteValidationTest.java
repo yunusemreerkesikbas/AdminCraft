@@ -1,9 +1,9 @@
 package com.backend.application.service;
 
-import java.nio.charset.StandardCharsets;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +12,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import com.backend.application.config.StorageConfigProperties;
 import com.backend.application.service.MediaStorageService.ValidationResult;
+import com.backend.domain.enums.MediaUploadErrorCode;
 
 /**
  * SEC-111: verifies magic-byte validation denies mismatched and untrusted content.
@@ -50,7 +51,7 @@ class MagicByteValidationTest {
         ValidationResult result = service.validate(file);
 
         assertThat(result.valid()).isFalse();
-        assertThat(result.errors()).anyMatch(e -> e.contains("does not match declared type"));
+        assertThat(result.primaryIssue().code()).isEqualTo(MediaUploadErrorCode.CONTENT_MISMATCH);
     }
 
     @Test
@@ -64,6 +65,7 @@ class MagicByteValidationTest {
         ValidationResult result = service.validate(file);
 
         assertThat(result.valid()).isFalse();
+        assertThat(result.primaryIssue().code()).isEqualTo(MediaUploadErrorCode.MIME_TYPE_NOT_ALLOWED);
     }
 
     @Test
@@ -94,6 +96,6 @@ class MagicByteValidationTest {
         ValidationResult result = service.validate(file);
 
         assertThat(result.valid()).isFalse();
-        assertThat(result.errors()).anyMatch(e -> e.contains("does not match declared type"));
+        assertThat(result.primaryIssue().code()).isEqualTo(MediaUploadErrorCode.CONTENT_MISMATCH);
     }
 }

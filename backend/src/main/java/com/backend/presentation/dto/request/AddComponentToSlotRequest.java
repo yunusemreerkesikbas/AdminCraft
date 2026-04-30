@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 public class AddComponentToSlotRequest {
 
-  @NotNull(message = "Component ID is required")
+  @NotNull(message = "{validation.component.id.required}")
   private Long componentId;
 }

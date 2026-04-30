@@ -19,7 +19,9 @@ import com.backend.application.service.MediaService;
 import com.backend.domain.entity.Media;
 import com.backend.shared.common.SecurityHelper;
 
-// SEC-009: verifies that private media files require authentication (MediaFileController — no class-level @PreAuthorize).
+/**
+ * SEC-009: verifies that private media files require authentication ({@link MediaFileController} — no class-level {@code @PreAuthorize}).
+ */
 @ExtendWith(MockitoExtension.class)
 class MediaPrivateAccessTest {
 
@@ -34,6 +36,15 @@ class MediaPrivateAccessTest {
     void setUp() {
         MediaFileController controller = new MediaFileController(mediaService, securityHelper);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    @Test
+    @DisplayName("No DB record → 404")
+    void noDbRecord_404() throws Exception {
+        when(mediaService.findByFileName("ghost.png")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/media/files/ghost.png"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

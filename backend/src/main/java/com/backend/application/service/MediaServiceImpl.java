@@ -125,7 +125,7 @@ public class MediaServiceImpl implements MediaService {
 
         MediaStorageService.ValidationResult validation = storageService.validate(file);
         if (!validation.valid()) {
-            throw new IllegalArgumentException(String.join(", ", validation.errors()));
+            throw validation.toUploadException();
         }
 
         MediaStorageService.StoredFileResult stored = storageService.store(file, "media");
