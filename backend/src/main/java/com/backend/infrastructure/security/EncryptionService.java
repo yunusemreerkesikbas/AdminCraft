@@ -101,8 +101,14 @@ public class EncryptionService implements EncryptionServicePort {
         if (ciphertext == null || ciphertext.isBlank()) {
             return java.util.Optional.empty();
         }
+        final byte[] decoded;
         try {
-            byte[] decoded = Base64.getDecoder().decode(ciphertext);
+            decoded = Base64.getDecoder().decode(ciphertext);
+        } catch (IllegalArgumentException e) {
+            log.debug("SEC-010: skip re-encrypt, invalid Base64 ciphertext");
+            return java.util.Optional.empty();
+        }
+        try {
             if (decoded.length <= IV_LENGTH) {
                 throw new IllegalArgumentException("Too short for GCM");
             }
@@ -120,10 +126,10 @@ public class EncryptionService implements EncryptionServicePort {
             try {
                 Cipher ecb = Cipher.getInstance("AES/ECB/PKCS5Padding");
                 ecb.init(Cipher.DECRYPT_MODE, secretKey);
-                String plain = new String(ecb.doFinal(Base64.getDecoder().decode(ciphertext)), StandardCharsets.UTF_8);
+                String plain = new String(ecb.doFinal(decoded), StandardCharsets.UTF_8);
                 return java.util.Optional.ofNullable(encrypt(plain));
             } catch (Exception ecbEx) {
-                log.error("SEC-010: ciphertext is neither valid GCM nor ECB — skipping", ecbEx);
+                log.warn("SEC-010: ciphertext is neither valid GCM nor ECB — skipping", ecbEx);
                 return java.util.Optional.empty();
             }
         }

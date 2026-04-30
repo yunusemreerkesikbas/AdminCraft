@@ -2,6 +2,7 @@ package com.backend.application.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -168,7 +169,7 @@ public class UserServiceImpl implements UserService {
     public void updateUserRole(Long id, UserRole role) {
         assertCallerMayManageTenantRoles();
         Long callerId = securityHelper.getCurrentUserIdOrNull();
-        if (id.equals(callerId)) {
+        if (Objects.equals(id, callerId)) {
             throw new AccessDeniedException("Cannot change own role");
         }
         if (role == UserRole.SUPER_ADMIN) {
