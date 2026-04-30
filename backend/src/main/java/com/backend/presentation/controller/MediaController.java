@@ -1,6 +1,5 @@
 package com.backend.presentation.controller;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -11,7 +10,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -362,49 +360,6 @@ public class MediaController {
                                         "error.general");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
-                }
-        }
-
-        // ========== File Retrieval ==========
-
-        // SEC-009: @PreAuthorize removed — SecurityConfig already permits /media/files/**
-        // isPublic check enforced below before serving content
-        @GetMapping("/files/{fileName:.+}")
-        @Operation(summary = "Download media file", description = "Serves public media files without authentication. Private media (isPublic=false) requires an authenticated request.")
-        public ResponseEntity<byte[]> downloadFile(
-                        @Parameter(description = "File name (UUID)", required = true) @PathVariable("fileName") String fileName,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-                try {
-                        Optional<Media> mediaOpt = mediaService.findByFileName(fileName);
-                        if (mediaOpt.isEmpty()) {
-                                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-                        }
-                        Media media = mediaOpt.get();
-
-                        // SEC-009: private media requires an authenticated caller
-                        if (!Boolean.TRUE.equals(media.getIsPublic()) && !securityHelper.isAuthenticated()) {
-                                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                        }
-
-                        byte[] content = mediaService.getFileContent(fileName);
-
-                        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-                        if (media.getMimeType() != null) {
-                                try {
-                                        mediaType = MediaType.parseMediaType(media.getMimeType());
-                                } catch (Exception e) {
-                                        log.warn("Invalid mime type for file {}: {}", fileName, e.getMessage());
-                                }
-                        }
-
-                        // Cache for 30 days — media files are immutable (UUID-named)
-                        return ResponseEntity.ok()
-                                        .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
-                                        .contentType(mediaType)
-                                        .body(content);
-                } catch (Exception ex) {
-                        log.error("Error downloading file {}: {}", fileName, ex.getMessage(), ex);
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
                 }
         }
 

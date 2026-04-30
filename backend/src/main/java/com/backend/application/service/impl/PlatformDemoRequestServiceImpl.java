@@ -1,6 +1,8 @@
 package com.backend.application.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +18,7 @@ import com.backend.application.service.PlatformMailMarketingService;
 import com.backend.application.service.RecaptchaService;
 import com.backend.domain.entity.PlatformDemoRequest;
 import com.backend.domain.repository.PlatformDemoRequestRepository;
+import com.backend.shared.common.LogSanitizer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,14 +41,9 @@ public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestServic
     public void submit(PlatformDemoRequestSubmitCommand command) {
         recaptchaService.verifyToken(command.recaptchaToken(), RECAPTCHA_ACTION);
 
-        String email = command.email().trim();
+        String email = command.email().trim().toLowerCase(Locale.ROOT);
         String clientIp = truncate(command.clientIp(), 45);
         LocalDateTime dedupeWindow = LocalDateTime.now().minusMinutes(DEDUPE_WINDOW_MINUTES);
-        boolean isDuplicate = repository.hasRecentSubmission(email, clientIp, dedupeWindow);
-        if (isDuplicate) {
-            log.info("Demo request duplicate suppressed for email hash={}", email.hashCode());
-            return;
-        }
 
         PlatformDemoRequest entity = PlatformDemoRequest.builder()
                 .fullName(command.fullName().trim())
@@ -57,10 +55,17 @@ public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestServic
                 .clientIp(clientIp)
                 .userAgent(truncate(command.userAgent(), 500))
                 .build();
-        repository.save(entity);
+
+        Optional<PlatformDemoRequest> inserted = repository.saveIfNotDuplicateWithinWindow(entity, dedupeWindow);
+        if (inserted.isEmpty()) {
+            log.info("Demo request duplicate suppressed for email={}", LogSanitizer.maskEmail(email));
+            return;
+        }
+
+        PlatformDemoRequest saved = inserted.get();
 
         Runnable sendConfirmation = () -> mailMarketingService.sendDemoRequestConfirmation(
-                entity.getEmail(), entity.getFullName(), entity.getLocale());
+                saved.getEmail(), saved.getFullName(), saved.getLocale());
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override

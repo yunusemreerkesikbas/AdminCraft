@@ -184,19 +184,25 @@ EOF
 log "Rendered compose: ${COMPOSE_FILE}"
 log "Deploying tenant storefront (${TENANT_SLUG}) to ${ENV}..."
 
+log "Pulling image ${IMAGE_REF}..."
+if ! docker compose -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" pull; then
+  error "docker compose pull failed — leaving existing stack running."
+fi
+
 # Tear down previous stack so recreate/up does not hit Docker container name conflicts.
 log "Stopping previous stack (if any)..."
 docker compose -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" down --remove-orphans 2>/dev/null || true
 
-# Remove stray containers still holding this project/service name (orphaned or leftover after failed deploy).
-ids="$(docker ps -aq --filter "name=${PROJECT_NAME}-${SERVICE_NAME}" 2>/dev/null || true)"
+# Remove stray containers for this compose project + service (avoid broad name= substring matches).
+ids="$(docker ps -aq \
+  --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+  --filter "label=com.docker.compose.service=${SERVICE_NAME}" 2>/dev/null || true)"
 if [[ -n "${ids}" ]]; then
   warn "Removing conflicting containers: ${ids//$'\n'/ }"
   # shellcheck disable=SC2086
   docker rm -f ${ids} 2>/dev/null || true
 fi
 
-docker compose -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" pull
 docker compose -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" up -d --remove-orphans
 
 echo -e "\n${BOLD}Deployed${NC}"

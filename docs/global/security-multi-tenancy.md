@@ -38,7 +38,7 @@ Tenant access is rejected if the tenant status is not `ACTIVE` (see `TenantFilte
 
 These endpoints bypass tenant resolution entirely (see `isPublicNoTenantRequired()` in `TenantFilter`):
 
-- `/api/actuator/health` (health check only — all other actuator endpoints require `ROLE_SUPER_ADMIN`, see SEC-005)
+- `/actuator/health` (health check only — all other actuator endpoints require `ROLE_SUPER_ADMIN`, see SEC-005)
 - `/api/health/**`
 - `/api/config/auth/**`
 - `/api/platform/public/newsletter/**`
@@ -122,7 +122,7 @@ Demo request deduplication (SEC-107): in addition to the global rate limit, the 
 
 CSP note: The backend is a pure REST API — it does not serve HTML. The Angular admin panel and Next.js storefront receive their CSP at the Traefik / CDN layer. The backend CSP is a defence-in-depth measure for API responses.
 
-HSTS note: HSTS is active on `stage` and `prod` profiles only. On the `dev` profile (`localhost` HTTP) it is suppressed to avoid browser HSTS preload conflicts.
+HSTS note: HSTS is enabled for every active Spring profile **except** `dev` (see `SecurityConfig`: `if (!isDev)`). On the `dev` profile (`localhost` HTTP) it is suppressed to avoid browser HSTS preload conflicts.
 
 ## Correlation IDs
 

@@ -373,8 +373,10 @@ public class UserController {
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.ok(ApiResponse.success(message, UserResponse.from(updatedUser)));
                 } catch (org.springframework.security.access.AccessDeniedException ex) {
+                        String message = messageSource.getMessage("security.forbidden", null,
+                                        Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                        .body(ApiResponse.error(ex.getMessage()));
+                                        .body(ApiResponse.error(message));
                 } catch (UserNotFoundException ex) {
                         String message = messageSource.getMessage("user.not.found", new Object[] { id },
                                         Locale.forLanguageTag(languageCode));

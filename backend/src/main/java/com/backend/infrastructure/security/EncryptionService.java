@@ -96,6 +96,7 @@ public class EncryptionService implements EncryptionServicePort {
      * SEC-010: If the ciphertext is ECB-encrypted, decrypts it and re-encrypts with GCM.
      * Returns Optional.empty() when the value is already GCM (no action needed).
      */
+    @Override
     public java.util.Optional<String> reEncryptIfLegacy(String ciphertext) {
         if (ciphertext == null || ciphertext.isBlank()) {
             return java.util.Optional.empty();
@@ -120,9 +121,9 @@ public class EncryptionService implements EncryptionServicePort {
                 Cipher ecb = Cipher.getInstance("AES/ECB/PKCS5Padding");
                 ecb.init(Cipher.DECRYPT_MODE, secretKey);
                 String plain = new String(ecb.doFinal(Base64.getDecoder().decode(ciphertext)), StandardCharsets.UTF_8);
-                return java.util.Optional.of(encrypt(plain));
+                return java.util.Optional.ofNullable(encrypt(plain));
             } catch (Exception ecbEx) {
-                log.error("SEC-010: ciphertext is neither valid GCM nor ECB — skipping");
+                log.error("SEC-010: ciphertext is neither valid GCM nor ECB — skipping", ecbEx);
                 return java.util.Optional.empty();
             }
         }

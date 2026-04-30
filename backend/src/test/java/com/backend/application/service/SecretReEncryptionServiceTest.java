@@ -20,7 +20,7 @@ import com.backend.domain.entity.PlatformConfigProperty;
 import com.backend.domain.repository.ConfigPropertyRepository;
 import com.backend.domain.repository.PlatformConfigPropertyRepository;
 import com.backend.domain.repository.TenantRepository;
-import com.backend.infrastructure.security.EncryptionService;
+import com.backend.domain.port.EncryptionServicePort;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SEC-010: SecretReEncryptionService")
@@ -30,7 +30,7 @@ class SecretReEncryptionServiceTest {
     @Mock private ConfigPropertyRepository tenantConfigPropertyRepository;
     @Mock private TenantRepository tenantRepository;
     @Mock private TenantDbExecutor tenantDbExecutor;
-    @Mock private EncryptionService encryptionService;
+    @Mock private EncryptionServicePort encryptionService;
     @Mock private PlatformTransactionManager tenantTransactionManager;
     @Mock private PlatformTransactionManager platformTransactionManager;
 

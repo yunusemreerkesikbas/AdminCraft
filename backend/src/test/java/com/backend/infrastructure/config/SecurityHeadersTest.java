@@ -38,6 +38,7 @@ class SecurityHeadersTest {
     @DisplayName("X-Frame-Options: DENY present on all responses")
     void xFrameOptions_deny() throws Exception {
         mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
                 .andExpect(header().string("X-Frame-Options", "DENY"));
     }
 
@@ -45,6 +46,7 @@ class SecurityHeadersTest {
     @DisplayName("X-Content-Type-Options: nosniff present")
     void xContentTypeOptions_nosniff() throws Exception {
         mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"));
     }
 
@@ -52,6 +54,7 @@ class SecurityHeadersTest {
     @DisplayName("Referrer-Policy: strict-origin-when-cross-origin present")
     void referrerPolicy_strictOriginWhenCrossOrigin() throws Exception {
         mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
                 .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"));
     }
 
@@ -59,6 +62,7 @@ class SecurityHeadersTest {
     @DisplayName("Content-Security-Policy present with default-src 'self'")
     void contentSecurityPolicy_present() throws Exception {
         mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
                 .andExpect(header().exists("Content-Security-Policy"))
                 .andExpect(header().string("Content-Security-Policy",
                         org.hamcrest.Matchers.containsString("default-src 'self'")));
@@ -68,6 +72,7 @@ class SecurityHeadersTest {
     @DisplayName("Strict-Transport-Security absent on dev profile (localhost HTTP)")
     void hsts_absentOnDevProfile() throws Exception {
         mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
                 .andExpect(header().doesNotExist("Strict-Transport-Security"));
     }
 

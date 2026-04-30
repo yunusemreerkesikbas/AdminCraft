@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,6 +53,22 @@ public class UserServiceImpl implements UserService {
             return lastName.trim();
         }
         return email;
+    }
+
+    private void assertCallerMayManageTenantRoles() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        if (securityHelper.isSuperAdmin()) {
+            return;
+        }
+        boolean tenantAdmin = auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_TENANT_ADMIN"::equals);
+        if (!tenantAdmin) {
+            throw new AccessDeniedException("Insufficient privilege");
+        }
     }
 
     @Override
@@ -148,12 +166,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUserRole(Long id, UserRole role) {
+        assertCallerMayManageTenantRoles();
         Long callerId = securityHelper.getCurrentUserIdOrNull();
         if (id.equals(callerId)) {
-            throw new org.springframework.security.access.AccessDeniedException("Cannot change own role");
+            throw new AccessDeniedException("Cannot change own role");
         }
         if (role == UserRole.SUPER_ADMIN) {
-            throw new org.springframework.security.access.AccessDeniedException(
+            throw new AccessDeniedException(
                     "SUPER_ADMIN role cannot be assigned via tenant API");
         }
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
@@ -358,12 +377,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void assignRole(Long userId, UserRole role) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        user.setRole(role);
-        userRepository.save(user);
-        log.info("Role {} assigned to user: {}", role, userId);
+        updateUserRole(userId, role);
     }
 
     @Override

@@ -160,7 +160,7 @@ PUT /api/users/{id}
 
 ### Update User Role (SEC-109)
 
-```
+```http
 PATCH /api/users/{id}/role
 ```
 
@@ -179,7 +179,7 @@ Requires `TENANT_ADMIN` role. Updates the role of a tenant user.
 - A caller cannot change their own role (`id` must differ from the JWT subject).
 - `SUPER_ADMIN` cannot be assigned via this endpoint (platform-only role).
 
-**Response**: `204 No Content`
+**Response**: `200 OK` with `ApiResponse<UserResponse>` (same envelope as other user mutations).
 
 **Security rationale:** Separating role changes from profile updates prevents mass-assignment vulnerabilities where an `UpdateUserRequest` body could silently elevate a user to an unintended role.
 

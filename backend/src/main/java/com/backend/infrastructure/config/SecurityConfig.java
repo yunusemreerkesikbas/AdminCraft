@@ -53,7 +53,9 @@ public class SecurityConfig {
                                         h.referrerPolicy(rp -> rp.policy(
                                                 ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
                                         h.contentSecurityPolicy(csp -> csp.policyDirectives(
-                                                "default-src 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https:"));
+                                                "default-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; "
+                                                        + "img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; "
+                                                        + "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"));
                                         if (!isDev) {
                                                 h.httpStrictTransportSecurity(hsts -> hsts
                                                         .includeSubDomains(true)

@@ -53,6 +53,12 @@ class EncryptionServiceReEncryptTest {
     }
 
     @Test
+    @DisplayName("SEC-010: non-Base64 string → Optional.empty()")
+    void reEncryptIfLegacy_invalidBase64_returnsEmpty() {
+        assertThat(service.reEncryptIfLegacy("%%%")).isEmpty();
+    }
+
+    @Test
     @DisplayName("SEC-010: garbage base64 → Optional.empty() (no exception thrown)")
     void reEncryptIfLegacy_garbage_returnsEmpty() {
         String garbage = Base64.getEncoder().encodeToString("not-a-valid-ciphertext".getBytes(StandardCharsets.UTF_8));

@@ -12,10 +12,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.backend.domain.entity.ConfigProperty;
 import com.backend.domain.entity.PlatformConfigProperty;
 import com.backend.domain.entity.Tenant;
+import com.backend.domain.port.EncryptionServicePort;
 import com.backend.domain.repository.ConfigPropertyRepository;
 import com.backend.domain.repository.PlatformConfigPropertyRepository;
 import com.backend.domain.repository.TenantRepository;
-import com.backend.infrastructure.security.EncryptionService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +31,7 @@ public class SecretReEncryptionService {
     private final ConfigPropertyRepository tenantConfigPropertyRepository;
     private final TenantRepository tenantRepository;
     private final TenantDbExecutor tenantDbExecutor;
-    private final EncryptionService encryptionService;
+    private final EncryptionServicePort encryptionService;
     private final PlatformTransactionManager tenantTransactionManager;
     private final PlatformTransactionManager platformTransactionManager;
 
@@ -40,7 +40,7 @@ public class SecretReEncryptionService {
             ConfigPropertyRepository tenantConfigPropertyRepository,
             TenantRepository tenantRepository,
             TenantDbExecutor tenantDbExecutor,
-            EncryptionService encryptionService,
+            EncryptionServicePort encryptionService,
             @Qualifier("tenantTransactionManager") PlatformTransactionManager tenantTransactionManager,
             @Qualifier("platformTransactionManager") PlatformTransactionManager platformTransactionManager) {
         this.platformConfigPropertyRepository = platformConfigPropertyRepository;
@@ -85,7 +85,7 @@ public class SecretReEncryptionService {
                     log.info("SEC-010: tenant {} migrated {} secret(s) ECB→GCM", tenant.getId(), count);
                 }
             } catch (Exception e) {
-                log.error("SEC-010: failed to migrate secrets for tenant {}: {}", tenant.getId(), e.getMessage());
+                log.error("SEC-010: failed to migrate secrets for tenant {}", tenant.getId(), e);
             }
         }
         return total;
