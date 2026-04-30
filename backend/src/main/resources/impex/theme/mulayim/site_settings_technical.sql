@@ -6,6 +6,18 @@
 -- ============================================================
 -- 1. GLOBAL SITE SETTINGS (language = NULL)
 -- ============================================================
+-- MySQL UNIQUE index treats each NULL as distinct, so ON DUPLICATE KEY UPDATE
+-- never fires for NULL-language rows. Use DELETE + INSERT instead.
+
+DELETE FROM site_settings WHERE language IS NULL AND setting_key IN (
+  'global.contactEmail', 'global.contactPhone', 'global.whatsappPhone',
+  'global.canonicalBaseUrl', 'global.robots',
+  'global.address.line1', 'global.address.line2', 'global.address.city',
+  'global.address.state', 'global.address.postalCode', 'global.address.country',
+  'global.address.mapEmbedUrl',
+  'global.social.instagram', 'global.social.youtube', 'global.social.linkedin',
+  'global.social.facebook', 'global.social.x', 'global.social.tiktok'
+);
 
 INSERT INTO site_settings (
   setting_key, setting_value, language, setting_type, category, display_name, is_public, sort_order, updated_by
@@ -28,16 +40,7 @@ VALUES
   ('global.social.linkedin', '', NULL, 'TEXT', 'social', 'LinkedIn URL', FALSE, 42, NULL),
   ('global.social.facebook', '', NULL, 'TEXT', 'social', 'Facebook URL', FALSE, 43, NULL),
   ('global.social.x', '', NULL, 'TEXT', 'social', 'X URL', FALSE, 44, NULL),
-  ('global.social.tiktok', '', NULL, 'TEXT', 'social', 'TikTok URL', FALSE, 45, NULL)
-ON DUPLICATE KEY UPDATE
-  setting_value = VALUES(setting_value),
-  setting_type = VALUES(setting_type),
-  category = VALUES(category),
-  display_name = VALUES(display_name),
-  is_public = VALUES(is_public),
-  sort_order = VALUES(sort_order),
-  updated_by = VALUES(updated_by),
-  updated_at = NOW();
+  ('global.social.tiktok', '', NULL, 'TEXT', 'social', 'TikTok URL', FALSE, 45, NULL);
 
 -- ============================================================
 -- 2. I18N SITE SETTINGS (TR / EN)

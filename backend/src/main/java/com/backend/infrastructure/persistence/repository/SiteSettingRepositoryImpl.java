@@ -27,14 +27,14 @@ public class SiteSettingRepositoryImpl implements SiteSettingRepository {
 
   @Override
   public Optional<SiteSetting> findByTenantIdAndSettingKeyAndLanguage(Long tenantId, String key, Language language) {
-    // In database-per-tenant model, routing is handled by TenantContext
-    return jpa.findBySettingKeyAndLanguage(key, language);
+    List<SiteSetting> results = jpa.findBySettingKeyAndLanguage(key, language);
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
   }
 
   @Override
   public Optional<SiteSetting> findByTenantIdAndSettingKeyAndLanguageIsNull(Long tenantId, String key) {
-    // In database-per-tenant model, routing is handled by TenantContext
-    return jpa.findBySettingKeyAndLanguageIsNull(key);
+    List<SiteSetting> results = jpa.findBySettingKeyAndLanguageIsNull(key);
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
   }
 
   @Override
