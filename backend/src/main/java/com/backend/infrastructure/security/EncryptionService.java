@@ -92,7 +92,50 @@ public class EncryptionService implements EncryptionServicePort {
         }
     }
 
-    // TODO: Remove legacy ECB fallback once all stored secrets are re-encrypted with GCM
+    /**
+     * SEC-010: If the ciphertext is ECB-encrypted, decrypts it and re-encrypts with GCM.
+     * Returns Optional.empty() when the value is already GCM (no action needed).
+     */
+    @Override
+    public java.util.Optional<String> reEncryptIfLegacy(String ciphertext) {
+        if (ciphertext == null || ciphertext.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        final byte[] decoded;
+        try {
+            decoded = Base64.getDecoder().decode(ciphertext);
+        } catch (IllegalArgumentException e) {
+            log.debug("SEC-010: skip re-encrypt, invalid Base64 ciphertext");
+            return java.util.Optional.empty();
+        }
+        try {
+            if (decoded.length <= IV_LENGTH) {
+                throw new IllegalArgumentException("Too short for GCM");
+            }
+            byte[] iv = new byte[IV_LENGTH];
+            System.arraycopy(decoded, 0, iv, 0, IV_LENGTH);
+            byte[] ct = new byte[decoded.length - IV_LENGTH];
+            System.arraycopy(decoded, IV_LENGTH, ct, 0, ct.length);
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(TAG_LENGTH, iv));
+            cipher.doFinal(ct);
+            // GCM succeeded → already migrated
+            return java.util.Optional.empty();
+        } catch (Exception e) {
+            // GCM failed → attempt ECB → re-encrypt to GCM
+            try {
+                Cipher ecb = Cipher.getInstance("AES/ECB/PKCS5Padding");
+                ecb.init(Cipher.DECRYPT_MODE, secretKey);
+                String plain = new String(ecb.doFinal(decoded), StandardCharsets.UTF_8);
+                return java.util.Optional.ofNullable(encrypt(plain));
+            } catch (Exception ecbEx) {
+                log.warn("SEC-010: ciphertext is neither valid GCM nor ECB — skipping", ecbEx);
+                return java.util.Optional.empty();
+            }
+        }
+    }
+
+    // TODO: Remove after all stored secrets are confirmed GCM (SEC-010 Phase 2)
     private String decryptLegacy(String encryptedText) {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");

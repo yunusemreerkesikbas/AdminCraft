@@ -68,6 +68,8 @@ public class PlatformMailMarketingService {
     private static final List<String> SUBSCRIBABLE_TEMPLATE_TYPES = List.of(NEWSLETTER_DEFAULT, VERSION_UPGRADE);
     private static final long MIN_PUBLIC_SUBSCRIBE_FILL_DURATION_MS = 1000L;
     private static final long MAX_PUBLIC_SUBSCRIBE_AGE_MS = 3_600_000L;
+    // SEC-108: suppress duplicate confirmation mails within this window
+    private static final long RESEND_THROTTLE_MINUTES = 5L;
 
     private final PlatformEmailTemplateRepository templateRepository;
     private final PlatformNewsletterSubscriberRepository subscriberRepository;
@@ -289,7 +291,19 @@ public class PlatformMailMarketingService {
             && Boolean.TRUE.equals(existingSubscription.getPermission());
         if (alreadySubscribed) {
             upsertTemplateSubscription(subscriber, templateType, command.source(), preferredLang, Boolean.TRUE);
-            return NEWSLETTER_SUBSCRIBE_ALREADY_ACTIVE;
+            // SEC-108: return same response as new subscriber — no enumeration signal
+            return NEWSLETTER_SUBSCRIBE_SENT;
+        }
+
+        // SEC-108: suppress resend within throttle window to prevent confirmation mail flood
+        boolean pendingAndRecent = subscriber.getId() != null
+                && subscriber.getStatus() == MailSubscriberStatus.PENDING_CONFIRMATION
+                && subscriber.getUpdatedAt() != null
+                && subscriber.getUpdatedAt().isAfter(LocalDateTime.now().minusMinutes(RESEND_THROTTLE_MINUTES));
+        if (pendingAndRecent) {
+            log.info("[MAIL] newsletter confirm resend suppressed (throttle) | recipient={}",
+                    LogSanitizer.maskEmail(normalizedEmail));
+            return NEWSLETTER_SUBSCRIBE_SENT;
         }
 
         boolean keepSubscriberActive = subscriber.getStatus() == MailSubscriberStatus.ACTIVE;

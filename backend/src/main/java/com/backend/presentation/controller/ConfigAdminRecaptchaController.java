@@ -20,6 +20,7 @@ import com.backend.presentation.dto.response.config.ConfigAuditItemResponse;
 import com.backend.presentation.dto.response.config.ConfigRecaptchaResponse;
 import com.backend.shared.common.ApiResponse;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -39,6 +40,7 @@ public class ConfigAdminRecaptchaController {
         return ResponseEntity.ok(ApiResponse.success(ConfigRecaptchaResponse.from(result)));
     }
 
+    @RateLimiter(name = "configAdmin")
     @PreAuthorize("hasRole('CONFIG_TENANT_ADMIN')")
     @PatchMapping("/security/recaptcha")
     public ResponseEntity<ApiResponse<ConfigRecaptchaResponse>> patchRecaptcha(

@@ -66,9 +66,9 @@ Note:
 
 - The backend uses `/uid/{uid}` (not `/code/{code}`).
 
-File serving (public endpoint, still tenant-scoped by tenant resolution):
+File serving (tenant-scoped; authentication required for private files):
 
-- `GET /api/media/files/{fileName}`
+- `GET /api/media/files/{fileName}` — serves the file bytes. **Public media** (`isPublic = true`) is accessible without authentication. **Private media** (`isPublic = false`) requires a valid JWT; anonymous requests receive `403 Forbidden` (SEC-009). S3-stored files already have `externalUrl` and are never served through this endpoint.
 
 ## Public CMS delivery (tenant-scoped, no auth)
 

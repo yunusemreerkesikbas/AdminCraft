@@ -3,6 +3,8 @@ package com.backend.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.nio.charset.StandardCharsets;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +44,7 @@ class MagicByteValidationTest {
     @Test
     @DisplayName("SEC-111: text bytes declared as image/jpeg → fails (magic-byte mismatch)")
     void textContentDeclaredAsJpeg_fails() {
-        byte[] textBytes = "Hello, world!".getBytes();
+        byte[] textBytes = "Hello, world!".getBytes(StandardCharsets.UTF_8);
         MockMultipartFile file = new MockMultipartFile(
                 "file", "evil.jpg", "image/jpeg", textBytes);
 

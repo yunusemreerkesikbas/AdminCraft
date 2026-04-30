@@ -12,40 +12,29 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.MessageSource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.backend.application.service.MediaContainerService;
-import com.backend.application.service.MediaI18nService;
-import com.backend.application.service.MediaProcessingService;
 import com.backend.application.service.MediaService;
 import com.backend.domain.entity.Media;
 import com.backend.shared.common.SecurityHelper;
-import jakarta.validation.Validator;
 
 /**
- * SEC-009: verifies that private media files require authentication.
+ * SEC-009: verifies that private media files require authentication ({@link MediaFileController} — no class-level {@code @PreAuthorize}).
  */
 @ExtendWith(MockitoExtension.class)
 class MediaPrivateAccessTest {
 
-    @Mock private MediaService mediaService;
-    @Mock private MediaI18nService i18nService;
-    @Mock private MediaContainerService containerService;
-    @Mock private MediaProcessingService processingService;
-    @Mock private MessageSource messageSource;
-    @Mock private SecurityHelper securityHelper;
-    @Mock private Validator validator;
+    @Mock
+    private MediaService mediaService;
+    @Mock
+    private SecurityHelper securityHelper;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        MediaController controller = new MediaController(
-                mediaService, i18nService, containerService,
-                processingService, messageSource, securityHelper, new ObjectMapper(), validator);
+        MediaFileController controller = new MediaFileController(mediaService, securityHelper);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -63,8 +52,7 @@ class MediaPrivateAccessTest {
     void publicMedia_anonymous_200() throws Exception {
         Media media = mediaWithPublic("file.png", true);
         when(mediaService.findByFileName("file.png")).thenReturn(Optional.of(media));
-        when(mediaService.getFileContent("file.png")).thenReturn(new byte[]{1, 2, 3});
-        // isAuthenticated() not called for public media — no stub needed
+        when(mediaService.getFileContent("file.png")).thenReturn(new byte[] { 1, 2, 3 });
 
         mockMvc.perform(get("/media/files/file.png"))
                 .andExpect(status().isOk());
@@ -86,7 +74,7 @@ class MediaPrivateAccessTest {
     void privateMedia_authenticated_200() throws Exception {
         Media media = mediaWithPublic("secret.png", false);
         when(mediaService.findByFileName("secret.png")).thenReturn(Optional.of(media));
-        when(mediaService.getFileContent("secret.png")).thenReturn(new byte[]{4, 5, 6});
+        when(mediaService.getFileContent("secret.png")).thenReturn(new byte[] { 4, 5, 6 });
         when(securityHelper.isAuthenticated()).thenReturn(true);
 
         mockMvc.perform(get("/media/files/secret.png"))

@@ -44,6 +44,8 @@ app:
       - http://127.0.0.1:3000
     allowed-origin-patterns:
       - http://*.localhost:4200
+  migration:
+    re-encrypt-secrets: ${APP_MIGRATION_RE_ENCRYPT_SECRETS:false}
   tenant:
     auto-sync-on-startup: ${TENANT_AUTO_SYNC:true}
     trust-forwarded-host: ${TENANT_TRUST_FORWARDED_HOST:false}
@@ -178,6 +180,16 @@ resilience4j:
         allow-health-indicator-to-fail: true
       impexExecute:
         limit-for-period: 5
+        limit-refresh-period: 60s
+        timeout-duration: 0s
+        allow-health-indicator-to-fail: true
+      configAdmin:
+        limit-for-period: 5
+        limit-refresh-period: 60s
+        timeout-duration: 0s
+        allow-health-indicator-to-fail: true
+      demoRequest:
+        limit-for-period: 10
         limit-refresh-period: 60s
         timeout-duration: 0s
         allow-health-indicator-to-fail: true

@@ -135,27 +135,34 @@ public class MediaStorageServiceImpl implements MediaStorageService {
     }
 
     private boolean validateMagicBytes(byte[] content, String mimeType) {
-        // Reject null or too short content
         if (content == null || content.length < 4) {
             log.debug("Magic bytes validation rejected: content null or too short (length: {})",
                     content == null ? "null" : content.length);
             return false;
         }
 
-        // Skip validation for mime types without defined magic bytes (allow by default)
         if (mimeType == null) {
-            log.debug("Magic bytes validation skipped: mimeType is null");
-            return true;
+            log.warn("Magic bytes validation failed: mimeType is null");
+            return false;
         }
 
-        byte[] expectedBytes = MAGIC_BYTES.get(mimeType.toLowerCase());
+        String mt = mimeType.toLowerCase();
+        if ("image/webp".equals(mt)) {
+            return looksLikeWebp(content);
+        }
+        if ("video/mp4".equals(mt)) {
+            return looksLikeMp4(content);
+        }
+        if ("audio/mpeg".equals(mt) || "audio/mp3".equals(mt)) {
+            return looksLikeMpegAudio(content);
+        }
+
+        byte[] expectedBytes = MAGIC_BYTES.get(mt);
         if (expectedBytes == null) {
-            // No magic bytes defined for this type - allow it (configurable allowlist for
-            // future)
-            return true;
+            log.warn("Magic bytes validation failed: no signature defined for type {}", mimeType);
+            return false;
         }
 
-        // Validate magic bytes match
         for (int i = 0; i < expectedBytes.length; i++) {
             if (content[i] != expectedBytes[i]) {
                 log.debug("Magic bytes validation failed for mimeType {}: expected {} at position {}, got {}",
@@ -164,6 +171,35 @@ public class MediaStorageServiceImpl implements MediaStorageService {
             }
         }
         return true;
+    }
+
+    private static boolean looksLikeWebp(byte[] content) {
+        if (content.length < 12) {
+            return false;
+        }
+        if (content[0] != 0x52 || content[1] != 0x49 || content[2] != 0x46 || content[3] != 0x46) {
+            return false;
+        }
+        return content[8] == 'W' && content[9] == 'E' && content[10] == 'B' && content[11] == 'P';
+    }
+
+    private static boolean looksLikeMp4(byte[] content) {
+        if (content.length < 12) {
+            return false;
+        }
+        return content[4] == 'f' && content[5] == 't' && content[6] == 'y' && content[7] == 'p';
+    }
+
+    private static boolean looksLikeMpegAudio(byte[] content) {
+        if (content.length >= 3 && content[0] == 'I' && content[1] == 'D' && content[2] == '3') {
+            return true;
+        }
+        if (content.length >= 2) {
+            int b0 = content[0] & 0xFF;
+            int b1 = content[1] & 0xFF;
+            return b0 == 0xFF && (b1 & 0xE0) == 0xE0;
+        }
+        return false;
     }
 
     private String generateUniqueFileName(String extension) {

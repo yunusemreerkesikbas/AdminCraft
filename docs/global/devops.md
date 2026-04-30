@@ -268,6 +268,9 @@ Notes:
 4. Tenant repo deploy jobs should call droplet-side scripts:
    - Deploy/update: `deploy-tenant-storefront.sh`
    - Remove/rollback target removal: `remove-tenant-storefront.sh`
+5. **Internal health probes (SSH / GitHub Actions):** When hitting the standalone Next.js process from another exec on the same container, use `http://127.0.0.1:3000/api/health` (or your compose healthcheck URL), not `http://localhost:3000/...`. Next.js typically listens on IPv4 only (`0.0.0.0:3000`); on Alpine-based images, `localhost` can resolve to `::1` first, so `wget` may get connection refused even while Docker reports `healthy` on a compose healthcheck that uses `127.0.0.1`.
+6. **External HTTPS smoke check (GitHub Actions):** Probe `https://s1-<tenant>.craftive.io/api/health` (or the tenant’s public hostname + `/api/health`), not `/`. The storefront root path loads CMS config and redirects to `/{locale}`; until the CMS is reachable or content exists, `GET /` may return 404 even when the app and Traefik are fine.
+7. **Deploy idempotency:** `deploy-tenant-storefront.sh` runs `docker compose down --remove-orphans` for the tenant project, then force-removes any remaining containers whose names match that project’s service (handles orphaned containers / name conflicts after a failed `compose up`).
 
 ### Tenant DNS patterns
 

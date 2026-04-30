@@ -21,6 +21,9 @@ public interface UserService {
 
     User updateUser(Long id, UpdateUserInput input);
 
+    // SEC-109: role changes go through a dedicated, validated method
+    void updateUserRole(Long id, UserRole role);
+
     void deleteUser(Long id);
 
     List<User> getAllUsers();

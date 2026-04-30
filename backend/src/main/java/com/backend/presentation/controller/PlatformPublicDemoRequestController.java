@@ -15,6 +15,8 @@ import com.backend.application.service.PlatformDemoRequestService;
 import com.backend.presentation.dto.request.PlatformPublicDemoRequestSubmitRequest;
 import com.backend.shared.common.ApiResponse;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +33,7 @@ public class PlatformPublicDemoRequestController {
     private final PlatformDemoRequestService platformDemoRequestService;
     private final MessageSource messageSource;
 
+    @RateLimiter(name = "demoRequest")
     @PostMapping
     @Operation(summary = "Submit demo request", description = "Accepts public demo request submission from landing")
     @ApiResponses(value = {
