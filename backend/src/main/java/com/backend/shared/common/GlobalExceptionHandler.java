@@ -4,6 +4,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.context.NoSuchMessageException;
+
 import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -290,7 +292,7 @@ public class GlobalExceptionHandler {
         String firstErrorMessage = null;
         for (var error : ex.getBindingResult().getAllErrors()) {
             String fieldName = error instanceof FieldError fe ? fe.getField() : error.getObjectName();
-            String errorMessage = getMessage(error.getDefaultMessage());
+            String errorMessage = resolveBindingErrorMessage(error);
             validationErrors.put(fieldName, errorMessage);
         }
         if (!validationErrors.isEmpty()) {
@@ -407,4 +409,19 @@ public class GlobalExceptionHandler {
         return getMessage(fallbackKey);
     }
 
+    private String resolveBindingErrorMessage(org.springframework.validation.ObjectError error) {
+        String msg = error.getDefaultMessage();
+        if (msg != null && msg.startsWith("{") && msg.endsWith("}")) {
+            String key = msg.substring(1, msg.length() - 1);
+            try {
+                msg = messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
+            } catch (NoSuchMessageException ignored) {
+                msg = key;
+            }
+        }
+        if (msg == null || msg.isBlank()) {
+            msg = getMessage("validation.failed");
+        }
+        return msg.length() > 500 ? msg.substring(0, 500) : msg;
+    }
 }

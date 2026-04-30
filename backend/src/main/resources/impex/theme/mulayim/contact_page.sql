@@ -11,7 +11,7 @@
 
 INSERT INTO component_types (uuid, uid, name, category, is_navigation_aware, created_at, updated_at)
 VALUES
-  (UUID(), 'ContactHeroComponent', 'Contact Hero', 'hero', FALSE, NOW(), NOW()),
+  (UUID(), 'SimpleBannerComponent', 'Banner', 'hero', FALSE, NOW(), NOW()),
   (UUID(), 'ContactFormSectionComponent', 'Contact Form Section', 'form', FALSE, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
@@ -24,8 +24,13 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 
 INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
-SELECT ct.id, 'supportingText', 'TEXTAREA', NOW()
-FROM component_types ct WHERE ct.uid = 'ContactHeroComponent'
+SELECT ct.id, 'imageUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'SimpleBannerComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'linkUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'SimpleBannerComponent'
 ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 
 INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
@@ -80,7 +85,7 @@ ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
 SELECT seed.uuid, seed.uid, ct.id, seed.name, seed.display_order, TRUE, seed.style_classes, 'PUBLISHED', NOW(), NOW()
 FROM (
-  SELECT 'c7100001-0000-4000-8000-000000000001' AS uuid, 'MulayimContactHeroComponent' AS uid, 'ContactHeroComponent' AS component_type_uid, 'Mulayim Contact Hero' AS name, 0 AS display_order, 'mulayim-contact-hero' AS style_classes
+  SELECT 'c7100001-0000-4000-8000-000000000001' AS uuid, 'MulayimContactHeroComponent' AS uid, 'SimpleBannerComponent' AS component_type_uid, 'Mulayim Contact Hero' AS name, 0 AS display_order, NULL AS style_classes
   UNION ALL
   SELECT 'c7100002-0000-4000-8000-000000000002', 'MulayimContactFormComponent', 'ContactFormSectionComponent', 'Mulayim Contact Form', 0, 'mulayim-contact-form'
 ) seed
@@ -136,9 +141,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, style_classes, status, created_at, updated_at)
 SELECT seed.uuid, seed.uid, c.id, seed.sort_order, TRUE, NULL, 'PUBLISHED', NOW(), NOW()
 FROM (
-  SELECT 'c7120001-0000-4000-8000-000000000001' AS uuid, 'MulayimContactHeroPrimary' AS uid, 'MulayimContactHeroComponent' AS component_uid, 0 AS sort_order
-  UNION ALL
-  SELECT 'c7120002-0000-4000-8000-000000000002', 'MulayimContactFormPrimary', 'MulayimContactFormComponent', 0
+  SELECT 'c7120002-0000-4000-8000-000000000002' AS uuid, 'MulayimContactFormPrimary' AS uid, 'MulayimContactFormComponent' AS component_uid, 0 AS sort_order
 ) seed
 JOIN components c ON c.uid = seed.component_uid
 ON DUPLICATE KEY UPDATE
@@ -156,19 +159,9 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT seed.uuid, seed.uid, e.id, seed.language, seed.title, seed.description, 'PUBLISHED', seed.custom_data, NOW(), NOW(), NOW()
 FROM (
-  SELECT 'c7130001-0000-4000-8000-000000000001' AS uuid, 'MulayimContactHeroPrimaryTr' AS uid, 'MulayimContactHeroPrimary' AS entry_uid, 'TR' AS language,
+  SELECT 'c7130003-0000-4000-8000-000000000003' AS uuid, 'MulayimContactFormPrimaryTr' AS uid, 'MulayimContactFormPrimary' AS entry_uid, 'TR' AS language,
     NULL AS title,
     NULL AS description,
-    JSON_OBJECT('supportingText', 'Logo, kimlik ve kampanya tasarımları için yazın') AS custom_data
-  UNION ALL
-  SELECT 'c7130002-0000-4000-8000-000000000002', 'MulayimContactHeroPrimaryEn', 'MulayimContactHeroPrimary', 'EN',
-    NULL,
-    NULL,
-    JSON_OBJECT('supportingText', 'Write for logo, identity and campaign design work')
-  UNION ALL
-  SELECT 'c7130003-0000-4000-8000-000000000003', 'MulayimContactFormPrimaryTr', 'MulayimContactFormPrimary', 'TR',
-    NULL,
-    NULL,
     JSON_OBJECT(
       'mapEmbedUrl', 'https://www.google.com/maps?q=Turkey&z=5&output=embed',
       'formTitle', 'Mesaj Gönderin',
@@ -179,7 +172,7 @@ FROM (
       'messageLabel', 'Mesaj',
       'messagePlaceholder', 'İhtiyacınızı, teslim zamanını ve varsa kapsamı birkaç cümleyle paylaşın',
       'submitLabel', 'Mesajı Hazırla'
-    )
+    ) AS custom_data
   UNION ALL
   SELECT 'c7130004-0000-4000-8000-000000000004', 'MulayimContactFormPrimaryEn', 'MulayimContactFormPrimary', 'EN',
     NULL,

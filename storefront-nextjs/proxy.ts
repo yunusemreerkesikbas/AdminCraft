@@ -4,6 +4,51 @@ import { fetchCmsJson } from "./lib/core/http/fetch-json";
 import { resolveCmsEndpoint } from "./lib/core/http/endpoints";
 import { isValidLocaleFormat } from "./lib/core/i18n/locale";
 
+const TRUST_X_FORWARDED_HOST =
+  process.env.TRUST_X_FORWARDED_HOST === "1" ||
+  process.env.TRUST_X_FORWARDED_HOST === "true";
+
+/**
+ * Parses a Host / X-Forwarded-Host style value to a hostname (lowercase).
+ * Handles bracketed IPv6 (e.g. [::1]:3000) without naive split(":").
+ */
+function parseHostname(rawHeader: string): string {
+  const raw = rawHeader.split(",")[0]?.trim() ?? "";
+  if (!raw) {
+    return "";
+  }
+  if (raw.startsWith("[")) {
+    const end = raw.indexOf("]");
+    if (end > 1) {
+      return raw.slice(1, end).toLowerCase();
+    }
+  }
+  try {
+    const withScheme = raw.includes("://") ? raw : `http://${raw}`;
+    return new URL(withScheme).hostname.toLowerCase();
+  } catch {
+    return raw.split(":")[0]?.toLowerCase() ?? "";
+  }
+}
+
+/**
+ * Host header the browser used. Prefer {@code Host} unless {@code TRUST_X_FORWARDED_HOST}
+ * is set (reverse proxy strips/forges {@code X-Forwarded-Host}).
+ */
+function getIncomingHostname(request: NextRequest): string {
+  if (TRUST_X_FORWARDED_HOST) {
+    const forwarded = request.headers.get("x-forwarded-host");
+    if (forwarded) {
+      return parseHostname(forwarded);
+    }
+  }
+  const host = request.headers.get("host");
+  if (host) {
+    return parseHostname(host);
+  }
+  return request.nextUrl.hostname.toLowerCase();
+}
+
 /**
  * Resolves the tenant subdomain for the incoming request.
  *
@@ -37,8 +82,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Resolve tenant subdomain from hostname (dynamic) or env var (static).
-  const subdomain = resolveTenantSubdomain(request.nextUrl.hostname);
+  const subdomain = resolveTenantSubdomain(getIncomingHostname(request));
   if (!subdomain) {
     return new NextResponse(null, { status: 404 });
   }
@@ -46,7 +90,6 @@ export async function proxy(request: NextRequest) {
   const segments = pathname.split("/").filter(Boolean);
   const locale = segments[0];
 
-  // Tarayıcı/sistem özel yolları: locale segmentinden sonra gelen .well-known vb.
   if (segments[1] === ".well-known") {
     return new NextResponse(null, { status: 404 });
   }
@@ -66,7 +109,6 @@ export async function proxy(request: NextRequest) {
   }
 
   try {
-    // Pass tenant header explicitly — next/headers is not available in proxy context.
     const site = await fetchCmsJson<{ maintenanceMode?: boolean }>(
       resolveCmsEndpoint("cmsSite"),
       undefined,

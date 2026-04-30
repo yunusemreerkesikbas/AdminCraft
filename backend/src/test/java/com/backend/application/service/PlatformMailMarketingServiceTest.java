@@ -185,8 +185,9 @@ class PlatformMailMarketingServiceTest {
                 "",
                 System.currentTimeMillis() - 5_000L));
 
+        // SEC-108: same response as new subscriber — no enumeration signal
         org.assertj.core.api.Assertions.assertThat(result)
-                .isEqualTo("mail.marketing.newsletter.subscribe.already.active");
+                .isEqualTo("mail.marketing.newsletter.subscribe.sent");
         verify(mailSender, never()).send(any(), any(), any());
         verify(subscriberRepository, never()).save(any(PlatformNewsletterSubscriber.class));
     }

@@ -736,6 +736,8 @@ export const langTR = {
                 userNotIdentified: 'Kullanıcı doğrulanamadı',
                 partialUploadWarning:
                     '{{successCount}} dosya yüklendi. {{failureCount}} dosya başarısız oldu.',
+                uploadErrorFallback:
+                    'Yükleme başarısız. Sunucu yanıtı okunamadı; bağlantınızı kontrol edip tekrar deneyin.',
                 folderCreated: 'Klasör oluşturuldu',
                 folderUpdated: 'Klasör güncellendi',
                 folderDeleted: 'Klasör silindi',

@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -37,6 +38,7 @@ import com.backend.domain.exception.UserNotFoundException;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.presentation.dto.request.CreateUserRequest;
 import com.backend.presentation.dto.request.UpdateUserRequest;
+import com.backend.presentation.dto.request.UpdateUserRoleRequest;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SortConfig;
 import com.backend.presentation.dto.response.UserResponse;
@@ -323,7 +325,7 @@ public class UserController {
                         // Convert Presentation DTO to Application Input
                         UpdateUserInput input = new UpdateUserInput(
                                         request.email(),
-                                        request.role(),
+                                        null, // role changes go through PATCH /{id}/role — SEC-109
                                         request.firstName(),
                                         request.lastName(),
                                         request.phone(),
@@ -347,6 +349,41 @@ public class UserController {
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error updating user", ex);
+                        String message = messageSource.getMessage("user.update.error",
+                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(message));
+                }
+        }
+
+        // ========== Update User Role — SEC-109 ==========
+
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        @PatchMapping("/{id}/role")
+        @Operation(summary = "Update user role", description = "Changes the role of a tenant user. Caller cannot change their own role and cannot assign SUPER_ADMIN.")
+        public ResponseEntity<ApiResponse<UserResponse>> updateUserRole(
+                        @PathVariable @Valid @NotNull @Min(1) Long id,
+                        @Valid @RequestBody UpdateUserRoleRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        userService.updateUserRole(id, request.role());
+                        User updatedUser = userService.getUserById(id)
+                                        .orElseThrow(() -> new UserNotFoundException(id));
+                        String message = messageSource.getMessage("user.update.success", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.ok(ApiResponse.success(message, UserResponse.from(updatedUser)));
+                } catch (org.springframework.security.access.AccessDeniedException ex) {
+                        String message = messageSource.getMessage("security.forbidden", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                        .body(ApiResponse.error(message));
+                } catch (UserNotFoundException ex) {
+                        String message = messageSource.getMessage("user.not.found", new Object[] { id },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                        .body(ApiResponse.error(message));
+                } catch (Exception ex) {
+                        log.error("Error updating user role", ex);
                         String message = messageSource.getMessage("user.update.error",
                                         new Object[] { ex.getMessage() }, Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

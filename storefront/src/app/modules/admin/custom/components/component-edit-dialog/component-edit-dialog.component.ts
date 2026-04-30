@@ -247,7 +247,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
     }
 
     protected buildI18nForm(lang: string): FormGroup {
-        const translation = this.data?.component?.translations?.[lang];
+        const translation = this.#getExistingTranslation(lang);
         return this.fb.group({
             title: [translation?.title || ''],
             subtitle: [translation?.subtitle || ''],
@@ -317,8 +317,6 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         const generalData = this.generalForm.value;
         const uid = (generalData.uid as string)?.trim();
 
-        const hasTranslations = Object.keys(translations).length > 0;
-
         this.#resolveResponsiveMediaIdForComposite(componentId)
             .pipe(
                 take(1),
@@ -330,9 +328,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
                         isVisible: generalData.isVisible,
                         styleClasses: generalData.styleClasses,
                         responsiveMediaId: responsiveMediaId ?? undefined,
-                        translations: hasTranslations
-                            ? translations
-                            : undefined,
+                        translations: translations,
                         ...this.#buildNavigationPayload(generalData),
                     };
                     return this.#componentService
@@ -367,42 +363,59 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
 
     #buildTranslations(): Record<Language, ComponentI18nRequest> {
         const translations = {} as Record<Language, ComponentI18nRequest>;
+        const isEditMode = this.data.mode === 'edit';
+        let hasAnyTranslationContent = false;
 
         this.languages.forEach((lang) => {
             const form = this.i18nForms[lang];
             if (!form) return;
 
-            const title = form.value.title as string;
-            const subtitle = form.value.subtitle as string;
-            const description = form.value.description as string;
+            const titleValue = this.#normalizeTranslationField(
+                form.value.title as string
+            );
+            const subtitleValue = this.#normalizeTranslationField(
+                form.value.subtitle as string
+            );
+            const descriptionValue = this.#normalizeTranslationField(
+                form.value.description as string
+            );
+            const hasCurrentTranslationContent =
+                titleValue.length > 0 ||
+                subtitleValue.length > 0 ||
+                descriptionValue.length > 0;
 
-            const titleTrimmed = title?.trim() ?? '';
-            const subtitleTrimmed = subtitle?.trim() ?? '';
-            const descriptionTrimmed = description?.trim() ?? '';
-            const gatedByAnyTranslationContent =
-                titleTrimmed.length > 0 ||
-                subtitleTrimmed.length > 0 ||
-                descriptionTrimmed.length > 0;
-
-            if (gatedByAnyTranslationContent) {
-                const titleValue =
-                    titleTrimmed.length > 0 ? titleTrimmed : undefined;
-                const subtitleValue =
-                    subtitleTrimmed.length > 0 ? subtitleTrimmed : undefined;
-                const descriptionValue =
-                    descriptionTrimmed.length > 0
-                        ? descriptionTrimmed
-                        : undefined;
-
-                translations[lang.toUpperCase() as Language] = {
-                    title: titleValue,
-                    subtitle: subtitleValue,
-                    description: descriptionValue,
-                };
+            if (hasCurrentTranslationContent) {
+                hasAnyTranslationContent = true;
             }
+
+            const existingTranslation = this.#getExistingTranslation(lang);
+            const shouldIncludeLocale = isEditMode
+                ? !!existingTranslation || hasCurrentTranslationContent
+                : hasCurrentTranslationContent;
+
+            if (!shouldIncludeLocale) {
+                return;
+            }
+
+            translations[lang.toUpperCase() as Language] = {
+                title: titleValue,
+                subtitle: subtitleValue,
+                description: descriptionValue,
+            };
         });
 
-        return translations;
+        return Object.keys(translations).length > 0
+            ? translations
+            : ({} as Record<Language, ComponentI18nRequest>);
+    }
+
+    #normalizeTranslationField(value: string | null | undefined): string {
+        return value?.trim() ?? '';
+    }
+
+    #getExistingTranslation(lang: string) {
+        const key = lang.toUpperCase();
+        return this.data?.component?.translations?.[key];
     }
 
     #resolveResponsiveMediaIdForComposite(

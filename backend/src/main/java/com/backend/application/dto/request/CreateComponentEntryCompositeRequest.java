@@ -11,12 +11,12 @@ import lombok.Builder;
 
 @Builder
 public record CreateComponentEntryCompositeRequest(
-    @NotNull(message = "validation.component.id.required") Long componentId,
+    @NotNull(message = "{validation.component.id.required}") Long componentId,
 
     Integer sortOrder,
     Boolean isVisible,
     String styleClasses,
     Long responsiveMediaId,
 
-    @NotEmpty(message = "At least one translation is required") @Valid Map<Language, EntryI18nRequest> translations) {
+    @NotEmpty(message = "{validation.component.entry.translations.required}") @Valid Map<Language, EntryI18nRequest> translations) {
 }

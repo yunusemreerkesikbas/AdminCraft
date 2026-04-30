@@ -22,6 +22,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.request.ComponentCreateRequest;
 import com.backend.application.dto.request.ComponentI18nCommand;
+import com.backend.application.dto.request.ComponentI18nUpdateCommand;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
 import com.backend.application.dto.response.BulkDeleteResultResponse;
@@ -352,15 +353,15 @@ public class ComponentServiceImpl implements ComponentService {
                             return newI18n;
                         });
 
-                ComponentI18nCommand data = entry.getValue();
+                ComponentI18nUpdateCommand data = entry.getValue();
                 if (data != null) {
-                    if (data.title() != null) {
+                    if (data.hasTitle()) {
                         i18n.setTitle(data.title());
                     }
-                    if (data.subtitle() != null) {
+                    if (data.hasSubtitle()) {
                         i18n.setSubtitle(data.subtitle());
                     }
-                    if (data.description() != null) {
+                    if (data.hasDescription()) {
                         i18n.setDescription(data.description());
                     }
                 }

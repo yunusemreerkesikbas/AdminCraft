@@ -192,9 +192,10 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
     }
 
     protected buildI18nForm(lang: string): FormGroup {
+        const translation = this.#getExistingTranslation(lang);
         return this.fb.group({
-            title: [this.data.translations?.[lang]?.title || ''],
-            description: [this.data.translations?.[lang]?.description || ''],
+            title: [translation?.title ?? null],
+            description: [translation?.description ?? null],
         });
     }
 
@@ -317,34 +318,53 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
     #buildCompositeTranslations(): Record<string, any> {
         const translations: Record<string, any> = {};
         const baseFields = ['title', 'description'];
-        const shouldClearLegacyMediaUid = !this.#hasSelectedMedia();
+        const isEditMode = this.data.mode === 'edit';
+        let hasAnyTranslationContent = false;
 
         this.languages.forEach((lang) => {
             const formData = this.i18nForms[lang].value;
-            const dynamicFields: Record<string, any> = {};
+            const existingTranslation = this.#getExistingTranslation(lang);
+            const existingDynamicFields =
+                this.#extractPersistedDynamicFields(existingTranslation);
+            const titleValue = this.#normalizeTranslationField(
+                formData.title as string
+            );
+            const descriptionValue = this.#normalizeTranslationField(
+                formData.description as string
+            );
+            const dynamicFields = this.#buildDynamicFieldsPayload(
+                formData,
+                baseFields
+            );
+            const hasCurrentTranslationContent =
+                titleValue.length > 0 ||
+                descriptionValue.length > 0 ||
+                Object.keys(dynamicFields).length > 0;
 
-            Object.keys(formData).forEach((key) => {
-                if (
-                    !baseFields.includes(key) &&
-                    !(shouldClearLegacyMediaUid && key === 'mediaUid') &&
-                    formData[key] !== null &&
-                    formData[key] !== ''
-                ) {
-                    dynamicFields[key] = formData[key];
-                }
-            });
+            if (hasCurrentTranslationContent) {
+                hasAnyTranslationContent = true;
+            }
 
-            translations[lang] = {
-                title: formData.title || undefined,
-                description: formData.description || undefined,
-                dynamicFields:
-                    Object.keys(dynamicFields).length > 0
-                        ? dynamicFields
-                        : undefined,
+            const shouldIncludeLocale = isEditMode
+                ? !!existingTranslation || hasCurrentTranslationContent
+                : hasCurrentTranslationContent;
+
+            if (!shouldIncludeLocale) {
+                return;
+            }
+
+            translations[lang.toUpperCase()] = {
+                title: titleValue,
+                description: descriptionValue,
+                dynamicFields: this.#resolveDynamicFieldsValue(
+                    dynamicFields,
+                    existingDynamicFields,
+                    isEditMode
+                ),
             };
         });
 
-        return translations;
+        return Object.keys(translations).length > 0 ? translations : {};
     }
 
     #hasSelectedMedia(): boolean {
@@ -353,5 +373,71 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             !!this.#extractMediaId(mediaValue?.desktopMedia) ||
             !!this.#extractMediaId(mediaValue?.mobileMedia)
         );
+    }
+
+    #normalizeTranslationField(value: string | null | undefined): string {
+        return value?.trim() ?? '';
+    }
+
+    #getExistingTranslation(lang: string): EntryI18nDto | undefined {
+        return (
+            this.data.translations?.[lang] ??
+            this.data.translations?.[lang.toUpperCase()]
+        );
+    }
+
+    #extractPersistedDynamicFields(
+        translation: EntryI18nDto | undefined
+    ): Record<string, any> {
+        const customFields = translation?.customFields;
+        if (!customFields) {
+            return {};
+        }
+
+        return Object.fromEntries(
+            Object.entries(customFields).filter(([key]) => key !== 'media')
+        );
+    }
+
+    #buildDynamicFieldsPayload(
+        formData: Record<string, any>,
+        baseFields: string[]
+    ): Record<string, any> {
+        const dynamicFields: Record<string, any> = {};
+        const shouldClearLegacyMediaUid = !this.#hasSelectedMedia();
+
+        Object.keys(formData).forEach((key) => {
+            const value = formData[key];
+            const shouldSkipMediaUid = shouldClearLegacyMediaUid && key === 'mediaUid';
+
+            if (
+                baseFields.includes(key) ||
+                shouldSkipMediaUid ||
+                value === null ||
+                value === ''
+            ) {
+                return;
+            }
+
+            dynamicFields[key] = value;
+        });
+
+        return dynamicFields;
+    }
+
+    #resolveDynamicFieldsValue(
+        dynamicFields: Record<string, any>,
+        existingDynamicFields: Record<string, any>,
+        isEditMode: boolean
+    ): Record<string, any> | undefined {
+        if (Object.keys(dynamicFields).length > 0) {
+            return dynamicFields;
+        }
+
+        if (isEditMode && Object.keys(existingDynamicFields).length > 0) {
+            return {};
+        }
+
+        return undefined;
     }
 }

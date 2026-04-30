@@ -34,7 +34,7 @@ Executes a SQL script submitted in the request body.
 |--------|-----------|
 | `200 OK` | All statements succeeded (`status: "SUCCESS"`) |
 | `207 Multi-Status` | At least one statement failed (`status: "PARTIAL"`) |
-| `400 Bad Request` | Missing `-- #CRAFTIVE_IMPEX` marker |
+| `400 Bad Request` | Missing `-- #CRAFTIVE_IMPEX` marker, or script contains a MySQL conditional comment (`/*! ... */`) |
 | `500 Internal Server Error` | Unexpected execution error |
 
 **Response body** (`ApiResponse<ImpExResult>`):
@@ -169,7 +169,7 @@ UI flow:
 - **Statement whitelist:** DML writes are restricted to `INSERT` and `UPDATE`. DDL and destructive operations are blocked at the service layer regardless of role.
 - **Sensitive tables:** Updates/inserts targeting a configured deny-list of logical table names (e.g. identity and security tables) are rejected even when the SQL uses schema-qualified or backtick-quoted identifiers.
 - **Size limit:** `sqlContent` is capped at 100 000 characters (`@Size(max = 100_000)`).
-- **Error truncation:** JDBC error messages are truncated at 500 characters before being stored in `StatementResult.errorMessage`.
+- **Error sanitization (SEC-110):** Per-statement errors are classified by Spring `DataAccessException` subtype (`BadSqlGrammarException` → syntax, `DuplicateKeyException` → duplicate, `DataIntegrityViolationException` → constraint, generic `DataAccessException` → dataAccess) and returned as a localised category message. The MDC `correlationId` is appended as `(ref: <id>)` so operators can cross-reference the full stack trace in server logs. Raw JDBC messages (table names, column names, vendor error codes) never reach the client.
 - **Rate limiting:** Controller-level Resilience4j limits apply (see `application.yml`); multi-replica caveats remain an ops concern.
 
 ---
@@ -190,7 +190,7 @@ UI flow:
 
 When `status` is `"PARTIAL"`, inspect `results` where `success: false`:
 
-- `errorMessage` contains the truncated JDBC exception message.
+- `errorMessage` contains a localised category message (e.g. `"SQL syntax error"`, `"Duplicate key — record already exists"`) followed by `(ref: <correlationId>)`. The full JDBC detail is in the server log under that correlation ID.
 - Common cause: FK violation (referenced `uid` does not exist yet) — fix ordering of statements.
 - Blocked statement: `errorMessage` starts with `"Operation not allowed"` — remove or replace the statement.
 
@@ -243,15 +243,19 @@ The `base/` folder now contains only theme-neutral catalogs and optional non-the
 2. base/base_media_formats.sql           — system media format presets
 3. base/base_product_types.sql           — product types and attribute definitions
 4. theme/mulayim/mulayim_foundation.sql  — theme-owned page templates, template slots, shared chrome components, navigation
-5. [upload media via Admin UI]           — upload port-1.jpg through port-8.jpg, logo.png, logo-white.png
-6. theme/mulayim/portfolio_homepage.sql  — homepage IntroBannerBlock, PortfolioCardGrid, StatementCtaBlock, Section1-Section3 slot wiring, media UID alignment
-7. theme/mulayim/portfolio_page.sql      — /portfolio listing page hero and filterable 4-column grid
-8. theme/mulayim/portfolio_detail_pages.sql — all /portfolio/{slug} detail pages using PortfolioDetailPageTemplate and PortfolioDetailsComponent
+5. theme/mulayim/site_settings_technical.sql — Mulayim site settings + technical dashboard defaults (site_settings, site_technical_settings)
+6. [upload media via Admin UI]           — upload port-1.jpg through port-8.jpg, logo.png, logo-white.png
+7. theme/mulayim/portfolio_homepage.sql  — homepage IntroBannerBlock, PortfolioCardGrid, StatementCtaBlock, Section1-Section3 slot wiring, media UID alignment
+8. theme/mulayim/portfolio_page.sql      — /portfolio listing page hero and filterable 4-column grid
+9. theme/mulayim/portfolio_detail_pages.sql — all /portfolio/{slug} detail pages using PortfolioDetailPageTemplate and PortfolioDetailsComponent
+10. [upload brand logos via Admin UI]    — upload brand-1.jpg through brand-15.jpg (references logo wall assets); must complete before the next step so media UID alignment runs correctly
+11. theme/mulayim/references_page.sql    — /references landing page hero, 15-logo references wall, StatementCtaBlock reuse
 ```
 
 Mulayim foundation/homepage scripts include their required generic component type seeds. Running `base_component_types.sql` and `base_entry_field_definitions.sql` first is still safe, but not required for the Mulayim path.
 The Mulayim homepage intentionally defines only `Section1`, `Section2`, and `Section3`. Additional vertical content can be added by binding more components into an existing section slot with a higher `sort_order`.
 Mulayim also defines `PortfolioDetailPageTemplate` with a single `MainContent` slot for gallery-first project detail pages.
+Header and footer navigation links for `/references` are owned by `theme/mulayim/mulayim_foundation.sql`, so rerunning foundation after adding the references page keeps shell navigation in sync.
 
 Platform sample data (e.g. mail-marketing platform seeds) must be applied with **DBA / migration tooling** against `platform_management`, not via ImpEx in the application (ImpEx is tenant-scoped only).
 

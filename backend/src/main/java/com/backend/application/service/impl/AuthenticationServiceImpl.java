@@ -534,6 +534,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         if (refreshToken != null && !refreshToken.isBlank()) {
+            // SEC-007: validate signature and type before processing
+            if (!jwtProviderPort.validateToken(refreshToken) || !jwtProviderPort.isRefreshToken(refreshToken)) {
+                log.warn("Logout: invalid or non-refresh token supplied — revocation skipped");
+                return;
+            }
             try {
                 String tokenHash = hashRefreshToken(refreshToken);
                 String role = jwtProviderPort.getRoleFromToken(refreshToken);

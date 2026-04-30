@@ -66,9 +66,9 @@ Note:
 
 - The backend uses `/uid/{uid}` (not `/code/{code}`).
 
-File serving (public endpoint, still tenant-scoped by tenant resolution):
+File serving (tenant-scoped; authentication required for private files):
 
-- `GET /api/media/files/{fileName}`
+- `GET /api/media/files/{fileName}` — serves the file bytes. **Public media** (`isPublic = true`) is accessible without authentication. **Private media** (`isPublic = false`) requires a valid JWT; anonymous requests receive `403 Forbidden` (SEC-009). S3-stored files already have `externalUrl` and are never served through this endpoint.
 
 ## Public CMS delivery (tenant-scoped, no auth)
 
@@ -286,6 +286,9 @@ Run these checks after each stage/prod deploy:
 - Tenant resolution and request categorization is enforced by [`backend/src/main/java/com/backend/infrastructure/tenant/TenantFilter.java`](../../backend/src/main/java/com/backend/infrastructure/tenant/TenantFilter.java).
 - Admin endpoints require `TENANT_ADMIN` (`@PreAuthorize("hasRole('TENANT_ADMIN')")` at controller level).
 - Public delivery endpoints are unauthenticated but still tenant-scoped (tenant must be resolvable).
+- **Private media gating (SEC-009):** `GET /api/media/files/{fileName}` checks the `isPublic` flag on the `Media` entity. Unauthenticated requests to private files return `403 Forbidden`. Private files are intended for authenticated admin use; storefront themes should only reference public media.
+- **Upload content-type validation (SEC-111):** `POST /api/media` and `POST /api/media/composite` validate the uploaded file against its declared MIME type using magic-byte detection (`MediaStorageService`). A file whose actual byte signature does not match the declared content-type (e.g. a text file submitted as `image/jpeg`) is rejected with `400 Bad Request`. Allowed types: `image/png`, `image/jpeg`, `image/gif`, `image/webp`, `application/pdf`. SVG is not permitted through this path. `video/mp4` and `audio/mpeg` bypass magic-byte checks (offset-0 signature ambiguous) and are validated by MIME type alone.
+- **Upload error payloads:** On `400` validation failures for those endpoints, `ApiResponse` includes localized `message` and, when applicable, optional **`errorCode`** (stable string, values defined by [`MediaUploadErrorCode`](../../backend/src/main/java/com/backend/domain/enums/MediaUploadErrorCode.java), e.g. `CONTENT_MISMATCH`, `MIME_TYPE_NOT_ALLOWED`, `TRANSLATIONS_JSON_INVALID`). Unexpected server failures from the same handlers may omit `errorCode`; clients should rely on `message` for display.
 
 ## Implementation guide
 

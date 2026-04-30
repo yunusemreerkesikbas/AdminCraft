@@ -5,7 +5,8 @@ import java.util.Map;
 import com.backend.domain.enums.Language;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
 @Builder
@@ -15,5 +16,5 @@ public record UpdateComponentEntryCompositeRequest(
     String styleClasses,
     Long responsiveMediaId,
 
-    @NotEmpty(message = "At least one translation is required") @Valid Map<Language, EntryI18nRequest> translations) {
+    @NotNull(message = "{validation.component.entry.translations.notNull}") @Size(min = 1, message = "{validation.component.entry.translations.required}") @Valid Map<Language, EntryI18nUpdateCommand> translations) {
 }

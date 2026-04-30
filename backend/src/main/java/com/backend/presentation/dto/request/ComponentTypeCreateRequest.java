@@ -7,11 +7,11 @@ import static com.backend.shared.constants.ValidationConstants.COMPONENT_TYPE_CA
 import static com.backend.shared.constants.ValidationConstants.COMPONENT_TYPE_NAME_MAX_LENGTH;
 
 public record ComponentTypeCreateRequest(
-        @NotBlank(message = "validation.component.type.name.required")
-        @Size(max = COMPONENT_TYPE_NAME_MAX_LENGTH, message = "validation.component.type.name.size")
+        @NotBlank(message = "{validation.component.type.name.required}")
+        @Size(max = COMPONENT_TYPE_NAME_MAX_LENGTH, message = "{validation.component.type.name.size}")
         String name,
 
-        @Size(max = COMPONENT_TYPE_CATEGORY_MAX_LENGTH, message = "validation.component.type.category.size")
+        @Size(max = COMPONENT_TYPE_CATEGORY_MAX_LENGTH, message = "{validation.component.type.category.size}")
         String category,
 
         boolean navigationAware) {

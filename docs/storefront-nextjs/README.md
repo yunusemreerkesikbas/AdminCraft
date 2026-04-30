@@ -66,7 +66,7 @@ Maintenance mode is enforced at the edge in [`proxy.ts`](../../storefront-nextjs
 
 ### Hostname validation
 
-`proxy.ts` also enforces hostname isolation when `TENANT_HOSTNAME` env var is set. Requests whose `host` header does not match `TENANT_HOSTNAME` receive HTTP 404 immediately — before any CMS call. This prevents wildcard DNS rules (e.g. `*.craftive.io → same server`) from serving one tenant's storefront for another tenant's subdomain. Leave `TENANT_HOSTNAME` unset in local dev.
+`proxy.ts` also enforces hostname isolation when `TENANT_HOSTNAME` env var is set. Requests whose **public** host does not match `TENANT_HOSTNAME` receive HTTP 404 immediately — before any CMS call. The incoming host is taken from `X-Forwarded-Host` or `Host` (not only `nextUrl.hostname`) so Traefik/Docker reverse-proxy setups resolve the correct tenant. Leave `TENANT_HOSTNAME` unset in local dev.
 
 The maintenance page itself is rendered in the catch-all route:
 `app/[lang]/[[...slug]]/page.tsx`.

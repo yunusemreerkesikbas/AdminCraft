@@ -87,8 +87,9 @@ export interface EntryI18nDto {
 }
 
 export interface EntryI18nRequest {
-    title?: string;
-    description?: string;
+    title?: string | null;
+    description?: string | null;
+    dynamicFields?: Record<string, any> | null;
     [key: string]: any;  // For dynamic entry fields
 }
 

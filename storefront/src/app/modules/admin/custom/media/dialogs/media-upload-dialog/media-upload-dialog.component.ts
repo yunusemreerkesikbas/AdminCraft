@@ -9,6 +9,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TranslocoModule } from '@jsverse/transloco';
 import { LanguageResponse } from '@modules/admin/custom/tenants/tenants.types';
 import { SpaDialogBase } from '@shared/components/spa-dialog-base';
@@ -199,8 +200,8 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
 
                 if (failures.length > 0 && successes.length === 0) {
                     const failure = failures[0];
-                    const msg = failure?.error?.error?.message ?? failure?.error?.message;
-                    this.#notificationService.alert(msg);
+                    const apiMessage = this.#extractUploadErrorMessage(failure.error);
+                    this.#notificationService.alert(apiMessage ?? 'admin.media.messages.uploadErrorFallback');
                 }
 
                 this.isUploadingSig.set(false);
@@ -245,5 +246,18 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
             return false;
         }
         return true;
+    }
+
+    #extractUploadErrorMessage(err: unknown): string | undefined {
+        const httpErr = err as HttpErrorResponse | undefined;
+        const body = httpErr?.error;
+        if (typeof body === 'string' && body.trim().length > 0) {
+            return body.trim();
+        }
+        if (!body || typeof body !== 'object') {
+            return undefined;
+        }
+        const m = (body as { message?: unknown }).message;
+        return typeof m === 'string' && m.trim().length > 0 ? m : undefined;
     }
 }

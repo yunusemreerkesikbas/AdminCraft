@@ -2,6 +2,7 @@ export interface ApiResponse<T> {
   data: T;
   result: 'SUCCESS' | 'ERROR';
   message?: string;
+  errorCode?: string;
   code?: number;
   success?: boolean;
 }

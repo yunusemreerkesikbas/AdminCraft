@@ -2,11 +2,14 @@ package com.backend.application.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ import com.backend.domain.enums.UserRole;
 import com.backend.domain.exception.UserNotFoundException;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.UserRepository;
+import com.backend.shared.common.SecurityHelper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +39,7 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final OtpService otpService;
     private final TenantContextPort tenantContext;
+    private final SecurityHelper securityHelper;
 
     private String resolveFullName(String firstName, String lastName, String email) {
         boolean hasFirstName = firstName != null && !firstName.trim().isEmpty();
@@ -49,6 +54,22 @@ public class UserServiceImpl implements UserService {
             return lastName.trim();
         }
         return email;
+    }
+
+    private void assertCallerMayManageTenantRoles() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        if (securityHelper.isSuperAdmin()) {
+            return;
+        }
+        boolean tenantAdmin = auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_TENANT_ADMIN"::equals);
+        if (!tenantAdmin) {
+            throw new AccessDeniedException("Insufficient privilege");
+        }
     }
 
     @Override
@@ -120,8 +141,7 @@ public class UserServiceImpl implements UserService {
             });
             user.setEmail(input.email());
         }
-        if (input.role() != null)
-            user.setRole(input.role());
+        // role field intentionally ignored here — use updateUserRole() (SEC-109)
         if (input.firstName() != null)
             user.setFirstName(input.firstName());
         if (input.lastName() != null)
@@ -143,6 +163,23 @@ public class UserServiceImpl implements UserService {
         User updatedUser = userRepository.save(user);
         log.info("User updated successfully with ID: {}", updatedUser.getId());
         return updatedUser;
+    }
+
+    @Override
+    public void updateUserRole(Long id, UserRole role) {
+        assertCallerMayManageTenantRoles();
+        Long callerId = securityHelper.getCurrentUserIdOrNull();
+        if (Objects.equals(id, callerId)) {
+            throw new AccessDeniedException("Cannot change own role");
+        }
+        if (role == UserRole.SUPER_ADMIN) {
+            throw new AccessDeniedException(
+                    "SUPER_ADMIN role cannot be assigned via tenant API");
+        }
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        user.setRole(role);
+        userRepository.save(user);
+        log.info("Role updated to {} for user ID: {}", role, id);
     }
 
     @Override
@@ -341,12 +378,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void assignRole(Long userId, UserRole role) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        user.setRole(role);
-        userRepository.save(user);
-        log.info("Role {} assigned to user: {}", role, userId);
+        updateUserRole(userId, role);
     }
 
     @Override

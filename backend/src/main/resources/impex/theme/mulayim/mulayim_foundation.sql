@@ -272,11 +272,13 @@ JOIN (
   SELECT 'm1900001-0000-4000-8000-000000000001' AS uuid, 'LandingMainNavHomeEntry' AS uid, 'LandingMainNavNode' AS node_uid, '/' AS url, 0 AS sort_order
   UNION ALL SELECT 'm1900005-0000-4000-8000-000000000005', 'LandingMainNavAboutEntry', 'LandingMainNavNode', '/about', 1
   UNION ALL SELECT 'm1900007-0000-4000-8000-000000000007', 'LandingMainNavPortfolioEntry', 'LandingMainNavNode', '/portfolio', 2
-  UNION ALL SELECT 'm1900009-0000-4000-8000-000000000009', 'LandingMainNavContactEntry', 'LandingMainNavNode', '/contact', 3
+  UNION ALL SELECT 'm1900011-0000-4000-8000-000000000011', 'LandingMainNavReferencesEntry', 'LandingMainNavNode', '/references', 3
+  UNION ALL SELECT 'm1900009-0000-4000-8000-000000000009', 'LandingMainNavContactEntry', 'LandingMainNavNode', '/contact', 4
   UNION ALL SELECT 'm1900003-0000-4000-8000-000000000003', 'LandingFooterHomeEntry', 'LandingFooterNavNode', '/', 0
   UNION ALL SELECT 'm1900006-0000-4000-8000-000000000006', 'LandingFooterAboutEntry', 'LandingFooterNavNode', '/about', 1
   UNION ALL SELECT 'm1900008-0000-4000-8000-000000000008', 'LandingFooterPortfolioEntry', 'LandingFooterNavNode', '/portfolio', 2
-  UNION ALL SELECT 'm1900010-0000-4000-8000-000000000010', 'LandingFooterContactEntry', 'LandingFooterNavNode', '/contact', 3
+  UNION ALL SELECT 'm1900012-0000-4000-8000-000000000012', 'LandingFooterReferencesEntry', 'LandingFooterNavNode', '/references', 3
+  UNION ALL SELECT 'm1900010-0000-4000-8000-000000000010', 'LandingFooterContactEntry', 'LandingFooterNavNode', '/contact', 4
 ) data ON data.node_uid = n.uid
 ON DUPLICATE KEY UPDATE
   node_id = VALUES(node_id),
@@ -299,6 +301,8 @@ JOIN (
   UNION ALL SELECT 'm1950010-0000-4000-8000-000000000010', 'm1951010-0000-4000-8000-000000000010', 'LandingMainNavAboutEntry', 'EN', 'About'
   UNION ALL SELECT 'm1950013-0000-4000-8000-000000000013', 'm1951013-0000-4000-8000-000000000013', 'LandingMainNavPortfolioEntry', 'TR', 'Projeler'
   UNION ALL SELECT 'm1950014-0000-4000-8000-000000000014', 'm1951014-0000-4000-8000-000000000014', 'LandingMainNavPortfolioEntry', 'EN', 'Portfolio'
+  UNION ALL SELECT 'm1950021-0000-4000-8000-000000000021', 'm1951021-0000-4000-8000-000000000021', 'LandingMainNavReferencesEntry', 'TR', 'Referanslar'
+  UNION ALL SELECT 'm1950022-0000-4000-8000-000000000022', 'm1951022-0000-4000-8000-000000000022', 'LandingMainNavReferencesEntry', 'EN', 'References'
   UNION ALL SELECT 'm1950017-0000-4000-8000-000000000017', 'm1951017-0000-4000-8000-000000000017', 'LandingMainNavContactEntry', 'TR', 'İletişim'
   UNION ALL SELECT 'm1950018-0000-4000-8000-000000000018', 'm1951018-0000-4000-8000-000000000018', 'LandingMainNavContactEntry', 'EN', 'Contact'
   UNION ALL SELECT 'm1950005-0000-4000-8000-000000000005', 'm1951005-0000-4000-8000-000000000005', 'LandingFooterHomeEntry', 'TR', 'Anasayfa'
@@ -307,6 +311,8 @@ JOIN (
   UNION ALL SELECT 'm1950012-0000-4000-8000-000000000012', 'm1951012-0000-4000-8000-000000000012', 'LandingFooterAboutEntry', 'EN', 'About'
   UNION ALL SELECT 'm1950015-0000-4000-8000-000000000015', 'm1951015-0000-4000-8000-000000000015', 'LandingFooterPortfolioEntry', 'TR', 'Projeler'
   UNION ALL SELECT 'm1950016-0000-4000-8000-000000000016', 'm1951016-0000-4000-8000-000000000016', 'LandingFooterPortfolioEntry', 'EN', 'Portfolio'
+  UNION ALL SELECT 'm1950023-0000-4000-8000-000000000023', 'm1951023-0000-4000-8000-000000000023', 'LandingFooterReferencesEntry', 'TR', 'Referanslar'
+  UNION ALL SELECT 'm1950024-0000-4000-8000-000000000024', 'm1951024-0000-4000-8000-000000000024', 'LandingFooterReferencesEntry', 'EN', 'References'
   UNION ALL SELECT 'm1950019-0000-4000-8000-000000000019', 'm1951019-0000-4000-8000-000000000019', 'LandingFooterContactEntry', 'TR', 'İletişim'
   UNION ALL SELECT 'm1950020-0000-4000-8000-000000000020', 'm1951020-0000-4000-8000-000000000020', 'LandingFooterContactEntry', 'EN', 'Contact'
 ) data ON data.entry_uid = e.uid

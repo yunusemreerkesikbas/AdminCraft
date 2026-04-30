@@ -741,6 +741,8 @@ export const langEN = {
                 userNotIdentified: 'User not identified',
                 partialUploadWarning:
                     'Uploaded {{successCount}} files. Failed: {{failureCount}}',
+                uploadErrorFallback:
+                    'Upload failed and we could not read the server message. Check your connection and try again.',
                 folderCreated: 'Folder created successfully',
                 folderUpdated: 'Folder updated successfully',
                 folderDeleted: 'Folder deleted successfully',
