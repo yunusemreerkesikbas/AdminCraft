@@ -1,6 +1,5 @@
 package com.backend.presentation.controller;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -11,7 +10,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +52,7 @@ import com.backend.presentation.dto.response.MediaVariantResponse;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SortConfig;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SecurityHelper;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -87,6 +86,7 @@ public class MediaController {
         private final MediaContainerService containerService;
         private final MediaProcessingService processingService;
         private final MessageSource messageSource;
+        private final SecurityHelper securityHelper;
 
         private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
         private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
@@ -360,39 +360,6 @@ public class MediaController {
                                         "error.general");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
-                }
-        }
-
-        // ========== File Retrieval ==========
-
-        @GetMapping("/files/{fileName:.+}")
-        @PreAuthorize("permitAll()")
-        @Operation(summary = "Download media file", description = "Downloads the physical file content. Public endpoint for serving images.")
-        public ResponseEntity<byte[]> downloadFile(
-                        @Parameter(description = "File name (UUID)", required = true) @PathVariable("fileName") String fileName,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-                try {
-                        byte[] content = mediaService.getFileContent(fileName);
-
-                        Optional<Media> mediaOpt = mediaService.findByFileName(fileName);
-                        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-
-                        if (mediaOpt.isPresent() && mediaOpt.get().getMimeType() != null) {
-                                try {
-                                        mediaType = MediaType.parseMediaType(mediaOpt.get().getMimeType());
-                                } catch (Exception e) {
-                                        log.warn("Invalid mime type for file {}: {}", fileName, e.getMessage());
-                                }
-                        }
-
-                        // Cache for 30 days - media files are immutable (UUID-named)
-                        return ResponseEntity.ok()
-                                        .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
-                                        .contentType(mediaType)
-                                        .body(content);
-                } catch (Exception ex) {
-                        log.error("Error downloading file {}: {}", fileName, ex.getMessage(), ex);
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
                 }
         }
 

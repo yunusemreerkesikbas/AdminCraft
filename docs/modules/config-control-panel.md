@@ -214,6 +214,10 @@ Frontend session management:
 - Auth interceptor (`authInterceptor`) handles 401/403 on `/config/admin` endpoints by attempting a silent refresh before propagating the error
 - `X-Config-Refresh-Retry` header is appended to the retried request; if the retry also returns 401/403, the session is cleared and the error is propagated — preventing infinite loops
 
+## Rate limiting (SEC-105)
+
+`PATCH /api/config/admin/security/recaptcha` is protected by the `configAdmin` Resilience4j rate limiter (5 requests / 60 s, fail-fast). Exceeding the limit returns HTTP 429. This prevents an attacker who has obtained a `CONFIG_TENANT_ADMIN` token from disabling reCAPTCHA in a single burst.
+
 ## Security & tenant isolation
 
 Invariants:

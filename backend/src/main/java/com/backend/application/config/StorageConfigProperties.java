@@ -32,7 +32,8 @@ public class StorageConfigProperties {
       "image/webp",
       "application/pdf",
       "video/mp4",
-      "audio/mpeg");
+      "audio/mpeg",
+      "audio/mp3");
 
   private Set<String> blockedExtensions = Set.of(
       "exe", "bat", "cmd", "scr", "js", "vbs", "ps1", "sh");

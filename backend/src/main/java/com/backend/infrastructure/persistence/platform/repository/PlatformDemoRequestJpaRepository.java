@@ -1,5 +1,8 @@
 package com.backend.infrastructure.persistence.platform.repository;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,4 +26,6 @@ public interface PlatformDemoRequestJpaRepository extends JpaRepository<Platform
         )
         """)
     Page<PlatformDemoRequest> search(@Param("search") String search, Pageable pageable);
+
+    Optional<PlatformDemoRequest> findByUuid(String uuid);
 }

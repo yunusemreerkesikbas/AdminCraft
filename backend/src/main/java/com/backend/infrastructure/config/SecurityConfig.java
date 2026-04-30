@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,9 +27,11 @@ import com.backend.infrastructure.tenant.TenantFilter;
 public class SecurityConfig {
 
         private final CorsProperties corsProperties;
+        private final Environment env;
 
-        public SecurityConfig(CorsProperties corsProperties) {
+        public SecurityConfig(CorsProperties corsProperties, Environment env) {
                 this.corsProperties = corsProperties;
+                this.env = env;
         }
 
         @Bean
@@ -38,9 +42,26 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter,
                         TenantFilter tenantFilter) throws Exception {
+                boolean isDev = Arrays.asList(env.getActiveProfiles()).contains("dev");
+
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .headers(h -> {
+                                        h.frameOptions(fo -> fo.deny());
+                                        h.contentTypeOptions(cto -> {});
+                                        h.referrerPolicy(rp -> rp.policy(
+                                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
+                                        h.contentSecurityPolicy(csp -> csp.policyDirectives(
+                                                "default-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; "
+                                                        + "img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; "
+                                                        + "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"));
+                                        if (!isDev) {
+                                                h.httpStrictTransportSecurity(hsts -> hsts
+                                                        .includeSubDomains(true)
+                                                        .maxAgeInSeconds(31_536_000));
+                                        }
+                                })
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
