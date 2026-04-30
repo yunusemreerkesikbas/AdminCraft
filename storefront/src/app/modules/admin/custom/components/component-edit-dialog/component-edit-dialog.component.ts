@@ -404,7 +404,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             };
         });
 
-        return hasAnyTranslationContent
+        return Object.keys(translations).length > 0
             ? translations
             : ({} as Record<Language, ComponentI18nRequest>);
     }
@@ -414,10 +414,8 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
     }
 
     #getExistingTranslation(lang: string) {
-        return (
-            this.data?.component?.translations?.[lang] ??
-            this.data?.component?.translations?.[lang.toUpperCase()]
-        );
+        const key = lang.toUpperCase();
+        return this.data?.component?.translations?.[key];
     }
 
     #resolveResponsiveMediaIdForComposite(

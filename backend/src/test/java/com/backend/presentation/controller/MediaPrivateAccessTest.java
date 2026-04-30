@@ -23,6 +23,7 @@ import com.backend.application.service.MediaProcessingService;
 import com.backend.application.service.MediaService;
 import com.backend.domain.entity.Media;
 import com.backend.shared.common.SecurityHelper;
+import jakarta.validation.Validator;
 
 /**
  * SEC-009: verifies that private media files require authentication.
@@ -36,6 +37,7 @@ class MediaPrivateAccessTest {
     @Mock private MediaProcessingService processingService;
     @Mock private MessageSource messageSource;
     @Mock private SecurityHelper securityHelper;
+    @Mock private Validator validator;
 
     private MockMvc mockMvc;
 
@@ -43,8 +45,17 @@ class MediaPrivateAccessTest {
     void setUp() {
         MediaController controller = new MediaController(
                 mediaService, i18nService, containerService,
-                processingService, messageSource, securityHelper, new ObjectMapper());
+                processingService, messageSource, securityHelper, new ObjectMapper(), validator);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    @Test
+    @DisplayName("No DB record → 404")
+    void noDbRecord_404() throws Exception {
+        when(mediaService.findByFileName("ghost.png")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/media/files/ghost.png"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

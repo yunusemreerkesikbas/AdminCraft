@@ -248,13 +248,13 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
         return true;
     }
 
-    /**
-     * Reads ApiResponse.message from an Http error body (multipart upload returns structured JSON).
-     */
     #extractUploadErrorMessage(err: unknown): string | undefined {
         const httpErr = err as HttpErrorResponse | undefined;
         const body = httpErr?.error;
-        if (!body || typeof body !== 'object' || body === null) {
+        if (typeof body === 'string' && body.trim().length > 0) {
+            return body.trim();
+        }
+        if (!body || typeof body !== 'object') {
             return undefined;
         }
         const m = (body as { message?: unknown }).message;

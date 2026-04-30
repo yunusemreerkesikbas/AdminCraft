@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -66,17 +67,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Media controller for managing media files.
- * Phase 1-4 implementation with CRUD, i18n, and detail operations.
- */
 @RestController
 @RequestMapping("/media")
 @RequiredArgsConstructor
@@ -93,6 +92,7 @@ public class MediaController {
         private final MessageSource messageSource;
         private final SecurityHelper securityHelper;
         private final ObjectMapper objectMapper;
+        private final Validator validator;
 
         private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
         private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
@@ -145,6 +145,16 @@ public class MediaController {
                                 translations = objectMapper.readValue(translationsJson,
                                                 new TypeReference<>() {
                                                 });
+                                Locale locale = Locale.forLanguageTag(languageCode);
+                                for (MediaI18nRequest i18n : translations.values()) {
+                                        Set<ConstraintViolation<MediaI18nRequest>> violations = validator.validate(i18n);
+                                        if (!violations.isEmpty()) {
+                                                String msgKey = violations.iterator().next().getMessage();
+                                                String resolvedMsg = messageSource.getMessage(msgKey, null, locale);
+                                                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                                                .body(ApiResponse.error(resolvedMsg));
+                                        }
+                                }
                         }
 
                         Media media = mediaService.uploadComposite(file, uploadedBy, translations);
@@ -220,10 +230,6 @@ public class MediaController {
                 }
         }
 
-        /**
-         * Get all media with optional pagination, sorting, and search.
-         * Returns lightweight MediaListResponse with sortConfig for dynamic sort UI.
-         */
         @GetMapping
         @Operation(summary = "List all media", description = "Retrieves a paginated list of all media files with minimal data for grid display. Supports search across originalName and mimeType.")
         public ResponseEntity<ApiResponse<PageableResponse<MediaListResponse>>> getAllMedia(
@@ -269,9 +275,6 @@ public class MediaController {
                 }
         }
 
-        /**
-         * Update media metadata (public flag, tags).
-         */
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}")
         @Operation(summary = "Update media metadata", description = "Updates media properties like public status and tags.")
@@ -387,21 +390,20 @@ public class MediaController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         Optional<Media> mediaOpt = mediaService.findByFileName(fileName);
-                        if (mediaOpt.isPresent()) {
-                                Media media = mediaOpt.get();
-                                if (!Boolean.TRUE.equals(media.getIsPublic())
-                                                && !securityHelper.isAuthenticated()) {
-                                        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                                }
+                        if (mediaOpt.isEmpty()) {
+                                return ResponseEntity.notFound().build();
+                        }
+                        Media media = mediaOpt.get();
+                        if (!Boolean.TRUE.equals(media.getIsPublic()) && !securityHelper.isAuthenticated()) {
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
                         }
 
                         byte[] content = mediaService.getFileContent(fileName);
 
                         MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-
-                        if (mediaOpt.isPresent() && mediaOpt.get().getMimeType() != null) {
+                        if (media.getMimeType() != null) {
                                 try {
-                                        mediaType = MediaType.parseMediaType(mediaOpt.get().getMimeType());
+                                        mediaType = MediaType.parseMediaType(media.getMimeType());
                                 } catch (Exception e) {
                                         log.warn("Invalid mime type for file {}: {}", fileName, e.getMessage());
                                 }
@@ -420,9 +422,6 @@ public class MediaController {
 
         // ========== i18n Operations ==========
 
-        /**
-         * Get i18n metadata for a media file.
-         */
         @GetMapping("/{id}/i18n/{language}")
         @Operation(summary = "Get media i18n", description = "Retrieves localized metadata (title, alt text, description) for a language.")
         public ResponseEntity<ApiResponse<MediaI18nResponse>> getI18n(
@@ -751,7 +750,7 @@ public class MediaController {
                                         MAX_FILE_SIZE / 1024 / 1024);
                 }
                 String contentType = file.getContentType();
-                if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+                if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
                         throw new MediaUploadValidationException(MediaUploadErrorCode.MIME_TYPE_NOT_ALLOWED,
                                         contentType);
                 }
@@ -759,7 +758,7 @@ public class MediaController {
                 if (originalFilename == null || originalFilename.trim().isEmpty()) {
                         throw new MediaUploadValidationException(MediaUploadErrorCode.FILENAME_REQUIRED);
                 }
-                String filename = originalFilename.toLowerCase();
+                String filename = originalFilename.toLowerCase(Locale.ROOT);
                 if (filename.contains("..") || filename.contains("/") || filename.contains("\\") ||
                                 filename.endsWith(".exe") || filename.endsWith(".bat") || filename.endsWith(".cmd") ||
                                 filename.endsWith(".scr") || filename.endsWith(".js") || filename.endsWith(".vbs")) {

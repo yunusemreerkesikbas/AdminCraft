@@ -5,9 +5,6 @@ import java.util.List;
 
 import com.backend.domain.enums.MediaUploadErrorCode;
 
-/**
- * Validation failure for media upload; carries a stable {@link MediaUploadErrorCode} for i18n mapping.
- */
 public final class MediaUploadValidationException extends IllegalArgumentException {
 
     private static final long serialVersionUID = 1L;
@@ -19,19 +16,10 @@ public final class MediaUploadValidationException extends IllegalArgumentExcepti
         this(errorCode, List.of());
     }
 
-    /**
-     * Preferred when args may be dynamic length (avoid varargs/Object[] ambiguity).
-     */
     public MediaUploadValidationException(MediaUploadErrorCode errorCode, List<Object> messageArgsList) {
-        super(toDebugMessage(errorCode, normalizeList(messageArgsList)));
-        this.errorCode = errorCode;
-        Object[] normalized = normalizeList(messageArgsList);
-        this.messageArgs = normalized;
+        this(errorCode, normalizeList(messageArgsList));
     }
 
-    /**
-     * Convenience for small call sites ({@code MIME_TYPE_NOT_ALLOWED} with one MIME, etc.).
-     */
     public MediaUploadValidationException(MediaUploadErrorCode errorCode, Object... messageArgs) {
         super(toDebugMessage(errorCode, copyVarargs(messageArgs)));
         this.errorCode = errorCode;

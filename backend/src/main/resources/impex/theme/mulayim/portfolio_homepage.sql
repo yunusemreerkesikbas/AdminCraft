@@ -1,4 +1,8 @@
 -- #CRAFTIVE_IMPEX
+SET NAMES 'utf8mb4';
+SET character_set_client = utf8mb4;
+SET character_set_connection = utf8mb4;
+SET character_set_results = utf8mb4;
 -- Mulayim portfolio homepage seed.
 -- Run via Admin UI /{lang}/impex after theme/mulayim/mulayim_foundation.sql and after media uploads.
 -- Seeds the homepage body using the portfolio-grid-col-4 source layout.
@@ -226,44 +230,44 @@ INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, descript
 SELECT seed.uuid, seed.uid, e.id, seed.language, seed.title, seed.description, 'PUBLISHED', seed.custom_data, NOW(), NOW(), NOW()
 FROM (
   SELECT 'f6400001-0000-4000-8000-000000000001' AS uuid, 'PortfolioCard01Tr' AS uid, 'PortfolioCard01' AS entry_uid, 'TR' AS language, 'Babil Sanat Logo & Kurumsal Kimlik' AS title, 'Logo Tasarım ve Kurumsal Kimlik' AS description,
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Kurumsal Kimlik', 'altText', 'Babil Sanat için hazırlanan logo ve kurumsal kimlik tasarimi') AS custom_data
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Kurumsal Kimlik', 'altText', 'Babil Sanat için hazırlanan logo ve kurumsal kimlik tasarimi', 'ariaLabel', '') AS custom_data
   UNION ALL SELECT 'f6400002-0000-4000-8000-000000000002', 'PortfolioCard01En', 'PortfolioCard01', 'EN', 'Babil Sanat Logo & Corporate Identity', 'Logo and Corporate Identity',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Identity', 'altText', 'Logo and brand identity design created for Babil Sanat')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Identity', 'altText', 'Logo and brand identity design created for Babil Sanat', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400003-0000-4000-8000-000000000003', 'PortfolioCard02Tr', 'PortfolioCard02', 'TR', 'Tufanlar Tohumculuk Logo', 'Logo Tasarımı',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'linkUrl', '/portfolio/tufanlar-tohumculuk-logo', 'category', 'Logo Tasarımı', 'altText', 'Tufanlar Tohumculuk marka kimligini guclendiren logo tasarimi')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'linkUrl', '/portfolio/tufanlar-tohumculuk-logo', 'category', 'Logo Tasarımı', 'altText', 'Tufanlar Tohumculuk marka kimligini guclendiren logo tasarimi', 'ariaLabel', '')
   UNION ALL SELECT 'f6400004-0000-4000-8000-000000000004', 'PortfolioCard02En', 'PortfolioCard02', 'EN', 'Tufanlar Tohumculuk Logo', 'Logo Design',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'linkUrl', '/portfolio/tufanlar-tohumculuk-logo', 'category', 'Logo Design', 'altText', 'Logo design for Tufanlar Tohumculuk brand')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'linkUrl', '/portfolio/tufanlar-tohumculuk-logo', 'category', 'Logo Design', 'altText', 'Logo design for Tufanlar Tohumculuk brand', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400005-0000-4000-8000-000000000005', 'PortfolioCard03Tr', 'PortfolioCard03', 'TR', 'Kns Dış Ticaret Danışmanlık Logo', 'Logo Tasarımı',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/kns-dis-ticaret-danismanlik-logo', 'category', 'Logo Tasarımı', 'altText', 'Kns Dis Ticaret Danismanlik icin tasarlanan logo calismasi')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/kns-dis-ticaret-danismanlik-logo', 'category', 'Logo Tasarımı', 'altText', 'Kns Dis Ticaret Danismanlik icin tasarlanan logo calismasi', 'ariaLabel', '')
   UNION ALL SELECT 'f6400006-0000-4000-8000-000000000006', 'PortfolioCard03En', 'PortfolioCard03', 'EN', 'Kns Foreign Trade Consultancy Logo', 'Logo Design',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/kns-dis-ticaret-danismanlik-logo', 'category', 'Logo Design', 'altText', 'Logo design created for Kns Foreign Trade Consultancy')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/kns-dis-ticaret-danismanlik-logo', 'category', 'Logo Design', 'altText', 'Logo design created for Kns Foreign Trade Consultancy', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400007-0000-4000-8000-000000000007', 'PortfolioCard04Tr', 'PortfolioCard04', 'TR', 'Armin Besi Logo', 'Yalin ve ayirt edici logo tasarimi',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/armin-besi-logo', 'category', 'Logo Tasarımı', 'altText', 'Armin Besi markasi icin gelistirilen logo tasarimi')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/armin-besi-logo', 'category', 'Logo Tasarımı', 'altText', 'Armin Besi markasi icin gelistirilen logo tasarimi', 'ariaLabel', '')
   UNION ALL SELECT 'f6400008-0000-4000-8000-000000000008', 'PortfolioCard04En', 'PortfolioCard04', 'EN', 'Armin Besi Logo', 'Logo Design',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/armin-besi-logo', 'category', 'Logo Design', 'altText', 'Logo design developed for Armin Besi')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/armin-besi-logo', 'category', 'Logo Design', 'altText', 'Logo design developed for Armin Besi', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400009-0000-4000-8000-000000000009', 'PortfolioCard05Tr', 'PortfolioCard05', 'TR', 'Işık Ticaret Askeri Malzeme Logo', 'Mevcut markayi guclendiren logo revizyonu',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/isik-ticaret-askeri-malzeme-logo', 'category', 'Logo Tasarımı', 'altText', 'Isik Ticaret markasi icin uygulanan logo revizyonu')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/isik-ticaret-askeri-malzeme-logo', 'category', 'Logo Tasarımı', 'altText', 'Isik Ticaret markasi icin uygulanan logo revizyonu', 'ariaLabel', '')
   UNION ALL SELECT 'f6400010-0000-4000-8000-000000000010', 'PortfolioCard05En', 'PortfolioCard05', 'EN', 'Işık Ticaret Military Equipment Logo', 'Logo Refresh',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/isik-ticaret-askeri-malzeme-logo', 'category', 'Logo Design', 'altText', 'Logo refresh project for Isik Ticaret')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/isik-ticaret-askeri-malzeme-logo', 'category', 'Logo Design', 'altText', 'Logo refresh project for Isik Ticaret', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400011-0000-4000-8000-000000000011', 'PortfolioCard06Tr', 'PortfolioCard06', 'TR', 'Köktaş İnşaat Logo ve Kartvizit', 'Sahada guven veren logo ve kartvizit tasarimi',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/koktas-i-nsaat-logo-ve-kartvizit', 'category', 'Kurumsal Kimlik', 'altText', 'Koktas Insaat icin hazirlanan logo ve kartvizit tasarimi')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/koktas-i-nsaat-logo-ve-kartvizit', 'category', 'Kurumsal Kimlik', 'altText', 'Koktas Insaat icin hazirlanan logo ve kartvizit tasarimi', 'ariaLabel', '')
   UNION ALL SELECT 'f6400012-0000-4000-8000-000000000012', 'PortfolioCard06En', 'PortfolioCard06', 'EN', 'Köktaş İnşaat Logo and Business Card', 'Logo and Business Card',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/koktas-i-nsaat-logo-ve-kartvizit', 'category', 'Corporate Identity', 'altText', 'Logo and business card design for Koktas Insaat')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/koktas-i-nsaat-logo-ve-kartvizit', 'category', 'Corporate Identity', 'altText', 'Logo and business card design for Koktas Insaat', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400013-0000-4000-8000-000000000013', 'PortfolioCard07Tr', 'PortfolioCard07', 'TR', 'Hasça Kuruyemiş - Kahve Logo Tasarımı', 'Raflarda ayirt edilen logo tasarimi',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/hasca-kuruyemis-kahve-logo-tasarimi', 'category', 'Logo Tasarımı', 'altText', 'Hasca Kuruyemis Kahve markasi icin logo tasarimi')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/hasca-kuruyemis-kahve-logo-tasarimi', 'category', 'Logo Tasarımı', 'altText', 'Hasca Kuruyemis Kahve markasi icin logo tasarimi', 'ariaLabel', '')
   UNION ALL SELECT 'f6400014-0000-4000-8000-000000000014', 'PortfolioCard07En', 'PortfolioCard07', 'EN', 'Hasça Nuts and Coffee Logo Design', 'Logo Design',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/hasca-kuruyemis-kahve-logo-tasarimi', 'category', 'Logo Design', 'altText', 'Logo design project for Hasca Nuts and Coffee')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/hasca-kuruyemis-kahve-logo-tasarimi', 'category', 'Logo Design', 'altText', 'Logo design project for Hasca Nuts and Coffee', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400015-0000-4000-8000-000000000015', 'PortfolioCard08Tr', 'PortfolioCard08', 'TR', 'Şen Turistik Logo Tasarımı', 'Turizm markasi icin guven veren logo kurgusu',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Tasarımı', 'altText', 'Sen Turistik markasi icin hazirlanan logo tasarimi')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Tasarımı', 'altText', 'Sen Turistik markasi icin hazirlanan logo tasarimi', 'ariaLabel', '')
   UNION ALL SELECT 'f6400016-0000-4000-8000-000000000016', 'PortfolioCard08En', 'PortfolioCard08', 'EN', 'Şen Turistik Logo Design', 'Logo Design',
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Design', 'altText', 'Logo design for Sen Turistik')
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Design', 'altText', 'Logo design for Sen Turistik', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400017-0000-4000-8000-000000000017', 'StatementCtaActionTr', 'StatementCtaAction', 'TR', NULL, NULL,
     JSON_OBJECT('buttonText', 'İletişime Geç', 'buttonUrl', '/contact')

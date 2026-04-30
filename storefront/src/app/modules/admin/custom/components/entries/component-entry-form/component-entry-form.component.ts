@@ -194,8 +194,8 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
     protected buildI18nForm(lang: string): FormGroup {
         const translation = this.#getExistingTranslation(lang);
         return this.fb.group({
-            title: [translation?.title || ''],
-            description: [translation?.description || ''],
+            title: [translation?.title ?? null],
+            description: [translation?.description ?? null],
         });
     }
 
@@ -364,7 +364,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             };
         });
 
-        return hasAnyTranslationContent ? translations : {};
+        return Object.keys(translations).length > 0 ? translations : {};
     }
 
     #hasSelectedMedia(): boolean {

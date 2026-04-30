@@ -73,9 +73,10 @@ public final class ComponentI18nUpdateCommand {
         if (fieldNode == null || fieldNode.isNull()) {
             return null;
         }
-
-        String value = fieldNode.asText();
-        String trimmed = value == null ? null : value.trim();
-        return trimmed == null ? null : (trimmed.isEmpty() ? "" : trimmed);
+        if (!fieldNode.isTextual()) {
+            return null;
+        }
+        String trimmed = fieldNode.textValue().trim();
+        return trimmed.isEmpty() ? "" : trimmed;
     }
 }

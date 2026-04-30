@@ -1,20 +1,15 @@
 package com.backend.application.dto.request;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.validation.constraints.Size;
 
 public final class EntryI18nUpdateCommand {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
-    };
 
     @Size(max = 255, message = "{validation.component.entry.title.size}")
     private final String title;
@@ -76,27 +71,52 @@ public final class EntryI18nUpdateCommand {
         if (!hasField(node, fieldName)) {
             return null;
         }
-
         JsonNode fieldNode = node.get(fieldName);
         if (fieldNode == null || fieldNode.isNull()) {
             return null;
         }
-
-        String value = fieldNode.asText();
-        String trimmed = value == null ? null : value.trim();
-        return trimmed == null ? null : (trimmed.isEmpty() ? "" : trimmed);
+        if (!fieldNode.isTextual()) {
+            throw new IllegalArgumentException(
+                    "Field '" + fieldName + "' must be a string, got: " + fieldNode.getNodeType());
+        }
+        String trimmed = fieldNode.textValue().trim();
+        return trimmed.isEmpty() ? "" : trimmed;
     }
 
     private static Map<String, Object> readMapField(JsonNode node, String fieldName) {
         if (!hasField(node, fieldName)) {
             return null;
         }
-
         JsonNode fieldNode = node.get(fieldName);
         if (fieldNode == null || fieldNode.isNull()) {
             return null;
         }
+        if (!fieldNode.isObject()) {
+            throw new IllegalArgumentException(
+                    "Field '" + fieldName + "' must be an object, got: " + fieldNode.getNodeType());
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        fieldNode.fields().forEachRemaining(entry -> result.put(entry.getKey(), toJavaValue(entry.getValue())));
+        return result;
+    }
 
-        return OBJECT_MAPPER.convertValue(fieldNode, MAP_TYPE);
+    private static Object toJavaValue(JsonNode node) {
+        if (node == null || node.isNull()) return null;
+        if (node.isTextual()) return node.textValue();
+        if (node.isBoolean()) return node.booleanValue();
+        if (node.isInt()) return node.intValue();
+        if (node.isLong()) return node.longValue();
+        if (node.isDouble() || node.isFloat()) return node.doubleValue();
+        if (node.isObject()) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            node.fields().forEachRemaining(e -> map.put(e.getKey(), toJavaValue(e.getValue())));
+            return map;
+        }
+        if (node.isArray()) {
+            java.util.List<Object> list = new java.util.ArrayList<>();
+            node.forEach(item -> list.add(toJavaValue(item)));
+            return list;
+        }
+        return node.asText();
     }
 }

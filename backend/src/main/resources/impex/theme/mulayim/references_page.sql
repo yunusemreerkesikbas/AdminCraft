@@ -1,4 +1,8 @@
 -- #CRAFTIVE_IMPEX
+SET NAMES 'utf8mb4';
+SET character_set_client = utf8mb4;
+SET character_set_connection = utf8mb4;
+SET character_set_results = utf8mb4;
 -- Mulayim references page seed.
 -- Run via Admin UI /{lang}/impex after theme/mulayim/mulayim_foundation.sql.
 -- Seeds the /references landing page with a dedicated hero, references logo wall and shared statement CTA.
@@ -11,7 +15,7 @@
 
 INSERT INTO component_types (uuid, uid, name, category, is_navigation_aware, created_at, updated_at)
 VALUES
-  (UUID(), 'ReferencesHeroComponent', 'References Hero', 'hero', FALSE, NOW(), NOW()),
+  (UUID(), 'SimpleBannerComponent', 'Banner', 'hero', FALSE, NOW(), NOW()),
   (UUID(), 'ReferencesGridComponent', 'References Grid', 'content', FALSE, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
@@ -22,6 +26,16 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 -- 2. ENTRY FIELD DEFINITIONS
 -- ============================================================
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'imageUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'SimpleBannerComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'linkUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'SimpleBannerComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 
 INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
 SELECT ct.id, 'mediaUid', 'TEXT', NOW()
@@ -134,7 +148,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
 SELECT seed.uuid, seed.uid, ct.id, seed.name, seed.display_order, TRUE, seed.style_classes, 'PUBLISHED', NOW(), NOW()
 FROM (
-  SELECT 'r7100001-0000-4000-8000-000000000001' AS uuid, 'ReferencesPageHeroBlock' AS uid, 'ReferencesHeroComponent' AS component_type_uid, 'Mulayim References Hero' AS name, 0 AS display_order, 'references-hero' AS style_classes
+  SELECT 'r7100001-0000-4000-8000-000000000001' AS uuid, 'ReferencesPageHeroBlock' AS uid, 'SimpleBannerComponent' AS component_type_uid, 'Mulayim References Hero' AS name, 0 AS display_order, NULL AS style_classes
   UNION ALL
   SELECT 'r7100002-0000-4000-8000-000000000002', 'ReferencesPageGrid', 'ReferencesGridComponent', 'Mulayim References Grid', 0, 'references-grid'
 ) seed
@@ -234,36 +248,36 @@ FROM (
     NULL,
     JSON_OBJECT()
 
-  UNION ALL SELECT 'r7130003-0000-4000-8000-000000000003', 'ReferencesLogo01Tr', 'ReferencesLogo01', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-01', 'altText', 'Referans logo 1')
-  UNION ALL SELECT 'r7130004-0000-4000-8000-000000000004', 'ReferencesLogo01En', 'ReferencesLogo01', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-01', 'altText', 'Reference logo 1')
-  UNION ALL SELECT 'r7130005-0000-4000-8000-000000000005', 'ReferencesLogo02Tr', 'ReferencesLogo02', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-02', 'altText', 'Referans logo 2')
-  UNION ALL SELECT 'r7130006-0000-4000-8000-000000000006', 'ReferencesLogo02En', 'ReferencesLogo02', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-02', 'altText', 'Reference logo 2')
-  UNION ALL SELECT 'r7130007-0000-4000-8000-000000000007', 'ReferencesLogo03Tr', 'ReferencesLogo03', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-03', 'altText', 'Referans logo 3')
-  UNION ALL SELECT 'r7130008-0000-4000-8000-000000000008', 'ReferencesLogo03En', 'ReferencesLogo03', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-03', 'altText', 'Reference logo 3')
-  UNION ALL SELECT 'r7130009-0000-4000-8000-000000000009', 'ReferencesLogo04Tr', 'ReferencesLogo04', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-04', 'altText', 'Referans logo 4')
-  UNION ALL SELECT 'r7130010-0000-4000-8000-000000000010', 'ReferencesLogo04En', 'ReferencesLogo04', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-04', 'altText', 'Reference logo 4')
-  UNION ALL SELECT 'r7130011-0000-4000-8000-000000000011', 'ReferencesLogo05Tr', 'ReferencesLogo05', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-05', 'altText', 'Referans logo 5')
-  UNION ALL SELECT 'r7130012-0000-4000-8000-000000000012', 'ReferencesLogo05En', 'ReferencesLogo05', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-05', 'altText', 'Reference logo 5')
-  UNION ALL SELECT 'r7130013-0000-4000-8000-000000000013', 'ReferencesLogo06Tr', 'ReferencesLogo06', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-06', 'altText', 'Referans logo 6')
-  UNION ALL SELECT 'r7130014-0000-4000-8000-000000000014', 'ReferencesLogo06En', 'ReferencesLogo06', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-06', 'altText', 'Reference logo 6')
-  UNION ALL SELECT 'r7130015-0000-4000-8000-000000000015', 'ReferencesLogo07Tr', 'ReferencesLogo07', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-07', 'altText', 'Referans logo 7')
-  UNION ALL SELECT 'r7130016-0000-4000-8000-000000000016', 'ReferencesLogo07En', 'ReferencesLogo07', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-07', 'altText', 'Reference logo 7')
-  UNION ALL SELECT 'r7130017-0000-4000-8000-000000000017', 'ReferencesLogo08Tr', 'ReferencesLogo08', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-08', 'altText', 'Referans logo 8')
-  UNION ALL SELECT 'r7130018-0000-4000-8000-000000000018', 'ReferencesLogo08En', 'ReferencesLogo08', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-08', 'altText', 'Reference logo 8')
-  UNION ALL SELECT 'r7130019-0000-4000-8000-000000000019', 'ReferencesLogo09Tr', 'ReferencesLogo09', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-09', 'altText', 'Referans logo 9')
-  UNION ALL SELECT 'r7130020-0000-4000-8000-000000000020', 'ReferencesLogo09En', 'ReferencesLogo09', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-09', 'altText', 'Reference logo 9')
-  UNION ALL SELECT 'r7130021-0000-4000-8000-000000000021', 'ReferencesLogo10Tr', 'ReferencesLogo10', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-10', 'altText', 'Referans logo 10')
-  UNION ALL SELECT 'r7130022-0000-4000-8000-000000000022', 'ReferencesLogo10En', 'ReferencesLogo10', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-10', 'altText', 'Reference logo 10')
-  UNION ALL SELECT 'r7130023-0000-4000-8000-000000000023', 'ReferencesLogo11Tr', 'ReferencesLogo11', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-11', 'altText', 'Referans logo 11')
-  UNION ALL SELECT 'r7130024-0000-4000-8000-000000000024', 'ReferencesLogo11En', 'ReferencesLogo11', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-11', 'altText', 'Reference logo 11')
-  UNION ALL SELECT 'r7130025-0000-4000-8000-000000000025', 'ReferencesLogo12Tr', 'ReferencesLogo12', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-12', 'altText', 'Referans logo 12')
-  UNION ALL SELECT 'r7130026-0000-4000-8000-000000000026', 'ReferencesLogo12En', 'ReferencesLogo12', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-12', 'altText', 'Reference logo 12')
-  UNION ALL SELECT 'r7130027-0000-4000-8000-000000000027', 'ReferencesLogo13Tr', 'ReferencesLogo13', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-13', 'altText', 'Referans logo 13')
-  UNION ALL SELECT 'r7130028-0000-4000-8000-000000000028', 'ReferencesLogo13En', 'ReferencesLogo13', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-13', 'altText', 'Reference logo 13')
-  UNION ALL SELECT 'r7130029-0000-4000-8000-000000000029', 'ReferencesLogo14Tr', 'ReferencesLogo14', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-14', 'altText', 'Referans logo 14')
-  UNION ALL SELECT 'r7130030-0000-4000-8000-000000000030', 'ReferencesLogo14En', 'ReferencesLogo14', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-14', 'altText', 'Reference logo 14')
-  UNION ALL SELECT 'r7130031-0000-4000-8000-000000000031', 'ReferencesLogo15Tr', 'ReferencesLogo15', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-15', 'altText', 'Referans logo 15')
-  UNION ALL SELECT 'r7130032-0000-4000-8000-000000000032', 'ReferencesLogo15En', 'ReferencesLogo15', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-15', 'altText', 'Reference logo 15')
+  UNION ALL SELECT 'r7130003-0000-4000-8000-000000000003', 'ReferencesLogo01Tr', 'ReferencesLogo01', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-01', 'altText', '')
+  UNION ALL SELECT 'r7130004-0000-4000-8000-000000000004', 'ReferencesLogo01En', 'ReferencesLogo01', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-01', 'altText', '')
+  UNION ALL SELECT 'r7130005-0000-4000-8000-000000000005', 'ReferencesLogo02Tr', 'ReferencesLogo02', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-02', 'altText', '')
+  UNION ALL SELECT 'r7130006-0000-4000-8000-000000000006', 'ReferencesLogo02En', 'ReferencesLogo02', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-02', 'altText', '')
+  UNION ALL SELECT 'r7130007-0000-4000-8000-000000000007', 'ReferencesLogo03Tr', 'ReferencesLogo03', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-03', 'altText', '')
+  UNION ALL SELECT 'r7130008-0000-4000-8000-000000000008', 'ReferencesLogo03En', 'ReferencesLogo03', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-03', 'altText', '')
+  UNION ALL SELECT 'r7130009-0000-4000-8000-000000000009', 'ReferencesLogo04Tr', 'ReferencesLogo04', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-04', 'altText', '')
+  UNION ALL SELECT 'r7130010-0000-4000-8000-000000000010', 'ReferencesLogo04En', 'ReferencesLogo04', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-04', 'altText', '')
+  UNION ALL SELECT 'r7130011-0000-4000-8000-000000000011', 'ReferencesLogo05Tr', 'ReferencesLogo05', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-05', 'altText', '')
+  UNION ALL SELECT 'r7130012-0000-4000-8000-000000000012', 'ReferencesLogo05En', 'ReferencesLogo05', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-05', 'altText', '')
+  UNION ALL SELECT 'r7130013-0000-4000-8000-000000000013', 'ReferencesLogo06Tr', 'ReferencesLogo06', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-06', 'altText', '')
+  UNION ALL SELECT 'r7130014-0000-4000-8000-000000000014', 'ReferencesLogo06En', 'ReferencesLogo06', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-06', 'altText', '')
+  UNION ALL SELECT 'r7130015-0000-4000-8000-000000000015', 'ReferencesLogo07Tr', 'ReferencesLogo07', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-07', 'altText', '')
+  UNION ALL SELECT 'r7130016-0000-4000-8000-000000000016', 'ReferencesLogo07En', 'ReferencesLogo07', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-07', 'altText', '')
+  UNION ALL SELECT 'r7130017-0000-4000-8000-000000000017', 'ReferencesLogo08Tr', 'ReferencesLogo08', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-08', 'altText', '')
+  UNION ALL SELECT 'r7130018-0000-4000-8000-000000000018', 'ReferencesLogo08En', 'ReferencesLogo08', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-08', 'altText', '')
+  UNION ALL SELECT 'r7130019-0000-4000-8000-000000000019', 'ReferencesLogo09Tr', 'ReferencesLogo09', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-09', 'altText', '')
+  UNION ALL SELECT 'r7130020-0000-4000-8000-000000000020', 'ReferencesLogo09En', 'ReferencesLogo09', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-09', 'altText', '')
+  UNION ALL SELECT 'r7130021-0000-4000-8000-000000000021', 'ReferencesLogo10Tr', 'ReferencesLogo10', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-10', 'altText', '')
+  UNION ALL SELECT 'r7130022-0000-4000-8000-000000000022', 'ReferencesLogo10En', 'ReferencesLogo10', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-10', 'altText', '')
+  UNION ALL SELECT 'r7130023-0000-4000-8000-000000000023', 'ReferencesLogo11Tr', 'ReferencesLogo11', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-11', 'altText', '')
+  UNION ALL SELECT 'r7130024-0000-4000-8000-000000000024', 'ReferencesLogo11En', 'ReferencesLogo11', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-11', 'altText', '')
+  UNION ALL SELECT 'r7130025-0000-4000-8000-000000000025', 'ReferencesLogo12Tr', 'ReferencesLogo12', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-12', 'altText', '')
+  UNION ALL SELECT 'r7130026-0000-4000-8000-000000000026', 'ReferencesLogo12En', 'ReferencesLogo12', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-12', 'altText', '')
+  UNION ALL SELECT 'r7130027-0000-4000-8000-000000000027', 'ReferencesLogo13Tr', 'ReferencesLogo13', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-13', 'altText', '')
+  UNION ALL SELECT 'r7130028-0000-4000-8000-000000000028', 'ReferencesLogo13En', 'ReferencesLogo13', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-13', 'altText', '')
+  UNION ALL SELECT 'r7130029-0000-4000-8000-000000000029', 'ReferencesLogo14Tr', 'ReferencesLogo14', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-14', 'altText', '')
+  UNION ALL SELECT 'r7130030-0000-4000-8000-000000000030', 'ReferencesLogo14En', 'ReferencesLogo14', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-14', 'altText', '')
+  UNION ALL SELECT 'r7130031-0000-4000-8000-000000000031', 'ReferencesLogo15Tr', 'ReferencesLogo15', 'TR', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-15', 'altText', '')
+  UNION ALL SELECT 'r7130032-0000-4000-8000-000000000032', 'ReferencesLogo15En', 'ReferencesLogo15', 'EN', NULL, NULL, JSON_OBJECT('mediaUid', 'references-brand-15', 'altText', '')
 
   UNION ALL SELECT 'r7130033-0000-4000-8000-000000000033', 'ReferencesGridActionTr', 'ReferencesGridAction', 'TR', NULL, NULL, JSON_OBJECT('buttonText', 'Iletisime Gec', 'buttonUrl', '/contact')
   UNION ALL SELECT 'r7130034-0000-4000-8000-000000000034', 'ReferencesGridActionEn', 'ReferencesGridAction', 'EN', NULL, NULL, JSON_OBJECT('buttonText', 'Get in Touch', 'buttonUrl', '/contact')
@@ -317,7 +331,13 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 
 INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
-SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, TRUE, FALSE, NOW(), NOW()
+SELECT
+  CASE ts.slot_name
+    WHEN 'Section1' THEN 'refs0001-0000-4000-8000-000000000001'
+    WHEN 'Section2' THEN 'refs0002-0000-4000-8000-000000000002'
+    WHEN 'Section3' THEN 'refs0003-0000-4000-8000-000000000003'
+  END,
+  CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, TRUE, FALSE, NOW(), NOW()
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'references'
@@ -330,7 +350,15 @@ ON DUPLICATE KEY UPDATE
   updated_at = NOW();
 
 INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
-SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, FALSE, FALSE, NOW(), NOW()
+SELECT
+  CASE ts.slot_name
+    WHEN 'Section4' THEN 'refs0004-0000-4000-8000-000000000004'
+    WHEN 'Section5' THEN 'refs0005-0000-4000-8000-000000000005'
+    WHEN 'Section6' THEN 'refs0006-0000-4000-8000-000000000006'
+    WHEN 'Section7' THEN 'refs0007-0000-4000-8000-000000000007'
+    WHEN 'Section8' THEN 'refs0008-0000-4000-8000-000000000008'
+  END,
+  CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, FALSE, FALSE, NOW(), NOW()
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'references'

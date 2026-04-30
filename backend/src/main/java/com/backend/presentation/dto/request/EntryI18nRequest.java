@@ -7,11 +7,13 @@ import static com.backend.shared.constants.ValidationConstants.COMPONENT_ENTRY_B
 import static com.backend.shared.constants.ValidationConstants.COMPONENT_ENTRY_BUTTON_URL_MAX_LENGTH;
 import static com.backend.shared.constants.ValidationConstants.COMPONENT_ENTRY_IMAGE_URL_MAX_LENGTH;
 import static com.backend.shared.constants.ValidationConstants.COMPONENT_ENTRY_TITLE_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.MEDIA_I18N_DESCRIPTION_MAX_LENGTH;
 
 public record EntryI18nRequest(
     @Size(max = COMPONENT_ENTRY_TITLE_MAX_LENGTH, message = "{validation.component.entry.title.size}")
     String title,
 
+    @Size(max = MEDIA_I18N_DESCRIPTION_MAX_LENGTH, message = "{validation.component.entry.description.size}")
     String description,
 
     @Size(max = COMPONENT_ENTRY_IMAGE_URL_MAX_LENGTH, message = "{validation.component.entry.image.url.size}")

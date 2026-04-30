@@ -2,7 +2,6 @@ export interface ApiResponse<T> {
   data: T;
   result: 'SUCCESS' | 'ERROR';
   message?: string;
-  /** Stable machine-readable code on some errors (e.g. media upload validation). */
   errorCode?: string;
   code?: number;
   success?: boolean;

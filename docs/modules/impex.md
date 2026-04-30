@@ -248,7 +248,8 @@ The `base/` folder now contains only theme-neutral catalogs and optional non-the
 7. theme/mulayim/portfolio_homepage.sql  — homepage IntroBannerBlock, PortfolioCardGrid, StatementCtaBlock, Section1-Section3 slot wiring, media UID alignment
 8. theme/mulayim/portfolio_page.sql      — /portfolio listing page hero and filterable 4-column grid
 9. theme/mulayim/portfolio_detail_pages.sql — all /portfolio/{slug} detail pages using PortfolioDetailPageTemplate and PortfolioDetailsComponent
-10. theme/mulayim/references_page.sql    — /references landing page hero, 15-logo references wall, StatementCtaBlock reuse
+10. [upload brand logos via Admin UI]    — upload brand-1.jpg through brand-15.jpg (references logo wall assets); must complete before the next step so media UID alignment runs correctly
+11. theme/mulayim/references_page.sql    — /references landing page hero, 15-logo references wall, StatementCtaBlock reuse
 ```
 
 Mulayim foundation/homepage scripts include their required generic component type seeds. Running `base_component_types.sql` and `base_entry_field_definitions.sql` first is still safe, but not required for the Mulayim path.
