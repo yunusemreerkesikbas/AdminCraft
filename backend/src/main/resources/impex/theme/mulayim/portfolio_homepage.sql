@@ -1,13 +1,9 @@
 -- #CRAFTIVE_IMPEX
-SET NAMES 'utf8mb4';
-SET character_set_client = utf8mb4;
-SET character_set_connection = utf8mb4;
-SET character_set_results = utf8mb4;
 -- Mulayim portfolio homepage seed.
 -- Run via Admin UI /{lang}/impex after theme/mulayim/mulayim_foundation.sql and after media uploads.
 -- Seeds the homepage body using the portfolio-grid-col-4 source layout.
 -- Shared header and footer chrome remain foundation-owned.
--- Foundation owns globally reusable component types and field definitions, including BigTextCtaComponent.
+-- Foundation owns globally reusable component types and field definitions, including BigTextCtaComponent and SeoParagraphComponent.
 -- Idempotent: safe to run multiple times.
 
 -- ============================================================
@@ -108,15 +104,27 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status),
   updated_at = NOW();
 
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
+SELECT 'f6100004-0000-4000-8000-000000000004', 'HomepageSeoParagraph', ct.id, 'Homepage SEO Paragraph', 0, TRUE, 'seo-paragraph', 'PUBLISHED', NOW(), NOW()
+FROM component_types ct WHERE ct.uid = 'SeoParagraphComponent'
+ON DUPLICATE KEY UPDATE
+  component_type_id = VALUES(component_type_id),
+  name = VALUES(name),
+  display_order = VALUES(display_order),
+  is_visible = VALUES(is_visible),
+  style_classes = VALUES(style_classes),
+  status = VALUES(status),
+  updated_at = NOW();
+
 -- ============================================================
 -- 4. COMPONENT_I18N
 -- ============================================================
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200001-0000-4000-8000-000000000001', 'IntroBannerBlockTr', c.id, 'TR',
-  'Markanızı öne çıkaran güçlü tasarım',
-  'Ahmet Mülayim',
-  'Logo, kurumsal kimlik ve kampanya görselleriyle markanızın akılda kalmasını sağlayan net ve uygulanabilir tasarımlar üretiyoruz.',
+  'Markanızı öne çıkaran güçlü tasarımlar',
+  NULL,
+  NULL,
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'IntroBannerBlock'
 ON DUPLICATE KEY UPDATE
@@ -128,9 +136,9 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200002-0000-4000-8000-000000000002', 'IntroBannerBlockEn', c.id, 'EN',
-  'Clear visual language for your brand',
-  'Ahmet Mülayim',
-  'We design logo, identity and campaign visuals that make your brand memorable and consistent.',
+  'Powerful designs that make your brand stand out',
+  NULL,
+  NULL,
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'IntroBannerBlock'
 ON DUPLICATE KEY UPDATE
@@ -189,6 +197,42 @@ SELECT 'f6200006-0000-4000-8000-000000000006', 'StatementCtaBlockEn', c.id, 'EN'
   NULL,
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StatementCtaBlock'
+ON DUPLICATE KEY UPDATE
+  title = VALUES(title),
+  subtitle = VALUES(subtitle),
+  description = VALUES(description),
+  status = VALUES(status),
+  updated_at = NOW();
+
+INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
+SELECT 'f6200007-0000-4000-8000-000000000007', 'HomepageSeoParagraphTr', c.id, 'TR',
+  'Grafik tasarım, logo tasarımı ve marka kimliği için net bir yaratıcı süreç',
+  NULL,
+  'Markaların ihtiyaç duyduğu grafik tasarım, logo tasarımı ve kurumsal kimlik tasarımı çalışmalarını yalnızca estetik bir çıktı olarak değil, markanın konumunu güçlendiren uygulanabilir bir sistem olarak ele alıyoruz.
+
+Her projeye marka kimliğini, hedef kitleyi ve kullanım alanlarını birlikte değerlendirerek başlıyoruz. Bu yaklaşım sayesinde sosyal medya tasarımı, kampanya görselleri, basılı materyaller ve dijital iletişim noktalarında tutarlı bir görünüm kuruyor; markaların daha güvenilir, daha görünür ve daha hatırlanır hale gelmesine yardımcı oluyoruz.
+
+Logo tasarımı ya da kurumsal kimlik tasarımı ihtiyacınız yeni bir başlangıçtan mevcut görünümü güçlendirmeye kadar uzanıyorsa, kısa ömürlü görseller üretmek yerine markanıza uzun vadede güven veren ve farklı mecralarda net çalışan bir tasarım altyapısı kurmaya odaklanıyoruz.',
+  'PUBLISHED', NOW(), NOW()
+FROM components c WHERE c.uid = 'HomepageSeoParagraph'
+ON DUPLICATE KEY UPDATE
+  title = VALUES(title),
+  subtitle = VALUES(subtitle),
+  description = VALUES(description),
+  status = VALUES(status),
+  updated_at = NOW();
+
+INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
+SELECT 'f6200008-0000-4000-8000-000000000008', 'HomepageSeoParagraphEn', c.id, 'EN',
+  'Graphic design, logo design and brand identity built on a clear creative process',
+  NULL,
+  'We approach graphic design, logo design and corporate identity design as a practical brand system, not just a visual deliverable. Our goal is to create work that looks distinctive, fits real business use and supports how the brand is perceived over time.
+
+We start each project by aligning brand identity, audience expectations and usage context. That foundation helps us create consistent social media design, campaign visuals, print assets and digital touchpoints, making brands appear more credible, more recognisable and easier to trust.
+
+Whether the need is a new logo design project or a broader brand identity refresh, we stay focused on building a design direction that works across channels, reduces inconsistency and gives the brand a stronger, more professional presence.',
+  'PUBLISHED', NOW(), NOW()
+FROM components c WHERE c.uid = 'HomepageSeoParagraph'
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
   subtitle = VALUES(subtitle),
@@ -270,7 +314,7 @@ FROM (
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Design', 'altText', 'Logo design for Sen Turistik', 'ariaLabel', '')
 
   UNION ALL SELECT 'f6400017-0000-4000-8000-000000000017', 'StatementCtaActionTr', 'StatementCtaAction', 'TR', NULL, NULL,
-    JSON_OBJECT('buttonText', 'İletişime Geç', 'buttonUrl', '/contact')
+    JSON_OBJECT('buttonText', 'Temas Kur', 'buttonUrl', '/contact')
   UNION ALL SELECT 'f6400018-0000-4000-8000-000000000018', 'StatementCtaActionEn', 'StatementCtaAction', 'EN', NULL, NULL,
     JSON_OBJECT('buttonText', 'Contact', 'buttonUrl', '/contact')
 ) seed
@@ -409,7 +453,7 @@ ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
 SELECT ps.id, c.id, 2, TRUE, NOW()
 FROM page_slots ps, components c
-WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterOfficeLinks'
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterContactInfo'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
 
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
@@ -444,6 +488,12 @@ ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_
 
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
 SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section3Slot' AND c.uid = 'HomepageSeoParagraph'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 1, TRUE, NOW()
 FROM page_slots ps, components c
 WHERE ps.uid = 'homepage-Section3Slot' AND c.uid = 'StatementCtaBlock'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);

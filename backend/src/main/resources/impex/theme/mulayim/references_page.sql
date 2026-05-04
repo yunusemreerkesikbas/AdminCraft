@@ -1,8 +1,4 @@
 -- #CRAFTIVE_IMPEX
-SET NAMES 'utf8mb4';
-SET character_set_client = utf8mb4;
-SET character_set_connection = utf8mb4;
-SET character_set_results = utf8mb4;
 -- Mulayim references page seed.
 -- Run via Admin UI /{lang}/impex after theme/mulayim/mulayim_foundation.sql.
 -- Seeds the /references landing page with a dedicated hero, references logo wall and shared statement CTA.

@@ -9,16 +9,6 @@
 -- MySQL UNIQUE index treats each NULL as distinct, so ON DUPLICATE KEY UPDATE
 -- never fires for NULL-language rows. Use DELETE + INSERT instead.
 
-DELETE FROM site_settings WHERE language IS NULL AND setting_key IN (
-  'global.contactEmail', 'global.contactPhone', 'global.whatsappPhone',
-  'global.canonicalBaseUrl', 'global.robots',
-  'global.address.line1', 'global.address.line2', 'global.address.city',
-  'global.address.state', 'global.address.postalCode', 'global.address.country',
-  'global.address.mapEmbedUrl',
-  'global.social.instagram', 'global.social.youtube', 'global.social.linkedin',
-  'global.social.facebook', 'global.social.x', 'global.social.tiktok'
-);
-
 INSERT INTO site_settings (
   setting_key, setting_value, language, setting_type, category, display_name, is_public, sort_order, updated_by
 )
