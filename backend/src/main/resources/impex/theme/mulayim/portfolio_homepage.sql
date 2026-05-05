@@ -371,25 +371,12 @@ SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'homepage'
-  AND ts.slot_name IN ('Section1', 'Section2', 'Section3')
+  AND ts.slot_name IN ('Section1', 'Section2', 'Section3', 'Section4', 'Section5', 'Section6', 'Section7', 'Section8')
 ON DUPLICATE KEY UPDATE
   position = VALUES(position),
   sort_order = VALUES(sort_order),
   is_active = VALUES(is_active),
   is_shared = VALUES(is_shared),
-  updated_at = NOW();
-
-INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
-SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, FALSE, FALSE, NOW(), NOW()
-FROM pages p
-JOIN template_slots ts ON ts.template_id = p.template_id
-WHERE p.uid = 'homepage'
-  AND ts.slot_name IN ('Section4', 'Section5', 'Section6', 'Section7', 'Section8')
-ON DUPLICATE KEY UPDATE
-  position = VALUES(position),
-  sort_order = VALUES(sort_order),
-  is_active = FALSE,
-  is_shared = FALSE,
   updated_at = NOW();
 
 INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)

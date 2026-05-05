@@ -26,5 +26,9 @@ public interface ComponentEntryRepository {
     List<ComponentEntry> findByComponentIdInAndStatusOrderBySortOrder(List<Long> componentIds,
             com.backend.domain.enums.ComponentStatus status);
 
+    /** Preview-aware variant: matches any status in the supplied set. */
+    List<ComponentEntry> findByComponentIdInAndStatusInOrderBySortOrder(List<Long> componentIds,
+            java.util.Collection<com.backend.domain.enums.ComponentStatus> statuses);
+
     List<ComponentEntry> findByResponsiveMediaId(Long responsiveMediaId);
 }

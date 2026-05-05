@@ -43,4 +43,13 @@ public interface PageRepository extends JpaRepository<Page, Long> {
     long countByIsHomeTrueAndStatus(PageStatus status);
 
     long countByPageTypeAndStatus(PageType pageType, PageStatus status);
+
+    /** Preview-aware home page lookup. */
+    Optional<Page> findByIsHomeTrueAndStatusIn(java.util.Collection<PageStatus> statuses);
+
+    /** Preview-aware unique-template page lookup (e.g. PRODUCT, SEARCH). */
+    Optional<Page> findFirstByPageTypeAndStatusInOrderByIdAsc(PageType pageType, java.util.Collection<PageStatus> statuses);
+
+    /** Preview-aware page lookup by id when status must be one of a permitted set. */
+    Optional<Page> findByIdAndStatusIn(Long id, java.util.Collection<PageStatus> statuses);
 }

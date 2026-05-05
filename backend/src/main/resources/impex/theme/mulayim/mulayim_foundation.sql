@@ -142,14 +142,14 @@ FROM components c
 JOIN (
   SELECT 'm1400001-0000-4000-8000-000000000001' AS uuid, 'StorefrontHeaderMainNavigationTr' AS uid, 'StorefrontHeaderMainNavigation' AS component_uid, 'TR' AS language, 'Ana Menu' AS title, NULL AS description
   UNION ALL SELECT 'm1400002-0000-4000-8000-000000000002', 'StorefrontHeaderMainNavigationEn', 'StorefrontHeaderMainNavigation', 'EN', 'Main Menu', NULL
-  UNION ALL SELECT 'm1400017-0000-4000-8000-000000000017', 'StorefrontHeaderIntroBlockTr', 'StorefrontHeaderIntroBlock', 'TR', 'Ahmet Mülayim', 'Logo, kimlik ve kampanya işleri.'
-  UNION ALL SELECT 'm1400018-0000-4000-8000-000000000018', 'StorefrontHeaderIntroBlockEn', 'StorefrontHeaderIntroBlock', 'EN', 'Ahmet Mülayim', 'Logo, identity and campaign work.'
+  UNION ALL SELECT 'm1400017-0000-4000-8000-000000000017', 'StorefrontHeaderIntroBlockTr', 'StorefrontHeaderIntroBlock', 'TR', 'Ahmet Mülayim', 'Şekiller ile oluşturulan marka hikayeleri!'
+  UNION ALL SELECT 'm1400018-0000-4000-8000-000000000018', 'StorefrontHeaderIntroBlockEn', 'StorefrontHeaderIntroBlock', 'EN', 'Ahmet Mülayim', 'Brand stories created with shapes!'
   UNION ALL SELECT 'm1400003-0000-4000-8000-000000000003', 'StorefrontHeaderSocialLinksTr', 'StorefrontHeaderSocialLinks', 'TR', 'Sosyal', NULL
   UNION ALL SELECT 'm1400004-0000-4000-8000-000000000004', 'StorefrontHeaderSocialLinksEn', 'StorefrontHeaderSocialLinks', 'EN', 'Social', NULL
-  UNION ALL SELECT 'm1400005-0000-4000-8000-000000000005', 'StorefrontHeaderContactInfoTr', 'StorefrontHeaderContactInfo', 'TR', 'Iletisim', NULL
-  UNION ALL SELECT 'm1400006-0000-4000-8000-000000000006', 'StorefrontHeaderContactInfoEn', 'StorefrontHeaderContactInfo', 'EN', 'Contact', NULL
-  UNION ALL SELECT 'm1400007-0000-4000-8000-000000000007', 'StorefrontFooterBrandBlockTr', 'StorefrontFooterBrandBlock', 'TR', 'Ahmet Mülayim', 'Markalar için logo, kurumsal kimlik ve kampanya tasarımları.'
-  UNION ALL SELECT 'm1400008-0000-4000-8000-000000000008', 'StorefrontFooterBrandBlockEn', 'StorefrontFooterBrandBlock', 'EN', 'Ahmet Mülayim', 'Logo, identity and campaign design for brands.'
+  UNION ALL SELECT 'm1400005-0000-4000-8000-000000000005', 'StorefrontHeaderContactInfoTr', 'StorefrontHeaderContactInfo', 'TR', 'Mail', NULL
+  UNION ALL SELECT 'm1400006-0000-4000-8000-000000000006', 'StorefrontHeaderContactInfoEn', 'StorefrontHeaderContactInfo', 'EN', 'Mail', NULL
+  UNION ALL SELECT 'm1400007-0000-4000-8000-000000000007', 'StorefrontFooterBrandBlockTr', 'StorefrontFooterBrandBlock', 'TR', NULL, 'Şekiller ile oluşturulan marka hikayeleri!'
+  UNION ALL SELECT 'm1400008-0000-4000-8000-000000000008', 'StorefrontFooterBrandBlockEn', 'StorefrontFooterBrandBlock', 'EN', NULL, 'Brand stories created with shapes!'
   UNION ALL SELECT 'm1400009-0000-4000-8000-000000000009', 'StorefrontFooterSitemapNavigationTr', 'StorefrontFooterSitemapNavigation', 'TR', 'Hızlı Menü', NULL
   UNION ALL SELECT 'm1400010-0000-4000-8000-000000000010', 'StorefrontFooterSitemapNavigationEn', 'StorefrontFooterSitemapNavigation', 'EN', 'Sitemap', NULL
   UNION ALL SELECT 'm1400011-0000-4000-8000-000000000011', 'StorefrontFooterOfficeLinksTr', 'StorefrontFooterOfficeLinks', 'TR', 'Baglantilar', NULL
@@ -158,9 +158,9 @@ JOIN (
   UNION ALL SELECT 'm1400014-0000-4000-8000-000000000014', 'StorefrontFooterNewsletterEn', 'StorefrontFooterNewsletter', 'EN', 'Newsletter', NULL
   UNION ALL SELECT 'm1400015-0000-4000-8000-000000000015', 'StorefrontFooterSocialLinksTr', 'StorefrontFooterSocialLinks', 'TR', 'Sosyal', NULL
   UNION ALL SELECT 'm1400016-0000-4000-8000-000000000016', 'StorefrontFooterSocialLinksEn', 'StorefrontFooterSocialLinks', 'EN', 'Social', NULL
-  UNION ALL SELECT 'm1400021-0000-4000-8000-000000000021', 'StorefrontFooterContactInfoTr', 'StorefrontFooterContactInfo', 'TR', 'Iletisim', NULL
-  UNION ALL SELECT 'm1400022-0000-4000-8000-000000000022', 'StorefrontFooterContactInfoEn', 'StorefrontFooterContactInfo', 'EN', 'Contact', NULL
-  UNION ALL SELECT 'm1400019-0000-4000-8000-000000000019', 'PortfolioPageBrandStripTr', 'PortfolioPageBrandStrip', 'TR', 'Çalışılan markalar', NULL
+  UNION ALL SELECT 'm1400021-0000-4000-8000-000000000021', 'StorefrontFooterContactInfoTr', 'StorefrontFooterContactInfo', 'TR', NULL, NULL
+  UNION ALL SELECT 'm1400022-0000-4000-8000-000000000022', 'StorefrontFooterContactInfoEn', 'StorefrontFooterContactInfo', 'EN', NULL, NULL
+  UNION ALL SELECT 'm1400019-0000-4000-8000-000000000019', 'PortfolioPageBrandStripTr', 'PortfolioPageBrandStrip', 'TR', 'Referanslar', NULL
   UNION ALL SELECT 'm1400020-0000-4000-8000-000000000020', 'PortfolioPageBrandStripEn', 'PortfolioPageBrandStrip', 'EN', 'Brands worked with', NULL
 ) data ON data.component_uid = c.uid
 ON DUPLICATE KEY UPDATE
@@ -237,8 +237,8 @@ JOIN (
   UNION ALL SELECT 'm1600021-0000-4000-8000-000000000021', 'StorefrontFooterSocialLinksEntry1En', 'StorefrontFooterSocialLinksEntry1', 'EN', 'Instagram', JSON_OBJECT('linkUrl', 'https://www.instagram.com', 'target', '_blank')
   UNION ALL SELECT 'm1600022-0000-4000-8000-000000000022', 'StorefrontFooterSocialLinksEntry2Tr', 'StorefrontFooterSocialLinksEntry2', 'TR', 'Behance', JSON_OBJECT('linkUrl', 'https://www.behance.net', 'target', '_blank')
   UNION ALL SELECT 'm1600023-0000-4000-8000-000000000023', 'StorefrontFooterSocialLinksEntry2En', 'StorefrontFooterSocialLinksEntry2', 'EN', 'Behance', JSON_OBJECT('linkUrl', 'https://www.behance.net', 'target', '_blank')
-  UNION ALL SELECT 'm1600024-0000-4000-8000-000000000024', 'StorefrontFooterSocialLinksEntry3Tr', 'StorefrontFooterSocialLinksEntry3', 'TR', 'Youtube', JSON_OBJECT('linkUrl', 'https://www.youtube.com', 'target', '_blank')
-  UNION ALL SELECT 'm1600025-0000-4000-8000-000000000025', 'StorefrontFooterSocialLinksEntry3En', 'StorefrontFooterSocialLinksEntry3', 'EN', 'Youtube', JSON_OBJECT('linkUrl', 'https://www.youtube.com', 'target', '_blank')
+  UNION ALL SELECT 'm1600024-0000-4000-8000-000000000024', 'StorefrontFooterSocialLinksEntry3Tr', 'StorefrontFooterSocialLinksEntry3', 'TR', 'LinkedIn', JSON_OBJECT('linkUrl', 'https://www.linkedin.com', 'target', '_blank')
+  UNION ALL SELECT 'm1600025-0000-4000-8000-000000000025', 'StorefrontFooterSocialLinksEntry3En', 'StorefrontFooterSocialLinksEntry3', 'EN', 'LinkedIn', JSON_OBJECT('linkUrl', 'https://www.linkedin.com', 'target', '_blank')
   UNION ALL SELECT 'm1600026-0000-4000-8000-000000000026', 'StorefrontFooterContactInfoEntry1Tr', 'StorefrontFooterContactInfoEntry1', 'TR', 'info@ahmetmulayim.com', JSON_OBJECT('linkUrl', 'mailto:info@ahmetmulayim.com')
   UNION ALL SELECT 'm1600027-0000-4000-8000-000000000027', 'StorefrontFooterContactInfoEntry1En', 'StorefrontFooterContactInfoEntry1', 'EN', 'info@ahmetmulayim.com', JSON_OBJECT('linkUrl', 'mailto:info@ahmetmulayim.com')
 ) data ON data.entry_uid = e.uid

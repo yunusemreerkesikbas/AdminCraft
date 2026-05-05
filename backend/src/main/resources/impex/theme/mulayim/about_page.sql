@@ -45,6 +45,11 @@ FROM component_types ct WHERE ct.uid = 'ContentHeroComponent'
 ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 
 INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'scrollLabel', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ContentHeroComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
 SELECT ct.id, 'scrollTarget', 'TEXT', NOW()
 FROM component_types ct WHERE ct.uid = 'ContentHeroComponent'
 ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
@@ -103,13 +108,13 @@ INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, 
 SELECT seed.uuid, seed.uid, c.id, seed.language, seed.title, seed.subtitle, seed.description, 'PUBLISHED', NOW(), NOW()
 FROM (
   SELECT 'a6210001-0000-4000-8000-000000000001' AS uuid, 'MulayimAboutHeroComponentTr' AS uid, 'MulayimAboutHeroComponent' AS component_uid, 'TR' AS language,
-    'Atölyeyi tanıyın' AS title,
-    'Ahmet Mülayim' AS subtitle,
-    'Logo, kurumsal kimlik, sosyal medya ve kampanya görselleri üreten grafik tasarım pratiği.' AS description
+    'Markalara Görsel Yön Veriyoruz' AS title,
+    'Grafik\nTasarım Stüdyosu' AS subtitle,
+    'Logo, kurumsal kimlik ve kampanya görsellerini stratejik bir tasarım diliyle üretiyoruz.' AS description
   UNION ALL SELECT 'a6210002-0000-4000-8000-000000000002', 'MulayimAboutHeroComponentEn', 'MulayimAboutHeroComponent', 'EN',
-    'Meet the studio',
-    'Ahmet Mülayim',
-    'Graphic design practice for logo, identity, social media and campaign visuals.'
+    'We Shape Visual Direction For Brands',
+    'Graphic\nDesign Studio',
+    'We create logos, brand identities and campaign visuals through a strategic design language.'
   UNION ALL SELECT 'a6210003-0000-4000-8000-000000000003', 'MulayimAboutIntroComponentTr', 'MulayimAboutIntroComponent', 'TR',
     'Ne yapıyoruz',
     'Grafik tasarım hizmetleri',
@@ -166,13 +171,13 @@ INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, descript
 SELECT seed.uuid, seed.uid, e.id, seed.language, seed.title, seed.description, 'PUBLISHED', seed.custom_data, NOW(), NOW(), NOW()
 FROM (
   SELECT 'a6230001-0000-4000-8000-000000000001' AS uuid, 'MulayimAboutHeroPrimaryTr' AS uid, 'MulayimAboutHeroPrimary' AS entry_uid, 'TR' AS language,
-    'Atölye görseli' AS title,
-    'Grafik tasarım yaklaşımını ve seçili marka işlerini daha yakından inceleyin.' AS description,
-    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'Projeleri İncele', 'buttonUrl', '/portfolio', 'supportingText', 'Logo, kimlik ve kampanya işleri', 'scrollTarget', 'MulayimAboutIntroComponent') AS custom_data
+    'Mulayim about hero' AS title,
+    'Mulayim; markalara net, akılda kalıcı ve uygulanabilir görsel sistemler tasarlar.' AS description,
+    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'Projeleri İncele', 'buttonUrl', '/portfolio', 'supportingText', 'Mulayim; markalara net, akılda kalıcı ve uygulanabilir görsel sistemler tasarlar.', 'scrollLabel', 'İncelemek İçin Kaydır', 'scrollTarget', 'about-info') AS custom_data
   UNION ALL SELECT 'a6230002-0000-4000-8000-000000000002', 'MulayimAboutHeroPrimaryEn', 'MulayimAboutHeroPrimary', 'EN',
-    'Studio image',
-    'Explore the studio’s graphic design approach and selected brand work.',
-    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'View Projects', 'buttonUrl', '/portfolio', 'supportingText', 'Logo, identity and campaign work', 'scrollTarget', 'MulayimAboutIntroComponent')
+    'Mulayim about hero',
+    'Mulayim designs clear, memorable and usable visual systems for brands.',
+    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'View Projects', 'buttonUrl', '/portfolio', 'supportingText', 'Mulayim designs clear, memorable and usable visual systems for brands.', 'scrollLabel', 'Scroll to Explore', 'scrollTarget', 'about-info')
   UNION ALL SELECT 'a6230009-0000-4000-8000-000000000009', 'MulayimAboutIntroList1Tr', 'MulayimAboutIntroList1', 'TR',
     'Hizmetler', NULL,
     JSON_OBJECT('items', JSON_ARRAY('Logo tasarım ve kurumsal kimlik', 'Sosyal medya yönetimi', 'Web tasarım', 'Katalog ve broşür tasarımı', 'Açık hava ve fuar tasarımı'))
@@ -257,25 +262,12 @@ SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'about'
-  AND ts.slot_name IN ('TopContent', 'BodyContent')
+  AND ts.slot_name IN ('TopContent', 'BodyContent', 'SideContent')
 ON DUPLICATE KEY UPDATE
   position = VALUES(position),
   sort_order = VALUES(sort_order),
   is_active = VALUES(is_active),
   is_shared = VALUES(is_shared),
-  updated_at = NOW();
-
-INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
-SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, FALSE, FALSE, NOW(), NOW()
-FROM pages p
-JOIN template_slots ts ON ts.template_id = p.template_id
-WHERE p.uid = 'about'
-  AND ts.slot_name = 'SideContent'
-ON DUPLICATE KEY UPDATE
-  position = VALUES(position),
-  sort_order = VALUES(sort_order),
-  is_active = FALSE,
-  is_shared = FALSE,
   updated_at = NOW();
 
 -- ============================================================
@@ -301,7 +293,7 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 
 UPDATE media m
-JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'hero-2-1.jpg') picked ON picked.id = m.id
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'hero-1.jpg') picked ON picked.id = m.id
 LEFT JOIN media existing ON existing.uid = 'mulayim-about-hero' AND existing.id <> m.id
 SET m.uid = 'mulayim-about-hero'
 WHERE m.uid != 'mulayim-about-hero' AND existing.id IS NULL;
@@ -326,7 +318,7 @@ WHERE m.uid != 'mulayim-about-portfolio-3' AND existing.id IS NULL;
 
 -- ============================================================
 -- REQUIRED MEDIA UPLOADS
---   hero-2-1.jpg
+--   hero-1.jpg
 --   portfolio-1.jpg
 --   portfolio-2.jpg
 --   portfolio-3.jpg

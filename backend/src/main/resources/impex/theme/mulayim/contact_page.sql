@@ -164,14 +164,14 @@ FROM (
     NULL AS description,
     JSON_OBJECT(
       'mapEmbedUrl', 'https://www.google.com/maps?q=Turkey&z=5&output=embed',
-      'formTitle', 'Mesaj Gönderin',
+      'formTitle', 'Hemen Teklif Al',
       'nameLabel', 'İsim',
       'namePlaceholder', 'Adınız Soyadınız',
       'subjectLabel', 'Konu',
       'subjectPlaceholder', 'Markanız veya proje başlığınız',
       'messageLabel', 'Mesaj',
       'messagePlaceholder', 'İhtiyacınızı, teslim zamanını ve varsa kapsamı birkaç cümleyle paylaşın',
-      'submitLabel', 'Mesajı Hazırla'
+      'submitLabel', 'Teklif Al'
     ) AS custom_data
   UNION ALL
   SELECT 'c7130004-0000-4000-8000-000000000004', 'MulayimContactFormPrimaryEn', 'MulayimContactFormPrimary', 'EN',
@@ -242,25 +242,12 @@ SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'contact'
-  AND ts.slot_name IN ('TopContent', 'BodyContent')
+  AND ts.slot_name IN ('TopContent', 'BodyContent', 'SideContent')
 ON DUPLICATE KEY UPDATE
   position = VALUES(position),
   sort_order = VALUES(sort_order),
   is_active = VALUES(is_active),
   is_shared = VALUES(is_shared),
-  updated_at = NOW();
-
-INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
-SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, FALSE, FALSE, NOW(), NOW()
-FROM pages p
-JOIN template_slots ts ON ts.template_id = p.template_id
-WHERE p.uid = 'contact'
-  AND ts.slot_name = 'SideContent'
-ON DUPLICATE KEY UPDATE
-  position = VALUES(position),
-  sort_order = VALUES(sort_order),
-  is_active = FALSE,
-  is_shared = FALSE,
   updated_at = NOW();
 
 -- ============================================================

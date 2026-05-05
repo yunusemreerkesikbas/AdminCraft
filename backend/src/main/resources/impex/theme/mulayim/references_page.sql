@@ -332,38 +332,22 @@ SELECT
     WHEN 'Section1' THEN 'refs0001-0000-4000-8000-000000000001'
     WHEN 'Section2' THEN 'refs0002-0000-4000-8000-000000000002'
     WHEN 'Section3' THEN 'refs0003-0000-4000-8000-000000000003'
-  END,
-  CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, TRUE, FALSE, NOW(), NOW()
-FROM pages p
-JOIN template_slots ts ON ts.template_id = p.template_id
-WHERE p.uid = 'references'
-  AND ts.slot_name IN ('Section1', 'Section2', 'Section3')
-ON DUPLICATE KEY UPDATE
-  position = VALUES(position),
-  sort_order = VALUES(sort_order),
-  is_active = VALUES(is_active),
-  is_shared = VALUES(is_shared),
-  updated_at = NOW();
-
-INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
-SELECT
-  CASE ts.slot_name
     WHEN 'Section4' THEN 'refs0004-0000-4000-8000-000000000004'
     WHEN 'Section5' THEN 'refs0005-0000-4000-8000-000000000005'
     WHEN 'Section6' THEN 'refs0006-0000-4000-8000-000000000006'
     WHEN 'Section7' THEN 'refs0007-0000-4000-8000-000000000007'
     WHEN 'Section8' THEN 'refs0008-0000-4000-8000-000000000008'
   END,
-  CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, FALSE, FALSE, NOW(), NOW()
+  CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, TRUE, FALSE, NOW(), NOW()
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'references'
-  AND ts.slot_name IN ('Section4', 'Section5', 'Section6', 'Section7', 'Section8')
+  AND ts.slot_name IN ('Section1', 'Section2', 'Section3', 'Section4', 'Section5', 'Section6', 'Section7', 'Section8')
 ON DUPLICATE KEY UPDATE
   position = VALUES(position),
   sort_order = VALUES(sort_order),
-  is_active = FALSE,
-  is_shared = FALSE,
+  is_active = VALUES(is_active),
+  is_shared = VALUES(is_shared),
   updated_at = NOW();
 
 -- ============================================================

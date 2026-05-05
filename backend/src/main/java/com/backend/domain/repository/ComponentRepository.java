@@ -39,6 +39,9 @@ public interface ComponentRepository {
 
     List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status);
 
+    /** Preview-aware variant: matches any status in the supplied set. */
+    List<Component> findByUidInAndStatusIn(List<String> uids, java.util.Collection<ComponentStatus> statuses);
+
     List<Component> findByIdIn(List<Long> ids);
 
     List<Component> findByResponsiveMediaId(Long responsiveMediaId);

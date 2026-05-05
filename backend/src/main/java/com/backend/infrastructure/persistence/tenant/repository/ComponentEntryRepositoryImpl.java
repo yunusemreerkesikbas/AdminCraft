@@ -64,6 +64,12 @@ public class ComponentEntryRepositoryImpl implements ComponentEntryRepository {
     }
 
     @Override
+    public List<ComponentEntry> findByComponentIdInAndStatusInOrderBySortOrder(List<Long> componentIds,
+            java.util.Collection<com.backend.domain.enums.ComponentStatus> statuses) {
+        return jpaRepository.findByComponentIdInAndStatusInOrderBySortOrderAsc(componentIds, statuses);
+    }
+
+    @Override
     public List<ComponentEntry> findByResponsiveMediaId(Long responsiveMediaId) {
         return jpaRepository.findByResponsiveMediaId(responsiveMediaId);
     }
