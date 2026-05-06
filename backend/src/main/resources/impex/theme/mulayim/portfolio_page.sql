@@ -246,23 +246,25 @@ ON DUPLICATE KEY UPDATE
   is_home = VALUES(is_home),
   robot_tag = VALUES(robot_tag);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'd7350001-0000-4000-8000-000000000001', 'portfolio-tr', p.id, 'TR', 'Portfolyo', 'Portfolyo | Ahmet Mülayim', '/portfolio', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'd7350001-0000-4000-8000-000000000001', 'portfolio-tr', p.id, 'TR', 'Portfolyo', 'Portfolyo', 'Kültür sanattan tarıma uzanan markalar için hazırlanan logo ve kurumsal kimlik çalışmalarından seçili portfolyo.', '/portfolio', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'portfolio'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'd7350002-0000-4000-8000-000000000002', 'portfolio-en', p.id, 'EN', 'Portfolio', 'Portfolio | Ahmet Mülayim', '/portfolio', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'd7350002-0000-4000-8000-000000000002', 'portfolio-en', p.id, 'EN', 'Portfolio', 'Portfolio', 'Selected logo and brand identity projects delivered across culture, agriculture, construction, retail and more.', '/portfolio', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'portfolio'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 

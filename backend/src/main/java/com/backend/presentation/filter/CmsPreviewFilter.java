@@ -82,6 +82,7 @@ public class CmsPreviewFilter extends OncePerRequestFilter {
   private boolean activate(CmsPreviewTicket ticket) {
     String tenantIdStr = tenantContext.getTenantId();
     if (tenantIdStr == null) {
+      log.warn("CMS preview ticket activation failed: tenant context not set");
       return false;
     }
     long currentTenantId;

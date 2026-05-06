@@ -364,22 +364,24 @@ ON DUPLICATE KEY UPDATE
   is_home = VALUES(is_home),
   robot_tag = VALUES(robot_tag);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'm2100001-0000-4000-8000-000000000001', 'search-page-tr', p.id, 'TR', 'Arama', 'Site Arama | Ahmet Mülayim', '/search', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'm2100001-0000-4000-8000-000000000001', 'search-page-tr', p.id, 'TR', 'Arama', 'Site Arama', 'Ahmet Mülayim sitesinde içerik ve sayfa araması yapın.', '/search', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'search-page'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'm2100002-0000-4000-8000-000000000002', 'search-page-en', p.id, 'EN', 'Search', 'Site Search | Ahmet Mülayim', '/search', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'm2100002-0000-4000-8000-000000000002', 'search-page-en', p.id, 'EN', 'Search', 'Site Search', 'Search pages and content on the Ahmet Mülayim website.', '/search', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'search-page'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);

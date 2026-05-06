@@ -1,6 +1,7 @@
 package com.backend.domain.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,11 +46,11 @@ public interface PageRepository extends JpaRepository<Page, Long> {
     long countByPageTypeAndStatus(PageType pageType, PageStatus status);
 
     /** Preview-aware home page lookup. */
-    Optional<Page> findByIsHomeTrueAndStatusIn(java.util.Collection<PageStatus> statuses);
+    Optional<Page> findByIsHomeTrueAndStatusIn(Collection<PageStatus> statuses);
 
     /** Preview-aware unique-template page lookup (e.g. PRODUCT, SEARCH). */
-    Optional<Page> findFirstByPageTypeAndStatusInOrderByIdAsc(PageType pageType, java.util.Collection<PageStatus> statuses);
+    Optional<Page> findFirstByPageTypeAndStatusInOrderByIdAsc(PageType pageType, Collection<PageStatus> statuses);
 
     /** Preview-aware page lookup by id when status must be one of a permitted set. */
-    Optional<Page> findByIdAndStatusIn(Long id, java.util.Collection<PageStatus> statuses);
+    Optional<Page> findByIdAndStatusIn(Long id, Collection<PageStatus> statuses);
 }

@@ -102,7 +102,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         } else {
                                 switch (resolvedType.get()) {
                                         case CONTENT -> pageOpt = normalizedPageLabelOrId != null
-                                                        ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.CONTENT)
+                                                        ? resolvePageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.CONTENT)
                                                         : Optional.empty();
                                         case PRODUCT -> {
                                                 if (normalizedCode != null) {
@@ -122,7 +122,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                         }
                                         case SEARCH -> pageOpt = resolveUniqueTemplatePage(PageType.SEARCH);
                                         case LANDING -> pageOpt = normalizedPageLabelOrId != null
-                                                        ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.LANDING)
+                                                        ? resolvePageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.LANDING)
                                                         : Optional.empty();
                                         default -> pageOpt = Optional.empty();
                                 }
@@ -134,19 +134,10 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .map(page -> buildPageDeliveryResponse(page, lang, codeToInclude[0]));
         }
 
-        /**
-         * In preview mode the storefront must show only the language being edited.
-         * If the page exists as DRAFT but has no DRAFT translation for the requested
-         * language we fail-closed (treat it as not found) instead of rendering the
-         * page with empty title/description fields.
-         */
         private boolean isPageVisibleForCurrentMode(Page page, Language lang) {
-                if (!cmsRequestContext.isPreview()) {
-                        return true;
-                }
-                Set<PageStatus> visibleStatuses = visiblePageStatuses();
+                Set<PageStatus> statuses = visiblePageStatuses();
                 return pageI18nRepository.findByPageIdAndLanguage(page.getId(), lang)
-                                .filter(i18n -> i18n.getStatus() == null || visibleStatuses.contains(i18n.getStatus()))
+                                .filter(i18n -> statuses.contains(i18n.getStatus()))
                                 .isPresent();
         }
 
@@ -158,7 +149,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 return pageRepository.findFirstByPageTypeAndStatusInOrderByIdAsc(pageType, visiblePageStatuses());
         }
 
-        private Optional<Page> resolvePublishedPageByCanonicalUrl(Language lang, String canonicalUrl, PageType pageType) {
+        private Optional<Page> resolvePageByCanonicalUrl(Language lang, String canonicalUrl, PageType pageType) {
                 Set<PageStatus> statuses = visiblePageStatuses();
                 return pageI18nRepository.findByLanguageAndCanonicalUrlAndStatusIn(lang, canonicalUrl, statuses)
                                 .flatMap(i18n -> pageRepository.findByIdAndStatusIn(i18n.getPageId(), statuses))

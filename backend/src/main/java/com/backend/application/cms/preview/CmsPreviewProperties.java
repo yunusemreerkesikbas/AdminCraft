@@ -28,7 +28,7 @@ public class CmsPreviewProperties {
   public static final String DEV_PLACEHOLDER_SECRET =
       "DEV_ONLY_CMS_PREVIEW_SECRET_DO_NOT_USE_IN_PRODUCTION_AAAAAAAAAA";
 
-  /** Minimum secret length in bytes. Matches the HMAC-SHA256 block size (RFC 2104). */
+  /** Minimum recommended key length in bytes for HMAC-SHA256 (matches the hash output length). */
   public static final int MIN_SECRET_BYTES = 32;
 
   /** HMAC secret used to sign preview tickets. Must be at least 32 bytes in non-dev profiles. */

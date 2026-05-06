@@ -302,23 +302,25 @@ ON DUPLICATE KEY UPDATE
   is_home = VALUES(is_home),
   robot_tag = VALUES(robot_tag);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'r7150001-0000-4000-8000-000000000001', 'references-tr', p.id, 'TR', 'Referanslar', 'Referanslar | Ahmet Mulayim', '/references', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'r7150001-0000-4000-8000-000000000001', 'references-tr', p.id, 'TR', 'Referanslar', 'Referanslar', 'Birlikte çalışılan markalardan seçili referans duvarı; logo, kurumsal kimlik ve kampanya işbirlikleri.', '/references', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'references'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'r7150002-0000-4000-8000-000000000002', 'references-en', p.id, 'EN', 'References', 'References | Ahmet Mulayim', '/references', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'r7150002-0000-4000-8000-000000000002', 'references-en', p.id, 'EN', 'References', 'References', 'A curated wall of brands worked with—logo design, corporate identity and campaign collaborations.', '/references', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'references'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 

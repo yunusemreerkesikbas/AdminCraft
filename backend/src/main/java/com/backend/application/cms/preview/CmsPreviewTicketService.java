@@ -44,6 +44,7 @@ public class CmsPreviewTicketService {
 
   private final CmsPreviewProperties properties;
   private final Environment environment;
+  private SecretKeySpec secretKeySpec;
 
   /**
    * Refuse to start with a missing/short secret, or with the built-in dev
@@ -68,6 +69,8 @@ public class CmsPreviewTicketService {
           "app.cms.preview.secret is using the built-in development placeholder. "
               + "Set the CMS_PREVIEW_SECRET environment variable for non-dev profiles.");
     }
+    this.secretKeySpec = new SecretKeySpec(
+        properties.getSecret().getBytes(StandardCharsets.UTF_8), HMAC_ALGO);
   }
 
   private boolean isNonProductionProfile() {
@@ -101,7 +104,7 @@ public class CmsPreviewTicketService {
   /**
    * Verify a token, returning the decoded ticket when the signature, expiry,
    * and structural checks all pass. Tenant matching is performed by the
-   * caller against {@link com.backend.infrastructure.tenant.TenantContext}.
+   * caller via {@code TenantContextPort}.
    */
   public Optional<CmsPreviewTicket> verify(String token) {
     if (token == null || token.isBlank()) {
@@ -124,7 +127,7 @@ public class CmsPreviewTicketService {
 
     String expectedSig = sign(payload);
     if (!constantTimeEquals(signature, expectedSig)) {
-      log.warn("Preview ticket signature mismatch");
+      log.debug("Preview ticket signature mismatch");
       return Optional.empty();
     }
 
@@ -178,9 +181,7 @@ public class CmsPreviewTicketService {
   private String sign(String payload) {
     try {
       Mac mac = Mac.getInstance(HMAC_ALGO);
-      SecretKeySpec key = new SecretKeySpec(
-          properties.getSecret().getBytes(StandardCharsets.UTF_8), HMAC_ALGO);
-      mac.init(key);
+      mac.init(this.secretKeySpec);
       byte[] sig = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
       return base64UrlEncode(sig);
     } catch (GeneralSecurityException ex) {

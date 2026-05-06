@@ -36,7 +36,7 @@ Mints a short-lived HMAC-SHA256 signed ticket the admin SmartEdit shell embeds i
 
 - **Auth**: `@PreAuthorize("hasRole('TENANT_ADMIN')")`.
 - **Tenant binding**: ticket payload includes the resolved `TenantContext` tenant id; verification fails if the request tenant does not match.
-- **Request body** ([`IssuePreviewTicketRequest`](../../backend/src/main/java/com/backend/presentation/dto/request/IssuePreviewTicketRequest.java)):
+- **Request body** ([`PreviewTicketIssueRequest`](../../backend/src/main/java/com/backend/presentation/dto/request/PreviewTicketIssueRequest.java)):
 
   ```json
   { "pageId": 12 }
@@ -119,7 +119,7 @@ Preview responses must not be cached by storefront ISR or browser. The Next.js c
   - `CmsSlot.tsx` → `data-cms-slot-id`, `data-cms-slot-position`, `data-cms-slot-shared`
   - `CmsComponent.tsx` → `data-cms-component-id`, `data-cms-component-type`
 - Preview ticket forwarding: `storefront-nextjs/lib/core/cms/{client,loaders}.ts` and `storefront-nextjs/lib/core/http/fetch-json.ts` add `X-Cms-Preview-Ticket` header and force `cache: "no-store"` when a ticket is supplied.
-- Layout-level injection: `storefront-nextjs/app/[lang]/layout.tsx` mounts `<script src="/smartedit-injector.js" defer>` and sets `data-smartedit-mode="preview"` on `<body>` whenever `searchParams.preview` is present.
+- Layout-level injection: `storefront-nextjs/app/[lang]/layout.tsx` unconditionally mounts `<Script src="/smartedit-injector.js" strategy="afterInteractive">` with a `data-allowed-origins` attribute read from `NEXT_PUBLIC_SMARTEDIT_ALLOWED_ORIGINS`. The script self-deactivates when not running inside an iframe, when the allowed-origins list is empty, or when `?preview=` is absent from the URL. `data-smartedit-mode="preview"` is set on `<body>` by the injector script itself when it activates.
 - Bridge script: `storefront-nextjs/public/smartedit-injector.js` — listens for clicks on `[data-cms-component-id]` / `[data-cms-slot-id]` and posts `smartedit:select` to the parent window; listens for `smartedit:reload` and reloads.
 
 ### Cross-window contract
@@ -143,7 +143,7 @@ Origin allow-list is built from `previewBaseUrl` returned in the ticket response
 
 `SecurityConfig` registers:
 
-```
+```text
 JwtAuthenticationFilter  → TenantFilter  → CmsPreviewFilter
 ```
 
@@ -155,7 +155,7 @@ This ordering matters: `CmsPreviewFilter` reads `TenantContext.getTenantId()` to
 
 ### Spring Security routing
 
-```
+```text
 /cms/preview/**  →  authenticated()  + @PreAuthorize("hasRole('TENANT_ADMIN')")
 /cms/**          →  permitAll()      (preview activation handled by CmsPreviewFilter)
 ```
@@ -168,9 +168,9 @@ Both are registered explicitly so the preview-issuance endpoint never falls unde
 
 ### HMAC secret hardening
 
-[`CmsPreviewProperties`](../../backend/src/main/java/com/backend/application/cms/preview/CmsPreviewProperties.java) has a `@PostConstruct` validator that:
+[`CmsPreviewTicketService`](../../backend/src/main/java/com/backend/application/cms/preview/CmsPreviewTicketService.java) has a `@PostConstruct` `validateSecret()` method that:
 
-- Refuses to start if `app.cms.preview.secret` is shorter than 32 bytes (HMAC-SHA256 minimum, RFC 2104).
+- Refuses to start if `app.cms.preview.secret` is shorter than 32 bytes (minimum recommended key length for HMAC-SHA256).
 - Refuses to start with the built-in `DEV_ONLY_*` placeholder secret unless an active profile is `dev` or `test` (default profile is also accepted as non-production for local convenience).
 
 Operations must set `CMS_PREVIEW_SECRET` to a randomly-generated ≥32-byte value for stage and prod profiles.
@@ -178,7 +178,7 @@ Operations must set `CMS_PREVIEW_SECRET` to a randomly-generated ≥32-byte valu
 ### Multi-tenant notes (current limitations)
 
 - The HMAC secret is platform-wide. A leaked secret allows ticket forgery for any tenant. Per-tenant key derivation is a Phase 2 item.
-- The preview-ticket response uses `app.cms.preview.storefront-base-url` (platform config) as the iframe origin whenever it is set. When the platform config is blank the controller falls back to the tenant's `global.canonicalBaseUrl` site setting. Note: `canonicalBaseUrl` is primarily a SEO/sitemap value and may carry a placeholder in dev tenants — that is why the platform config wins by default. Subdomain-per-tenant production deployments either pin a single shared preview host in the platform config, or leave the platform config blank and rely on each tenant's canonical URL.
+- The preview-ticket response uses `app.cms.preview.storefront-base-url` (platform config) as the iframe origin whenever it is set. When the platform config is blank, `CmsPreviewApplicationService` falls back to the tenant's `global.canonicalBaseUrl` site setting. If neither is configured the service throws, preventing ticket issuance with an unknown preview origin. Both paths are validated to enforce `http`/`https` scheme and a non-empty host (SSRF prevention). Note: `canonicalBaseUrl` is primarily a SEO/sitemap value and may carry a placeholder in dev tenants — that is why the platform config wins by default. Subdomain-per-tenant production deployments either pin a single shared preview host in the platform config, or leave the platform config blank and rely on each tenant's canonical URL.
 
 ### Known limitations (Phase 2 candidates)
 

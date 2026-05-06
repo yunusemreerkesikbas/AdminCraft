@@ -213,23 +213,25 @@ ON DUPLICATE KEY UPDATE
   is_home = VALUES(is_home),
   robot_tag = VALUES(robot_tag);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'c7150001-0000-4000-8000-000000000001', 'contact-tr', p.id, 'TR', 'İletişim', 'İletişim | Ahmet Mülayim', '/contact', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'c7150001-0000-4000-8000-000000000001', 'contact-tr', p.id, 'TR', 'İletişim', 'İletişim', 'Logo, kurumsal kimlik ve kampanya tasarımları için proje kapsamınızı paylaşın. Ahmet Mülayim ile iletişime geçin.', '/contact', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'contact'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'c7150002-0000-4000-8000-000000000002', 'contact-en', p.id, 'EN', 'Contact', 'Contact | Ahmet Mülayim', '/contact', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'c7150002-0000-4000-8000-000000000002', 'contact-en', p.id, 'EN', 'Contact', 'Contact', 'Share your project scope for logo, brand identity and campaign design. Get in touch with Ahmet Mülayim.', '/contact', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'contact'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
