@@ -12,37 +12,46 @@ import { normalizeLanguage } from "../i18n/locale";
 import { resolveCmsEndpoint } from "../http/endpoints";
 import { fetchCmsJson } from "../http/fetch-json";
 
+export interface GetCmsPageOptions {
+  pageType?: string;
+  pageLabelOrId?: string;
+  code?: string;
+  previewTicket?: string;
+}
+
 export const getCmsPage = async (
   lang?: string,
-  pageType?: string,
-  pageLabelOrId?: string,
-  code?: string,
+  options?: GetCmsPageOptions,
 ): Promise<PageDeliveryResponse | null> => {
   const language = normalizeLanguage(lang);
   const query: Record<string, string | number | undefined> = { lang: language };
 
-  if (pageType) {
-    query.pageType = pageType;
+  if (options?.pageType) {
+    query.pageType = options.pageType;
   }
 
-  if (pageLabelOrId) {
-    query.pageLabelOrId = pageLabelOrId;
+  if (options?.pageLabelOrId) {
+    query.pageLabelOrId = options.pageLabelOrId;
   }
 
-  if (code) {
-    query.code = code;
+  if (options?.code) {
+    query.code = options.code;
   }
 
   return fetchCmsJson<PageDeliveryResponse>(resolveCmsEndpoint("cmsPages"), query, {
     revalidate: 30,
+    previewTicket: options?.previewTicket,
   });
 };
 
-export const getSiteConfig = async (lang?: string): Promise<SiteDeliveryResponse | null> =>
+export const getSiteConfig = async (
+  lang?: string,
+  previewTicket?: string,
+): Promise<SiteDeliveryResponse | null> =>
   fetchCmsJson<SiteDeliveryResponse>(
     resolveCmsEndpoint("cmsSite"),
     { lang: normalizeLanguage(lang) },
-    { revalidate: 300 },
+    { revalidate: 300, previewTicket },
   );
 
 export const getShell = async (lang?: string): Promise<ShellDeliveryResponse | null> =>

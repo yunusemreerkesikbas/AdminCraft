@@ -1,0 +1,157 @@
+<div class="spa-smartedit-shell" *transloco="let t">
+    <header class="se-toolbar">
+        <a
+            mat-icon-button
+            [routerLink]="['/', langParamSig(), 'pages']"
+            [matTooltip]="t('admin.smartedit.actions.backToList')"
+        >
+            <mat-icon>arrow_back</mat-icon>
+        </a>
+
+        <div class="se-toolbar__title">
+            <span class="se-toolbar__page-name">
+                {{ pageSig()?.uid ?? t('admin.smartedit.title') }}
+            </span>
+            <span
+                class="se-toolbar__connection"
+                [class.is-online]="connectedSig()"
+                [matTooltip]="connectedSig() ? t('admin.smartedit.tooltip.connected') : t('admin.smartedit.tooltip.connecting')"
+            >
+                <mat-icon>{{ connectedSig() ? 'wifi' : 'wifi_off' }}</mat-icon>
+            </span>
+        </div>
+
+        <div class="se-toolbar__viewport">
+            <button
+                mat-icon-button
+                [matTooltip]="t('admin.smartedit.viewport.desktop')"
+                [class.is-active]="viewportSig() === 'desktop'"
+                (click)="onViewportChange('desktop')"
+            >
+                <mat-icon>desktop_windows</mat-icon>
+            </button>
+            <button
+                mat-icon-button
+                [matTooltip]="t('admin.smartedit.viewport.tablet')"
+                [class.is-active]="viewportSig() === 'tablet'"
+                (click)="onViewportChange('tablet')"
+            >
+                <mat-icon>tablet_mac</mat-icon>
+            </button>
+            <button
+                mat-icon-button
+                [matTooltip]="t('admin.smartedit.viewport.mobile')"
+                [class.is-active]="viewportSig() === 'mobile'"
+                (click)="onViewportChange('mobile')"
+            >
+                <mat-icon>smartphone</mat-icon>
+            </button>
+        </div>
+
+        <div class="se-toolbar__lang">
+            <mat-icon>translate</mat-icon>
+            <mat-select
+                [value]="currentLangSig()"
+                (selectionChange)="onLanguageChange($event.value)"
+            >
+                @for (lang of supportedLanguagesSig(); track lang) {
+                    <mat-option [value]="lang">{{ lang }}</mat-option>
+                }
+            </mat-select>
+        </div>
+    </header>
+
+    <main class="se-main">
+        <div class="se-canvas">
+            @if (errorSig(); as errorMessage) {
+                <div class="se-error">
+                    <mat-icon>error_outline</mat-icon>
+                    <p>{{ errorMessage }}</p>
+                </div>
+            } @else {
+                @if (iframeUrlSig(); as src) {
+                    <div class="se-canvas__viewport" [style.max-width]="viewportWidthSig()">
+                        <iframe
+                            #iframe
+                            class="se-iframe"
+                            [src]="src"
+                            (load)="onIframeLoad()"
+                            referrerpolicy="origin"
+                            sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                        ></iframe>
+                    </div>
+                } @else {
+                    <div class="se-loading">
+                        <mat-spinner diameter="36"></mat-spinner>
+                        <span>{{ t('admin.smartedit.loading.iframe') }}</span>
+                    </div>
+                }
+            }
+        </div>
+
+        <aside class="se-inspector">
+            <section class="se-inspector__section">
+                <h3>{{ t('admin.smartedit.inspector.page') }}</h3>
+                <button mat-stroked-button (click)="editPageMetadata()" [disabled]="!pageSig() || busySig()">
+                    <mat-icon>edit_document</mat-icon>
+                    {{ t('admin.smartedit.actions.editPageMetadata') }}
+                </button>
+                <button
+                    mat-flat-button
+                    color="primary"
+                    (click)="publishCurrentLanguage()"
+                    [disabled]="!canPublishSig() || busySig()"
+                >
+                    <mat-icon>publish</mat-icon>
+                    {{ t('admin.smartedit.actions.publishCurrentLang') }} ({{ currentLangSig() }})
+                </button>
+            </section>
+
+            <section class="se-inspector__section">
+                <h3>{{ t('admin.smartedit.inspector.selection') }}</h3>
+                @if (selectionSig(); as selection) {
+                    <div class="se-selection-card" [attr.data-kind]="selection.kind">
+                        <div class="se-selection-card__row">
+                            <span class="se-label">{{ t('admin.smartedit.inspector.kind') }}</span>
+                            <span class="se-value">{{ selection.kind }}</span>
+                        </div>
+                        <div class="se-selection-card__row">
+                            <span class="se-label">{{ t('admin.smartedit.inspector.id') }}</span>
+                            <span class="se-value">{{ selection.id }}</span>
+                        </div>
+                        @switch (selection.kind) {
+                            @case ('component') {
+                                <div class="se-selection-card__row">
+                                    <span class="se-label">{{ t('admin.smartedit.inspector.componentType') }}</span>
+                                    <span class="se-value">{{ selection.componentType ?? '—' }}</span>
+                                </div>
+                                <button
+                                    mat-flat-button
+                                    color="primary"
+                                    (click)="editSelectedComponent()"
+                                    [disabled]="busySig()"
+                                >
+                                    <mat-icon>tune</mat-icon>
+                                    {{ t('admin.smartedit.actions.editComponent') }}
+                                </button>
+                            }
+                            @case ('slot') {
+                                <div class="se-selection-card__row">
+                                    <span class="se-label">{{ t('admin.smartedit.inspector.slotName') }}</span>
+                                    <span class="se-value">{{ selection.slotName ?? '—' }}</span>
+                                </div>
+                                <div class="se-selection-card__row">
+                                    <span class="se-label">{{ t('admin.smartedit.inspector.position') }}</span>
+                                    <span class="se-value">{{ selection.position ?? '—' }}</span>
+                                </div>
+                                <p class="se-help-text">{{ t('admin.smartedit.help.slotEditing') }}</p>
+                            }
+                        }
+                    </div>
+                } @else {
+                    <p class="se-help-text">{{ t('admin.smartedit.help.clickToSelect') }}</p>
+                }
+            </section>
+        </aside>
+    </main>
+</div>

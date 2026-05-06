@@ -526,6 +526,52 @@ export const langEN = {
                 loadTemplatesFailed: 'Failed to load templates',
             },
         },
+        smartedit: {
+            title: 'SmartEdit',
+            actions: {
+                openInSmartEdit: 'Open in SmartEdit',
+                backToList: 'Back to page list',
+                editPageMetadata: 'Edit page metadata',
+                editComponent: 'Edit component',
+                publishCurrentLang: 'Publish current language',
+            },
+            viewport: {
+                desktop: 'Desktop view',
+                tablet: 'Tablet view',
+                mobile: 'Mobile view',
+            },
+            tooltip: {
+                connected: 'Connected to storefront',
+                connecting: 'Waiting for storefront connection',
+            },
+            errors: {
+                invalidPageId: 'Invalid page identifier',
+                pageLoadFailed: 'Failed to load page',
+                ticketFailed: 'Failed to obtain preview ticket',
+                componentNotFound: 'Component not found',
+                componentLoadFailed: 'Failed to load component',
+                publishFailed: 'Publish operation failed',
+            },
+            messages: {
+                publishSuccess: 'Content published for the current language',
+            },
+            help: {
+                clickToSelect: 'Click any component inside the preview iframe to start editing.',
+                slotEditing: 'Slot structure is managed in the template editor — here you can only change content.',
+            },
+            loading: {
+                iframe: 'Loading preview…',
+            },
+            inspector: {
+                page: 'Page',
+                selection: 'Selection',
+                kind: 'Kind',
+                id: 'ID',
+                componentType: 'Component type',
+                slotName: 'Slot name',
+                position: 'Position',
+            },
+        },
         pageBuilder: {
             title: 'Page Builder',
             pages: 'Pages',

@@ -315,6 +315,15 @@ export const appRoutes: Route[] = [
                     ),
             },
             {
+                path: 'smartedit',
+                canActivate: [tenantAdminGuard, moduleGuard],
+                data: { requiredModule: 'core' },
+                loadChildren: () =>
+                    import(
+                        'app/modules/admin/custom/smartedit/smartedit.routes'
+                    ),
+            },
+            {
                 path: 'settings',
                 canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
