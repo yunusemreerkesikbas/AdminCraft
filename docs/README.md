@@ -36,6 +36,7 @@ Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/M
 - User Management: [`modules/user-management.md`](modules/user-management.md)
 - **Site Dashboard**: [`modules/site-dashboard.md`](modules/site-dashboard.md) - Unified site management interface
 - Page Builder: [`modules/pagebuilder.md`](modules/pagebuilder.md) _(core-managed capability in provisioning)_
+- SmartEdit (admin WYSIWYG editor): [`modules/smartedit.md`](modules/smartedit.md) _(layered on top of Page Builder + CMS Delivery)_
 - Site Settings: [`modules/site-settings.md`](modules/site-settings.md) _(integrated into Site Dashboard; not a provisioning module)_
 - Media Library (DAM): [`modules/media.md`](modules/media.md) _(core-managed capability in provisioning)_
 - Product Catalog: [`modules/product-catalog.md`](modules/product-catalog.md)

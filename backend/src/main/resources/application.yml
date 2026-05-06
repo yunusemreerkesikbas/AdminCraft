@@ -44,6 +44,11 @@ app:
       - http://127.0.0.1:3000
     allowed-origin-patterns:
       - http://*.localhost:4200
+  cms:
+    preview:
+      secret: ${CMS_PREVIEW_SECRET:DEV_ONLY_CMS_PREVIEW_SECRET_DO_NOT_USE_IN_PRODUCTION_AAAAAAAAAA}
+      ttl-seconds: ${CMS_PREVIEW_TTL_SECONDS:900}
+      storefront-base-url: ${CMS_PREVIEW_STOREFRONT_BASE_URL:http://localhost:3000}
   migration:
     re-encrypt-secrets: ${APP_MIGRATION_RE_ENCRYPT_SECRETS:false}
   tenant:

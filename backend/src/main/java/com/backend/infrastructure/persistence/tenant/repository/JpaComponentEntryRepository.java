@@ -23,6 +23,9 @@ public interface JpaComponentEntryRepository extends JpaRepository<ComponentEntr
     List<ComponentEntry> findByComponentIdInAndStatusOrderBySortOrderAsc(List<Long> componentIds,
             com.backend.domain.enums.ComponentStatus status);
 
+    List<ComponentEntry> findByComponentIdInAndStatusInOrderBySortOrderAsc(List<Long> componentIds,
+            java.util.Collection<com.backend.domain.enums.ComponentStatus> statuses);
+
     @Query("SELECT e FROM ComponentEntry e WHERE e.responsiveMedia.id = :responsiveMediaId")
     List<ComponentEntry> findByResponsiveMediaId(@Param("responsiveMediaId") Long responsiveMediaId);
 }

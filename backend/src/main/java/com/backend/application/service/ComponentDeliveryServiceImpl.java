@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.cms.preview.CmsRequestContext;
+import com.backend.application.cms.preview.CmsVisibility;
 import com.backend.application.dto.delivery.BatchDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.EntryDeliveryResponse;
@@ -41,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+@Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
 public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private static final int MAX_BATCH_SIZE = 50;
@@ -57,6 +59,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   private final ResponsiveMediaService responsiveMediaService;
   private final MediaFieldExpander mediaFieldExpander;
   private final NavigationService navigationService;
+  private final CmsRequestContext cmsRequestContext;
 
   @Override
   public Optional<ComponentDeliveryResponse> getComponentByUid(String uid, Language lang) {
@@ -66,7 +69,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
     }
 
     Component component = componentOpt.get();
-    if (component.getStatus() != ComponentStatus.PUBLISHED) {
+    if (!CmsVisibility.componentStatuses(cmsRequestContext.isPreview()).contains(component.getStatus())) {
       return Optional.empty();
     }
 
@@ -79,7 +82,8 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         ? uids.subList(0, MAX_BATCH_SIZE)
         : uids;
 
-    List<Component> components = componentRepository.findByUidInAndStatus(limitedUids, ComponentStatus.PUBLISHED);
+    Set<ComponentStatus> visibleStatuses = CmsVisibility.componentStatuses(cmsRequestContext.isPreview());
+    List<Component> components = componentRepository.findByUidInAndStatusIn(limitedUids, visibleStatuses);
     Map<String, Component> componentMap = components.stream()
         .collect(Collectors.toMap(Component::getUid, c -> c));
     List<Long> componentIds = components.stream()
@@ -90,7 +94,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .stream()
         .collect(Collectors.toMap(ComponentI18n::getComponentId, i -> i));
     List<ComponentEntry> allEntries = componentEntryRepository
-        .findByComponentIdInAndStatusOrderBySortOrder(componentIds, ComponentStatus.PUBLISHED);
+        .findByComponentIdInAndStatusInOrderBySortOrder(componentIds, visibleStatuses);
     Map<Long, List<ComponentEntry>> entriesByComponentId = allEntries.stream()
         .collect(Collectors.groupingBy(ComponentEntry::getComponentId));
     List<Long> entryIds = allEntries.stream()
@@ -221,8 +225,9 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
     Optional<ComponentI18n> i18nOpt = componentI18nRepository
         .findByComponentIdAndLanguage(component.getId(), lang);
 
+    Set<ComponentStatus> visibleStatuses = CmsVisibility.componentStatuses(cmsRequestContext.isPreview());
     List<ComponentEntry> entries = componentEntryRepository
-        .findByComponentIdAndStatusOrderBySortOrder(component.getId(), ComponentStatus.PUBLISHED);
+        .findByComponentIdInAndStatusInOrderBySortOrder(List.of(component.getId()), visibleStatuses);
 
     List<EntryDeliveryResponse> entryResponses = entries.stream()
         .map(entry -> buildEntryResponse(entry, component.getComponentTypeId(), lang))

@@ -228,23 +228,25 @@ ON DUPLICATE KEY UPDATE
   is_home = VALUES(is_home),
   robot_tag = VALUES(robot_tag);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'a6250001-0000-4000-8000-000000000001', 'about-tr', p.id, 'TR', 'Hakkında', 'Ahmet Mülayim Hakkında', '/about', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'a6250001-0000-4000-8000-000000000001', 'about-tr', p.id, 'TR', 'Hakkında', 'Hakkımda', 'Ahmet Mülayim; markalara logo, kurumsal kimlik ve kampanya görselleriyle net, akılda kalıcı ve uygulanabilir görsel sistemler tasarlar. Grafik tasarım süreci ve yaklaşımı.', '/about', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'a6250002-0000-4000-8000-000000000002', 'about-en', p.id, 'EN', 'About', 'About Ahmet Mülayim', '/about', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'a6250002-0000-4000-8000-000000000002', 'about-en', p.id, 'EN', 'About', 'About', 'Learn how Ahmet Mülayim builds distinctive logo design, brand identity and campaign visuals for brands—from process to collaboration in Samsun, Turkey.', '/about', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
@@ -257,25 +259,12 @@ SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'about'
-  AND ts.slot_name IN ('TopContent', 'BodyContent')
+  AND ts.slot_name IN ('TopContent', 'BodyContent', 'SideContent')
 ON DUPLICATE KEY UPDATE
   position = VALUES(position),
   sort_order = VALUES(sort_order),
   is_active = VALUES(is_active),
   is_shared = VALUES(is_shared),
-  updated_at = NOW();
-
-INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
-SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, FALSE, FALSE, NOW(), NOW()
-FROM pages p
-JOIN template_slots ts ON ts.template_id = p.template_id
-WHERE p.uid = 'about'
-  AND ts.slot_name = 'SideContent'
-ON DUPLICATE KEY UPDATE
-  position = VALUES(position),
-  sort_order = VALUES(sort_order),
-  is_active = FALSE,
-  is_shared = FALSE,
   updated_at = NOW();
 
 -- ============================================================
