@@ -19,17 +19,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Issues and verifies HMAC-SHA256 signed preview tickets used by the
- * SmartEdit-style admin iframe to fetch DRAFT CMS content.
- *
- * <p>Token format: {@code <payloadB64>.<signatureB64>} where the payload is
- * a pipe-delimited string {@code tenantId|userId|pageId|issuedAtEpoch|expiresAtEpoch}.
- * A pageId of {@code 0} means the ticket is not bound to a specific page.</p>
- *
- * <p>Tokens are intentionally <strong>opaque</strong> to clients (no JWT
- * libraries pulled in) and are validated against tenant context server-side.</p>
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -46,13 +35,6 @@ public class CmsPreviewTicketService {
   private final Environment environment;
   private SecretKeySpec secretKeySpec;
 
-  /**
-   * Refuse to start with a missing/short secret, or with the built-in dev
-   * placeholder secret in non-dev profiles. Validation lives here (and not on
-   * {@link CmsPreviewProperties}) because constructor binding for
-   * {@code @ConfigurationProperties} disallows non-property dependencies like
-   * {@link Environment}.
-   */
   @PostConstruct
   void validateSecret() {
     String secret = properties.getSecret();
@@ -82,17 +64,12 @@ public class CmsPreviewTicketService {
     return Arrays.stream(active).anyMatch(NON_PRODUCTION_PROFILES::contains);
   }
 
-  /**
-   * Issue a new preview ticket for the supplied tenant/user. Pass
-   * {@code pageId = null} to mint a "any-page" ticket (still tenant-scoped).
-   */
   public CmsPreviewTicket issue(long tenantId, Long userId, Long pageId) {
     Instant now = Instant.now();
     Instant exp = now.plusSeconds(properties.getTtlSeconds());
     return new CmsPreviewTicket(tenantId, userId, pageId, now, exp);
   }
 
-  /** Encode a ticket into its wire form (pre-signed). */
   public String encode(CmsPreviewTicket ticket) {
     String payload = serialize(ticket);
     String signature = sign(payload);
@@ -101,11 +78,6 @@ public class CmsPreviewTicketService {
         + signature;
   }
 
-  /**
-   * Verify a token, returning the decoded ticket when the signature, expiry,
-   * and structural checks all pass. Tenant matching is performed by the
-   * caller via {@code TenantContextPort}.
-   */
   public Optional<CmsPreviewTicket> verify(String token) {
     if (token == null || token.isBlank()) {
       return Optional.empty();

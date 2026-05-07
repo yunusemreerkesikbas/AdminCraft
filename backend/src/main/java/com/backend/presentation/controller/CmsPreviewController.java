@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.cms.preview.CmsPreviewApplicationService;
+import com.backend.application.cms.preview.PreviewTicketResult;
 import com.backend.presentation.dto.request.PreviewTicketIssueRequest;
 import com.backend.presentation.dto.response.PreviewTicketResponse;
 import com.backend.shared.common.ApiResponse;
@@ -40,7 +41,9 @@ public class CmsPreviewController {
         @RequestBody(required = false) @Valid PreviewTicketIssueRequest request) {
         Long userId = currentUserId();
         Long pageId = Optional.ofNullable(request).map(PreviewTicketIssueRequest::pageId).orElse(null);
-        PreviewTicketResponse response = applicationService.issueTicket(userId, pageId);
+        PreviewTicketResult result = applicationService.issueTicket(userId, pageId);
+        PreviewTicketResponse response = new PreviewTicketResponse(
+            result.ticket(), result.expiresAt(), result.storefrontBaseUrl());
         return ResponseEntity.ok(ApiResponse.success("Preview ticket issued", response));
     }
 

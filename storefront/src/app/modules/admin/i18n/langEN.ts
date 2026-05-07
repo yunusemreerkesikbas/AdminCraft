@@ -534,6 +534,7 @@ export const langEN = {
                 editPageMetadata: 'Edit page metadata',
                 editComponent: 'Edit component',
                 publishCurrentLang: 'Publish current language',
+                renewTicket: 'Renew session',
             },
             viewport: {
                 desktop: 'Desktop view',
@@ -554,6 +555,10 @@ export const langEN = {
             },
             messages: {
                 publishSuccess: 'Content published for the current language',
+            },
+            warnings: {
+                ticketExpiringSoon: 'Preview session expires in less than 2 minutes.',
+                ticketExpired: 'Preview session has expired. Renew to continue editing.',
             },
             help: {
                 clickToSelect: 'Click any component inside the preview iframe to start editing.',

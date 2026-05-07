@@ -15,8 +15,10 @@ const readPreviewTicket = (
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ lang: string; slug?: string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { lang, slug } = await params;
   if (slug?.[0] === "maintenance") {
@@ -26,11 +28,13 @@ export async function generateMetadata({
       description: translate("description"),
     };
   }
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const previewTicket = readPreviewTicket(resolvedSearchParams.preview);
   const isHome = !slug || slug.length === 0;
   const slugPath = isHome ? undefined : `/${slug.join("/")}`;
   const { page, site } = isHome
-    ? await loadHomepage(lang)
-    : await loadContentPage(lang, slugPath);
+    ? await loadHomepage(lang, previewTicket)
+    : await loadContentPage(lang, slugPath, previewTicket);
 
   return buildPageMetadata(page, site, isHome ? `/${lang}` : `/${lang}${slugPath}`);
 }

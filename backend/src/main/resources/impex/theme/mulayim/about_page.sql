@@ -103,13 +103,13 @@ INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, 
 SELECT seed.uuid, seed.uid, c.id, seed.language, seed.title, seed.subtitle, seed.description, 'PUBLISHED', NOW(), NOW()
 FROM (
   SELECT 'a6210001-0000-4000-8000-000000000001' AS uuid, 'MulayimAboutHeroComponentTr' AS uid, 'MulayimAboutHeroComponent' AS component_uid, 'TR' AS language,
-    'Atölyeyi tanıyın' AS title,
-    'Ahmet Mülayim' AS subtitle,
-    'Logo, kurumsal kimlik, sosyal medya ve kampanya görselleri üreten grafik tasarım pratiği.' AS description
-  UNION ALL SELECT 'a6210002-0000-4000-8000-000000000002', 'MulayimAboutHeroComponentEn', 'MulayimAboutHeroComponent', 'EN',
-    'Meet the studio',
+    'Şekiller ile oluşturulan marka hikayeleri!' AS title,
     'Ahmet Mülayim',
-    'Graphic design practice for logo, identity, social media and campaign visuals.'
+    'Grafik tasarım atölyesi · Atakum, Konya'
+  UNION ALL SELECT 'a6210002-0000-4000-8000-000000000002', 'MulayimAboutHeroComponentEn', 'MulayimAboutHeroComponent', 'EN',
+    'Brand stories created with shapes!',
+    'Ahmet Mülayim',
+    'Graphic design studio for logo, identity, social channels and campaign visuals — collaborative process rooted in Konya, Turkey.'
   UNION ALL SELECT 'a6210003-0000-4000-8000-000000000003', 'MulayimAboutIntroComponentTr', 'MulayimAboutIntroComponent', 'TR',
     'Ne yapıyoruz',
     'Grafik tasarım hizmetleri',
@@ -166,9 +166,9 @@ INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, descript
 SELECT seed.uuid, seed.uid, e.id, seed.language, seed.title, seed.description, 'PUBLISHED', seed.custom_data, NOW(), NOW(), NOW()
 FROM (
   SELECT 'a6230001-0000-4000-8000-000000000001' AS uuid, 'MulayimAboutHeroPrimaryTr' AS uid, 'MulayimAboutHeroPrimary' AS entry_uid, 'TR' AS language,
-    'Atölye görseli' AS title,
-    'Grafik tasarım yaklaşımını ve seçili marka işlerini daha yakından inceleyin.' AS description,
-    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'Projeleri İncele', 'buttonUrl', '/portfolio', 'supportingText', 'Logo, kimlik ve kampanya işleri', 'scrollTarget', 'MulayimAboutIntroComponent') AS custom_data
+    NULL AS title,
+    NULL AS description,
+    JSON_OBJECT('mediaUid', 'mulayim-about-hero', 'buttonText', 'Projeleri İncele', 'buttonUrl', '/portfolio', 'supportingText', NULL, 'scrollTarget', 'MulayimAboutIntroComponent') AS custom_data
   UNION ALL SELECT 'a6230002-0000-4000-8000-000000000002', 'MulayimAboutHeroPrimaryEn', 'MulayimAboutHeroPrimary', 'EN',
     'Studio image',
     'Explore the studio’s graphic design approach and selected brand work.',
@@ -229,7 +229,7 @@ ON DUPLICATE KEY UPDATE
   robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
-SELECT 'a6250001-0000-4000-8000-000000000001', 'about-tr', p.id, 'TR', 'Hakkında', 'Hakkımda', 'Ahmet Mülayim; markalara logo, kurumsal kimlik ve kampanya görselleriyle net, akılda kalıcı ve uygulanabilir görsel sistemler tasarlar. Grafik tasarım süreci ve yaklaşımı.', '/about', 'PUBLISHED'
+SELECT 'a6250001-0000-4000-8000-000000000001', 'about-tr', p.id, 'TR', 'Hakkında', 'Hakkımda | Ahmet Mülayim — Grafik tasarım atölyesi, Konya', 'Ahmet Mülayim ile tanışın: logo, kurumsal kimlik ve kampanya görsellerinde net, akılda kalıcı ve mecralarda tutarlı çalışan görsel sistemler. Atakum, Samsun.', '/about', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about'
 ON DUPLICATE KEY UPDATE
@@ -240,7 +240,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
-SELECT 'a6250002-0000-4000-8000-000000000002', 'about-en', p.id, 'EN', 'About', 'About', 'Learn how Ahmet Mülayim builds distinctive logo design, brand identity and campaign visuals for brands—from process to collaboration in Samsun, Turkey.', '/about', 'PUBLISHED'
+SELECT 'a6250002-0000-4000-8000-000000000002', 'about-en', p.id, 'EN', 'About', 'About | Ahmet Mülayim — Graphic design studio, Konya', 'Meet Ahmet Mülayim: logo design, brand identity and campaign visuals shaped into distinctive, practical systems for brands. Based in Atakum, Samsun, Turkey.', '/about', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about'
 ON DUPLICATE KEY UPDATE
@@ -296,6 +296,24 @@ SET m.uid = 'mulayim-about-hero'
 WHERE m.uid != 'mulayim-about-hero' AND existing.id IS NULL;
 
 UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'about-1.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'mulayim-about-intro-1' AND existing.id <> m.id
+SET m.uid = 'mulayim-about-intro-1'
+WHERE m.uid != 'mulayim-about-intro-1' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'about-2.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'mulayim-about-intro-2' AND existing.id <> m.id
+SET m.uid = 'mulayim-about-intro-2'
+WHERE m.uid != 'mulayim-about-intro-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'about-3.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'mulayim-about-intro-3' AND existing.id <> m.id
+SET m.uid = 'mulayim-about-intro-3'
+WHERE m.uid != 'mulayim-about-intro-3' AND existing.id IS NULL;
+
+UPDATE media m
 JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'portfolio-1.jpg') picked ON picked.id = m.id
 LEFT JOIN media existing ON existing.uid = 'mulayim-about-portfolio-1' AND existing.id <> m.id
 SET m.uid = 'mulayim-about-portfolio-1'
@@ -316,7 +334,11 @@ WHERE m.uid != 'mulayim-about-portfolio-3' AND existing.id IS NULL;
 -- ============================================================
 -- REQUIRED MEDIA UPLOADS
 --   hero-2-1.jpg
+--   about-1.jpg
+--   about-2.jpg
+--   about-3.jpg
 --   portfolio-1.jpg
 --   portfolio-2.jpg
 --   portfolio-3.jpg
 -- ============================================================
+

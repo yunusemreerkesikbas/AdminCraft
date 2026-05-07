@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.domain.constants.SiteSettingKeys;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.SiteSettingRepository;
-import com.backend.presentation.dto.response.PreviewTicketResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,7 @@ public class CmsPreviewApplicationService {
     private final TenantContextPort tenantContext;
 
     @Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
-    public PreviewTicketResponse issueTicket(Long userId, Long pageId) {
+    public PreviewTicketResult issueTicket(Long userId, Long pageId) {
         String tenantIdStr = tenantContext.getTenantId();
         if (tenantIdStr == null || tenantIdStr.isBlank()) {
             throw new IllegalStateException("Tenant context is not set");
@@ -35,7 +34,7 @@ public class CmsPreviewApplicationService {
         log.debug("Issued CMS preview ticket: tenantId={}, userId={}, pageId={}, exp={}",
             tenantId, userId, pageId, ticket.expiresAt());
 
-        return new PreviewTicketResponse(token, ticket.expiresAt(), storefrontBaseUrl);
+        return new PreviewTicketResult(token, ticket.expiresAt(), storefrontBaseUrl);
     }
 
     private String resolveStorefrontBaseUrl(long tenantId) {
@@ -46,12 +45,9 @@ public class CmsPreviewApplicationService {
         }
 
         String tenantBaseUrl = siteSettingRepository
-            .findByTenantIdAndLanguageIsNull(tenantId)
-            .stream()
-            .filter(s -> SiteSettingKeys.GLOBAL_CANONICAL_BASE_URL.equals(s.getSettingKey()))
+            .findByTenantIdAndSettingKeyAndLanguageIsNull(tenantId, SiteSettingKeys.GLOBAL_CANONICAL_BASE_URL)
             .map(s -> s.getSettingValue())
             .filter(value -> value != null && !value.isBlank())
-            .findFirst()
             .orElseThrow(() -> new IllegalStateException(
                 "No storefront base URL available: configure app.cms.preview.storefront-base-url"
                     + " or set global.canonicalBaseUrl on tenant " + tenantId));

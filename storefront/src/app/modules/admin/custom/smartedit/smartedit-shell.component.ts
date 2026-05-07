@@ -25,7 +25,7 @@ import { LanguageContextService } from '@core/services/language-context.service'
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ApiResponse } from '@core/crud';
-import { forkJoin, take } from 'rxjs';
+import { forkJoin, interval, take } from 'rxjs';
 
 import {
     ComponentEditDialogComponent,
@@ -92,6 +92,21 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
     protected readonly errorSig = signal<string | null>(null);
     protected readonly viewportSig = signal<Viewport>('desktop');
     protected readonly currentLangSig = signal<Language>(Language.TR);
+    protected readonly nowSig = signal(Date.now());
+
+    protected readonly isTicketExpiringSig = computed(() => {
+        const preview = this.previewSig();
+        if (!preview) return false;
+        const expiresAt = new Date(preview.expiresAt).getTime();
+        const now = this.nowSig();
+        return expiresAt > now && expiresAt - now < 2 * 60 * 1000;
+    });
+
+    protected readonly isTicketExpiredSig = computed(() => {
+        const preview = this.previewSig();
+        if (!preview) return false;
+        return new Date(preview.expiresAt).getTime() <= this.nowSig();
+    });
 
     protected readonly supportedLanguagesSig = computed<Language[]>(() => {
         const ctxLangs = this.#languageContext.supportedLanguages();
@@ -141,12 +156,16 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         }
 
         this.pageIdSig.set(pageId);
-        const defaultLang = this.#defaultLanguage();
-        if (defaultLang === null) {
+        const initialLang = this.#resolveInitialLanguage(langParam);
+        if (initialLang === null) {
             this.errorSig.set(this.#transloco.translate('admin.smartedit.errors.pageLoadFailed'));
             return;
         }
-        this.currentLangSig.set(defaultLang);
+        this.currentLangSig.set(initialLang);
+
+        interval(30_000)
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe(() => this.nowSig.set(Date.now()));
 
         this.#loadInitial(pageId);
         this.#issueTicket(pageId);
@@ -272,6 +291,12 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
             });
     }
 
+    renewTicket(): void {
+        const pageId = this.pageIdSig();
+        if (!pageId) return;
+        this.#issueTicket(pageId);
+    }
+
     onIframeLoad(): void {
         const iframe = this.iframeRef?.nativeElement;
         if (!iframe?.contentWindow) return;
@@ -288,6 +313,14 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
             snapshot = snapshot.parent;
         }
         return null;
+    }
+
+    #resolveInitialLanguage(langParam: string): Language | null {
+        const paramUpper = langParam.toUpperCase() as Language;
+        if (Object.values(Language).includes(paramUpper)) {
+            return paramUpper;
+        }
+        return this.#defaultLanguage();
     }
 
     #defaultLanguage(): Language | null {
@@ -343,8 +376,20 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
             .pipe(take(1))
             .subscribe({
                 next: (response) => {
+                    let origin: string;
+                    try {
+                        const parsed = new URL(response.storefrontBaseUrl);
+                        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                            throw new Error('Invalid protocol');
+                        }
+                        origin = parsed.origin;
+                    } catch {
+                        this.errorSig.set(this.#transloco.translate('admin.smartedit.errors.pageLoadFailed'));
+                        this.busySig.set(false);
+                        return;
+                    }
                     this.previewSig.set(response);
-                    this.#gateway.startListening(new URL(response.storefrontBaseUrl).origin);
+                    this.#gateway.startListening(origin);
                     this.#refreshIframeUrl();
                     this.busySig.set(false);
                 },

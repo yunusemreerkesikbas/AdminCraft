@@ -530,6 +530,7 @@ export const langTR = {
                 editPageMetadata: 'Sayfa bilgilerini düzenle',
                 editComponent: 'Bileşeni düzenle',
                 publishCurrentLang: 'Geçerli dili yayınla',
+                renewTicket: 'Oturumu yenile',
             },
             viewport: {
                 desktop: 'Masaüstü görünümü',
@@ -550,6 +551,10 @@ export const langTR = {
             },
             messages: {
                 publishSuccess: 'Geçerli dil için içerik yayınlandı',
+            },
+            warnings: {
+                ticketExpiringSoon: 'Önizleme oturumunun süresi 2 dakikadan az kaldı.',
+                ticketExpired: 'Önizleme oturumunun süresi doldu. Düzenlemeye devam etmek için yenileyin.',
             },
             help: {
                 clickToSelect: 'Düzenlemek için iframe içindeki bir bileşene tıklayın.',

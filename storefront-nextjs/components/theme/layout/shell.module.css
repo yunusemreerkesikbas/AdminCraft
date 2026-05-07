@@ -230,6 +230,10 @@
   border-bottom: 1px solid rgba(6, 7, 40, 0.1);
 }
 
+.panelNavSectionHeader {
+  position: relative;
+}
+
 .panelNavSection:last-child {
   border-bottom: 0;
 }
@@ -282,6 +286,31 @@
 
 .panelNavLinkStandalone {
   padding-right: 0;
+}
+
+.panelNavLinkWithToggle {
+  padding-right: 72px;
+}
+
+.panelNavToggleButton {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border: 0;
+  background: transparent;
+  color: #19191a;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color 0.3s ease;
+}
+
+.panelNavToggleButtonOpen {
+  color: rgba(25, 25, 26, 0.72);
 }
 
 .panelNavToggle {

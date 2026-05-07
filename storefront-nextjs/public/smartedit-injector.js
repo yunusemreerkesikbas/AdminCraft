@@ -1,21 +1,3 @@
-/* SmartEdit storefront-side bridge.
- *
- * Loaded by the Next.js storefront layout. Activates only when the URL
- * carries a `?preview=<ticket>` query parameter (the admin SmartEdit shell
- * adds this when embedding the storefront in its iframe).
- *
- * Contract:
- * - Posts {type:"smartedit:ready",payload:{pageUid,lang,href}} on load.
- * - Listens for clicks bubbling up from elements that carry
- *   `data-cms-component-id` or `data-cms-slot-id` and posts
- *   {type:"smartedit:select",payload:{kind,id,...rect}}.
- * - Listens for parent → iframe messages of type "smartedit:reload"
- *   and reloads the current page so the iframe re-fetches DRAFT content.
- *
- * Allowed parent origins are read from the script tag's
- * `data-allowed-origins` attribute (comma-separated). Messages from / to
- * other origins are ignored.
- */
 (function () {
   "use strict";
 
@@ -115,7 +97,9 @@
       return;
     }
     if (data.type === "smartedit:reload") {
-      window.location.reload();
+      var reloadUrl = new URL(window.location.href);
+      reloadUrl.searchParams.set("_se", Date.now().toString());
+      window.location.replace(reloadUrl.toString());
     }
   }
 

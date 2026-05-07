@@ -360,7 +360,7 @@
 
 .storyHello {
   position: absolute;
-  top: -55px;
+  top: -70px;
   left: 20px;
   display: inline-flex;
   align-items: center;
@@ -822,8 +822,7 @@
     radial-gradient(circle at 8% 22%, rgba(255, 255, 255, 0.08) 0 2px, transparent 3px),
     radial-gradient(circle at 96% 18%, rgba(255, 255, 255, 0.05) 0 3px, transparent 4px),
     radial-gradient(circle at 40% 100%, rgba(255, 255, 255, 0.04), transparent 36%),
-    linear-gradient(0deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02)),
-    #111111;
+    linear-gradient(0deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02)), #111111;
   background-position: center center;
   background-repeat: repeat;
   background-size: auto;
@@ -874,8 +873,7 @@
   display: block;
   height: 20px;
   border-radius: 999px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.14));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.14));
   animation: content-logo-pulse 2.6s ease-in-out infinite;
 }
 
@@ -970,8 +968,7 @@
 }
 
 .awardsPreviewPlaceholder {
-  background:
-    linear-gradient(145deg, #2c2c2c 12%, #3f3f3f 48%, #1e1e1e 100%);
+  background: linear-gradient(145deg, #2c2c2c 12%, #3f3f3f 48%, #1e1e1e 100%);
   border-radius: 18px;
   overflow: hidden;
 }

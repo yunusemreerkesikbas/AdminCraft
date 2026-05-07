@@ -61,6 +61,24 @@
         </div>
     </header>
 
+    @if (isTicketExpiredSig()) {
+        <div class="se-ticket-banner se-ticket-banner--expired">
+            <mat-icon>timer_off</mat-icon>
+            <span>{{ t('admin.smartedit.warnings.ticketExpired') }}</span>
+            <button mat-stroked-button (click)="renewTicket()" [disabled]="busySig()">
+                {{ t('admin.smartedit.actions.renewTicket') }}
+            </button>
+        </div>
+    } @else if (isTicketExpiringSig()) {
+        <div class="se-ticket-banner se-ticket-banner--expiring">
+            <mat-icon>timer</mat-icon>
+            <span>{{ t('admin.smartedit.warnings.ticketExpiringSoon') }}</span>
+            <button mat-stroked-button (click)="renewTicket()" [disabled]="busySig()">
+                {{ t('admin.smartedit.actions.renewTicket') }}
+            </button>
+        </div>
+    }
+
     <main class="se-main">
         <div class="se-canvas">
             @if (errorSig(); as errorMessage) {

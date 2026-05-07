@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, NgZone, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, fromEvent } from 'rxjs';
+import { ReplaySubject, Subject, fromEvent } from 'rxjs';
 
 import {
     SmartEditInboundMessage,
@@ -14,8 +14,8 @@ export class SmartEditGatewayService {
     readonly #zone = inject(NgZone);
     readonly #destroyRef = inject(DestroyRef);
 
-    readonly #ready$ = new Subject<SmartEditReadyMessage['payload']>();
-    readonly #selection$ = new Subject<SmartEditSelectMessage['payload']>();
+    readonly #ready$ = new ReplaySubject<SmartEditReadyMessage['payload']>(1);
+    readonly #selection$ = new ReplaySubject<SmartEditSelectMessage['payload']>(1);
 
     readonly ready$ = this.#ready$.asObservable();
     readonly selection$ = this.#selection$.asObservable();
