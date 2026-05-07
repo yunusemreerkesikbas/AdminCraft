@@ -6,6 +6,12 @@ export type FetchJsonOptions = {
   cache?: RequestCache;
   revalidate?: number;
   extraHeaders?: Record<string, string>;
+  /**
+   * SmartEdit preview ticket. When set, the request bypasses ISR caching
+   * (forces {@code cache: "no-store"}) and forwards {@code X-Cms-Preview-Ticket}
+   * so the backend serves DRAFT content.
+   */
+  previewTicket?: string;
 };
 
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -16,13 +22,21 @@ export const fetchCmsJson = async <T>(
   options?: FetchJsonOptions,
 ): Promise<T | null> => {
   const url = buildCmsUrl(path, params);
-  const requestCache = isDevelopment ? "no-store" : options?.cache ?? "force-cache";
+  const previewActive = Boolean(options?.previewTicket);
+  const requestCache = previewActive
+    ? "no-store"
+    : isDevelopment
+      ? "no-store"
+      : options?.cache ?? "force-cache";
+  const previewHeaders: Record<string, string> = previewActive
+    ? { "X-Cms-Preview-Ticket": options!.previewTicket! }
+    : {};
   const fetchOptions: RequestInit & { next?: { revalidate?: number } } = {
-    headers: { ...(await buildJsonHeaders()), ...options?.extraHeaders },
+    headers: { ...(await buildJsonHeaders()), ...previewHeaders, ...options?.extraHeaders },
     cache: requestCache,
   };
 
-  if (!isDevelopment && options?.revalidate !== undefined) {
+  if (!previewActive && !isDevelopment && options?.revalidate !== undefined) {
     fetchOptions.next = { revalidate: options.revalidate };
   }
 

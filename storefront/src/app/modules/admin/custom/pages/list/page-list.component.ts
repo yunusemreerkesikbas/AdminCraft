@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -52,6 +53,8 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
     #confirmationService = inject(ConfirmationService);
     #dialog = inject(MatDialog);
     #languageContext = inject(LanguageContextService);
+    #router = inject(Router);
+    #activatedRoute = inject(ActivatedRoute);
 
     protected pageSizeSig = signal(24);
     protected pageIndexSig = signal(0);
@@ -109,12 +112,24 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
                 action: 'slots'
             },
             {
+                icon: 'heroicons_outline:cursor-arrow-rays',
+                label: 'admin.smartedit.actions.openInSmartEdit',
+                action: 'smartedit'
+            },
+            {
                 icon: 'heroicons_outline:trash',
                 label: 'admin.common.actions.delete',
                 action: 'delete',
                 color: 'warn'
             }
         ];
+    }
+
+    protected openInSmartEdit(page: PageListDto): void {
+        const lang = this.#activatedRoute.snapshot.paramMap.get('lang') ??
+            this.#activatedRoute.parent?.snapshot.paramMap.get('lang') ??
+            'tr';
+        this.#router.navigate(['/', lang, 'smartedit', page.id]);
     }
 
     protected override loadItems(): void {
@@ -211,6 +226,9 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
                 break;
             case 'slots':
                 this.#openSlotDialog(item);
+                break;
+            case 'smartedit':
+                this.openInSmartEdit(item);
                 break;
             case 'delete':
                 this.deletePage(item);

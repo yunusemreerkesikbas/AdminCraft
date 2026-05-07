@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CrudEndpoints, CrudHttpService } from '@core/crud';
+import { ApiResponse, CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable, Subject } from 'rxjs';
 import {
     CreatePageCompositeRequest,
@@ -67,8 +67,8 @@ export class PageBuilderService extends CrudHttpService<PageListDto, CreatePageR
     return this.customPut<PageI18nDto>('pageI18n', req, { pageId, language });
   }
 
-  publishPageI18n(pageId: number, language: Language, req?: PublishPageI18nRequest): Observable<PageI18nDto> {
-    return this.customPost<PageI18nDto>('pageI18nPublish', req || {}, { pageId, language });
+  publishPageI18n(pageId: number, language: Language, req?: PublishPageI18nRequest): Observable<ApiResponse<PageI18nDto>> {
+    return this.api.post<ApiResponse<PageI18nDto>>('pageI18nPublish', req || {}, { pageId, language });
   }
 
   // Composite operations (Sprint 34 pattern)

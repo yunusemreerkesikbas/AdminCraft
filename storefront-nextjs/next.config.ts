@@ -39,6 +39,27 @@ const buildImageRemotePatterns = (): NextConfig["images"] => {
   return { remotePatterns: patterns };
 };
 
+const buildSecurityHeaders = (): NextConfig["headers"] => {
+  const smartEditOrigins = process.env.NEXT_PUBLIC_SMARTEDIT_ALLOWED_ORIGINS;
+  if (!smartEditOrigins) return undefined;
+  const frameAncestors = smartEditOrigins
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .join(" ");
+  return async () => [
+    {
+      source: "/(.*)",
+      headers: [
+        {
+          key: "Content-Security-Policy",
+          value: `frame-ancestors 'self' ${frameAncestors}`,
+        },
+      ],
+    },
+  ];
+};
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.resolve(__dirname),
   ...(outputMode && { output: outputMode }),
@@ -48,6 +69,7 @@ const nextConfig: NextConfig = {
     },
   },
   images: buildImageRemotePatterns(),
+  headers: buildSecurityHeaders(),
 };
 
 export default withNextIntl(nextConfig);

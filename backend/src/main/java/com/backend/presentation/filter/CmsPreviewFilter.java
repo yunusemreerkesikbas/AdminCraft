@@ -18,22 +18,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Inspects {@code /cms/**} delivery requests for a SmartEdit preview ticket.
- * When a valid token is present (header {@code X-Cms-Preview-Ticket} or query
- * param {@code ?preview=}) and the ticket's tenant matches the resolved
- * {@code TenantContext}, the {@link CmsRequestContext#enablePreview()} flag is
- * set so downstream delivery services switch to DRAFT-only mode.
- *
- * <p>If a token is supplied but rejected (invalid, expired, cross-tenant) the
- * request is short-circuited with HTTP 401 — the only callers of this header
- * are authenticated SmartEdit shells, so a soft-fail would mask client bugs.
- * Requests without the header proceed unchanged in live PUBLISHED-only mode.</p>
- *
- * <p>Scoped to {@code /cms/} paths only (see {@link #shouldNotFilter}); all
- * other endpoints skip the verification cost and avoid presenting an HMAC
- * oracle on auth/admin paths.</p>
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -54,7 +38,6 @@ public class CmsPreviewFilter extends OncePerRequestFilter {
     if (path == null || !path.startsWith(CMS_PATH_PREFIX)) {
       return true;
     }
-    // Preview ticket issuance endpoints never carry a preview ticket themselves.
     return path.startsWith(CMS_PREVIEW_PREFIX);
   }
 

@@ -3,7 +3,7 @@
 -- Run via Admin UI /{lang}/impex after theme/mulayim/mulayim_foundation.sql and after media uploads.
 -- Seeds the homepage body using the portfolio-grid-col-4 source layout.
 -- Shared header and footer chrome remain foundation-owned.
--- Foundation owns globally reusable component types and field definitions, including BigTextCtaComponent and SeoParagraphComponent.
+-- Foundation owns globally reusable component types and field definitions, including IntroBannerSliderComponent, BigTextCtaComponent and SeoParagraphComponent.
 -- Idempotent: safe to run multiple times.
 
 -- ============================================================
@@ -69,8 +69,8 @@ ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 -- ============================================================
 
 INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'f6100001-0000-4000-8000-000000000001', 'IntroBannerBlock', ct.id, 'Intro Banner Block', 0, TRUE, 'intro-banner', 'PUBLISHED', NOW(), NOW()
-FROM component_types ct WHERE ct.uid = 'SimpleBannerComponent'
+SELECT 'f6100001-0000-4000-8000-000000000001', 'IntroBannerBlock', ct.id, 'Intro Banner Slider', 0, TRUE, 'intro-banner-slider', 'PUBLISHED', NOW(), NOW()
+FROM component_types ct WHERE ct.uid = 'IntroBannerSliderComponent'
 ON DUPLICATE KEY UPDATE
   component_type_id = VALUES(component_type_id),
   name = VALUES(name),
@@ -122,9 +122,9 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200001-0000-4000-8000-000000000001', 'IntroBannerBlockTr', c.id, 'TR',
-  'Markanızı öne çıkaran güçlü tasarımlar',
-  NULL,
-  NULL,
+  'Logo, kimlik ve kampanyada seçili işler',
+  'Ahmet Mülayim Grafik Atölye',
+  'Şekil ve düzeni bir araya getirerek markanızın hikayesini logo, kurumsal kimlik ve kampanya görsellerinde tutarlı şekilde anlatıyoruz.',
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'IntroBannerBlock'
 ON DUPLICATE KEY UPDATE
@@ -136,9 +136,9 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200002-0000-4000-8000-000000000002', 'IntroBannerBlockEn', c.id, 'EN',
-  'Powerful designs that make your brand stand out',
-  NULL,
-  NULL,
+  'Selected work that sharpens how your brand is seen',
+  'Ahmet Mulayim Studio',
+  'A curated set of logo, identity and campaign projects presented through a large visual stage and an editorial intro block inside one reusable CMS section.',
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'IntroBannerBlock'
 ON DUPLICATE KEY UPDATE
@@ -152,7 +152,7 @@ INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, 
 SELECT 'f6200003-0000-4000-8000-000000000003', 'PortfolioCardGridTr', c.id, 'TR',
   'Seçili Çalışmalar',
   'Logo, kurumsal kimlik ve kampanya tasarımlarından öne çıkan işler',
-  'Sektör bağımsız markalar için ürettiğimiz seçili logo ve kimlik projeleri.',
+  'Farklı sektörlerden markalar için seçilmiş logo, kimlik ve kampanya çalışmalarımızdan bir kesit.',
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'PortfolioCardGrid'
 ON DUPLICATE KEY UPDATE
@@ -178,8 +178,8 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200005-0000-4000-8000-000000000005', 'StatementCtaBlockTr', c.id, 'TR',
-  'Markanı güçlendiren tasarım',
-  'Logo, kurumsal kimlik ve kampanya tasarımını birlikte planlayalım',
+  'Markanızın görsel hikayesini birlikte kuralım',
+  'Logo, kurumsal kimlik ve kampanya tasarımını tek bir sistemde düşünelim',
   NULL,
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StatementCtaBlock'
@@ -206,13 +206,13 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200007-0000-4000-8000-000000000007', 'HomepageSeoParagraphTr', c.id, 'TR',
-  'Grafik tasarım, logo tasarımı ve marka kimliği için net bir yaratıcı süreç',
+  'Grafik tasarım, logo ve kurumsal kimlik için net bir süreç',
   NULL,
-  'Markaların ihtiyaç duyduğu grafik tasarım, logo tasarımı ve kurumsal kimlik tasarımı çalışmalarını yalnızca estetik bir çıktı olarak değil, markanın konumunu güçlendiren uygulanabilir bir sistem olarak ele alıyoruz.
+  'Ahmet Mülayim Grafik Atölye olarak grafik tasarım, logo tasarımı ve kurumsal kimlik çalışmalarını yalnızca tek bir görsel teslimat değil; şekil, tipografi ve renk düzenini bir araya getiren, markanın konumunu güçlendiren uygulanabilir bir sistem olarak ele alıyoruz.
 
-Her projeye marka kimliğini, hedef kitleyi ve kullanım alanlarını birlikte değerlendirerek başlıyoruz. Bu yaklaşım sayesinde sosyal medya tasarımı, kampanya görselleri, basılı materyaller ve dijital iletişim noktalarında tutarlı bir görünüm kuruyor; markaların daha güvenilir, daha görünür ve daha hatırlanır hale gelmesine yardımcı oluyoruz.
+Her projeye markayı, hedef kitleyi ve kullanım alanlarını birlikte okuyarak başlıyoruz. Böylece sosyal medya tasarımı, kampanya görselleri, basılı materyaller ve dijital iletişimde tutarlı bir yüz oluşturuyor; markanızın daha güvenilir, daha görünür ve daha akılda kalır olmasına katkı sağlıyoruz.
 
-Logo tasarımı ya da kurumsal kimlik tasarımı ihtiyacınız yeni bir başlangıçtan mevcut görünümü güçlendirmeye kadar uzanıyorsa, kısa ömürlü görseller üretmek yerine markanıza uzun vadede güven veren ve farklı mecralarda net çalışan bir tasarım altyapısı kurmaya odaklanıyoruz.',
+İhtiyaç yeni bir logo ile başlasa da mevcut görünümün güçlendirilmesiyle devam etse de, kısa ömürlü görseller yerine Atakum, Samsun merkezli çalışma düzenimizle uzun vadede mecralarda sapmadan çalışan bir tasarım altyapısı kurmayı hedefliyoruz.',
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'HomepageSeoParagraph'
 ON DUPLICATE KEY UPDATE
@@ -247,7 +247,10 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, style_classes, status, created_at, updated_at)
 SELECT seed.uuid, seed.uid, c.id, seed.sort_order, TRUE, NULL, 'PUBLISHED', NOW(), NOW()
 FROM (
-  SELECT 'f6300001-0000-4000-8000-000000000001' AS uuid, 'PortfolioCard01' AS uid, 'PortfolioCardGrid' AS component_uid, 0 AS sort_order
+  SELECT 'f6300101-0000-4000-8000-000000000101' AS uuid, 'IntroBannerSlide01' AS uid, 'IntroBannerBlock' AS component_uid, 0 AS sort_order
+  UNION ALL SELECT 'f6300102-0000-4000-8000-000000000102', 'IntroBannerSlide02', 'IntroBannerBlock', 1
+  UNION ALL SELECT 'f6300103-0000-4000-8000-000000000103', 'IntroBannerSlide03', 'IntroBannerBlock', 2
+  UNION ALL SELECT 'f6300001-0000-4000-8000-000000000001', 'PortfolioCard01', 'PortfolioCardGrid', 0
   UNION ALL SELECT 'f6300002-0000-4000-8000-000000000002', 'PortfolioCard02', 'PortfolioCardGrid', 1
   UNION ALL SELECT 'f6300003-0000-4000-8000-000000000003', 'PortfolioCard03', 'PortfolioCardGrid', 2
   UNION ALL SELECT 'f6300004-0000-4000-8000-000000000004', 'PortfolioCard04', 'PortfolioCardGrid', 3
@@ -273,7 +276,22 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT seed.uuid, seed.uid, e.id, seed.language, seed.title, seed.description, 'PUBLISHED', seed.custom_data, NOW(), NOW(), NOW()
 FROM (
-  SELECT 'f6400001-0000-4000-8000-000000000001' AS uuid, 'PortfolioCard01Tr' AS uid, 'PortfolioCard01' AS entry_uid, 'TR' AS language, 'Babil Sanat Logo & Kurumsal Kimlik' AS title, 'Logo Tasarım ve Kurumsal Kimlik' AS description,
+  SELECT 'f6400101-0000-4000-8000-000000000101' AS uuid, 'IntroBannerSlide01Tr' AS uid, 'IntroBannerSlide01' AS entry_uid, 'TR' AS language, 'Logo ve kurumsal kimlik sistemleri' AS title, 'Markanın ilk temas noktasını netleştiren logo, tipografi ve kimlik uygulamaları.' AS description,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'eyebrow', 'Seçili Çalışma', 'buttonText', 'Projeleri İncele', 'buttonUrl', '/portfolio', 'altText', 'Ahmet Mülayim ana sayfa slaytında logo ve kurumsal kimlik çalışması görseli') AS custom_data
+  UNION ALL SELECT 'f6400102-0000-4000-8000-000000000102', 'IntroBannerSlide01En', 'IntroBannerSlide01', 'EN', 'Logo and identity systems' AS title, 'Logo, typography and identity applications built to clarify the brand at first glance.' AS description,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'eyebrow', 'Selected Work', 'buttonText', 'View Portfolio', 'buttonUrl', '/portfolio', 'altText', 'Mulayim homepage slider first image')
+
+  UNION ALL SELECT 'f6400103-0000-4000-8000-000000000103', 'IntroBannerSlide02Tr', 'IntroBannerSlide02', 'TR', 'Kampanya ve dijital iletişim dili' AS title, 'Sosyal medya, kampanya görselleri ve dijital temas noktalarında tutarlı bir marka deneyimi.' AS description,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'eyebrow', 'Görsel Sistem', 'buttonText', 'Hakkımda', 'buttonUrl', '/about', 'altText', 'Ahmet Mülayim ana sayfa slaytında kampanya ve dijital iletişim görseli')
+  UNION ALL SELECT 'f6400104-0000-4000-8000-000000000104', 'IntroBannerSlide02En', 'IntroBannerSlide02', 'EN', 'Campaign and digital communication' AS title, 'Consistent visual direction across social media, campaign assets and digital touchpoints.' AS description,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'eyebrow', 'Visual System', 'buttonText', 'About the Studio', 'buttonUrl', '/about', 'altText', 'Mulayim homepage slider second image')
+
+  UNION ALL SELECT 'f6400105-0000-4000-8000-000000000105', 'IntroBannerSlide03Tr', 'IntroBannerSlide03', 'TR', 'Marka hikayesini temas noktasına dönüştürme' AS title, 'Her mecrada daha güvenilir, daha görünür ve daha akılda kalır bir marka deneyimi için seçili tasarım yaklaşımı.' AS description,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'eyebrow', 'İletişime Geç', 'buttonText', 'Temas Kur', 'buttonUrl', '/contact', 'altText', 'Ahmet Mülayim ana sayfa slaytında iletişim ve marka dokunuşu görseli')
+  UNION ALL SELECT 'f6400106-0000-4000-8000-000000000106', 'IntroBannerSlide03En', 'IntroBannerSlide03', 'EN', 'Turning brand story into touchpoints' AS title, 'A selected design approach built to make the brand feel more credible, more visible and easier to remember across channels.' AS description,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'eyebrow', 'Get in Touch', 'buttonText', 'Contact', 'buttonUrl', '/contact', 'altText', 'Mulayim homepage slider third image')
+
+  UNION ALL SELECT 'f6400001-0000-4000-8000-000000000001' AS uuid, 'PortfolioCard01Tr' AS uid, 'PortfolioCard01' AS entry_uid, 'TR' AS language, 'Babil Sanat Logo & Kurumsal Kimlik' AS title, 'Logo Tasarım ve Kurumsal Kimlik' AS description,
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Kurumsal Kimlik', 'altText', 'Babil Sanat için hazırlanan logo ve kurumsal kimlik tasarımı', 'ariaLabel', '') AS custom_data
   UNION ALL SELECT 'f6400002-0000-4000-8000-000000000002', 'PortfolioCard01En', 'PortfolioCard01', 'EN', 'Babil Sanat Logo & Corporate Identity', 'Logo and Corporate Identity',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Identity', 'altText', 'Logo and brand identity design created for Babil Sanat', 'ariaLabel', '')
@@ -288,27 +306,27 @@ FROM (
   UNION ALL SELECT 'f6400006-0000-4000-8000-000000000006', 'PortfolioCard03En', 'PortfolioCard03', 'EN', 'Kns Foreign Trade Consultancy Logo', 'Logo Design',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'linkUrl', '/portfolio/kns-dis-ticaret-danismanlik-logo', 'category', 'Logo Design', 'altText', 'Logo design created for Kns Foreign Trade Consultancy', 'ariaLabel', '')
 
-  UNION ALL SELECT 'f6400007-0000-4000-8000-000000000007', 'PortfolioCard04Tr', 'PortfolioCard04', 'TR', 'Armin Besi Logo', 'Yalin ve ayirt edici logo tasarimi',
+  UNION ALL SELECT 'f6400007-0000-4000-8000-000000000007', 'PortfolioCard04Tr', 'PortfolioCard04', 'TR', 'Armin Besi Logo', 'Yalın ve ayırt edici logo tasarımı',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/armin-besi-logo', 'category', 'Logo Tasarımı', 'altText', 'Armin Besi markası için geliştirilen logo tasarımı', 'ariaLabel', '')
   UNION ALL SELECT 'f6400008-0000-4000-8000-000000000008', 'PortfolioCard04En', 'PortfolioCard04', 'EN', 'Armin Besi Logo', 'Logo Design',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-04', 'linkUrl', '/portfolio/armin-besi-logo', 'category', 'Logo Design', 'altText', 'Logo design developed for Armin Besi', 'ariaLabel', '')
 
-  UNION ALL SELECT 'f6400009-0000-4000-8000-000000000009', 'PortfolioCard05Tr', 'PortfolioCard05', 'TR', 'Işık Ticaret Askeri Malzeme Logo', 'Mevcut markayi guclendiren logo revizyonu',
+  UNION ALL SELECT 'f6400009-0000-4000-8000-000000000009', 'PortfolioCard05Tr', 'PortfolioCard05', 'TR', 'Işık Ticaret Askeri Malzeme Logo', 'Mevcut markayı güçlendiren logo revizyonu',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/isik-ticaret-askeri-malzeme-logo', 'category', 'Logo Tasarımı', 'altText', 'Işık Ticaret markası için uygulanan logo revizyonu', 'ariaLabel', '')
   UNION ALL SELECT 'f6400010-0000-4000-8000-000000000010', 'PortfolioCard05En', 'PortfolioCard05', 'EN', 'Işık Ticaret Military Equipment Logo', 'Logo Refresh',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-05', 'linkUrl', '/portfolio/isik-ticaret-askeri-malzeme-logo', 'category', 'Logo Design', 'altText', 'Logo refresh project for Isik Ticaret', 'ariaLabel', '')
 
-  UNION ALL SELECT 'f6400011-0000-4000-8000-000000000011', 'PortfolioCard06Tr', 'PortfolioCard06', 'TR', 'Köktaş İnşaat Logo ve Kartvizit', 'Sahada guven veren logo ve kartvizit tasarimi',
+  UNION ALL SELECT 'f6400011-0000-4000-8000-000000000011', 'PortfolioCard06Tr', 'PortfolioCard06', 'TR', 'Köktaş İnşaat Logo ve Kartvizit', 'Sahada güven veren logo ve kartvizit tasarımı',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/koktas-i-nsaat-logo-ve-kartvizit', 'category', 'Kurumsal Kimlik', 'altText', 'Köktaş İnşaat için hazırlanan logo ve kartvizit tasarımı', 'ariaLabel', '')
   UNION ALL SELECT 'f6400012-0000-4000-8000-000000000012', 'PortfolioCard06En', 'PortfolioCard06', 'EN', 'Köktaş İnşaat Logo and Business Card', 'Logo and Business Card',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-06', 'linkUrl', '/portfolio/koktas-i-nsaat-logo-ve-kartvizit', 'category', 'Corporate Identity', 'altText', 'Logo and business card design for Koktas Insaat', 'ariaLabel', '')
 
-  UNION ALL SELECT 'f6400013-0000-4000-8000-000000000013', 'PortfolioCard07Tr', 'PortfolioCard07', 'TR', 'Hasça Kuruyemiş - Kahve Logo Tasarımı', 'Raflarda ayirt edilen logo tasarimi',
+  UNION ALL SELECT 'f6400013-0000-4000-8000-000000000013', 'PortfolioCard07Tr', 'PortfolioCard07', 'TR', 'Hasça Kuruyemiş - Kahve Logo Tasarımı', 'Raflarda ayırt edilen logo tasarımı',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/hasca-kuruyemis-kahve-logo-tasarimi', 'category', 'Logo Tasarımı', 'altText', 'Hasça Kuruyemiş Kahve markası için logo tasarımı', 'ariaLabel', '')
   UNION ALL SELECT 'f6400014-0000-4000-8000-000000000014', 'PortfolioCard07En', 'PortfolioCard07', 'EN', 'Hasça Nuts and Coffee Logo Design', 'Logo Design',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-07', 'linkUrl', '/portfolio/hasca-kuruyemis-kahve-logo-tasarimi', 'category', 'Logo Design', 'altText', 'Logo design project for Hasca Nuts and Coffee', 'ariaLabel', '')
 
-  UNION ALL SELECT 'f6400015-0000-4000-8000-000000000015', 'PortfolioCard08Tr', 'PortfolioCard08', 'TR', 'Şen Turistik Logo Tasarımı', 'Turizm markasi icin guven veren logo kurgusu',
+  UNION ALL SELECT 'f6400015-0000-4000-8000-000000000015', 'PortfolioCard08Tr', 'PortfolioCard08', 'TR', 'Şen Turistik Logo Tasarımı', 'Turizm markası için güven veren logo kurgusu',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Tasarımı', 'altText', 'Şen Turistik markası için hazırlanan logo tasarımı', 'ariaLabel', '')
   UNION ALL SELECT 'f6400016-0000-4000-8000-000000000016', 'PortfolioCard08En', 'PortfolioCard08', 'EN', 'Şen Turistik Logo Design', 'Logo Design',
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-08', 'linkUrl', '/portfolio/sen-turistik-logo-tasarimi', 'category', 'Logo Design', 'altText', 'Logo design for Sen Turistik', 'ariaLabel', '')
@@ -343,7 +361,7 @@ ON DUPLICATE KEY UPDATE
   robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
-SELECT UUID(), 'homepage-tr', p.id, 'TR', 'Anasayfa', NULL, 'Logo tasarımı, kurumsal kimlik ve kampanya görselleri ile markaların görünümünü güçlendiren grafik tasarım stüdyosu. Atakum, Samsun.', '/', 'PUBLISHED'
+SELECT UUID(), 'homepage-tr', p.id, 'TR', 'Anasayfa', 'Ahmet Mülayim | Grafik tasarım, logo ve kurumsal kimlik — Samsun', 'Atakum, Samsun merkezli grafik tasarım stüdyosu: logo tasarımı, kurumsal kimlik ve kampanya görselleriyle markanızın görünür yüzünü güçlendirin. Şekiller ile oluşturulan marka hikayeleri!', '/', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'homepage'
 ON DUPLICATE KEY UPDATE
@@ -354,7 +372,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
-SELECT UUID(), 'homepage-en', p.id, 'EN', 'Homepage', NULL, 'Graphic design studio focused on logo, brand identity and campaign visuals that strengthen how brands look and communicate. Atakum, Samsun.', '/', 'PUBLISHED'
+SELECT UUID(), 'homepage-en', p.id, 'EN', 'Homepage', 'Ahmet Mülayim | Graphic design, logo & brand identity — Samsun', 'Graphic design studio in Atakum, Samsun: logo design, corporate identity and campaign visuals that sharpen how your brand looks and speaks across channels.', '/', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'homepage'
 ON DUPLICATE KEY UPDATE
@@ -562,3 +580,4 @@ SET
 --   logo.png
 --   logo-white.png
 -- ============================================================
+

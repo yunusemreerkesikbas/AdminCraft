@@ -72,6 +72,40 @@ function renderMenuSection(
     );
   }
 
+  if (section.href) {
+    return (
+      <div key={section.uid} className={styles.panelNavSection}>
+        <div className={styles.panelNavSectionHeader}>
+          {renderLink(
+            {
+              uid: section.uid,
+              label: section.title,
+              href: section.href,
+              isExternal: section.isExternal,
+            },
+            `${styles.panelNavLink} ${styles.panelNavLinkStandalone} ${styles.panelNavLinkWithToggle}`,
+            section.uid,
+            onClick,
+          )}
+          {section.links.length > 0 ? (
+            <button
+              type="button"
+              className={`${styles.panelNavToggleButton} ${isOpen ? styles.panelNavToggleButtonOpen : ""}`}
+              onClick={onToggle}
+              aria-label={`${section.title} submenu`}
+              aria-expanded={isOpen}
+            >
+              <span className={styles.panelNavToggle}>{isOpen ? "−" : "+"}</span>
+            </button>
+          ) : null}
+        </div>
+        <div className={`${styles.panelNavSubmenu} ${isOpen ? styles.panelNavSubmenuOpen : ""}`}>
+          {section.links.map((link) => renderLink(link, styles.panelNavSubmenuLink, link.uid, onClick))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div key={section.uid} className={styles.panelNavSection}>
       <button

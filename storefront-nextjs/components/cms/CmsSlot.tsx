@@ -19,7 +19,14 @@ export default function CmsSlot({ slotName, slotMap, lang }: CmsSlotProps) {
   const components = slot.components?.component ?? [];
 
   return (
-    <div className={`cms-slot ${slotName}`} data-slot-name={slotName}>
+    <div
+      className={`cms-slot ${slotName}`}
+      data-slot-name={slotName}
+      data-cms-slot-id={slot.slotId}
+      data-cms-slot-uuid={slot.slotUuid}
+      data-cms-slot-position={slot.position}
+      data-cms-slot-shared={slot.slotShared ? "true" : "false"}
+    >
       {components.map((component) => (
         <CmsComponent key={component.uid} component={component} lang={lang} />
       ))}
