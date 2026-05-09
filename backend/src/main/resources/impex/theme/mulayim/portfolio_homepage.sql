@@ -122,9 +122,9 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200001-0000-4000-8000-000000000001', 'IntroBannerBlockTr', c.id, 'TR',
-  'Logo, kimlik ve kampanyada seçili işler',
-  'Ahmet Mülayim Grafik Atölye',
-  'Şekil ve düzeni bir araya getirerek markanızın hikayesini logo, kurumsal kimlik ve kampanya görsellerinde tutarlı şekilde anlatıyoruz.',
+  NULL,
+  NULL,
+  NULL,
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'IntroBannerBlock'
 ON DUPLICATE KEY UPDATE
@@ -136,9 +136,9 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'f6200002-0000-4000-8000-000000000002', 'IntroBannerBlockEn', c.id, 'EN',
-  'Selected work that sharpens how your brand is seen',
-  'Ahmet Mulayim Studio',
-  'A curated set of logo, identity and campaign projects presented through a large visual stage and an editorial intro block inside one reusable CMS section.',
+  NULL,
+  NULL,
+  NULL,
   'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'IntroBannerBlock'
 ON DUPLICATE KEY UPDATE
@@ -276,20 +276,20 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT seed.uuid, seed.uid, e.id, seed.language, seed.title, seed.description, 'PUBLISHED', seed.custom_data, NOW(), NOW(), NOW()
 FROM (
-  SELECT 'f6400101-0000-4000-8000-000000000101' AS uuid, 'IntroBannerSlide01Tr' AS uid, 'IntroBannerSlide01' AS entry_uid, 'TR' AS language, 'Logo ve kurumsal kimlik sistemleri' AS title, 'Markanın ilk temas noktasını netleştiren logo, tipografi ve kimlik uygulamaları.' AS description,
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'eyebrow', 'Seçili Çalışma', 'buttonText', 'Projeleri İncele', 'buttonUrl', '/portfolio', 'altText', 'Ahmet Mülayim ana sayfa slaytında logo ve kurumsal kimlik çalışması görseli') AS custom_data
-  UNION ALL SELECT 'f6400102-0000-4000-8000-000000000102', 'IntroBannerSlide01En', 'IntroBannerSlide01', 'EN', 'Logo and identity systems' AS title, 'Logo, typography and identity applications built to clarify the brand at first glance.' AS description,
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'eyebrow', 'Selected Work', 'buttonText', 'View Portfolio', 'buttonUrl', '/portfolio', 'altText', 'Mulayim homepage slider first image')
+  SELECT 'f6400101-0000-4000-8000-000000000101' AS uuid, 'IntroBannerSlide01Tr' AS uid, 'IntroBannerSlide01' AS entry_uid, 'TR' AS language, NULL AS title, NULL AS description,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'altText', 'Ahmet Mülayim ana sayfa slaytında logo ve kurumsal kimlik çalışması görseli') AS custom_data
+  UNION ALL SELECT 'f6400102-0000-4000-8000-000000000102', 'IntroBannerSlide01En', 'IntroBannerSlide01', 'EN', NULL, NULL,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'altText', 'Mulayim homepage slider first image')
 
-  UNION ALL SELECT 'f6400103-0000-4000-8000-000000000103', 'IntroBannerSlide02Tr', 'IntroBannerSlide02', 'TR', 'Kampanya ve dijital iletişim dili' AS title, 'Sosyal medya, kampanya görselleri ve dijital temas noktalarında tutarlı bir marka deneyimi.' AS description,
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'eyebrow', 'Görsel Sistem', 'buttonText', 'Hakkımda', 'buttonUrl', '/about', 'altText', 'Ahmet Mülayim ana sayfa slaytında kampanya ve dijital iletişim görseli')
-  UNION ALL SELECT 'f6400104-0000-4000-8000-000000000104', 'IntroBannerSlide02En', 'IntroBannerSlide02', 'EN', 'Campaign and digital communication' AS title, 'Consistent visual direction across social media, campaign assets and digital touchpoints.' AS description,
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'eyebrow', 'Visual System', 'buttonText', 'About the Studio', 'buttonUrl', '/about', 'altText', 'Mulayim homepage slider second image')
+  UNION ALL SELECT 'f6400103-0000-4000-8000-000000000103', 'IntroBannerSlide02Tr', 'IntroBannerSlide02', 'TR', NULL, NULL,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'altText', 'Ahmet Mülayim ana sayfa slaytında kampanya ve dijital iletişim görseli')
+  UNION ALL SELECT 'f6400104-0000-4000-8000-000000000104', 'IntroBannerSlide02En', 'IntroBannerSlide02', 'EN', NULL, NULL,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-02', 'altText', 'Mulayim homepage slider second image')
 
-  UNION ALL SELECT 'f6400105-0000-4000-8000-000000000105', 'IntroBannerSlide03Tr', 'IntroBannerSlide03', 'TR', 'Marka hikayesini temas noktasına dönüştürme' AS title, 'Her mecrada daha güvenilir, daha görünür ve daha akılda kalır bir marka deneyimi için seçili tasarım yaklaşımı.' AS description,
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'eyebrow', 'İletişime Geç', 'buttonText', 'Temas Kur', 'buttonUrl', '/contact', 'altText', 'Ahmet Mülayim ana sayfa slaytında iletişim ve marka dokunuşu görseli')
-  UNION ALL SELECT 'f6400106-0000-4000-8000-000000000106', 'IntroBannerSlide03En', 'IntroBannerSlide03', 'EN', 'Turning brand story into touchpoints' AS title, 'A selected design approach built to make the brand feel more credible, more visible and easier to remember across channels.' AS description,
-    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'eyebrow', 'Get in Touch', 'buttonText', 'Contact', 'buttonUrl', '/contact', 'altText', 'Mulayim homepage slider third image')
+  UNION ALL SELECT 'f6400105-0000-4000-8000-000000000105', 'IntroBannerSlide03Tr', 'IntroBannerSlide03', 'TR', NULL, NULL,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'altText', 'Ahmet Mülayim ana sayfa slaytında iletişim ve marka dokunuşu görseli')
+  UNION ALL SELECT 'f6400106-0000-4000-8000-000000000106', 'IntroBannerSlide03En', 'IntroBannerSlide03', 'EN', NULL, NULL,
+    JSON_OBJECT('mediaUid', 'portfolio-grid-image-03', 'altText', 'Mulayim homepage slider third image')
 
   UNION ALL SELECT 'f6400001-0000-4000-8000-000000000001' AS uuid, 'PortfolioCard01Tr' AS uid, 'PortfolioCard01' AS entry_uid, 'TR' AS language, 'Babil Sanat Logo & Kurumsal Kimlik' AS title, 'Logo Tasarım ve Kurumsal Kimlik' AS description,
     JSON_OBJECT('mediaUid', 'portfolio-grid-image-01', 'linkUrl', '/portfolio/babil-sanat-logo-and-kurumsal-kimlik', 'category', 'Logo & Kurumsal Kimlik', 'altText', 'Babil Sanat için hazırlanan logo ve kurumsal kimlik tasarımı', 'ariaLabel', '') AS custom_data
