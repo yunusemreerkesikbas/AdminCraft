@@ -11,16 +11,8 @@
     return;
   }
 
-  var script = document.currentScript || (function () {
-    var scripts = document.getElementsByTagName("script");
-    for (var i = 0; i < scripts.length; i++) {
-      if (scripts[i].src && scripts[i].src.indexOf("smartedit-injector.js") !== -1) {
-        return scripts[i];
-      }
-    }
-    return null;
-  })();
-  var rawAllowed = script && script.getAttribute("data-allowed-origins");
+  var metaTag = document.querySelector('meta[name="smartedit-allowed-origins"]');
+  var rawAllowed = metaTag ? metaTag.getAttribute("content") : "";
   var allowedOrigins = (rawAllowed || "")
     .split(",")
     .map(function (s) { return s.trim(); })

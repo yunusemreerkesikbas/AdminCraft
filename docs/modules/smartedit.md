@@ -59,7 +59,7 @@ Mints a short-lived HMAC-SHA256 signed ticket the admin SmartEdit shell embeds i
   ```
 
 - **TTL**: `app.cms.preview.ttl-seconds` (default 900 — 15 minutes).
-- **Storefront base URL**: `app.cms.preview.storefront-base-url`. Currently a single platform-wide value; for subdomain-per-tenant deployments this must be derived from the tenant.
+- **Storefront base URL**: resolved from the tenant's `global.canonicalBaseUrl` site setting (Site Dashboard → SEO → Canonical Base URL). If not set, ticket issuance fails with an error. There is no platform-wide env var override — each tenant configures its own storefront URL.
 
 ### Ticket format
 
@@ -99,6 +99,8 @@ Status sets are centralised in [`CmsVisibility`](../../backend/src/main/java/com
 
 Preview responses must not be cached by storefront ISR or browser. The Next.js client switches to `cache: "no-store"` whenever a preview ticket is supplied — see `storefront-nextjs/lib/core/http/fetch-json.ts`.
 
+`generateMetadata` in `storefront-nextjs/app/[lang]/[[...slug]]/page.tsx` also receives the preview ticket from `searchParams` and passes it to the same loaders, so page `<title>` and meta description always match the DRAFT content shown in the iframe.
+
 ## Frontend integration
 
 ### Admin (Angular, `storefront/`)
@@ -119,7 +121,7 @@ Preview responses must not be cached by storefront ISR or browser. The Next.js c
   - `CmsSlot.tsx` → `data-cms-slot-id`, `data-cms-slot-position`, `data-cms-slot-shared`
   - `CmsComponent.tsx` → `data-cms-component-id`, `data-cms-component-type`
 - Preview ticket forwarding: `storefront-nextjs/lib/core/cms/{client,loaders}.ts` and `storefront-nextjs/lib/core/http/fetch-json.ts` add `X-Cms-Preview-Ticket` header and force `cache: "no-store"` when a ticket is supplied.
-- Layout-level injection: `storefront-nextjs/app/[lang]/layout.tsx` unconditionally mounts `<Script src="/smartedit-injector.js" strategy="afterInteractive">` with a `data-allowed-origins` attribute read from `NEXT_PUBLIC_SMARTEDIT_ALLOWED_ORIGINS`. The script self-deactivates when not running inside an iframe, when the allowed-origins list is empty, or when `?preview=` is absent from the URL. `data-smartedit-mode="preview"` is set on `<body>` by the injector script itself when it activates.
+- Layout-level injection: `storefront-nextjs/app/[lang]/layout.tsx` mounts `<Script src="/smartedit-injector.js" strategy="afterInteractive">` **only when `NEXT_PUBLIC_SMARTEDIT_ALLOWED_ORIGINS` is non-empty** (the tag is omitted entirely in production when the env var is unset). The script additionally self-deactivates when not running inside an iframe or when `?preview=` is absent from the URL. `data-smartedit-mode="preview"` is set on `<body>` by the injector script itself when it activates.
 - Bridge script: `storefront-nextjs/public/smartedit-injector.js` — listens for clicks on `[data-cms-component-id]` / `[data-cms-slot-id]` and posts `smartedit:select` to the parent window; listens for `smartedit:reload` and reloads.
 
 ### Cross-window contract
@@ -166,19 +168,31 @@ Both are registered explicitly so the preview-issuance endpoint never falls unde
 
 `X-Cms-Preview-Ticket` is added to `app.cors.allowed-headers` in `application.yml`. `app.cors.allowed-origins` must list both the admin origin (e.g. `http://localhost:4200`) and the storefront origin (e.g. `http://localhost:3000`) for preflight to pass.
 
+### Storefront `frame-ancestors`
+
+`storefront-nextjs/next.config.ts` sets a `Content-Security-Policy: frame-ancestors 'self' <origins>` response header on all pages when `NEXT_PUBLIC_SMARTEDIT_ALLOWED_ORIGINS` is non-empty. The value is derived from the same env var used for the injector script, so only the configured admin origin(s) may embed the storefront in an iframe. When the env var is unset (e.g. on the live storefront deployment) no `frame-ancestors` header is added and framing remains unrestricted — set the env var in every environment where SmartEdit is active.
+
 ### HMAC secret hardening
 
 [`CmsPreviewTicketService`](../../backend/src/main/java/com/backend/application/cms/preview/CmsPreviewTicketService.java) has a `@PostConstruct` `validateSecret()` method that:
 
-- Refuses to start if `app.cms.preview.secret` is shorter than 32 bytes (minimum recommended key length for HMAC-SHA256).
-- Refuses to start with the built-in `DEV_ONLY_*` placeholder secret unless an active profile is `dev` or `test` (default profile is also accepted as non-production for local convenience).
+- Refuses to start if `app.cms.preview.secret` is not set or shorter than 32 bytes (minimum recommended key length for HMAC-SHA256).
 
-Operations must set `CMS_PREVIEW_SECRET` to a randomly-generated ≥32-byte value for stage and prod profiles.
+`CMS_PREVIEW_SECRET` is required in all environments including dev — there is no built-in fallback or placeholder. Set it to a randomly-generated ≥32-byte value.
 
 ### Multi-tenant notes (current limitations)
 
 - The HMAC secret is platform-wide. A leaked secret allows ticket forgery for any tenant. Per-tenant key derivation is a Phase 2 item.
-- The preview-ticket response uses `app.cms.preview.storefront-base-url` (platform config) as the iframe origin whenever it is set. When the platform config is blank, `CmsPreviewApplicationService` falls back to the tenant's `global.canonicalBaseUrl` site setting. If neither is configured the service throws, preventing ticket issuance with an unknown preview origin. Both paths are validated to enforce `http`/`https` scheme and a non-empty host (SSRF prevention). Note: `canonicalBaseUrl` is primarily a SEO/sitemap value and may carry a placeholder in dev tenants — that is why the platform config wins by default. Subdomain-per-tenant production deployments either pin a single shared preview host in the platform config, or leave the platform config blank and rely on each tenant's canonical URL.
+- The preview-ticket response uses the tenant's `global.canonicalBaseUrl` site setting as the iframe/storefront origin. The URL is validated to enforce `http`/`https` scheme and a non-empty host (SSRF prevention). If the setting is not configured for the tenant, ticket issuance throws `IllegalStateException` — the tenant admin must set **Canonical Base URL** in Site Dashboard → SEO before SmartEdit can be used. There is no platform-wide env var override; each tenant manages its own storefront URL through the SEO settings tab.
+
+### Ticket expiry (admin shell)
+
+The preview ticket has a 15-minute TTL (`app.cms.preview.ttl-seconds`). The Angular SmartEdit shell monitors expiry on a 30-second polling interval using computed signals:
+
+- **< 2 minutes remaining** — a yellow banner is shown: *"Preview session expires in less than 2 minutes."* with a **Renew session** button.
+- **Expired** — a red banner is shown: *"Preview session has expired."* with a **Renew session** button.
+
+Clicking **Renew session** re-issues the ticket (`POST /api/cms/preview/tickets`) and reloads the iframe with the new token. Implementation: `SmartEditShellComponent.renewTicket()`.
 
 ### Known limitations (Phase 2 candidates)
 

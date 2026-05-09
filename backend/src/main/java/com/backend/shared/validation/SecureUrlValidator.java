@@ -23,9 +23,9 @@ public class SecureUrlValidator implements ConstraintValidator<SecureUrl, String
       "youtube.com", "www.youtube.com",
       "tiktok.com", "www.tiktok.com");
 
-  // Basic URL pattern validation
+  // Basic URL pattern validation — allows standard domain.tld and localhost
   private static final Pattern URL_PATTERN = Pattern.compile(
-      "^https?://([a-zA-Z0-9-]+\\.)*[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}(:[0-9]+)?(/.*)?$");
+      "^https?://((([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,})|localhost)(:[0-9]+)?(/.*)?$");
 
   private SecureUrlType urlType;
 

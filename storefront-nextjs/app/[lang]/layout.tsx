@@ -42,11 +42,10 @@ export default async function LocaleLayout({
         cookieConsentText={site?.cookieConsent?.text}
       />
       {smartEditAllowedOrigins && (
-        <Script
-          src="/smartedit-injector.js"
-          strategy="afterInteractive"
-          data-allowed-origins={smartEditAllowedOrigins}
-        />
+        <>
+          <meta name="smartedit-allowed-origins" content={smartEditAllowedOrigins} />
+          <Script src="/smartedit-injector.js" strategy="afterInteractive" />
+        </>
       )}
     </NextIntlClientProvider>
   );

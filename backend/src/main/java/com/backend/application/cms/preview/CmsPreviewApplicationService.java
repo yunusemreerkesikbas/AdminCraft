@@ -16,9 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 public class CmsPreviewApplicationService {
 
     private final CmsPreviewTicketService ticketService;
-    private final CmsPreviewProperties properties;
     private final SiteSettingRepository siteSettingRepository;
     private final TenantContextPort tenantContext;
+    private final CmsPreviewProperties properties;
 
     @Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
     public PreviewTicketResult issueTicket(Long userId, Long pageId) {
@@ -38,21 +38,19 @@ public class CmsPreviewApplicationService {
     }
 
     private String resolveStorefrontBaseUrl(long tenantId) {
-        String platformBaseUrl = properties.getStorefrontBaseUrl();
-        if (platformBaseUrl != null && !platformBaseUrl.isBlank()) {
-            validateStorefrontUrl(platformBaseUrl);
-            return platformBaseUrl;
+        String override = properties.getStorefrontUrl();
+        if (override != null && !override.isBlank()) {
+            validateStorefrontUrl(override);
+            return extractOrigin(override);
         }
-
         String tenantBaseUrl = siteSettingRepository
             .findByTenantIdAndSettingKeyAndLanguageIsNull(tenantId, SiteSettingKeys.GLOBAL_CANONICAL_BASE_URL)
             .map(s -> s.getSettingValue())
             .filter(value -> value != null && !value.isBlank())
             .orElseThrow(() -> new IllegalStateException(
-                "No storefront base URL available: configure app.cms.preview.storefront-base-url"
-                    + " or set global.canonicalBaseUrl on tenant " + tenantId));
+                "Storefront URL not configured: set Canonical Base URL in Site Dashboard → SEO for tenant " + tenantId));
         validateStorefrontUrl(tenantBaseUrl);
-        return tenantBaseUrl;
+        return extractOrigin(tenantBaseUrl);
     }
 
     private void validateStorefrontUrl(String url) {
@@ -69,6 +67,18 @@ public class CmsPreviewApplicationService {
             }
         } catch (java.net.URISyntaxException ex) {
             throw new IllegalArgumentException("Storefront base URL is not a valid URI: " + url);
+        }
+    }
+
+    private String extractOrigin(String url) {
+        try {
+            java.net.URI uri = new java.net.URI(url);
+            int port = uri.getPort();
+            return port == -1
+                ? uri.getScheme() + "://" + uri.getHost()
+                : uri.getScheme() + "://" + uri.getHost() + ":" + port;
+        } catch (java.net.URISyntaxException ex) {
+            throw new IllegalStateException("Failed to extract origin from storefront URL: " + url, ex);
         }
     }
 }

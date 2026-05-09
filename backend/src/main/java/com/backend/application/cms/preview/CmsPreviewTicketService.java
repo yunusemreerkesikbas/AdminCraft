@@ -4,15 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 import java.util.Optional;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -27,12 +24,9 @@ public class CmsPreviewTicketService {
   private static final String HMAC_ALGO = "HmacSHA256";
   private static final char SEGMENT_SEPARATOR = '.';
   private static final char FIELD_SEPARATOR = '|';
-
-  /** Profiles where the development placeholder HMAC secret is acceptable. */
-  private static final List<String> NON_PRODUCTION_PROFILES = List.of("dev", "test");
+  private static final int MIN_SECRET_BYTES = 32;
 
   private final CmsPreviewProperties properties;
-  private final Environment environment;
   private SecretKeySpec secretKeySpec;
 
   @PostConstruct
@@ -41,27 +35,13 @@ public class CmsPreviewTicketService {
     if (secret == null || secret.isBlank()) {
       throw new IllegalStateException("app.cms.preview.secret must be configured");
     }
-    if (secret.getBytes(StandardCharsets.UTF_8).length < CmsPreviewProperties.MIN_SECRET_BYTES) {
+    if (secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
       throw new IllegalStateException(
-          "app.cms.preview.secret must be at least " + CmsPreviewProperties.MIN_SECRET_BYTES
+          "app.cms.preview.secret must be at least " + MIN_SECRET_BYTES
               + " bytes (HMAC-SHA256 minimum)");
     }
-    if (CmsPreviewProperties.DEV_PLACEHOLDER_SECRET.equals(secret) && !isNonProductionProfile()) {
-      throw new IllegalStateException(
-          "app.cms.preview.secret is using the built-in development placeholder. "
-              + "Set the CMS_PREVIEW_SECRET environment variable for non-dev profiles.");
-    }
     this.secretKeySpec = new SecretKeySpec(
-        properties.getSecret().getBytes(StandardCharsets.UTF_8), HMAC_ALGO);
-  }
-
-  private boolean isNonProductionProfile() {
-    String[] active = environment.getActiveProfiles();
-    if (active.length == 0) {
-      // Spring's default profile is treated as non-production-safe.
-      return true;
-    }
-    return Arrays.stream(active).anyMatch(NON_PRODUCTION_PROFILES::contains);
+        secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGO);
   }
 
   public CmsPreviewTicket issue(long tenantId, Long userId, Long pageId) {
