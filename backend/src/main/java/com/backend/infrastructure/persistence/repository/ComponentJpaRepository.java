@@ -72,6 +72,8 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
 
     List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status);
 
+    List<Component> findByUidInAndStatusIn(List<String> uids, java.util.Collection<ComponentStatus> statuses);
+
     List<Component> findByIdIn(List<Long> ids);
 
     @Query("SELECT c FROM Component c WHERE c.responsiveMedia.id = :responsiveMediaId")

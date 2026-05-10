@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
 public class CmsDeliveryServiceImpl implements CmsDeliveryService {
 
-  private static final String CANONICAL_BASE_URL_KEY = "global.canonicalBaseUrl";
+  private static final String CANONICAL_BASE_URL_KEY = SiteSettingKeys.GLOBAL_CANONICAL_BASE_URL;
   private static final String SEO_TITLE_KEY = "i18n.seo.title";
   private static final String SEO_DESCRIPTION_KEY = "i18n.seo.description";
   private static final String SEO_KEYWORDS_KEY = "i18n.seo.keywords";

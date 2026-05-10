@@ -166,6 +166,9 @@ See [`landing/.env.local.example`](../../landing/.env.local.example). Contract a
 | `TENANT_HOSTNAME`              | _(not set)_                 | `s1-demo.craftive.io`            | `demo.craftive.io`            |
 | `NEXT_IMAGE_DOMAINS`           | _(not set)_                 | `s1-cdn.craftive.io`             | `media.craftive.io`           |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | optional local env   | tracked in `storefront-nextjs/.env.staging` for the demo storefront | tracked in `storefront-nextjs/.env.production` for the demo storefront |
+| `NEXT_PUBLIC_SMARTEDIT_ALLOWED_ORIGINS` | `http://localhost:4200` (in `.env.development`) | `https://s1-app.craftive.io` | `https://app.craftive.io` |
+
+> **`NEXT_PUBLIC_SMARTEDIT_ALLOWED_ORIGINS`**: Comma-separated list of admin panel origins that the storefront iframe trusts for `postMessage` (SmartEdit). Must match the Angular admin panel URL exactly (no trailing slash). When unset or empty, the SmartEdit bridge is disabled — the injector script exits early. `NEXT_PUBLIC_` prefix is required so the value is inlined at **build time** (server components don't access runtime env vars). Set this before running `next build` for stage/prod.
 
 > **`TENANT_HOSTNAME`**: When set, `proxy.ts` validates every incoming request's `host` header against this value. Requests from other hostnames receive HTTP 404. Leave unset in local dev (all traffic from `localhost` is accepted). The local `start:stage`, `start:prod`, `serve:stage`, and `serve:prod` scripts clear this variable intentionally so localhost can run against stage/prod APIs. Required in real stage/prod deployments to prevent wildcard DNS rules from serving the wrong tenant's storefront.
 >
@@ -301,6 +304,8 @@ npm run build:static
 | `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64` | Base64 alternative for GA4 service account JSON | Optional alternative |
 | `APP_SEO_CRUX_API_KEY` | CrUX History API key | Yes, if SEO insights performance snapshot is enabled |
 | `APP_MIGRATION_RE_ENCRYPT_SECRETS` | Set to `true` to trigger one-shot ECB→GCM secret re-encryption on startup (SEC-010). Run once on each environment after deploy, then remove or reset to `false`. The runner is idempotent — already-GCM values are skipped. | No (default: `false`) |
+| `CMS_PREVIEW_SECRET` | HMAC-SHA256 signing key for SmartEdit preview tickets — **min 32 bytes**, required in all environments. Generate: `openssl rand -hex 32`. Backend refuses to start if unset or too short. | Yes |
+| `CMS_PREVIEW_TTL_SECONDS` | Preview ticket lifetime in seconds. Default: `900` (15 min). | No |
 
 ### Stage/Prod Observability and Edge
 

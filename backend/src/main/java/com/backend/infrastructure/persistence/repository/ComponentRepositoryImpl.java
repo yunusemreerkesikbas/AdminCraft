@@ -91,6 +91,11 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     }
 
     @Override
+    public List<Component> findByUidInAndStatusIn(List<String> uids, java.util.Collection<ComponentStatus> statuses) {
+        return jpaRepository.findByUidInAndStatusIn(uids, statuses);
+    }
+
+    @Override
     public List<Component> findByIdIn(List<Long> ids) {
         return jpaRepository.findByIdIn(ids);
     }

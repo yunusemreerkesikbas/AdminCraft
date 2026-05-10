@@ -246,23 +246,25 @@ ON DUPLICATE KEY UPDATE
   is_home = VALUES(is_home),
   robot_tag = VALUES(robot_tag);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'd7350001-0000-4000-8000-000000000001', 'portfolio-tr', p.id, 'TR', 'Portfolyo', 'Portfolyo | Ahmet Mülayim', '/portfolio', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'd7350001-0000-4000-8000-000000000001', 'portfolio-tr', p.id, 'TR', 'Portfolyo', 'Portfolyo', 'Kültür sanattan tarıma uzanan markalar için hazırlanan logo ve kurumsal kimlik çalışmalarından seçili portfolyo.', '/portfolio', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'portfolio'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
-INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'd7350002-0000-4000-8000-000000000002', 'portfolio-en', p.id, 'EN', 'Portfolio', 'Portfolio | Ahmet Mülayim', '/portfolio', 'PUBLISHED'
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, description, canonical_url, status)
+SELECT 'd7350002-0000-4000-8000-000000000002', 'portfolio-en', p.id, 'EN', 'Portfolio', 'Portfolio', 'Selected logo and brand identity projects delivered across culture, agriculture, construction, retail and more.', '/portfolio', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'portfolio'
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
   title = VALUES(title),
+  description = VALUES(description),
   canonical_url = VALUES(canonical_url),
   status = VALUES(status);
 
@@ -275,25 +277,12 @@ SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'portfolio'
-  AND ts.slot_name IN ('Section1', 'Section2')
+  AND ts.slot_name IN ('Section1', 'Section2', 'Section3', 'Section4', 'Section5', 'Section6', 'Section7', 'Section8')
 ON DUPLICATE KEY UPDATE
   position = VALUES(position),
   sort_order = VALUES(sort_order),
   is_active = VALUES(is_active),
   is_shared = VALUES(is_shared),
-  updated_at = NOW();
-
-INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
-SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, FALSE, FALSE, NOW(), NOW()
-FROM pages p
-JOIN template_slots ts ON ts.template_id = p.template_id
-WHERE p.uid = 'portfolio'
-  AND ts.slot_name IN ('Section3', 'Section4', 'Section5', 'Section6', 'Section7', 'Section8')
-ON DUPLICATE KEY UPDATE
-  position = VALUES(position),
-  sort_order = VALUES(sort_order),
-  is_active = FALSE,
-  is_shared = FALSE,
   updated_at = NOW();
 
 -- ============================================================
@@ -306,6 +295,8 @@ FROM (
   SELECT 'portfolio-Section1Slot' AS slot_uid, 'PortfolioPageHeroBlock' AS component_uid, 0 AS sort_order
   UNION ALL SELECT 'portfolio-Section2Slot', 'PortfolioPageGrid', 0
   UNION ALL SELECT 'portfolio-Section2Slot', 'PortfolioPageBrandStrip', 1
+  UNION ALL SELECT 'portfolio-Section3Slot', 'HomepageSeoParagraph', 0
+  UNION ALL SELECT 'portfolio-Section4Slot', 'StatementCtaBlock', 0
 ) seed
 JOIN page_slots ps ON ps.uid = seed.slot_uid
 JOIN components c ON c.uid = seed.component_uid

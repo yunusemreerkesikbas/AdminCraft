@@ -1,10 +1,8 @@
-import { ComponentDeliveryResponse } from 'app/cms/cms-delivery.types';
-
 export interface PageSlotResponse {
     id: number;
     uuid: string;
     uid: string;
-    pageId: number | null; // null for shared slots
+    pageId: number | null;
     slotName: string;
     position: string;
     sortOrder: number;
@@ -15,11 +13,12 @@ export interface PageSlotResponse {
 
 export interface SlotComponentResponse {
     id: number;
-    slotId: number;
     componentId: number;
+    componentUid: string;
+    componentName: string;
+    componentTypeName: string;
     sortOrder: number;
     isVisible: boolean;
-    component?: ComponentDeliveryResponse; // Optional expanded data
 }
 
 export interface CreatePageSlotRequest {

@@ -522,6 +522,57 @@ export const langTR = {
                 loadTemplatesFailed: 'Şablonlar yüklenemedi',
             },
         },
+        smartedit: {
+            title: 'SmartEdit',
+            actions: {
+                openInSmartEdit: 'SmartEdit\'te aç',
+                backToList: 'Sayfa listesine dön',
+                editPageMetadata: 'Sayfa bilgilerini düzenle',
+                editComponent: 'Bileşeni düzenle',
+                publishCurrentLang: 'Geçerli dili yayınla',
+                renewTicket: 'Oturumu yenile',
+            },
+            viewport: {
+                desktop: 'Masaüstü görünümü',
+                tablet: 'Tablet görünümü',
+                mobile: 'Mobil görünümü',
+            },
+            tooltip: {
+                connected: 'Storefront bağlantısı kuruldu',
+                connecting: 'Storefront bağlantısı bekleniyor',
+            },
+            errors: {
+                invalidPageId: 'Geçersiz sayfa kimliği',
+                pageLoadFailed: 'Sayfa yüklenemedi',
+                ticketFailed: 'Önizleme bileti alınamadı',
+                componentNotFound: 'Bileşen bulunamadı',
+                componentLoadFailed: 'Bileşen yüklenemedi',
+                publishFailed: 'Yayınlama başarısız oldu',
+            },
+            messages: {
+                publishSuccess: 'Geçerli dil için içerik yayınlandı',
+            },
+            warnings: {
+                ticketExpiringSoon: 'Önizleme oturumunun süresi 2 dakikadan az kaldı.',
+                ticketExpired: 'Önizleme oturumunun süresi doldu. Düzenlemeye devam etmek için yenileyin.',
+            },
+            help: {
+                clickToSelect: 'Düzenlemek için iframe içindeki bir bileşene tıklayın.',
+                slotEditing: 'Slot yapısı şablon ekranından yönetilir; burada sadece içeriği değiştirebilirsiniz.',
+            },
+            loading: {
+                iframe: 'Önizleme yükleniyor…',
+            },
+            inspector: {
+                page: 'Sayfa',
+                selection: 'Seçim',
+                kind: 'Tür',
+                id: 'Kimlik',
+                componentType: 'Bileşen tipi',
+                slotName: 'Slot adı',
+                position: 'Konum',
+            },
+        },
         pageBuilder: {
             title: 'Sayfa Oluşturucu',
             pages: 'Sayfalar',

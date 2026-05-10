@@ -13,7 +13,13 @@ export default function CmsComponent({
   if (!rendered) return null;
   return (
     <CmsErrorBoundary componentUid={component.uid}>
-      <div id={component.uid}>{rendered}</div>
+      <div
+        id={component.uid}
+        data-cms-component-id={component.uid}
+        data-cms-component-type={component.type}
+      >
+        {rendered}
+      </div>
     </CmsErrorBoundary>
   );
 }

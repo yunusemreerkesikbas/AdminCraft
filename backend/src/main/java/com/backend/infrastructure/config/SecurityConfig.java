@@ -20,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.backend.infrastructure.tenant.TenantFilter;
+import com.backend.presentation.filter.CmsPreviewFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -41,7 +42,7 @@ public class SecurityConfig {
 
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter,
-                        TenantFilter tenantFilter) throws Exception {
+                        TenantFilter tenantFilter, CmsPreviewFilter cmsPreviewFilter) throws Exception {
                 boolean isDev = Arrays.asList(env.getActiveProfiles()).contains("dev");
 
                 http
@@ -79,6 +80,7 @@ public class SecurityConfig {
                                                                                                         // other actuator
                                                                                                         // endpoints
                                                 .requestMatchers("/public/**").permitAll() // Public API endpoints
+                                                .requestMatchers("/cms/preview/**").authenticated() // SmartEdit preview ticket issue (TENANT_ADMIN via @PreAuthorize)
                                                 .requestMatchers("/cms/**").permitAll() // CMS Delivery API (public)
                                                 .requestMatchers("/media/files/**").permitAll() // Media file downloads
                                                                                                 // (images)
@@ -90,7 +92,8 @@ public class SecurityConfig {
                                                 // All other endpoints require authentication
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                                .addFilterAfter(tenantFilter, JwtAuthenticationFilter.class);
+                                .addFilterAfter(tenantFilter, JwtAuthenticationFilter.class)
+                                .addFilterAfter(cmsPreviewFilter, TenantFilter.class);
 
                 return http.build();
         }
@@ -118,7 +121,8 @@ public class SecurityConfig {
                                 "X-Tenant-ID",
                                 "X-Tenant-Subdomain",
                                 "X-User-ID",
-                                "X-Client-Version"));
+                                "X-Client-Version",
+                                "X-Cms-Preview-Ticket"));
 
                 // Allow credentials (cookies, authorization headers)
                 configuration.setAllowCredentials(true);

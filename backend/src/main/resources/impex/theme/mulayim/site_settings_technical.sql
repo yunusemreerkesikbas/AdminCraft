@@ -48,7 +48,8 @@ VALUES
   ('i18n.seo.ogTitle', 'Ahmet Mülayim | Grafik Tasarım', 'TR', 'I18N_TEXT', 'seo', 'OG Title (TR)', FALSE, 113, NULL),
   ('i18n.seo.ogDescription', 'Logo, kurumsal kimlik ve kampanya tasarımı çalışmaları.', 'TR', 'I18N_TEXT', 'seo', 'OG Description (TR)', FALSE, 114, NULL),
   ('i18n.seo.twitterCard', 'summary_large_image', 'TR', 'I18N_TEXT', 'seo', 'Twitter Card (TR)', FALSE, 115, NULL),
-  ('i18n.cookie.consent.text', 'Bu web sitesi deneyiminizi iyileştirmek için çerezleri kullanır.', 'TR', 'I18N_TEXT', 'general', 'Cookie Consent Text (TR)', FALSE, 116, NULL),
+  ('i18n.seo.titleSeparator', ' | ', 'TR', 'I18N_TEXT', 'seo', 'SEO Title Separator (TR)', FALSE, 116, NULL),
+  ('i18n.cookie.consent.text', 'Bu web sitesi deneyiminizi iyileştirmek için çerezleri kullanır.', 'TR', 'I18N_TEXT', 'general', 'Cookie Consent Text (TR)', FALSE, 117, NULL),
 
   ('i18n.siteName', 'Ahmet Mülayim', 'EN', 'I18N_TEXT', 'general', 'Site Name (EN)', FALSE, 200, NULL),
   ('i18n.tagline', 'Graphic design studio for logo, identity and campaign work.', 'EN', 'I18N_TEXT', 'general', 'Tagline (EN)', FALSE, 201, NULL),
@@ -58,7 +59,8 @@ VALUES
   ('i18n.seo.ogTitle', 'Ahmet Mülayim | Graphic Design', 'EN', 'I18N_TEXT', 'seo', 'OG Title (EN)', FALSE, 213, NULL),
   ('i18n.seo.ogDescription', 'Logo, brand identity and campaign design works.', 'EN', 'I18N_TEXT', 'seo', 'OG Description (EN)', FALSE, 214, NULL),
   ('i18n.seo.twitterCard', 'summary_large_image', 'EN', 'I18N_TEXT', 'seo', 'Twitter Card (EN)', FALSE, 215, NULL),
-  ('i18n.cookie.consent.text', 'This website uses cookies to improve your experience.', 'EN', 'I18N_TEXT', 'general', 'Cookie Consent Text (EN)', FALSE, 216, NULL)
+  ('i18n.seo.titleSeparator', ' | ', 'EN', 'I18N_TEXT', 'seo', 'SEO Title Separator (EN)', FALSE, 216, NULL),
+  ('i18n.cookie.consent.text', 'This website uses cookies to improve your experience.', 'EN', 'I18N_TEXT', 'general', 'Cookie Consent Text (EN)', FALSE, 217, NULL)
 ON DUPLICATE KEY UPDATE
   setting_value = VALUES(setting_value),
   setting_type = VALUES(setting_type),

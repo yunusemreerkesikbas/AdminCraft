@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.cms.preview.CmsRequestContext;
+import com.backend.application.cms.preview.CmsVisibility;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.util.UrlUtils;
 import com.backend.application.dto.delivery.ContentSlotDeliveryResponse;
@@ -60,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+@Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private static final Set<String> RESERVED_FIELDS = Set.of(
@@ -81,6 +83,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         private final ResponsiveMediaService responsiveMediaService;
         private final NavigationService navigationService;
         private final MediaFieldExpander mediaFieldExpander;
+        private final CmsRequestContext cmsRequestContext;
 
         @Override
         public Optional<PageDeliveryResponse> resolvePageForDelivery(String pageType, String pageLabelOrId,
@@ -99,7 +102,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         } else {
                                 switch (resolvedType.get()) {
                                         case CONTENT -> pageOpt = normalizedPageLabelOrId != null
-                                                        ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.CONTENT)
+                                                        ? resolvePageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.CONTENT)
                                                         : Optional.empty();
                                         case PRODUCT -> {
                                                 if (normalizedCode != null) {
@@ -119,28 +122,42 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                         }
                                         case SEARCH -> pageOpt = resolveUniqueTemplatePage(PageType.SEARCH);
                                         case LANDING -> pageOpt = normalizedPageLabelOrId != null
-                                                        ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.LANDING)
+                                                        ? resolvePageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.LANDING)
                                                         : Optional.empty();
                                         default -> pageOpt = Optional.empty();
                                 }
                         }
                 }
 
-                return pageOpt.map(page -> buildPageDeliveryResponse(page, lang, codeToInclude[0]));
+                return pageOpt
+                                .filter(page -> isPageVisibleForCurrentMode(page, lang))
+                                .map(page -> buildPageDeliveryResponse(page, lang, codeToInclude[0]));
+        }
+
+        private boolean isPageVisibleForCurrentMode(Page page, Language lang) {
+                Set<PageStatus> statuses = visiblePageStatuses();
+                return pageI18nRepository.findByPageIdAndLanguage(page.getId(), lang)
+                                .filter(i18n -> statuses.contains(i18n.getStatus()))
+                                .isPresent();
         }
 
         private Optional<Page> resolveHomepage() {
-                return pageRepository.findByIsHomeTrueAndStatus(PageStatus.PUBLISHED);
+                return pageRepository.findByIsHomeTrueAndStatusIn(visiblePageStatuses());
         }
 
         private Optional<Page> resolveUniqueTemplatePage(PageType pageType) {
-                return pageRepository.findFirstByPageTypeAndStatusOrderByIdAsc(pageType, PageStatus.PUBLISHED);
+                return pageRepository.findFirstByPageTypeAndStatusInOrderByIdAsc(pageType, visiblePageStatuses());
         }
 
-        private Optional<Page> resolvePublishedPageByCanonicalUrl(Language lang, String canonicalUrl, PageType pageType) {
-                return pageI18nRepository.findPublishedByCanonicalUrl(lang, canonicalUrl)
-                                .flatMap(i18n -> pageRepository.findByIdAndStatus(i18n.getPageId(), PageStatus.PUBLISHED))
+        private Optional<Page> resolvePageByCanonicalUrl(Language lang, String canonicalUrl, PageType pageType) {
+                Set<PageStatus> statuses = visiblePageStatuses();
+                return pageI18nRepository.findByLanguageAndCanonicalUrlAndStatusIn(lang, canonicalUrl, statuses)
+                                .flatMap(i18n -> pageRepository.findByIdAndStatusIn(i18n.getPageId(), statuses))
                                 .filter(page -> pageType == page.getPageType());
+        }
+
+        private Set<PageStatus> visiblePageStatuses() {
+                return CmsVisibility.pageStatuses(cmsRequestContext.isPreview());
         }
 
         private String normalizeParam(String value) {
@@ -200,10 +217,11 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .distinct()
                                 .toList();
 
+                Set<ComponentStatus> visibleComponentStatuses = CmsVisibility.componentStatuses(cmsRequestContext.isPreview());
                 Map<Long, Component> componentMap = allComponentIds.isEmpty()
                                 ? Map.of()
                                 : componentRepository.findByIdIn(allComponentIds).stream()
-                                                .filter(c -> c.getStatus() == ComponentStatus.PUBLISHED)
+                                                .filter(c -> visibleComponentStatuses.contains(c.getStatus()))
                                                 .collect(Collectors.toMap(Component::getId, c -> c));
 
                 List<Long> publishedComponentIds = componentMap.keySet().stream().toList();
@@ -228,8 +246,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 Map<Long, List<ComponentEntry>> entriesByComponentId = publishedComponentIds.isEmpty()
                                 ? Map.of()
                                 : componentEntryRepository
-                                                .findByComponentIdInAndStatusOrderBySortOrder(publishedComponentIds,
-                                                                ComponentStatus.PUBLISHED)
+                                                .findByComponentIdInAndStatusInOrderBySortOrder(publishedComponentIds,
+                                                                visibleComponentStatuses)
                                                 .stream()
                                                 .collect(Collectors.groupingBy(ComponentEntry::getComponentId));
 

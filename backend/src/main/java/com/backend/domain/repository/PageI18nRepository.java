@@ -31,6 +31,10 @@ public interface PageI18nRepository extends JpaRepository<PageI18n, Long> {
         Optional<PageI18n> findPublishedByCanonicalUrl(@Param("language") Language language,
                         @Param("canonicalUrl") String canonicalUrl);
 
+        /** Preview-aware lookup by canonical URL where status must be in the permitted set. */
+        Optional<PageI18n> findByLanguageAndCanonicalUrlAndStatusIn(Language language, String canonicalUrl,
+                        java.util.Collection<PageStatus> statuses);
+
         List<PageI18n> findByLanguageAndStatus(Language language, PageStatus status);
 
         boolean existsByPageIdAndLanguage(Long pageId, Language language);

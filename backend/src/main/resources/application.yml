@@ -44,6 +44,10 @@ app:
       - http://127.0.0.1:3000
     allowed-origin-patterns:
       - http://*.localhost:4200
+  cms:
+    preview:
+      secret: ${CMS_PREVIEW_SECRET}
+      ttl-seconds: ${CMS_PREVIEW_TTL_SECONDS:900}
   migration:
     re-encrypt-secrets: ${APP_MIGRATION_RE_ENCRYPT_SECRETS:false}
   tenant:

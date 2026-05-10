@@ -133,6 +133,9 @@ export const SPA_ENDPOINTS_CONFIG = {
     pagesComposite: 'pages/composite',
     pageComposite: 'pages/${id}/composite',
 
+    // ----- SMARTEDIT PREVIEW -----
+    cmsPreviewTickets: 'cms/preview/tickets',
+
     // ----- PAGE BUILDER: SLOTS -----
     pageSlots: 'pages/${id}/slots',
     pageSlot: 'pages/${id}/slots/${slotName}',

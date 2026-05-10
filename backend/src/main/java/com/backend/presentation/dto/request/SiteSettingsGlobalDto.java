@@ -10,13 +10,13 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record SiteSettingsGlobalDto(
-        @Email(message = "validation.email") String contactEmail,
+        @Email(message = "{validation.email}") String contactEmail,
 
-        @Pattern(regexp = ValidationConstants.PHONE_GLOBAL_PATTERN, message = "validation.phone.pattern") String contactPhone,
+        @Pattern(regexp = ValidationConstants.PHONE_GLOBAL_PATTERN, message = "{validation.phone.pattern}") String contactPhone,
 
-        @Pattern(regexp = ValidationConstants.PHONE_GLOBAL_PATTERN, message = "validation.phone.pattern") String whatsappPhone,
+        @Pattern(regexp = ValidationConstants.PHONE_GLOBAL_PATTERN, message = "{validation.phone.pattern}") String whatsappPhone,
 
-        @SecureUrl(type = SecureUrlType.CANONICAL, message = "validation.url.canonical") String canonicalBaseUrl,
+        @SecureUrl(type = SecureUrlType.CANONICAL, message = "{validation.url.canonical}") String canonicalBaseUrl,
 
         RobotsMetaTag robots,
 

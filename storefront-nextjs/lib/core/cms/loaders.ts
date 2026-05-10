@@ -22,8 +22,11 @@ export const loadShellData = cache(async (lang: string) => {
   };
 });
 
-export const loadHomepage = cache(async (lang: string) => {
-  const [page, site] = await Promise.all([getCmsPage(lang), getSiteConfig(lang)]);
+export const loadHomepage = cache(async (lang: string, previewTicket?: string) => {
+  const [page, site] = await Promise.all([
+    getCmsPage(lang, { previewTicket }),
+    getSiteConfig(lang, previewTicket),
+  ]);
 
   return {
     page: requirePageOrNotFound(page),
@@ -31,10 +34,12 @@ export const loadHomepage = cache(async (lang: string) => {
   };
 });
 
-export const loadContentPage = cache(async (lang: string, slugPath?: string) => {
+export const loadContentPage = cache(async (lang: string, slugPath?: string, previewTicket?: string) => {
   const [page, site] = await Promise.all([
-    slugPath ? getCmsPage(lang, "ContentPage", slugPath) : getCmsPage(lang),
-    getSiteConfig(lang),
+    slugPath
+      ? getCmsPage(lang, { pageType: "ContentPage", pageLabelOrId: slugPath, previewTicket })
+      : getCmsPage(lang, { previewTicket }),
+    getSiteConfig(lang, previewTicket),
   ]);
 
   return {
@@ -45,7 +50,7 @@ export const loadContentPage = cache(async (lang: string, slugPath?: string) => 
 
 export const loadProductPage = cache(async (lang: string, uid: string) => {
   const [page, site, product] = await Promise.all([
-    getCmsPage(lang, "ProductPage", undefined, uid),
+    getCmsPage(lang, { pageType: "ProductPage", code: uid }),
     getSiteConfig(lang),
     getProduct(uid, lang),
   ]);
@@ -59,7 +64,7 @@ export const loadProductPage = cache(async (lang: string, uid: string) => {
 
 export const loadCategoryPage = cache(async (lang: string, categoryUid: string) => {
   const [page, site, products] = await Promise.all([
-    getCmsPage(lang, "CategoryPage", undefined, categoryUid),
+    getCmsPage(lang, { pageType: "CategoryPage", code: categoryUid }),
     getSiteConfig(lang),
     getCategoryProducts(categoryUid, lang),
   ]);
@@ -74,7 +79,7 @@ export const loadCategoryPage = cache(async (lang: string, categoryUid: string) 
 export const loadSearchPage = cache(async (lang: string, query?: string) => {
   const normalizedQuery = query?.trim() ?? "";
   const [page, site, results] = await Promise.all([
-    getCmsPage(lang, "SearchResultPage"),
+    getCmsPage(lang, { pageType: "SearchResultPage" }),
     getSiteConfig(lang),
     normalizedQuery ? searchProducts(normalizedQuery, lang) : Promise.resolve(null),
   ]);
