@@ -153,11 +153,13 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- COMPONENT LIBRARY: COMPONENTS -----
     components: 'components',
     componentById: 'components/${id}',
+    componentByUid: 'components/by-uid/${uid}',
     componentWithI18n: 'components/${id}?include=translations',
     componentI18n: 'components/${componentId}/i18n/${language}',
     componentI18nPublish: 'components/${componentId}/publish/${language}',
     componentComposite: 'components/composite',
     componentCompositeById: 'components/${id}/composite',
+    componentCompositeDraftById: 'components/${id}/composite/draft',
     componentBulkDelete: 'components/bulk-delete',
 
     // ----- COMPONENT LIBRARY: ENTRY FIELDS -----

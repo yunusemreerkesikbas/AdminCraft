@@ -8,10 +8,12 @@ import FooterSlot from "@/components/layout/shell/FooterSlot";
 export default async function CmsPage({
   page,
   lang,
+  previewTicket,
   children,
 }: {
   page: PageDeliveryResponse;
   lang: string;
+  previewTicket?: string;
   children?: React.ReactNode;
 }) {
   const slotMap = buildSlotMap(page);
@@ -27,7 +29,7 @@ export default async function CmsPage({
     <>
       <BodyClassSetter pageUid={page.uid} />
       {showHeader && (
-        <HeaderSlot lang={lang} />
+        <HeaderSlot lang={lang} previewTicket={previewTicket} />
       )}
       <main
         className={
@@ -40,7 +42,7 @@ export default async function CmsPage({
         {children}
       </main>
       {showFooter && (
-        <FooterSlot lang={lang} lifted={isLandingPage} />
+        <FooterSlot lang={lang} previewTicket={previewTicket} lifted={isLandingPage} />
       )}
     </>
   );

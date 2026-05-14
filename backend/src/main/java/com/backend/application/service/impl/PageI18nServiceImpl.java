@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.request.PageI18nRequest;
 import com.backend.application.dto.request.PagePublishRequest;
+import com.backend.application.cms.preview.CmsDraftOverrideService;
 import com.backend.application.service.PageI18nService;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
@@ -30,6 +31,7 @@ public class PageI18nServiceImpl implements PageI18nService {
 
     private final PageI18nRepository pageI18nRepository;
     private final PageRepository pageRepository;
+    private final CmsDraftOverrideService cmsDraftOverrideService;
 
     @Override
     @Transactional(readOnly = true)
@@ -85,6 +87,7 @@ public class PageI18nServiceImpl implements PageI18nService {
 
         if (request.isImmediatePublish()) {
             validateSinglePublishedTemplatePerType(page);
+            cmsDraftOverrideService.publishComponentDraftsForPage(pageId, language);
             pageI18n.publish();
 
             // Update Parent Page PublishedAt
@@ -206,9 +209,16 @@ public class PageI18nServiceImpl implements PageI18nService {
         if (request.description() != null)
             existing.setDescription(request.description());
         if (request.status() != null)
-            existing.setStatus(request.status());
+            existing.setStatus(resolveEditableStatus(existing.getStatus(), request.status()));
 
         return existing;
+    }
+
+    private PageStatus resolveEditableStatus(PageStatus currentStatus, PageStatus requestedStatus) {
+        if (currentStatus == PageStatus.PUBLISHED && requestedStatus == PageStatus.DRAFT) {
+            return PageStatus.PUBLISHED;
+        }
+        return requestedStatus;
     }
 
     private PageI18n createNewPageI18n(Long pageId, Language language, PageI18nRequest request) {

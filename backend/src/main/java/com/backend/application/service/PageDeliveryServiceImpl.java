@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.cms.preview.CmsRequestContext;
+import com.backend.application.cms.preview.CmsDraftOverrideService;
 import com.backend.application.cms.preview.CmsVisibility;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.util.UrlUtils;
@@ -84,14 +85,30 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         private final NavigationService navigationService;
         private final MediaFieldExpander mediaFieldExpander;
         private final CmsRequestContext cmsRequestContext;
+        private final CmsDraftOverrideService cmsDraftOverrideService;
 
         @Override
         public Optional<PageDeliveryResponse> resolvePageForDelivery(String pageType, String pageLabelOrId,
-                        String code, Language lang) {
+                        String code, Long previewPageId, Language lang) {
                 Optional<Page> pageOpt;
                 String normalizedPageLabelOrId = normalizePageLabelOrId(pageLabelOrId);
                 String normalizedCode = normalizeParam(code);
                 final String[] codeToInclude = { null };
+
+                if (cmsRequestContext.isPreview()) {
+                        Long boundPageId = cmsRequestContext.getPreviewPageId();
+                        if (boundPageId != null && previewPageId == null) {
+                                return Optional.empty();
+                        }
+                }
+
+                if (cmsRequestContext.isPreview() && previewPageId != null) {
+                        pageOpt = resolvePreviewPageById(previewPageId);
+                        return pageOpt
+                                        .filter(page -> isPageVisibleForCurrentMode(page, lang))
+                                        .map(page -> buildPageDeliveryResponse(page, lang,
+                                                        previewDeliveryCode(page, normalizedCode)));
+                }
 
                 if (pageType == null || pageType.isBlank()) {
                         pageOpt = resolveHomepage();
@@ -132,6 +149,26 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 return pageOpt
                                 .filter(page -> isPageVisibleForCurrentMode(page, lang))
                                 .map(page -> buildPageDeliveryResponse(page, lang, codeToInclude[0]));
+        }
+
+        private Optional<Page> resolvePreviewPageById(Long previewPageId) {
+                Long ticketPageId = cmsRequestContext.getPreviewPageId();
+                if (ticketPageId != null && !ticketPageId.equals(previewPageId)) {
+                        log.debug("Preview page id mismatch: ticketPageId={}, requestedPageId={}", ticketPageId, previewPageId);
+                        return Optional.empty();
+                }
+                return pageRepository.findByIdAndStatusIn(previewPageId, visiblePageStatuses());
+        }
+
+        private String previewDeliveryCode(Page page, String normalizedCode) {
+                if (normalizedCode == null) {
+                        return null;
+                }
+                PageType pageType = page.getPageType();
+                if (pageType == PageType.PRODUCT || pageType == PageType.CATEGORY) {
+                        return normalizedCode;
+                }
+                return null;
         }
 
         private boolean isPageVisibleForCurrentMode(Page page, Language lang) {
@@ -222,15 +259,48 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 ? Map.of()
                                 : componentRepository.findByIdIn(allComponentIds).stream()
                                                 .filter(c -> visibleComponentStatuses.contains(c.getStatus()))
+                                                .map(this::cloneComponent)
                                                 .collect(Collectors.toMap(Component::getId, c -> c));
+
+                if (cmsRequestContext.isPreview() && !componentMap.isEmpty()) {
+                        Map<Long, com.backend.application.cms.preview.ComponentDraftPayload> drafts =
+                                        cmsDraftOverrideService.findComponentDrafts(componentMap.keySet());
+                        drafts.forEach((componentId, draft) -> {
+                                Component component = componentMap.get(componentId);
+                                if (component != null) {
+                                        cmsDraftOverrideService.apply(component, draft);
+                                }
+                        });
+                }
 
                 List<Long> publishedComponentIds = componentMap.keySet().stream().toList();
 
                 Map<Long, ComponentI18n> componentI18nMap = publishedComponentIds.isEmpty()
-                                ? Map.of()
-                                : componentI18nRepository.findByComponentIdInAndLanguage(publishedComponentIds, lang)
-                                                .stream()
-                                                .collect(Collectors.toMap(ComponentI18n::getComponentId, i -> i));
+                                ? new LinkedHashMap<>()
+                                : new LinkedHashMap<>(
+                                                componentI18nRepository.findByComponentIdInAndLanguage(publishedComponentIds, lang)
+                                                                .stream()
+                                                                .map(this::cloneComponentI18n)
+                                                                .collect(Collectors.toMap(ComponentI18n::getComponentId, i -> i)));
+
+                if (cmsRequestContext.isPreview() && !publishedComponentIds.isEmpty()) {
+                        Map<String, com.backend.application.cms.preview.ComponentI18nDraftPayload> i18nDrafts =
+                                        cmsDraftOverrideService.findComponentI18nDrafts(publishedComponentIds, lang);
+                        for (Long componentId : publishedComponentIds) {
+                                var draft = i18nDrafts.get(cmsDraftOverrideService.i18nKey(componentId, lang));
+                                if (draft == null) {
+                                        continue;
+                                }
+                                ComponentI18n i18n = componentI18nMap.get(componentId);
+                                if (i18n == null) {
+                                        i18n = new ComponentI18n();
+                                        i18n.setComponentId(componentId);
+                                        i18n.setLanguage(lang);
+                                        componentI18nMap.put(componentId, i18n);
+                                }
+                                cmsDraftOverrideService.apply(i18n, draft);
+                        }
+                }
 
                 List<Long> typeIds = componentMap.values().stream()
                                 .map(Component::getComponentTypeId)
@@ -578,6 +648,39 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 effective.setPosition(templateSlot.getPosition());
                 effective.setSortOrder(templateSlot.getSortOrder());
                 return effective;
+        }
+
+        private Component cloneComponent(Component source) {
+                Component copy = new Component();
+                copy.setId(source.getId());
+                copy.setUuid(source.getUuid());
+                copy.setUid(source.getUid());
+                copy.setComponentTypeId(source.getComponentTypeId());
+                copy.setName(source.getName());
+                copy.setDisplayOrder(source.getDisplayOrder());
+                copy.setIsVisible(source.getIsVisible());
+                copy.setStyleClasses(source.getStyleClasses());
+                copy.setCustomData(source.getCustomData());
+                copy.setStatus(source.getStatus());
+                copy.setResponsiveMedia(source.getResponsiveMedia());
+                copy.setNavigationNodeId(source.getNavigationNodeId());
+                copy.setNavigationType(source.getNavigationType());
+                copy.setSearchBox(source.getSearchBox());
+                return copy;
+        }
+
+        private ComponentI18n cloneComponentI18n(ComponentI18n source) {
+                ComponentI18n copy = new ComponentI18n();
+                copy.setId(source.getId());
+                copy.setUuid(source.getUuid());
+                copy.setUid(source.getUid());
+                copy.setComponentId(source.getComponentId());
+                copy.setLanguage(source.getLanguage());
+                copy.setTitle(source.getTitle());
+                copy.setSubtitle(source.getSubtitle());
+                copy.setDescription(source.getDescription());
+                copy.setStatus(source.getStatus());
+                return copy;
         }
 
 

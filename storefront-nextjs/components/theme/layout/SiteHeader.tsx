@@ -129,7 +129,7 @@ function renderPrimaryInfoBlock(
   onClick?: () => void,
 ) {
   return (
-    <div key={block.uid}>
+    <div key={block.uid} {...smartEditBlockAttributes(block)}>
       {block.title ? <p className={styles.panelLabel}>{block.title}</p> : null}
       {block.links.map((link) => renderLink(link, styles.panelInfoLink, `${block.uid}-${link.uid}`, onClick))}
       {block.description ? <p className={styles.panelInfoText}>{block.description}</p> : null}
@@ -142,7 +142,7 @@ function renderSecondaryBlock(
   onClick?: () => void,
 ) {
   return (
-    <div key={block.uid}>
+    <div key={block.uid} {...smartEditBlockAttributes(block)}>
       {block.title ? <p className={styles.panelLabel}>{block.title}</p> : null}
       {block.links.length > 0 ? (
         <div className={styles.panelSocial}>
@@ -154,10 +154,23 @@ function renderSecondaryBlock(
   );
 }
 
+function smartEditBlockAttributes(block: LayoutBlockDelivery | null | undefined) {
+  if (!block) {
+    return {};
+  }
+
+  return {
+    "data-cms-component-id": block.uid,
+    "data-cms-component-type": block.componentType,
+    "data-cms-layout-role": block.role,
+  };
+}
+
 export default function SiteHeader({
   lang,
   brand,
   mainNavigation,
+  mainNavigationBlock,
   primaryBlocks,
   secondaryBlocks,
   enabledLanguages,
@@ -167,6 +180,7 @@ export default function SiteHeader({
   lang: string;
   brand: string;
   mainNavigation: (NavigationDeliveryResponse & { sections?: NavigationSectionDelivery[] }) | null;
+  mainNavigationBlock?: LayoutBlockDelivery | null;
   primaryBlocks: LayoutBlockDelivery[];
   secondaryBlocks: LayoutBlockDelivery[];
   enabledLanguages: LanguageInfo[];
@@ -322,7 +336,7 @@ export default function SiteHeader({
               </button>
             </div>
 
-            <nav className={styles.panelNav}>
+            <nav className={styles.panelNav} {...smartEditBlockAttributes(mainNavigationBlock)}>
               {sections.map((section) =>
                 renderMenuSection(
                   section,

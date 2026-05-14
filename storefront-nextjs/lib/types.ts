@@ -104,6 +104,7 @@ export interface LayoutBlockDelivery {
 export interface ShellDeliveryResponse {
   header: {
     mainNavigation?: (NavigationDeliveryResponse & { sections?: NavigationSectionDelivery[] }) | null;
+    mainNavigationBlock?: LayoutBlockDelivery | null;
     primaryBlocks: LayoutBlockDelivery[];
     secondaryBlocks: LayoutBlockDelivery[];
   };

@@ -18,11 +18,8 @@ Tenant migration location:
 
 Key migrations and seeds:
 
-- `V17__add_component_navigation_bindings.sql` (component-level navigation binding fields)
-- `V20__simplify_component_type_navigation_profile.sql` (consolidated legacy boolean columns → `navigation_profile` enum)
-- `V21__replace_navigation_profile_with_is_navigation_aware.sql` (replaces `navigation_profile` enum with single `is_navigation_aware` boolean)
-- `R__seed_component_types.sql` (idempotent upsert with `is_navigation_aware`; includes `NavigationComponent` system type)
-- `R__seed_entry_field_definitions.sql`
+- `V1.0.0__baseline.sql`
+- `V1.0.1__create_cms_draft_overrides.sql` (SmartEdit working-copy overrides for published component edits)
 
 Navigation capability model source of truth:
 
@@ -64,12 +61,14 @@ Endpoints:
 - `GET /api/components` (paginated + sort + search)
 - `POST /api/components`
 - `GET /api/components/{id}` (supports `?include=translations`)
+- `GET /api/components/by-uid/{uid}` (supports `?include=translations`; used by SmartEdit selection when the iframe only has a component uid)
 - `PUT /api/components/{id}`
 - `DELETE /api/components/{id}`
 - `POST /api/components/bulk-delete` (body `{ "ids": [...] }`, max **100** IDs; **200** + `ApiResponse.SUCCESS` with localized summary in `message` and `data` `{ requestedCount, deletedIds, failedIds, errors[] }` for partial or full success; **422** + `ApiResponse.ERROR` + `message` only when **every** ID fails; `errors[]` entries expose safe `code` + localized `message`, not raw exception text)
 - `POST /api/components/composite`
 - `GET /api/components/{id}/composite`
 - `PUT /api/components/{id}/composite`
+- `PUT /api/components/{id}/composite/draft` (SmartEdit-only working-copy update; stores draft override, does not mutate the published component row)
 - `PATCH /api/components/{id}/responsive-media?responsiveMediaId={id}`
 
 Composite note:
@@ -77,6 +76,7 @@ Composite note:
 - Composite success/error responses return localized `ApiResponse.message` text resolved from backend message bundles via `Accept-Language`.
 - Admin UI is expected to show backend `response.message` directly for composite success/error notifications.
 - Responsive media create/update in the admin UI sends only `desktopMediaId` / `mobileMediaId`; the client does **not** generate a `code`. Backend creates a code on create and preserves the existing code on update.
+- SmartEdit opens the same component edit dialog in `draftMode`; saves go to `PUT /api/components/{id}/composite/draft`. The draft endpoint persists `COMPONENT` and `COMPONENT_I18N` payloads in `cms_draft_overrides`. Public live delivery ignores these rows; preview delivery overlays them on top of the published component fallback.
 
 Entry field definition controller:
 

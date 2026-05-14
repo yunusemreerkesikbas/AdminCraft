@@ -58,6 +58,7 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
     List<LayoutBlockDelivery> headerPrimary = new ArrayList<>();
     List<LayoutBlockDelivery> headerSecondary = new ArrayList<>();
     NavigationDeliveryResponse mainNavigation = null;
+    LayoutBlockDelivery mainNavigationBlock = null;
 
     List<LayoutBlockDelivery> footerPrimary = new ArrayList<>();
     List<LayoutBlockDelivery> footerBottom = new ArrayList<>();
@@ -76,6 +77,7 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
 
       if (role.startsWith("header.")) {
         if (HEADER_MAIN_NAVIGATION_ROLE.equals(role)) {
+          mainNavigationBlock = toLayoutBlock(delivery, role, langCode);
           NavigationDeliveryResponse nav = delivery.navigationNode();
           if (nav != null) {
             List<NavigationDeliveryResponse.NavigationSectionDelivery> sections = buildSections(nav, langCode);
@@ -107,7 +109,7 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
       }
     }
 
-    HeaderDelivery header = new HeaderDelivery(mainNavigation, headerPrimary, headerSecondary);
+    HeaderDelivery header = new HeaderDelivery(mainNavigation, mainNavigationBlock, headerPrimary, headerSecondary);
     FooterDelivery footer = new FooterDelivery(footerPrimary, footerBottom);
 
     return Optional.of(new ShellDeliveryResponse(header, footer));

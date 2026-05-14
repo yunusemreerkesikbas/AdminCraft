@@ -13,6 +13,15 @@ const readPreviewTicket = (
   return typeof value === "string" && value.length > 0 ? value : undefined;
 };
 
+const readPreviewPageId = (
+  raw: string | string[] | undefined,
+): number | undefined => {
+  if (!raw) return undefined;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+};
+
 export async function generateMetadata({
   params,
   searchParams,
@@ -30,11 +39,12 @@ export async function generateMetadata({
   }
   const resolvedSearchParams = (await searchParams) ?? {};
   const previewTicket = readPreviewTicket(resolvedSearchParams.preview);
+  const previewPageId = readPreviewPageId(resolvedSearchParams.previewPageId);
   const isHome = !slug || slug.length === 0;
   const slugPath = isHome ? undefined : `/${slug.join("/")}`;
   const { page, site } = isHome
-    ? await loadHomepage(lang, previewTicket)
-    : await loadContentPage(lang, slugPath, previewTicket);
+    ? await loadHomepage(lang, previewTicket, previewPageId)
+    : await loadContentPage(lang, slugPath, previewTicket, previewPageId);
 
   return buildPageMetadata(page, site, isHome ? `/${lang}` : `/${lang}${slugPath}`);
 }
@@ -49,6 +59,7 @@ export default async function ContentPage({
   const { lang, slug } = await params;
   const resolvedSearchParams = (await searchParams) ?? {};
   const previewTicket = readPreviewTicket(resolvedSearchParams.preview);
+  const previewPageId = readPreviewPageId(resolvedSearchParams.previewPageId);
 
   if (slug?.[0] === "maintenance") {
     const translate = await getTranslations("Maintenance");
@@ -63,8 +74,8 @@ export default async function ContentPage({
   const slugPath = isHome ? undefined : `/${slug.join("/")}`;
 
   const { page, site } = isHome
-    ? await loadHomepage(lang, previewTicket)
-    : await loadContentPage(lang, slugPath, previewTicket);
+    ? await loadHomepage(lang, previewTicket, previewPageId)
+    : await loadContentPage(lang, slugPath, previewTicket, previewPageId);
 
   const orgSchema = isHome && site ? buildOrganizationSchema(site) : null;
 
@@ -76,7 +87,7 @@ export default async function ContentPage({
           dangerouslySetInnerHTML={{ __html: safeJsonLd(orgSchema) }}
         />
       ) : null}
-      <CmsPage page={page} lang={lang} />
+      <CmsPage page={page} lang={lang} previewTicket={previewTicket} />
     </>
   );
 }

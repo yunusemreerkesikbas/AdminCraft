@@ -51,6 +51,8 @@
         <div class="se-toolbar__lang">
             <mat-icon>translate</mat-icon>
             <mat-select
+                class="se-toolbar__lang-select"
+                panelClass="se-toolbar__lang-panel"
                 [value]="currentLangSig()"
                 (selectionChange)="onLanguageChange($event.value)"
             >
