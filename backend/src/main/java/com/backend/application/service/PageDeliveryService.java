@@ -8,6 +8,5 @@ import com.backend.domain.enums.Language;
 public interface PageDeliveryService {
 
   Optional<PageDeliveryResponse> resolvePageForDelivery(String pageType, String pageLabelOrId, String code,
-      Language lang);
+      Long previewPageId, Language lang);
 }
-

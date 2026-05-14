@@ -26,6 +26,7 @@ import com.backend.application.dto.request.ComponentI18nUpdateCommand;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
 import com.backend.application.dto.response.BulkDeleteResultResponse;
+import com.backend.application.cms.preview.CmsDraftOverrideService;
 import com.backend.application.support.BulkDeleteExceptionMapper;
 import com.backend.application.dto.response.ComponentCompositeResponse;
 import com.backend.application.dto.response.ComponentListItemResponse;
@@ -69,6 +70,7 @@ public class ComponentServiceImpl implements ComponentService {
     private final NavigationNodeRepository navigationNodeRepository;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
+    private final CmsDraftOverrideService cmsDraftOverrideService;
     private final SiteActivityPublisher activityPublisher;
     private final SecurityHelper securityHelper;
     private final MessageSource messageSource;
@@ -127,10 +129,29 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Override
     @Transactional(readOnly = true)
+    public Component getComponentByUid(String uid) {
+        return componentRepository.findByUid(uid)
+                .orElseThrow(() -> new EntityNotFoundException("Component", uid));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Component, List<ComponentI18n>> getComponentWithI18n(Long id) {
         Component component = componentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Component", id));
         List<ComponentI18n> i18nList = componentI18nRepository.findByComponentId(id);
+
+        Map<Component, List<ComponentI18n>> result = new HashMap<>();
+        result.put(component, i18nList);
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Component, List<ComponentI18n>> getComponentWithI18nByUid(String uid) {
+        Component component = componentRepository.findByUid(uid)
+                .orElseThrow(() -> new EntityNotFoundException("Component", uid));
+        List<ComponentI18n> i18nList = componentI18nRepository.findByComponentId(component.getId());
 
         Map<Component, List<ComponentI18n>> result = new HashMap<>();
         result.put(component, i18nList);
@@ -379,6 +400,48 @@ public class ComponentServiceImpl implements ComponentService {
         return ComponentCompositeResponse.from(savedComponent, typeName, i18nList);
     }
 
+    @Override
+    @Transactional
+    public ComponentCompositeResponse updateDraftComposite(Long id, UpdateComponentCompositeRequest request) {
+        Component component = componentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Component", id));
+
+        ComponentType componentType = componentTypeRepository.findById(component.getComponentTypeId())
+                .orElseThrow(() -> new EntityNotFoundException("ComponentType", component.getComponentTypeId()));
+
+        cmsDraftOverrideService.saveComponentDraft(id, request);
+
+        Component previewComponent = cloneComponent(component);
+        cmsDraftOverrideService.findComponentDraft(id)
+                .ifPresent(draft -> cmsDraftOverrideService.apply(previewComponent, draft));
+
+        List<ComponentI18n> i18nList = componentI18nRepository.findByComponentId(id).stream()
+                .map(this::cloneComponentI18n)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (request.translations() != null) {
+            for (var entry : request.translations().entrySet()) {
+                ComponentI18n i18n = i18nList.stream()
+                        .filter(existing -> existing.getLanguage() == entry.getKey())
+                        .findFirst()
+                        .orElseGet(() -> {
+                            ComponentI18n created = new ComponentI18n();
+                            created.setComponentId(id);
+                            created.setLanguage(entry.getKey());
+                            created.setStatus(ComponentStatus.DRAFT);
+                            i18nList.add(created);
+                            return created;
+                        });
+                cmsDraftOverrideService.findComponentI18nDraft(id, entry.getKey())
+                        .ifPresent(draft -> cmsDraftOverrideService.apply(i18n, draft));
+            }
+        }
+
+        activityPublisher.publishComponentEvent(component.getId(), component.getName(),
+                ActivityAction.UPDATED, securityHelper.getCurrentUserIdOrNull(), null, null);
+        return ComponentCompositeResponse.from(previewComponent, componentType.getUid(), i18nList);
+    }
+
     private void createBootstrapEntryWithDraftTranslations(Long componentId, Set<Language> languages) {
         if (languages == null || languages.isEmpty()) {
             return;
@@ -402,6 +465,43 @@ public class ComponentServiceImpl implements ComponentService {
                 .toList();
 
         componentEntryI18nRepository.saveAll(i18nEntries);
+    }
+
+    private Component cloneComponent(Component source) {
+        Component copy = new Component();
+        copy.setId(source.getId());
+        copy.setUuid(source.getUuid());
+        copy.setUid(source.getUid());
+        copy.setComponentTypeId(source.getComponentTypeId());
+        copy.setName(source.getName());
+        copy.setDisplayOrder(source.getDisplayOrder());
+        copy.setIsVisible(source.getIsVisible());
+        copy.setStyleClasses(source.getStyleClasses());
+        copy.setCustomData(source.getCustomData());
+        copy.setStatus(source.getStatus());
+        copy.setResponsiveMedia(source.getResponsiveMedia());
+        copy.setNavigationNodeId(source.getNavigationNodeId());
+        copy.setNavigationType(source.getNavigationType());
+        copy.setSearchBox(source.getSearchBox());
+        copy.setCreatedAt(source.getCreatedAt());
+        copy.setUpdatedAt(source.getUpdatedAt());
+        return copy;
+    }
+
+    private ComponentI18n cloneComponentI18n(ComponentI18n source) {
+        ComponentI18n copy = new ComponentI18n();
+        copy.setId(source.getId());
+        copy.setUuid(source.getUuid());
+        copy.setUid(source.getUid());
+        copy.setComponentId(source.getComponentId());
+        copy.setLanguage(source.getLanguage());
+        copy.setTitle(source.getTitle());
+        copy.setSubtitle(source.getSubtitle());
+        copy.setDescription(source.getDescription());
+        copy.setStatus(source.getStatus());
+        copy.setCreatedAt(source.getCreatedAt());
+        copy.setUpdatedAt(source.getUpdatedAt());
+        return copy;
     }
 
     @Override

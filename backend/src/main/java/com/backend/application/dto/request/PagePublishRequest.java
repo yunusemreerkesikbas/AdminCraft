@@ -2,10 +2,8 @@ package com.backend.application.dto.request;
 
 import java.time.LocalDateTime;
 
-import jakarta.validation.constraints.NotNull;
-
 public record PagePublishRequest(
-    @NotNull(message = "validation.tenant.id.required") Long tenantId,
+    Long tenantId,
     LocalDateTime scheduledAt) {
 
   public boolean isImmediatePublish() {
@@ -16,4 +14,3 @@ public record PagePublishRequest(
     return scheduledAt != null;
   }
 }
-

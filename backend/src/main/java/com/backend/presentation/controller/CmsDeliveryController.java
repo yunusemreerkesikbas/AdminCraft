@@ -114,15 +114,16 @@ public class CmsDeliveryController {
       @RequestParam(required = false) String pageType,
       @RequestParam(required = false) String pageLabelOrId,
       @RequestParam(required = false) String code,
+      @RequestParam(required = false) Long previewPageId,
       @RequestParam(required = false) Language lang,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
     Locale locale = Locale.forLanguageTag(acceptLanguage);
     Language resolvedLang = resolveLanguage(lang, acceptLanguage);
-    log.debug("CMS Delivery: Resolving page pageType={}, pageLabelOrId={}, code={}, lang={}",
-        pageType, pageLabelOrId, code, resolvedLang);
+    log.debug("CMS Delivery: Resolving page pageType={}, pageLabelOrId={}, code={}, previewPageId={}, lang={}",
+        pageType, pageLabelOrId, code, previewPageId, resolvedLang);
 
-    return cmsDeliveryService.resolvePageForDelivery(pageType, pageLabelOrId, code, resolvedLang)
+    return cmsDeliveryService.resolvePageForDelivery(pageType, pageLabelOrId, code, previewPageId, resolvedLang)
         .map(response -> ResponseEntity.ok(
             ApiResponse.success(messageSource.getMessage("cms.page.found", null, locale), response)))
         .orElseGet(() -> ResponseEntity.ok(

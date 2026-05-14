@@ -46,6 +46,11 @@ i18n:
 - `PUT /api/pages/{pageId}/i18n/{language}`
 - `POST /api/pages/{pageId}/publish/{language}`
 
+Publish request note:
+
+- `PagePublishRequest.tenantId` is optional/legacy and must not be required by clients. Tenant scope is resolved from `TenantContext` by `TenantFilter`, not from the request body.
+- SmartEdit publish applies current component draft overrides from `cms_draft_overrides` to published component/component_i18n rows before clearing those overrides.
+
 Composite operations:
 
 - `POST /api/pages/composite`
@@ -53,6 +58,11 @@ Composite operations:
 - `PUT /api/pages/{id}/composite`
 
 These endpoints are the **atomic-write** path for base + translations in one request.
+
+Published edit note:
+
+- Normal page/component admin update endpoints can still update their live records directly.
+- SmartEdit component editing uses a separate draft override endpoint so published storefront content does not change until the page publish action runs.
 
 Slots contract (`GET /api/pages/{id}/slots`):
 
@@ -114,4 +124,3 @@ Locations (confirmed):
 1. Update backend validation and DTOs in the application layer.
 2. Expose it via `PageTemplateController` and ensure the sort/search contracts remain stable.
 3. Update frontend types in `storefront/src/app/modules/admin/custom/templates/page-template.types.ts`.
-

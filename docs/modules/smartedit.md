@@ -4,23 +4,35 @@
 
 SmartEdit is the admin-side WYSIWYG editor for CMS pages. It loads the headless Next.js storefront in an iframe, overlays the admin selection chrome on top, and reuses the existing page/component admin dialogs (`PageEditDialogComponent`, `ComponentEditDialogComponent`) for in-context editing.
 
-The storefront iframe renders **DRAFT-only** content while a valid SmartEdit preview ticket is attached to its requests. Live storefront traffic continues to receive PUBLISHED content as before — preview mode and live mode never overlap.
+The storefront iframe renders SmartEdit preview content while a valid preview ticket is attached to its requests. Live storefront traffic continues to receive **PUBLISHED-only** content.
+
+Preview mode resolves content as **draft override first, then PUBLISHED fallback**. This lets editors open an already published page in SmartEdit without demoting the live page to `DRAFT`.
 
 Phase 1 scope:
 
 | In scope | Out of scope |
 | --- | --- |
-| Component content edit (i18n strings, media, links) | Slot CRUD (managed in `/:lang/templates`) |
-| Add/remove/reorder components in a slot | New page / new template creation |
-| Page metadata (title, slug, meta, robots) | Workflow / approval / version history |
+| Component content edit via draft overrides (i18n strings, media, links) | Full slot draft override model |
+| Open published pages in SmartEdit using published fallback | Add/remove/reorder components in a slot |
 | Per-language Publish | Scheduled publish, personalization, multi-variant |
+| Component UID fallback lookup | Page metadata draft override, workflow / approval / version history |
 
 ## Database
 
-No new tables. SmartEdit consumes the existing CMS schema:
+SmartEdit uses the existing CMS schema plus a working-copy override table:
 
-- `pages.status`, `page_i18n.status` — drives DRAFT vs PUBLISHED resolution.
-- `components.status`, `component_entries.status` — same.
+- `pages.status`, `page_i18n.status` — live delivery visibility is still `PUBLISHED`.
+- `components.status`, `component_entries.status` — live delivery visibility is still `PUBLISHED`.
+- `cms_draft_overrides` — stores SmartEdit working-copy changes for published records without mutating the live row.
+
+Migration:
+
+- [`backend/src/main/resources/db/tenant/component_library/V1.0.1__create_cms_draft_overrides.sql`](../../backend/src/main/resources/db/tenant/component_library/V1.0.1__create_cms_draft_overrides.sql)
+
+Current override targets:
+
+- `COMPONENT`
+- `COMPONENT_I18N`
 
 The HMAC preview secret is stored in configuration (`app.cms.preview.secret`), not in the database.
 
@@ -42,7 +54,7 @@ Mints a short-lived HMAC-SHA256 signed ticket the admin SmartEdit shell embeds i
   { "pageId": 12 }
   ```
 
-  `pageId` is optional; when absent the ticket is "any-page" (still tenant-scoped). When provided it is informational — verification still allows DRAFT for any page within the tenant.
+  `pageId` is optional; when absent the ticket is "any-page" (still tenant-scoped). When provided, delivery requests with `previewPageId` must match the ticket page id.
 
 - **Response** ([`PreviewTicketResponse`](../../backend/src/main/java/com/backend/presentation/dto/response/PreviewTicketResponse.java)):
 
@@ -80,18 +92,20 @@ Filter: [`CmsPreviewFilter`](../../backend/src/main/java/com/backend/presentatio
 
 If the header/param is present but the token is invalid (bad signature, expired, cross-tenant), the filter responds with **HTTP 401 — `Invalid CMS preview ticket`**. Requests without the token proceed as live PUBLISHED-only delivery.
 
-### DRAFT-only contract under preview
+### Preview visibility contract
 
 When preview mode is active:
 
 | Resource | Live (no ticket) | Preview (valid ticket) |
 | --- | --- | --- |
-| `Page.status` | `PUBLISHED` | `DRAFT` only |
-| `PageI18n.status` (per language) | `PUBLISHED` | `DRAFT` only |
-| `Component.status` | `PUBLISHED` | `DRAFT` only |
-| `ComponentEntry.status` | `PUBLISHED` | `DRAFT` only |
+| `Page.status` | `PUBLISHED` | `DRAFT` or `PUBLISHED` fallback |
+| `PageI18n.status` (per language) | `PUBLISHED` | `DRAFT` or `PUBLISHED` fallback |
+| `Component.status` | `PUBLISHED` | `DRAFT` or `PUBLISHED` fallback |
+| `ComponentEntry.status` | `PUBLISHED` | `DRAFT` or `PUBLISHED` fallback |
 
-There is **no fallback** to PUBLISHED in preview mode. If a tenant has no DRAFT for the requested language the delivery endpoint returns its standard not-found contract (HTTP 200 with `result: "ERROR"` for `/api/cms/pages`, `Optional.empty` mapping for individual components). This is intentional — content managers see exactly the content they are editing, not whatever was already live.
+Component-level draft overrides are applied only in preview mode. Normal CMS delivery ignores `cms_draft_overrides`.
+
+If a published page has no draft override, SmartEdit still opens using published fallback. If a draft override exists, the preview render overlays the draft values on top of the published component shell. This is the current Craftive equivalent of the Hybris staged/online separation.
 
 Status sets are centralised in [`CmsVisibility`](../../backend/src/main/java/com/backend/application/cms/preview/CmsVisibility.java). Per-request preview state lives in [`CmsRequestContext`](../../backend/src/main/java/com/backend/application/cms/preview/CmsRequestContext.java) (ThreadLocal, mirrors `TenantContext`).
 
@@ -99,7 +113,7 @@ Status sets are centralised in [`CmsVisibility`](../../backend/src/main/java/com
 
 Preview responses must not be cached by storefront ISR or browser. The Next.js client switches to `cache: "no-store"` whenever a preview ticket is supplied — see `storefront-nextjs/lib/core/http/fetch-json.ts`.
 
-`generateMetadata` in `storefront-nextjs/app/[lang]/[[...slug]]/page.tsx` also receives the preview ticket from `searchParams` and passes it to the same loaders, so page `<title>` and meta description always match the DRAFT content shown in the iframe.
+`generateMetadata` in `storefront-nextjs/app/[lang]/[[...slug]]/page.tsx` also receives the preview ticket and `previewPageId` from `searchParams` and passes both to the same loaders, so page `<title>` and meta description always match the preview content shown in the iframe.
 
 ## Frontend integration
 
@@ -196,7 +210,9 @@ Clicking **Renew session** re-issues the ticket (`POST /api/cms/preview/tickets`
 
 ### Known limitations (Phase 2 candidates)
 
-- **Component uid → numeric id resolution is frontend-cached.** When the inspector opens an `ComponentEditDialogComponent`, the SmartEdit shell maps the iframe-supplied component uid to a numeric `componentId` by walking its in-memory `pageSlotsSig`. The cache is refreshed after every save (`#reloadPageData`), so the staleness window is one user-tab — concurrent edits from another browser tab are not detected. A backend `GET /api/components/by-uid/{uid}` resolver would close this gap and is queued for Phase 2 along with concurrent-editor warnings.
+- Component lookup by UID is now available via `GET /api/components/by-uid/{uid}`, so SmartEdit no longer depends solely on the page slot cache for selected component resolution.
+- Draft overrides currently cover component shell fields and component i18n fields. Component entry content, slot component order/visibility, and shared slot overrides still need the same working-copy treatment before they are safe to edit without touching live rows.
+- `publishPageI18n` currently applies all component draft overrides in the tenant. A later revision should scope draft application by page/slot/component graph.
 
 ## Implementation guide
 
@@ -208,8 +224,8 @@ Clicking **Renew session** re-issues the ticket (`POST /api/cms/preview/tickets`
    - Reads `:pageId` and `:lang` from the route.
    - Calls `SmartEditPreviewService.issueTicket(pageId)` → backend `POST /api/cms/preview/tickets`.
    - Calls `PageBuilderService.getPageDetail`, `PageSlotService.getSlots`, `ComponentLibraryService.listComponentTypes` in parallel via `forkJoin`.
-4. Iframe URL is built as `${storefrontBaseUrl}/${lang}${canonicalUrl}?preview=${encodedTicket}` and bound to a `[src]="iframeUrlSig() | safe"` attribute.
-5. Storefront serves the page rendering DRAFT content (the preview filter activates because `?preview=` is valid).
+4. Iframe URL is built as `${storefrontBaseUrl}/${lang}${canonicalUrl}?preview=${encodedTicket}&previewPageId=${pageId}` and bound to a `[src]="iframeUrlSig() | safe"` attribute.
+5. Storefront serves the page rendering preview content: draft overrides first, then published fallback (the preview filter activates because `?preview=` is valid).
 6. The injector script posts `smartedit:ready`. The shell flips its **Connected** indicator on.
 
 ### Flow 2: Edit a component inline
@@ -218,17 +234,18 @@ Clicking **Renew session** re-issues the ticket (`POST /api/cms/preview/tickets`
 2. `smartedit-injector.js` walks up the DOM, finds the nearest `[data-cms-component-id]`, and posts `{ type: 'smartedit:select', payload: { kind: 'component', id, componentType, rect } }`.
 3. `SmartEditGatewayService` receives the message, validates origin against the allow-list, pushes the selection into a Subject. The shell binds it to `selectionSig`.
 4. The inspector shows component metadata and an **Edit** button. Clicking it:
-   - Resolves the numeric id via `pageSlotsSig` (component uid → page slot binding).
-   - Calls `ComponentLibraryService.getComponentDetail(id)`.
-   - Opens `ComponentEditDialogComponent` with the existing admin dialog flow (no SmartEdit-specific edit UI).
-5. On dialog save the shell calls `SmartEditGatewayService.requestReload()` which posts `smartedit:reload` to the iframe; `smartedit-injector.js` calls `location.reload()`. Because the URL still has `?preview=`, the new render fetches the updated DRAFT.
+   - Resolves the numeric id via `pageSlotsSig` when possible, otherwise calls `GET /api/components/by-uid/{uid}`.
+   - Opens `ComponentEditDialogComponent` in `draftMode`.
+5. On dialog save, the component dialog calls `PUT /api/components/{id}/composite/draft`. The backend writes `cms_draft_overrides` instead of mutating the published component row.
+6. The shell calls `SmartEditGatewayService.requestReload()` which posts `smartedit:reload` to the iframe; `smartedit-injector.js` calls `location.reload()`. Because the URL still has `?preview=`, the new render overlays the draft override.
 
 ### Flow 3: Publish current language
 
 1. Sidebar **Publish** button is enabled when the current language has a translation (`canPublishSig`).
-2. The shell calls `PageBuilderService.publishPageI18n(pageId, lang)` — same endpoint used elsewhere in the admin.
+2. The shell calls `PageBuilderService.publishPageI18n(pageId, lang)` — same endpoint used elsewhere in the admin. `PagePublishRequest.tenantId` is not required; tenant scope comes from `TenantContext`.
 3. On success the shell shows a localized notification (success message taken from the API response when present), reloads the iframe via `smartedit:reload`, and refreshes its in-memory page/slots state.
-4. The newly published `PageI18n` is now visible to live storefront traffic. Preview mode continues to show DRAFT — if there is no DRAFT for that language any more, the iframe returns a not-found response (intentional; the manager publishes and is done).
+4. The publish operation applies current component draft overrides to the published component/component_i18n records and clears those overrides.
+5. The newly published page/component content is now visible to live storefront traffic. Preview mode continues to use draft override first, published fallback second.
 
 ## Verification
 
@@ -242,8 +259,8 @@ curl -sS -X POST http://localhost:8080/api/cms/preview/tickets \
   -H 'Content-Type: application/json' \
   -d '{}' | jq
 
-# 2. Hit a delivery endpoint with the ticket — DRAFT content visible
-curl -sS 'http://localhost:8080/api/cms/pages?lang=TR' \
+# 2. Hit a delivery endpoint with the ticket — preview content visible
+curl -sS 'http://localhost:8080/api/cms/pages?lang=TR&previewPageId=<pageId>' \
   -H 'X-Tenant-Subdomain: <subdomain>' \
   -H 'X-Cms-Preview-Ticket: <ticket>'
 

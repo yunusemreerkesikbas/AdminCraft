@@ -104,43 +104,8 @@ public class ComponentController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
                         if (include != null && include.contains("translations")) {
-                                Map<Component, List<ComponentI18n>> resultMap = componentService
-                                                .getComponentWithI18n(id);
-
-                                Map.Entry<Component, List<ComponentI18n>> entry = resultMap.entrySet().iterator()
-                                                .next();
-                                Component component = entry.getKey();
-                                List<ComponentI18n> i18nList = entry.getValue();
-                                Map<String, ComponentI18nContentResponse> translationsMap = i18nList.stream()
-                                                .collect(Collectors.toMap(
-                                                                i18n -> i18n.getLanguage().name(), // "TR", "EN", etc.
-                                                                ComponentI18nContentResponse::from));
-
-                                int publishedCount = (int) i18nList.stream()
-                                                .filter(i18n -> com.backend.domain.enums.ComponentStatus.PUBLISHED
-                                                                .equals(i18n.getStatus()))
-                                                .count();
-                                ComponentDetailResponse.Metadata metadata = new ComponentDetailResponse.Metadata(
-                                                translationsMap.size(),
-                                                publishedCount);
-
-                                String componentTypeName = "";
-                                try {
-                                        ComponentType componentType = componentTypeService.getComponentTypeById(
-                                                        new GetComponentTypeByIdQuery(component.getComponentTypeId()));
-                                        componentTypeName = componentType.getUid();
-                                } catch (Exception e) {
-                                        log.warn("Could not fetch component type name for id: {}",
-                                                        component.getComponentTypeId());
-                                }
-
-                                ComponentDetailResponse response = ComponentDetailResponse.from(
-                                                component,
-                                                componentTypeName,
-                                                translationsMap,
-                                                metadata);
-
-                                return ResponseEntity.ok(ApiResponse.success(response));
+                                return ResponseEntity.ok(ApiResponse.success(
+                                                buildComponentDetailResponse(componentService.getComponentWithI18n(id))));
                         }
 
                         Component result = componentService.getComponentById(id);
@@ -149,6 +114,30 @@ public class ComponentController {
                         return ResponseEntity.ok(ApiResponse.success(response));
                 } catch (Exception ex) {
                         log.error("Error getting component {}", id, ex);
+                        String msg = messageSource.getMessage("component.get.error",
+                                        null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                        .body(ApiResponse.error(msg));
+                }
+        }
+
+        @GetMapping("/by-uid/{uid}")
+        public ResponseEntity<ApiResponse<?>> getByUid(
+                        @PathVariable String uid,
+                        @RequestParam(value = "include", required = false) String include,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+                try {
+                        if (include != null && include.contains("translations")) {
+                                return ResponseEntity.ok(ApiResponse.success(
+                                                buildComponentDetailResponse(componentService.getComponentWithI18nByUid(uid))));
+                        }
+
+                        Component result = componentService.getComponentByUid(uid);
+                        ComponentResponse response = ComponentResponse.from(result);
+
+                        return ResponseEntity.ok(ApiResponse.success(response));
+                } catch (Exception ex) {
+                        log.error("Error getting component {}", uid, ex);
                         String msg = messageSource.getMessage("component.get.error",
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -380,6 +369,26 @@ public class ComponentController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        @PutMapping("/{id}/composite/draft")
+        public ResponseEntity<ApiResponse<ComponentCompositeResponse>> updateDraftComposite(
+                        @PathVariable @NotNull @Min(1) Long id,
+                        @Valid @RequestBody UpdateComponentCompositeRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+                try {
+                        ComponentCompositeResponse response = componentService.updateDraftComposite(id, request);
+                        String successMessage = messageSource.getMessage("component.composite.update.success",
+                                        null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.ok(ApiResponse.success(successMessage, response));
+                } catch (Exception ex) {
+                        log.error("Error updating component draft composite id={}", id, ex);
+                        String msg = messageSource.getMessage("component.composite.update.error",
+                                        null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(msg));
+                }
+        }
+
         @GetMapping("/{id}/composite")
         public ResponseEntity<ApiResponse<ComponentCompositeResponse>> getComposite(
                         @PathVariable @NotNull @Min(1) Long id,
@@ -416,5 +425,39 @@ public class ComponentController {
                 String successMessage = messageSource.getMessage("component.responsive.assign.success",
                                 null, Locale.forLanguageTag(lang));
                 return ResponseEntity.ok(ApiResponse.success(successMessage, response));
+        }
+
+        private ComponentDetailResponse buildComponentDetailResponse(Map<Component, List<ComponentI18n>> resultMap) {
+                Map.Entry<Component, List<ComponentI18n>> entry = resultMap.entrySet().iterator().next();
+                Component component = entry.getKey();
+                List<ComponentI18n> i18nList = entry.getValue();
+                Map<String, ComponentI18nContentResponse> translationsMap = i18nList.stream()
+                                .collect(Collectors.toMap(
+                                                i18n -> i18n.getLanguage().name(),
+                                                ComponentI18nContentResponse::from));
+
+                int publishedCount = (int) i18nList.stream()
+                                .filter(i18n -> com.backend.domain.enums.ComponentStatus.PUBLISHED
+                                                .equals(i18n.getStatus()))
+                                .count();
+                ComponentDetailResponse.Metadata metadata = new ComponentDetailResponse.Metadata(
+                                translationsMap.size(),
+                                publishedCount);
+
+                String componentTypeName = "";
+                try {
+                        ComponentType componentType = componentTypeService.getComponentTypeById(
+                                        new GetComponentTypeByIdQuery(component.getComponentTypeId()));
+                        componentTypeName = componentType.getUid();
+                } catch (Exception e) {
+                        log.warn("Could not fetch component type name for id: {}",
+                                        component.getComponentTypeId());
+                }
+
+                return ComponentDetailResponse.from(
+                                component,
+                                componentTypeName,
+                                translationsMap,
+                                metadata);
         }
 }

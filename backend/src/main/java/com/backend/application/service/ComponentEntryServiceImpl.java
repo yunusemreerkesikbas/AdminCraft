@@ -17,6 +17,7 @@ import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.ResponsiveMediaSet;
+import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
@@ -91,7 +92,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
         existing.setSortOrder(entry.getSortOrder());
         existing.setIsVisible(entry.getIsVisible());
         existing.setStyleClasses(entry.getStyleClasses());
-        existing.setStatus(entry.getStatus());
+        existing.setStatus(resolveEditableStatus(existing.getStatus(), entry.getStatus()));
         existing.setUpdatedBy(entry.getUpdatedBy());
 
         return entryRepository.save(existing);
@@ -334,5 +335,15 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
             log.error("Failed to serialize custom fields for entryId={}, language={}", entryId, language, ex);
             throw new RuntimeException("Failed to serialize custom fields", ex);
         }
+    }
+
+    private ComponentStatus resolveEditableStatus(ComponentStatus currentStatus, ComponentStatus requestedStatus) {
+        if (requestedStatus == null) {
+            return currentStatus;
+        }
+        if (currentStatus == ComponentStatus.PUBLISHED && requestedStatus == ComponentStatus.DRAFT) {
+            return ComponentStatus.PUBLISHED;
+        }
+        return requestedStatus;
     }
 }

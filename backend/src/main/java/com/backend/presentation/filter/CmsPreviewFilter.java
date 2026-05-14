@@ -78,7 +78,7 @@ public class CmsPreviewFilter extends OncePerRequestFilter {
       log.debug("Preview ticket tenant mismatch: ticket={}, request={}", ticket.tenantId(), currentTenantId);
       return false;
     }
-    requestContext.enablePreview();
+    requestContext.enablePreview(ticket.pageId());
     log.debug("Preview activated: tenantId={}, pageId={}", ticket.tenantId(), ticket.pageId());
     return true;
   }

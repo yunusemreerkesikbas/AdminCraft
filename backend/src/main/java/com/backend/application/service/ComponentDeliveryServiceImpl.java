@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.cms.preview.CmsRequestContext;
+import com.backend.application.cms.preview.CmsDraftOverrideService;
 import com.backend.application.cms.preview.CmsVisibility;
 import com.backend.application.dto.delivery.BatchDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
@@ -60,6 +61,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   private final MediaFieldExpander mediaFieldExpander;
   private final NavigationService navigationService;
   private final CmsRequestContext cmsRequestContext;
+  private final CmsDraftOverrideService cmsDraftOverrideService;
 
   @Override
   public Optional<ComponentDeliveryResponse> getComponentByUid(String uid, Language lang) {
@@ -68,9 +70,13 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       return Optional.empty();
     }
 
-    Component component = componentOpt.get();
+    Component component = cloneComponent(componentOpt.get());
     if (!CmsVisibility.componentStatuses(cmsRequestContext.isPreview()).contains(component.getStatus())) {
       return Optional.empty();
+    }
+    if (cmsRequestContext.isPreview()) {
+      cmsDraftOverrideService.findComponentDraft(component.getId())
+          .ifPresent(draft -> cmsDraftOverrideService.apply(component, draft));
     }
 
     return Optional.of(buildDeliveryResponse(component, lang));
@@ -85,14 +91,41 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
     Set<ComponentStatus> visibleStatuses = CmsVisibility.componentStatuses(cmsRequestContext.isPreview());
     List<Component> components = componentRepository.findByUidInAndStatusIn(limitedUids, visibleStatuses);
     Map<String, Component> componentMap = components.stream()
+        .map(this::cloneComponent)
         .collect(Collectors.toMap(Component::getUid, c -> c));
+    if (cmsRequestContext.isPreview() && !componentMap.isEmpty()) {
+      Map<Long, com.backend.application.cms.preview.ComponentDraftPayload> drafts =
+          cmsDraftOverrideService.findComponentDrafts(componentMap.values().stream().map(Component::getId).toList());
+      componentMap.values().forEach(component ->
+          cmsDraftOverrideService.apply(component, drafts.get(component.getId())));
+    }
     List<Long> componentIds = components.stream()
         .map(Component::getId)
         .toList();
-    Map<Long, ComponentI18n> componentI18nMap = componentI18nRepository
-        .findByComponentIdInAndLanguage(componentIds, lang)
-        .stream()
-        .collect(Collectors.toMap(ComponentI18n::getComponentId, i -> i));
+    Map<Long, ComponentI18n> componentI18nMap = new LinkedHashMap<>(
+        componentI18nRepository
+            .findByComponentIdInAndLanguage(componentIds, lang)
+            .stream()
+            .map(this::cloneComponentI18n)
+            .collect(Collectors.toMap(ComponentI18n::getComponentId, i -> i)));
+    if (cmsRequestContext.isPreview() && !componentIds.isEmpty()) {
+      Map<String, com.backend.application.cms.preview.ComponentI18nDraftPayload> i18nDrafts =
+          cmsDraftOverrideService.findComponentI18nDrafts(componentIds, lang);
+      for (Long componentId : componentIds) {
+        var draft = i18nDrafts.get(cmsDraftOverrideService.i18nKey(componentId, lang));
+        if (draft == null) {
+          continue;
+        }
+        ComponentI18n i18n = componentI18nMap.get(componentId);
+        if (i18n == null) {
+          i18n = new ComponentI18n();
+          i18n.setComponentId(componentId);
+          i18n.setLanguage(lang);
+          componentI18nMap.put(componentId, i18n);
+        }
+        cmsDraftOverrideService.apply(i18n, draft);
+      }
+    }
     List<ComponentEntry> allEntries = componentEntryRepository
         .findByComponentIdInAndStatusInOrderBySortOrder(componentIds, visibleStatuses);
     Map<Long, List<ComponentEntry>> entriesByComponentId = allEntries.stream()
@@ -223,7 +256,19 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .orElse(null);
 
     Optional<ComponentI18n> i18nOpt = componentI18nRepository
-        .findByComponentIdAndLanguage(component.getId(), lang);
+        .findByComponentIdAndLanguage(component.getId(), lang)
+        .map(this::cloneComponentI18n);
+    if (cmsRequestContext.isPreview()) {
+      ComponentI18n i18n = i18nOpt.orElseGet(() -> {
+        ComponentI18n created = new ComponentI18n();
+        created.setComponentId(component.getId());
+        created.setLanguage(lang);
+        return created;
+      });
+      cmsDraftOverrideService.findComponentI18nDraft(component.getId(), lang)
+          .ifPresent(draft -> cmsDraftOverrideService.apply(i18n, draft));
+      i18nOpt = Optional.of(i18n);
+    }
 
     Set<ComponentStatus> visibleStatuses = CmsVisibility.componentStatuses(cmsRequestContext.isPreview());
     List<ComponentEntry> entries = componentEntryRepository
@@ -336,6 +381,39 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private boolean isNavigationAware(ComponentType type) {
     return type != null && type.isNavigationAware();
+  }
+
+  private Component cloneComponent(Component source) {
+    Component copy = new Component();
+    copy.setId(source.getId());
+    copy.setUuid(source.getUuid());
+    copy.setUid(source.getUid());
+    copy.setComponentTypeId(source.getComponentTypeId());
+    copy.setName(source.getName());
+    copy.setDisplayOrder(source.getDisplayOrder());
+    copy.setIsVisible(source.getIsVisible());
+    copy.setStyleClasses(source.getStyleClasses());
+    copy.setCustomData(source.getCustomData());
+    copy.setStatus(source.getStatus());
+    copy.setResponsiveMedia(source.getResponsiveMedia());
+    copy.setNavigationNodeId(source.getNavigationNodeId());
+    copy.setNavigationType(source.getNavigationType());
+    copy.setSearchBox(source.getSearchBox());
+    return copy;
+  }
+
+  private ComponentI18n cloneComponentI18n(ComponentI18n source) {
+    ComponentI18n copy = new ComponentI18n();
+    copy.setId(source.getId());
+    copy.setUuid(source.getUuid());
+    copy.setUid(source.getUid());
+    copy.setComponentId(source.getComponentId());
+    copy.setLanguage(source.getLanguage());
+    copy.setTitle(source.getTitle());
+    copy.setSubtitle(source.getSubtitle());
+    copy.setDescription(source.getDescription());
+    copy.setStatus(source.getStatus());
+    return copy;
   }
 
 }

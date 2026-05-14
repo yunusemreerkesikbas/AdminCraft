@@ -122,7 +122,7 @@ public class PageServiceImpl implements PageService {
 
         page.setTemplateId(request.templateId());
         if (request.status() != null)
-            page.setStatus(request.status());
+            page.setStatus(resolveEditableStatus(page.getStatus(), request.status()));
         if (request.styleClasses() != null)
             page.setStyleClasses(request.styleClasses());
         if (request.robotTag() != null)
@@ -207,7 +207,7 @@ public class PageServiceImpl implements PageService {
             page.setUid(newUid);
         }
         if (request.status() != null)
-            page.setStatus(request.status());
+            page.setStatus(resolveEditableStatus(page.getStatus(), request.status()));
         if (request.styleClasses() != null)
             page.setStyleClasses(request.styleClasses());
         if (request.robotTag() != null)
@@ -266,6 +266,13 @@ public class PageServiceImpl implements PageService {
 
             pageI18nService.upsertPageI18n(pageId, lang, pageI18nRequest);
         }
+    }
+
+    private PageStatus resolveEditableStatus(PageStatus currentStatus, PageStatus requestedStatus) {
+        if (currentStatus == PageStatus.PUBLISHED && requestedStatus == PageStatus.DRAFT) {
+            return PageStatus.PUBLISHED;
+        }
+        return requestedStatus;
     }
 
     private String ensureUniqueUid(String desiredUid) {

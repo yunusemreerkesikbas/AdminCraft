@@ -39,6 +39,13 @@ Public delivery resolution rules:
 - `pageType=ContentPage` and `pageType=LandingPage` require `pageLabelOrId` parameter.
 - `PRODUCT`, `CATEGORY`, `SEARCH` resolve to one published template per tenant (if misconfigured with multiple published templates, the lowest `id` is used).
 
+SmartEdit preview exception:
+
+- A valid `X-Cms-Preview-Ticket` header or `preview` query parameter activates preview mode for `/api/cms/**`.
+- Live requests remain `PUBLISHED` only.
+- Preview requests resolve `DRAFT` or `PUBLISHED` fallback through `CmsVisibility`, and overlay matching rows from `cms_draft_overrides` for component/component_i18n draft edits.
+- Page-bound preview uses `previewPageId`; when the ticket contains a page id, the requested `previewPageId` must match.
+
 ### Site
 
 - `GET /api/cms/site`

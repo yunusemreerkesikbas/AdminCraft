@@ -8,10 +8,10 @@ import com.backend.domain.enums.PageStatus;
 public final class CmsVisibility {
 
   private static final Set<PageStatus> PUBLISHED_PAGE_STATUSES = Set.of(PageStatus.PUBLISHED);
-  private static final Set<PageStatus> PREVIEW_PAGE_STATUSES = Set.of(PageStatus.DRAFT);
+  private static final Set<PageStatus> PREVIEW_PAGE_STATUSES = Set.of(PageStatus.DRAFT, PageStatus.PUBLISHED);
 
   private static final Set<ComponentStatus> PUBLISHED_COMPONENT_STATUSES = Set.of(ComponentStatus.PUBLISHED);
-  private static final Set<ComponentStatus> PREVIEW_COMPONENT_STATUSES = Set.of(ComponentStatus.DRAFT);
+  private static final Set<ComponentStatus> PREVIEW_COMPONENT_STATUSES = Set.of(ComponentStatus.DRAFT, ComponentStatus.PUBLISHED);
 
   private CmsVisibility() {}
 

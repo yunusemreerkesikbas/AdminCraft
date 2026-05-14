@@ -96,9 +96,9 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
 
   @Override
   public Optional<PageDeliveryResponse> resolvePageForDelivery(String pageType, String pageLabelOrId, String code,
-      Language lang) {
+      Long previewPageId, Language lang) {
     Language resolvedLang = lang != null ? lang : getDefaultLanguage();
-    return pageDeliveryService.resolvePageForDelivery(pageType, pageLabelOrId, code, resolvedLang);
+    return pageDeliveryService.resolvePageForDelivery(pageType, pageLabelOrId, code, previewPageId, resolvedLang);
   }
 
   @Override
