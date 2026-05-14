@@ -54,6 +54,7 @@ import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
+import com.backend.shared.validation.Uid;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -123,7 +124,7 @@ public class ComponentController {
 
         @GetMapping("/by-uid/{uid}")
         public ResponseEntity<ApiResponse<?>> getByUid(
-                        @PathVariable String uid,
+                        @PathVariable @Uid String uid,
                         @RequestParam(value = "include", required = false) String include,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {

@@ -48,8 +48,8 @@ i18n:
 
 Publish request note:
 
-- `PagePublishRequest.tenantId` is optional/legacy and must not be required by clients. Tenant scope is resolved from `TenantContext` by `TenantFilter`, not from the request body.
-- SmartEdit publish applies current component draft overrides from `cms_draft_overrides` to published component/component_i18n rows before clearing those overrides.
+- `PagePublishRequest` body is optional and typically contains only `scheduledAt` for scheduled publish. Tenant scope is resolved from `TenantContext` by `TenantFilter`, not from the request body.
+- SmartEdit publish applies component draft overrides from `cms_draft_overrides` **scoped to the published page** (page-specific slots, visible slot components) to published component/component_i18n rows before clearing those overrides. Shared header/footer slots are not in that graph today (see SmartEdit docs).
 
 Composite operations:
 

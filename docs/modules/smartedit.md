@@ -71,7 +71,7 @@ Mints a short-lived HMAC-SHA256 signed ticket the admin SmartEdit shell embeds i
   ```
 
 - **TTL**: `app.cms.preview.ttl-seconds` (default 900 — 15 minutes).
-- **Storefront base URL**: resolved from the tenant's `global.canonicalBaseUrl` site setting (Site Dashboard → SEO → Canonical Base URL). If not set, ticket issuance fails with an error. There is no platform-wide env var override — each tenant configures its own storefront URL.
+- **Storefront base URL**: resolved from the tenant's `global.canonicalBaseUrl` site setting (Site Dashboard → SEO → Canonical Base URL). If not set, ticket issuance fails with an error. There is no platform env override — each tenant must configure its own storefront URL in SEO settings.
 
 ### Ticket format
 
@@ -114,6 +114,8 @@ Status sets are centralised in [`CmsVisibility`](../../backend/src/main/java/com
 Preview responses must not be cached by storefront ISR or browser. The Next.js client switches to `cache: "no-store"` whenever a preview ticket is supplied — see `storefront-nextjs/lib/core/http/fetch-json.ts`.
 
 `generateMetadata` in `storefront-nextjs/app/[lang]/[[...slug]]/page.tsx` also receives the preview ticket and `previewPageId` from `searchParams` and passes both to the same loaders, so page `<title>` and meta description always match the preview content shown in the iframe.
+
+`storefront-nextjs/lib/core/cms/client.ts` forwards `previewPageId` as a query parameter on `GET /api/cms/pages` whenever callers pass `GetCmsPageOptions.previewPageId` (SmartEdit iframe URL includes `previewPageId`, and `loadHomepage` / `loadContentPage` propagate it).
 
 ## Frontend integration
 
@@ -197,7 +199,7 @@ Both are registered explicitly so the preview-issuance endpoint never falls unde
 ### Multi-tenant notes (current limitations)
 
 - The HMAC secret is platform-wide. A leaked secret allows ticket forgery for any tenant. Per-tenant key derivation is a Phase 2 item.
-- The preview-ticket response uses the tenant's `global.canonicalBaseUrl` site setting as the iframe/storefront origin. The URL is validated to enforce `http`/`https` scheme and a non-empty host (SSRF prevention). If the setting is not configured for the tenant, ticket issuance throws `IllegalStateException` — the tenant admin must set **Canonical Base URL** in Site Dashboard → SEO before SmartEdit can be used. There is no platform-wide env var override; each tenant manages its own storefront URL through the SEO settings tab.
+- The preview-ticket response uses the tenant's `global.canonicalBaseUrl` site setting as the iframe/storefront origin. The URL is validated to enforce `http`/`https` scheme and a non-empty host (SSRF prevention). If the setting is not configured for the tenant, ticket issuance throws `IllegalStateException` — the tenant admin must set **Canonical Base URL** in Site Dashboard → SEO before SmartEdit can be used.
 
 ### Ticket expiry (admin shell)
 
@@ -212,7 +214,9 @@ Clicking **Renew session** re-issues the ticket (`POST /api/cms/preview/tickets`
 
 - Component lookup by UID is now available via `GET /api/components/by-uid/{uid}`, so SmartEdit no longer depends solely on the page slot cache for selected component resolution.
 - Draft overrides currently cover component shell fields and component i18n fields. Component entry content, slot component order/visibility, and shared slot overrides still need the same working-copy treatment before they are safe to edit without touching live rows.
-- `publishPageI18n` currently applies all component draft overrides in the tenant. A later revision should scope draft application by page/slot/component graph.
+- **`publishPageI18n` draft application is page-scoped:** component draft overrides are applied and cleared only for components on **that page’s page-specific (non-shared) slots** that are visible in the slot graph. Drafts on shared chrome slots are not flushed by this publish path yet.
+- **Scheduled publish:** immediate publish applies and clears component draft overrides for the page; scheduled publish does not run that merge today — schedule + SmartEdit drafts should be treated as an unsupported combination until explicitly designed.
+- **Optional hardening backlog:** separate audit/activity action for “draft saved” vs live update, batch `DELETE` for many override rows, and stricter preview scoping on non-page CMS endpoints beyond what `GET /api/cms/pages` already enforces for page-bound tickets (see [`cms-delivery.md`](cms-delivery.md) preview notes).
 
 ## Implementation guide
 
@@ -242,7 +246,7 @@ Clicking **Renew session** re-issues the ticket (`POST /api/cms/preview/tickets`
 ### Flow 3: Publish current language
 
 1. Sidebar **Publish** button is enabled when the current language has a translation (`canPublishSig`).
-2. The shell calls `PageBuilderService.publishPageI18n(pageId, lang)` — same endpoint used elsewhere in the admin. `PagePublishRequest.tenantId` is not required; tenant scope comes from `TenantContext`.
+2. The shell calls `PageBuilderService.publishPageI18n(pageId, lang)` — same endpoint used elsewhere in the admin. Request body is optional (`PagePublishRequest` with optional `scheduledAt` only); tenant scope comes from `TenantContext`.
 3. On success the shell shows a localized notification (success message taken from the API response when present), reloads the iframe via `smartedit:reload`, and refreshes its in-memory page/slots state.
 4. The publish operation applies current component draft overrides to the published component/component_i18n records and clears those overrides.
 5. The newly published page/component content is now visible to live storefront traffic. Preview mode continues to use draft override first, published fallback second.

@@ -6,6 +6,7 @@ import java.util.Locale;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -30,6 +31,7 @@ import com.backend.shared.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/cms")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 @Tag(name = "CMS Delivery", description = "Public CMS delivery endpoints for storefront rendering")
 public class CmsDeliveryController {
 
@@ -114,7 +117,7 @@ public class CmsDeliveryController {
       @RequestParam(required = false) String pageType,
       @RequestParam(required = false) String pageLabelOrId,
       @RequestParam(required = false) String code,
-      @RequestParam(required = false) Long previewPageId,
+      @RequestParam(required = false) @Min(1) Long previewPageId,
       @RequestParam(required = false) Language lang,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 

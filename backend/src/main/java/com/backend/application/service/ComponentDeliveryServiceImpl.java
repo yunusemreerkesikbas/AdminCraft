@@ -139,7 +139,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .stream()
         .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
 
-    List<Long> typeIds = components.stream()
+    List<Long> typeIds = componentMap.values().stream()
         .map(Component::getComponentTypeId)
         .filter(id -> id != null)
         .distinct()
@@ -150,7 +150,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
             .collect(Collectors.toMap(ComponentType::getId, t -> t));
 
     // Batch fetch responsive media sets with eagerly loaded media and translations
-    List<Long> responsiveMediaIds = components.stream()
+    List<Long> responsiveMediaIds = componentMap.values().stream()
         .map(Component::getResponsiveMedia)
         .filter(r -> r != null)
         .map(ResponsiveMediaSet::getId)

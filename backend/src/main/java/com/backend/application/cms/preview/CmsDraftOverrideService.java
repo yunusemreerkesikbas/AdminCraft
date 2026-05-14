@@ -16,15 +16,19 @@ import com.backend.application.dto.request.UpdateComponentCompositeRequest;
 import com.backend.domain.entity.CmsDraftOverride;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
+import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.PageSlot;
 import com.backend.domain.entity.SlotComponent;
 import com.backend.domain.enums.CmsDraftTargetType;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.NavigationType;
 import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.CmsDraftOverrideRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
+import com.backend.domain.repository.ComponentTypeRepository;
+import com.backend.domain.repository.NavigationNodeRepository;
 import com.backend.domain.repository.PageSlotRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
 import com.backend.domain.repository.SlotComponentRepository;
@@ -42,6 +46,8 @@ public class CmsDraftOverrideService {
     private final PageSlotRepository pageSlotRepository;
     private final SlotComponentRepository slotComponentRepository;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
+    private final ComponentTypeRepository componentTypeRepository;
+    private final NavigationNodeRepository navigationNodeRepository;
     private final ObjectMapper objectMapper;
 
     @Transactional(transactionManager = "tenantTransactionManager")
@@ -49,15 +55,36 @@ public class CmsDraftOverrideService {
         Component component = componentRepository.findById(componentId)
             .orElseThrow(() -> new EntityNotFoundException("Component", componentId));
 
+        ComponentType componentType = componentTypeRepository.findById(component.getComponentTypeId())
+            .orElseThrow(() -> new EntityNotFoundException("ComponentType", component.getComponentTypeId()));
+
+        if (request.responsiveMediaId() != null) {
+            responsiveMediaSetRepository.findById(request.responsiveMediaId())
+                .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", request.responsiveMediaId()));
+        }
+
+        Long navigationNodeId = request.navigationNodeId();
+        NavigationType navigationType = request.navigationType();
+        Boolean searchBox = request.searchBox();
+        if (!componentType.isNavigationAware()) {
+            navigationNodeId = null;
+            navigationType = null;
+            searchBox = null;
+        } else if (navigationNodeId != null) {
+            final Long nodeId = navigationNodeId;
+            navigationNodeRepository.findById(nodeId)
+                .orElseThrow(() -> new EntityNotFoundException("NavigationNode", nodeId));
+        }
+
         ComponentDraftPayload componentPayload = new ComponentDraftPayload(
             request.name(),
             request.displayOrder(),
             request.isVisible(),
             request.styleClasses(),
             request.responsiveMediaId(),
-            request.navigationNodeId(),
-            request.navigationType(),
-            request.searchBox());
+            navigationNodeId,
+            navigationType,
+            searchBox);
         saveOverride(CmsDraftTargetType.COMPONENT, component.getId(), CmsDraftOverride.NO_LANGUAGE, componentPayload);
 
         if (request.translations() == null) {
@@ -132,6 +159,9 @@ public class CmsDraftOverrideService {
 
     @Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
     public Optional<ComponentI18nDraftPayload> findComponentI18nDraft(Long componentId, Language language) {
+        if (language == null) {
+            return Optional.empty();
+        }
         return draftOverrideRepository.findByTargetTypeAndTargetIdAndLanguageKey(
                 CmsDraftTargetType.COMPONENT_I18N, componentId, language.name())
             .map(draft -> readPayload(draft.getPayload(), ComponentI18nDraftPayload.class));
@@ -139,6 +169,9 @@ public class CmsDraftOverrideService {
 
     @Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
     public Map<String, ComponentI18nDraftPayload> findComponentI18nDrafts(Collection<Long> componentIds, Language language) {
+        if (language == null) {
+            return Map.of();
+        }
         if (componentIds == null || componentIds.isEmpty()) {
             return Map.of();
         }
@@ -181,7 +214,8 @@ public class CmsDraftOverrideService {
             component.setSearchBox(draft.searchBox());
         }
         if (draft.responsiveMediaId() != null) {
-            component.setResponsiveMedia(responsiveMediaSetRepository.findById(draft.responsiveMediaId()).orElse(null));
+            component.setResponsiveMedia(responsiveMediaSetRepository.findById(draft.responsiveMediaId())
+                .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", draft.responsiveMediaId())));
         }
         return component;
     }

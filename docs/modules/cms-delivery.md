@@ -44,7 +44,8 @@ SmartEdit preview exception:
 - A valid `X-Cms-Preview-Ticket` header or `preview` query parameter activates preview mode for `/api/cms/**`.
 - Live requests remain `PUBLISHED` only.
 - Preview requests resolve `DRAFT` or `PUBLISHED` fallback through `CmsVisibility`, and overlay matching rows from `cms_draft_overrides` for component/component_i18n draft edits.
-- Page-bound preview uses `previewPageId`; when the ticket contains a page id, the requested `previewPageId` must match.
+- Page-bound preview: when the ticket payload includes a concrete page id, **`previewPageId` query parameter is required** for `GET /api/cms/pages` resolution; otherwise the handler returns no page (prevents reusing the same ticket to browse unrelated URLs). Any-page tickets (`pageId` omitted at issuance) do not require `previewPageId`.
+- When `previewPageId` is present, it must still match the ticket’s page id.
 
 ### Site
 

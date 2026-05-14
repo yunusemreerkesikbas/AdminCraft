@@ -25,4 +25,22 @@ class PageI18nTest {
 
     assertThat(pageI18n.canBePublished()).isFalse();
   }
+
+  @Test
+  void canBePublished_ShouldAllowDraftWhenTitleAndCanonicalUrlPresent() {
+    PageI18n pageI18n = new PageI18n();
+    pageI18n.setStatus(PageStatus.DRAFT);
+    pageI18n.setTitle("Draft title");
+    pageI18n.setCanonicalUrl("/draft-path");
+
+    assertThat(pageI18n.canBePublished()).isTrue();
+  }
+
+  @Test
+  void canBePublished_ShouldRejectDraftWhenRequiredFieldsMissing() {
+    PageI18n pageI18n = new PageI18n();
+    pageI18n.setStatus(PageStatus.DRAFT);
+
+    assertThat(pageI18n.canBePublished()).isFalse();
+  }
 }

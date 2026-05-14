@@ -421,7 +421,7 @@ public class ComponentServiceImpl implements ComponentService {
 
         if (request.translations() != null) {
             for (var entry : request.translations().entrySet()) {
-                ComponentI18n i18n = i18nList.stream()
+                i18nList.stream()
                         .filter(existing -> existing.getLanguage() == entry.getKey())
                         .findFirst()
                         .orElseGet(() -> {
@@ -432,9 +432,12 @@ public class ComponentServiceImpl implements ComponentService {
                             i18nList.add(created);
                             return created;
                         });
-                cmsDraftOverrideService.findComponentI18nDraft(id, entry.getKey())
-                        .ifPresent(draft -> cmsDraftOverrideService.apply(i18n, draft));
             }
+        }
+
+        for (ComponentI18n i18n : i18nList) {
+            cmsDraftOverrideService.findComponentI18nDraft(id, i18n.getLanguage())
+                    .ifPresent(draft -> cmsDraftOverrideService.apply(i18n, draft));
         }
 
         activityPublisher.publishComponentEvent(component.getId(), component.getName(),

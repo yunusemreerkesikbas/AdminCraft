@@ -95,11 +95,19 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 String normalizedCode = normalizeParam(code);
                 final String[] codeToInclude = { null };
 
+                if (cmsRequestContext.isPreview()) {
+                        Long boundPageId = cmsRequestContext.getPreviewPageId();
+                        if (boundPageId != null && previewPageId == null) {
+                                return Optional.empty();
+                        }
+                }
+
                 if (cmsRequestContext.isPreview() && previewPageId != null) {
                         pageOpt = resolvePreviewPageById(previewPageId);
                         return pageOpt
                                         .filter(page -> isPageVisibleForCurrentMode(page, lang))
-                                        .map(page -> buildPageDeliveryResponse(page, lang, codeToInclude[0]));
+                                        .map(page -> buildPageDeliveryResponse(page, lang,
+                                                        previewDeliveryCode(page, normalizedCode)));
                 }
 
                 if (pageType == null || pageType.isBlank()) {
@@ -150,6 +158,17 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         return Optional.empty();
                 }
                 return pageRepository.findByIdAndStatusIn(previewPageId, visiblePageStatuses());
+        }
+
+        private String previewDeliveryCode(Page page, String normalizedCode) {
+                if (normalizedCode == null) {
+                        return null;
+                }
+                PageType pageType = page.getPageType();
+                if (pageType == PageType.PRODUCT || pageType == PageType.CATEGORY) {
+                        return normalizedCode;
+                }
+                return null;
         }
 
         private boolean isPageVisibleForCurrentMode(Page page, Language lang) {
