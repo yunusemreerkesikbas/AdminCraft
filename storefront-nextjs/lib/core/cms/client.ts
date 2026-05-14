@@ -17,6 +17,7 @@ export interface GetCmsPageOptions {
   pageLabelOrId?: string;
   code?: string;
   previewTicket?: string;
+  previewPageId?: number;
 }
 
 export const getCmsPage = async (
@@ -38,6 +39,10 @@ export const getCmsPage = async (
     query.code = options.code;
   }
 
+  if (options?.previewPageId) {
+    query.previewPageId = options.previewPageId;
+  }
+
   return fetchCmsJson<PageDeliveryResponse>(resolveCmsEndpoint("cmsPages"), query, {
     revalidate: 30,
     previewTicket: options?.previewTicket,
@@ -54,11 +59,14 @@ export const getSiteConfig = async (
     { revalidate: 300, previewTicket },
   );
 
-export const getShell = async (lang?: string): Promise<ShellDeliveryResponse | null> =>
+export const getShell = async (
+  lang?: string,
+  previewTicket?: string,
+): Promise<ShellDeliveryResponse | null> =>
   fetchCmsJson<ShellDeliveryResponse>(
     resolveCmsEndpoint("cmsShell"),
     { lang: normalizeLanguage(lang) },
-    { revalidate: 300 },
+    { revalidate: 300, previewTicket },
   );
 
 export const getSitemapPages = async (lang: string): Promise<SitemapPageEntry[] | null> =>

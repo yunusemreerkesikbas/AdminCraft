@@ -13,8 +13,11 @@ export const loadSiteConfig = cache(async (lang?: string) =>
   requireSiteConfig(await getSiteConfig(lang)),
 );
 
-export const loadShellData = cache(async (lang: string) => {
-  const [site, shell] = await Promise.all([getSiteConfig(lang), getShell(lang)]);
+export const loadShellData = cache(async (lang: string, previewTicket?: string) => {
+  const [site, shell] = await Promise.all([
+    getSiteConfig(lang, previewTicket),
+    getShell(lang, previewTicket),
+  ]);
 
   return {
     site: requireSiteConfig(site),
@@ -22,9 +25,9 @@ export const loadShellData = cache(async (lang: string) => {
   };
 });
 
-export const loadHomepage = cache(async (lang: string, previewTicket?: string) => {
+export const loadHomepage = cache(async (lang: string, previewTicket?: string, previewPageId?: number) => {
   const [page, site] = await Promise.all([
-    getCmsPage(lang, { previewTicket }),
+    getCmsPage(lang, { previewTicket, previewPageId }),
     getSiteConfig(lang, previewTicket),
   ]);
 
@@ -34,11 +37,16 @@ export const loadHomepage = cache(async (lang: string, previewTicket?: string) =
   };
 });
 
-export const loadContentPage = cache(async (lang: string, slugPath?: string, previewTicket?: string) => {
+export const loadContentPage = cache(async (
+  lang: string,
+  slugPath?: string,
+  previewTicket?: string,
+  previewPageId?: number,
+) => {
   const [page, site] = await Promise.all([
     slugPath
-      ? getCmsPage(lang, { pageType: "ContentPage", pageLabelOrId: slugPath, previewTicket })
-      : getCmsPage(lang, { previewTicket }),
+      ? getCmsPage(lang, { pageType: "ContentPage", pageLabelOrId: slugPath, previewTicket, previewPageId })
+      : getCmsPage(lang, { previewTicket, previewPageId }),
     getSiteConfig(lang, previewTicket),
   ]);
 

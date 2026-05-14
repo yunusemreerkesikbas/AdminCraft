@@ -31,8 +31,8 @@ import {
     ComponentEditDialogComponent,
     ComponentEditDialogData,
 } from '../components/component-edit-dialog/component-edit-dialog.component';
+import { ComponentDetailDto, ComponentTypeDto } from '../components/models/component-library.types';
 import { ComponentLibraryService } from '../components/services/component-library.service';
-import { ComponentTypeDto } from '../components/models/component-library.types';
 import { PageBuilderService } from '../pages/page-builder.service';
 import { Language, PageDetailDto, PageI18nDto } from '../pages/page-builder.types';
 import { PageEditDialogComponent, PageEditDialogData } from '../pages/page-edit-dialog/page-edit-dialog.component';
@@ -197,45 +197,22 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         }
 
         const componentId = this.#findComponentIdByUid(selection.id);
-        if (componentId == null) {
-            this.#notify.alert(this.#transloco.translate('admin.smartedit.errors.componentNotFound'));
-            return;
-        }
+        const detail$ =
+            componentId != null
+                ? this.#componentService.getComponentDetail(componentId)
+                : this.#componentService.getComponentDetailByUid(selection.id);
 
         this.busySig.set(true);
-        this.#componentService
-            .getComponentDetail(componentId)
+        detail$
             .pipe(take(1))
             .subscribe({
                 next: (detail) => {
                     this.busySig.set(false);
-                    const data: ComponentEditDialogData = {
-                        mode: 'edit',
-                        component: detail,
-                        languages: this.#languageContext.supportedLanguages(),
-                        componentTypes: this.componentTypesSig(),
-                    };
-                    const dialogRef = this.#dialog.open(ComponentEditDialogComponent, {
-                        width: '900px',
-                        height: '90vh',
-                        maxHeight: '90vh',
-                        panelClass: 'spa-compact-dialog',
-                        disableClose: true,
-                        data,
-                    });
-                    dialogRef
-                        .afterClosed()
-                        .pipe(take(1))
-                        .subscribe((result) => {
-                            if (result) {
-                                this.#gateway.requestReload();
-                                this.#reloadPageData();
-                            }
-                        });
+                    this.#openComponentDialog(detail);
                 },
                 error: (error: HttpErrorResponse) => {
                     this.busySig.set(false);
-                    this.#notify.alert(error.error?.message ?? this.#transloco.translate('admin.common.errors.server'));
+                    this.#notify.alert(error.error?.message ?? this.#transloco.translate('admin.smartedit.errors.componentNotFound'));
                 },
             });
     }
@@ -403,17 +380,19 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
 
     #refreshIframeUrl(): void {
         const preview = this.previewSig();
-        if (!preview) {
+        const pageId = this.pageIdSig();
+        const page = this.pageSig();
+        if (!preview || !pageId || !page) {
             this.iframeUrlSig.set(null);
             return;
         }
         const slug = this.#resolveSlugForCurrentLanguage();
         const lang = this.currentLangSig().toLowerCase();
         const path = slug && slug !== '/' ? slug : '';
-        const url = `${preview.storefrontBaseUrl.replace(/\/$/, '')}/${lang}${path}?preview=${encodeURIComponent(
-            preview.ticket,
-        )}`;
-        this.iframeUrlSig.set(this.#sanitizer.bypassSecurityTrustResourceUrl(url));
+        const url = new URL(`${preview.storefrontBaseUrl.replace(/\/$/, '')}/${lang}${path}`);
+        url.searchParams.set('preview', preview.ticket);
+        url.searchParams.set('previewPageId', String(pageId));
+        this.iframeUrlSig.set(this.#sanitizer.bypassSecurityTrustResourceUrl(url.toString()));
     }
 
     #resolveSlugForCurrentLanguage(): string {
@@ -432,5 +411,32 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
             }
         }
         return null;
+    }
+
+    #openComponentDialog(detail: ComponentDetailDto): void {
+        const data: ComponentEditDialogData = {
+            mode: 'edit',
+            component: detail,
+            languages: this.#languageContext.supportedLanguages(),
+            componentTypes: this.componentTypesSig(),
+            draftMode: true,
+        };
+        const dialogRef = this.#dialog.open(ComponentEditDialogComponent, {
+            width: '900px',
+            height: '90vh',
+            maxHeight: '90vh',
+            panelClass: 'spa-compact-dialog',
+            disableClose: true,
+            data,
+        });
+        dialogRef
+            .afterClosed()
+            .pipe(take(1))
+            .subscribe((result) => {
+                if (result) {
+                    this.#gateway.requestReload();
+                    this.#reloadPageData();
+                }
+            });
     }
 }

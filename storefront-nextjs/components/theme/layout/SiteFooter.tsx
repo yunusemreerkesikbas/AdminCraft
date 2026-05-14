@@ -37,7 +37,11 @@ function renderParagraphBlock(
   logoUrl?: string,
 ) {
   return (
-    <div key={block.uid} className={styles.footerColumnBrand}>
+    <div
+      key={block.uid}
+      className={styles.footerColumnBrand}
+      {...smartEditBlockAttributes(block)}
+    >
       <Link href={`/${lang}`} className={styles.footerLogo} aria-label={brand}>
         {logoUrl && (
           <Image
@@ -57,7 +61,11 @@ function renderParagraphBlock(
 
 function renderTextBlock(block: LayoutBlockDelivery) {
   return (
-    <div key={block.uid} className={styles.footerColumnOffice}>
+    <div
+      key={block.uid}
+      className={styles.footerColumnOffice}
+      {...smartEditBlockAttributes(block)}
+    >
       {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
       {block.description ? <p className={styles.footerBrandText}>{block.description}</p> : null}
     </div>
@@ -66,7 +74,11 @@ function renderTextBlock(block: LayoutBlockDelivery) {
 
 function renderNavigationBlock(block: LayoutBlockDelivery) {
   return (
-    <div key={block.uid} className={styles.footerColumnSitemap}>
+    <div
+      key={block.uid}
+      className={styles.footerColumnSitemap}
+      {...smartEditBlockAttributes(block)}
+    >
       {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
       <ul className={styles.footerMenu}>
         {block.links.map((link) => (
@@ -85,7 +97,11 @@ function renderNewsletterBlock(block: LayoutBlockDelivery) {
   }
 
   return (
-    <div key={block.uid} className={styles.footerColumnNewsletter}>
+    <div
+      key={block.uid}
+      className={styles.footerColumnNewsletter}
+      {...smartEditBlockAttributes(block)}
+    >
       {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
       <NewsletterForm
         placeholder={block.newsletterPlaceholder}
@@ -97,7 +113,11 @@ function renderNewsletterBlock(block: LayoutBlockDelivery) {
 
 function renderLinkListBlock(block: LayoutBlockDelivery) {
   return (
-    <div key={block.uid} className={styles.footerColumnOffice}>
+    <div
+      key={block.uid}
+      className={styles.footerColumnOffice}
+      {...smartEditBlockAttributes(block)}
+    >
       {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
       <div className={styles.footerContactList}>
         {block.links.map((link) => renderLink(link, styles.footerContactLink, `${block.uid}-${link.uid}`))}
@@ -135,17 +155,37 @@ function renderPrimaryBlock(
 function renderBottomBlock(block: LayoutBlockDelivery) {
   if (block.links.length > 0) {
     return (
-      <div key={block.uid} className={styles.footerSocial}>
+      <div
+        key={block.uid}
+        className={styles.footerSocial}
+        {...smartEditBlockAttributes(block)}
+      >
         {block.links.map((link) => renderLink(link, styles.footerSocialLink, `${block.uid}-${link.uid}`))}
       </div>
     );
   }
 
   if (block.description) {
-    return <p key={block.uid} className={styles.footerCopyrightText}>{block.description}</p>;
+    return (
+      <p
+        key={block.uid}
+        className={styles.footerCopyrightText}
+        {...smartEditBlockAttributes(block)}
+      >
+        {block.description}
+      </p>
+    );
   }
 
   return null;
+}
+
+function smartEditBlockAttributes(block: LayoutBlockDelivery) {
+  return {
+    "data-cms-component-id": block.uid,
+    "data-cms-component-type": block.componentType,
+    "data-cms-layout-role": block.role,
+  };
 }
 
 export default async function SiteFooter({

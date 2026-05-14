@@ -56,6 +56,7 @@ export interface ComponentEditDialogData
     component?: ComponentDetailDto;
     componentTypes?: ComponentTypeDto[];
     languages: string[];
+    draftMode?: boolean;
 }
 
 interface SelectOption<T = number> {
@@ -317,7 +318,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         const generalData = this.generalForm.value;
         const uid = (generalData.uid as string)?.trim();
 
-        this.#resolveResponsiveMediaIdForComposite(componentId)
+        this.#resolveResponsiveMediaIdForComposite(componentId, !!this.data.draftMode)
             .pipe(
                 take(1),
                 switchMap(({ responsiveMediaId, clearAfter }) => {
@@ -331,11 +332,13 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
                         translations: translations,
                         ...this.#buildNavigationPayload(generalData),
                     };
-                    return this.#componentService
-                        .updateCompositeWithResponse(componentId, request)
+                    const update$ = this.data.draftMode
+                        ? this.#componentService.updateDraftCompositeWithResponse(componentId, request)
+                        : this.#componentService.updateCompositeWithResponse(componentId, request);
+                    return update$
                         .pipe(
                             switchMap((response) =>
-                                clearAfter
+                                clearAfter && !this.data.draftMode
                                     ? this.#componentService
                                           .assignResponsiveMedia(
                                               componentId,
@@ -419,7 +422,8 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
     }
 
     #resolveResponsiveMediaIdForComposite(
-        componentId: number
+        componentId: number,
+        draftMode = false
     ): Observable<{ responsiveMediaId?: number; clearAfter: boolean }> {
         const raw = this.generalForm.getRawValue?.() ?? this.generalForm.value;
         const responsiveValue =
@@ -454,7 +458,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             mobileMediaId: mobileId ?? desktopId,
         };
 
-        if (currentSetId) {
+        if (currentSetId && !draftMode) {
             return this.#mediaService
                 .updateResponsiveMedia(currentSetId, responsiveMediaRequest)
                 .pipe(
