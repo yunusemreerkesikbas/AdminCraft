@@ -63,7 +63,7 @@ public class PageI18n extends BaseI18nEntity {
     private PageStatus status = PageStatus.DRAFT;
 
     public boolean canBePublished() {
-        return status == PageStatus.DRAFT &&
+        return (status == PageStatus.DRAFT || status == PageStatus.PUBLISHED) &&
                 title != null && !title.trim().isEmpty() &&
                 canonicalUrl != null && !canonicalUrl.trim().isEmpty();
     }

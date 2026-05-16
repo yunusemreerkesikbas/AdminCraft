@@ -21,7 +21,11 @@ public interface ComponentService {
 
     Component getComponentById(Long id);
 
+    Component getComponentByUid(String uid);
+
     Map<Component, List<ComponentI18n>> getComponentWithI18n(Long id);
+
+    Map<Component, List<ComponentI18n>> getComponentWithI18nByUid(String uid);
 
     List<Component> getAllComponents();
 
@@ -42,6 +46,8 @@ public interface ComponentService {
     ComponentCompositeResponse createComposite(CreateComponentCompositeRequest request);
 
     ComponentCompositeResponse updateComposite(Long id, UpdateComponentCompositeRequest request);
+
+    ComponentCompositeResponse updateDraftComposite(Long id, UpdateComponentCompositeRequest request);
 
     Optional<ComponentCompositeResponse> getComposite(Long id);
 

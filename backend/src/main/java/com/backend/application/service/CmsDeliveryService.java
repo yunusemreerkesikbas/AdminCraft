@@ -17,7 +17,7 @@ public interface CmsDeliveryService {
   BatchDeliveryResponse getComponentsByUids(List<String> uids, Language lang);
 
   Optional<PageDeliveryResponse> resolvePageForDelivery(String pageType, String pageLabelOrId, String code,
-      Language lang);
+      Long previewPageId, Language lang);
 
   Language getDefaultLanguage();
 

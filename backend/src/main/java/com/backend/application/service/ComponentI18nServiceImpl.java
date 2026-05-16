@@ -12,6 +12,7 @@ import com.backend.application.command.ComponentI18nCommands.UpsertComponentI18n
 import com.backend.application.query.ComponentI18nQueries.GetComponentI18nByComponentIdQuery;
 import com.backend.application.query.ComponentI18nQueries.GetComponentI18nQuery;
 import com.backend.domain.entity.ComponentI18n;
+import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.util.UuidUidGenerator;
 
@@ -41,7 +42,7 @@ public class ComponentI18nServiceImpl implements ComponentI18nService {
         componentI18n.setSubtitle(command.subtitle());
         componentI18n.setDescription(command.description());
         if (command.status() != null) {
-            componentI18n.setStatus(command.status());
+            componentI18n.setStatus(resolveEditableStatus(componentI18n.getStatus(), command.status()));
         }
 
         return componentI18nRepository.save(componentI18n);
@@ -106,5 +107,12 @@ public class ComponentI18nServiceImpl implements ComponentI18nService {
             uid = UuidUidGenerator.generateUid();
         } while (componentI18nRepository.existsByUid(uid));
         return uid;
+    }
+
+    private ComponentStatus resolveEditableStatus(ComponentStatus currentStatus, ComponentStatus requestedStatus) {
+        if (currentStatus == ComponentStatus.PUBLISHED && requestedStatus == ComponentStatus.DRAFT) {
+            return ComponentStatus.PUBLISHED;
+        }
+        return requestedStatus;
     }
 }

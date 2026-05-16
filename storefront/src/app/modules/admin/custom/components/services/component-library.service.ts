@@ -40,6 +40,10 @@ export class ComponentLibraryService extends CrudHttpService<ComponentDto, Creat
         return this.customGet<ComponentDetailDto>('componentById', { id }, { include: 'translations' });
     }
 
+    getComponentDetailByUid(uid: string): Observable<ComponentDetailDto> {
+        return this.customGet<ComponentDetailDto>('componentByUid', { uid }, { include: 'translations' });
+    }
+
     createComponent(req: CreateComponentRequest): Observable<ComponentDto> {
         return this.create(req);
     }
@@ -94,6 +98,17 @@ export class ComponentLibraryService extends CrudHttpService<ComponentDto, Creat
     ): Observable<ApiResponse<ComponentCompositeResponse>> {
         return this.api.put<ApiResponse<ComponentCompositeResponse>>(
             'componentCompositeById',
+            data,
+            { id }
+        );
+    }
+
+    updateDraftCompositeWithResponse(
+        id: number,
+        data: UpdateComponentCompositeRequest
+    ): Observable<ApiResponse<ComponentCompositeResponse>> {
+        return this.api.put<ApiResponse<ComponentCompositeResponse>>(
+            'componentCompositeDraftById',
             data,
             { id }
         );

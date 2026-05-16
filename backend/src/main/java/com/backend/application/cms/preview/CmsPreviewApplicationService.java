@@ -18,7 +18,6 @@ public class CmsPreviewApplicationService {
     private final CmsPreviewTicketService ticketService;
     private final SiteSettingRepository siteSettingRepository;
     private final TenantContextPort tenantContext;
-    private final CmsPreviewProperties properties;
 
     @Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
     public PreviewTicketResult issueTicket(Long userId, Long pageId) {
@@ -38,11 +37,6 @@ public class CmsPreviewApplicationService {
     }
 
     private String resolveStorefrontBaseUrl(long tenantId) {
-        String override = properties.getStorefrontUrl();
-        if (override != null && !override.isBlank()) {
-            validateStorefrontUrl(override);
-            return extractOrigin(override);
-        }
         String tenantBaseUrl = siteSettingRepository
             .findByTenantIdAndSettingKeyAndLanguageIsNull(tenantId, SiteSettingKeys.GLOBAL_CANONICAL_BASE_URL)
             .map(s -> s.getSettingValue())

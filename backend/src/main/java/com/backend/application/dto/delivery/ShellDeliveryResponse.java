@@ -13,6 +13,7 @@ public record ShellDeliveryResponse(
 ) {
   public record HeaderDelivery(
       NavigationDeliveryResponse mainNavigation,
+      LayoutBlockDelivery mainNavigationBlock,
       List<LayoutBlockDelivery> primaryBlocks,
       List<LayoutBlockDelivery> secondaryBlocks
   ) {}
