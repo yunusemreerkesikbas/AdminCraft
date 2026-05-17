@@ -251,6 +251,12 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
             throw new InvalidCredentialsException();
         }
 
+        if (!configAuthProperties.otpEnabled()) {
+            admin.recordSuccessfulLogin(ipAddress);
+            platformAdminUserRepository.save(admin);
+            return ConfigLoginResult.session(createPlatformAuthResult(admin));
+        }
+
         PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
         emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), resolvePlatformLanguage());
 

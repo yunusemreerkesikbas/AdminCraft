@@ -16,7 +16,8 @@ public class ConsoleEmailSender implements EmailSender, ConsoleMailSenderPort {
     @Override
     public EmailResult send(String to, String subject, String htmlContent) {
         String messageId = UUID.randomUUID().toString();
-        log.info("[MAIL:CONSOLE] messageId={} channel=console status=accepted", messageId);
+        log.info("[MAIL:CONSOLE] messageId={} to={} subject={}", messageId, to, subject);
+        log.info("[MAIL:CONSOLE] body:\n{}", htmlContent);
         return EmailResult.success(messageId);
     }
 
