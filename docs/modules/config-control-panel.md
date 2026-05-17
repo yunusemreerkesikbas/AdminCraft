@@ -6,7 +6,7 @@ Config Control Panel provides a storefront-independent recovery and runtime conf
 
 Current scope:
 
-- password authentication for config operations, plus **email OTP** for `CONFIG_SUPER_ADMIN` always after password; for `CONFIG_TENANT_ADMIN` OTP is **on by default** and can be disabled only via explicit env override (see `app.config-auth.otp-enabled`)
+- password authentication for config operations, plus **email OTP** for both `CONFIG_SUPER_ADMIN` and `CONFIG_TENANT_ADMIN`; OTP is **off by default** and can be enabled via `CONFIG_AUTH_OTP_ENABLED=true` (see `app.config-auth.otp-enabled`)
 - tenant reCAPTCHA management (recovery from storefront lockout)
 - tenant GA4 property management for dashboard analytics snapshot
 - tenant Search Console property management for overview SEO snapshot
@@ -198,12 +198,13 @@ Role-based behavior:
 
 Session behavior:
 
-- `app.config-auth.otp-enabled` defaults to **`true`** in `application.yml` (override with `CONFIG_AUTH_OTP_ENABLED=false` only when you accept password-only tenant config sessions and have compensating controls).
-- **`CONFIG_SUPER_ADMIN` (platform `/config` login):** after a valid password, the backend **always** issues an email OTP challenge; completing `POST /api/config/auth/verify-otp` returns the access token (no password-only platform config session).
+- `app.config-auth.otp-enabled` defaults to **`false`** in `application.yml`. Set `CONFIG_AUTH_OTP_ENABLED=true` in environments where email delivery is confirmed working (Postmark active). Applies to **both** `CONFIG_SUPER_ADMIN` and `CONFIG_TENANT_ADMIN`.
+- **`CONFIG_SUPER_ADMIN` (platform `/config` login):** when OTP is enabled, after a valid password the backend issues an email OTP challenge; completing `POST /api/config/auth/verify-otp` returns the access token. When OTP is **disabled**, password-only login returns the access token directly.
 - **`CONFIG_TENANT_ADMIN`:** when OTP is enabled, password login returns a challenge; after OTP verification, access + refresh tokens are issued. When OTP is **disabled**, password-only login is allowed and the backend records **audit + metrics** for that path (see `ConfigAuthenticationServiceImpl`).
 - Tenant context for config login can be supplied via the `subdomain` query param (`/config?subdomain={tenantSubdomain}`).
 - Tenant config sessions can silently refresh in the same browser when the access token expires (`POST /api/config/auth/refresh`).
-- `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, a fresh login (including OTP) is required again.
+- `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, a fresh login is required again (including OTP if enabled).
+- **Console email provider:** when `app.email.provider` resolves to `console` (Postmark not configured), `ConsoleEmailSender` logs the full email content including the OTP code at INFO level (`[MAIL:CONSOLE] body:`). Use this to retrieve OTP codes from application logs during development or when Postmark is disabled.
 - **Tenant / main auth OTP** (`OtpServiceImpl`): global runtime bypass and `OTP_BYPASS_CODE` env bypass are **disabled when the Spring `prod` profile is active** (constant-time compare elsewhere).
 - **Config panel platform OTP** (`verifyPlatformOtp` in `ConfigAuthenticationServiceImpl`): still honors `OTP_BYPASS_CODE` when non-blank, independent of profile — **leave unset in production** unless you explicitly accept that risk.
 

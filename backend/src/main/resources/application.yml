@@ -73,7 +73,7 @@ app:
     max-attempts: ${OTP_MAX_ATTEMPTS:5}
     bypass-code: ${OTP_BYPASS_CODE:}
   config-auth:
-    otp-enabled: ${CONFIG_AUTH_OTP_ENABLED:true}
+    otp-enabled: ${CONFIG_AUTH_OTP_ENABLED:false}
   password-reset:
     expiry-seconds: ${PASSWORD_RESET_EXPIRY_SECONDS:3600}
   email-verification:
