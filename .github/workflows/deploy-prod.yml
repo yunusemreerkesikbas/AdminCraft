@@ -148,16 +148,36 @@ jobs:
           script: |
             echo "Waiting for backend startup..."
             for i in $(seq 1 20); do
+              CONTAINER_STATE=$(docker inspect craftive-backend --format '{{.State.Status}}' 2>/dev/null || echo "not_found")
+              if [ "$CONTAINER_STATE" = "exited" ] || [ "$CONTAINER_STATE" = "not_found" ]; then
+                echo "Container state: $CONTAINER_STATE — startup failed, aborting health check"
+                docker logs craftive-backend --tail 50 2>&1 || true
+                exit 1
+              fi
               STATUS=$(docker exec craftive-backend wget -qO- http://localhost:8080/api/actuator/health 2>/dev/null | grep -o '"status":"[^"]*"' | head -1 || echo "")
               if echo "$STATUS" | grep -q '"UP"'; then
                 echo "Backend healthy — $STATUS (attempt $i)"
                 exit 0
               fi
-              echo "Attempt $i/20: $STATUS — retrying in 15s"
+              echo "Attempt $i/20: container=$CONTAINER_STATE status=$STATUS — retrying in 15s"
               sleep 15
             done
             echo "Health check failed after 20 attempts"
+            docker logs craftive-backend --tail 50 2>&1 || true
             exit 1
+
+      - name: Print backend logs on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_DROPLET_IP }}
+          username: deploy
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
+          script: |
+            echo "=== craftive-backend logs (last 100 lines) ==="
+            docker logs craftive-backend --tail 100 2>&1 || echo "Container not found"
+            echo "=== Container state ==="
+            docker inspect craftive-backend --format 'Status: {{.State.Status}} ExitCode: {{.State.ExitCode}}' 2>/dev/null || echo "Container not found"
 
       - name: Rollback on failure
         if: failure()
