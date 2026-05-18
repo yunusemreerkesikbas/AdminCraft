@@ -369,18 +369,24 @@ Stage inherits the same middleware values from `docker-compose.prod.yml` and onl
 
 ### GitHub Secrets
 
-| Secret                    | Used by                                                                                                        |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `DROPLET_SSH_PRIVATE_KEY` | Both deploy workflows                                                                                          |
-| `PROD_DROPLET_IP`         | `deploy-prod.yml`                                                                                              |
-| `STAGE_DROPLET_IP`        | `deploy-stage.yml`                                                                                             |
-| `CF_API_TOKEN`            | Traefik DNS-01 (injected via `.env.*`)                                                                         |
-| `ENV_PROD`                | `.env.prod` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for prod bucket   |
-| `ENV_STAGE`               | `.env.stage` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for stage bucket |
+| Secret                                    | Used by                                                                                                        |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `DROPLET_SSH_PRIVATE_KEY`                 | Both deploy workflows                                                                                          |
+| `PROD_DROPLET_IP`                         | `deploy-prod.yml`                                                                                              |
+| `STAGE_DROPLET_IP`                        | `deploy-stage.yml`                                                                                             |
+| `CF_API_TOKEN`                            | Traefik DNS-01 (injected via `.env.*`)                                                                         |
+| `ENV_PROD`                                | `.env.prod` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for prod bucket   |
+| `ENV_STAGE`                               | `.env.stage` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for stage bucket |
+| `CMS_PREVIEW_SECRET_PROD`                 | `deploy-prod.yml` — exported as shell env var, NOT in `ENV_PROD`                                               |
+| `CMS_PREVIEW_SECRET_STAGE`                | `deploy-stage.yml` — exported as shell env var, NOT in `ENV_STAGE`                                             |
+| `APP_ANALYTICS_GA4_JSON_BASE64_PROD`      | `deploy-prod.yml` — exported as shell env var, NOT in `ENV_PROD`                                               |
+| `APP_ANALYTICS_GA4_JSON_BASE64_STAGE`     | `deploy-stage.yml` — exported as shell env var, NOT in `ENV_STAGE`                                             |
 
 Use separate DO Spaces key pairs for stage and prod (stage key compromise cannot affect prod bucket).
 
 `GITHUB_TOKEN` is auto-injected by GitHub Actions (no explicit secret needed for GHCR push).
+
+> **Why dedicated secrets instead of ENV_PROD/ENV_STAGE?** Docker Compose v5 env-file parser has a bug with values longer than ~2KB. `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64` (~3KB) triggers this. `CMS_PREVIEW_SECRET` follows the same pattern for consistency. Both are exported as shell environment variables in the deploy step and picked up by Docker Compose variable interpolation.
 
 ### Tenant storefront repo secrets (minimum)
 
