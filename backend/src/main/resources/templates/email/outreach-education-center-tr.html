@@ -1,8 +1,10 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" style="color-scheme: light;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <meta name="x-apple-disable-message-reformatting" />
     <title>Potansiyel veliler sizi göremeyebilir</title>
     <!--[if mso
@@ -202,6 +204,31 @@
         text-decoration: none;
       }
 
+      :root {
+        color-scheme: light;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body,
+        .email-shell { background-color: #eef2ff !important; }
+        .header-block { background-color: #0d1527 !important; }
+        .header-h1 { color: #ffffff !important; }
+        .header-h1 span { color: #93c5fd !important; }
+        .header-tag { color: #ffffff !important; }
+        .card { background-color: #ffffff !important; border-color: #c7d2fe !important; }
+        .body-copy { color: #1e293b !important; }
+        .highlight { background-color: #eff6ff !important; border-color: #bfdbfe !important; }
+        .highlight-text { color: #1e3a8a !important; }
+        .offer-row td { color: #1e293b !important; border-bottom-color: #f1f5ff !important; }
+        .offer-icon { color: #3b82f6 !important; }
+        .section-label { color: #6366f1 !important; }
+        .sig-name { color: #0d1527 !important; }
+        .sig-sub { color: #64748b !important; }
+        .footer { color: #94a3b8 !important; }
+        .footer-link { color: #64748b !important; }
+        .cta-note { color: #6366f1 !important; }
+      }
+
       @media screen and (max-width: 620px) {
         .email-container {
           width: 100% !important;
@@ -232,13 +259,13 @@
   <body>
     <div class="preheader">Veliler Google'da arıyor — web siteniz yoksa görünmüyorsunuz.</div>
 
-    <table role="presentation" class="email-shell" width="100%" cellpadding="0" cellspacing="0">
+    <table role="presentation" class="email-shell" width="100%" cellpadding="0" cellspacing="0" bgcolor="#eef2ff">
       <tr>
-        <td class="outer-pad" align="center" style="padding: 40px 16px 52px">
+        <td class="outer-pad" align="center" style="padding: 40px 16px 52px" bgcolor="#eef2ff">
           <table role="presentation" class="email-container" width="600" cellpadding="0" cellspacing="0">
             <!-- ▌HEADER ▐ -->
             <tr>
-              <td class="header-block">
+              <td class="header-block" bgcolor="#0d1527">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <!-- logo row -->
                   <tr>
@@ -284,7 +311,7 @@
 
             <!-- ▌CARD ▐ -->
             <tr>
-              <td class="card">
+              <td class="card" bgcolor="#ffffff">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td class="content-padding">
