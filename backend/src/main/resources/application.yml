@@ -64,7 +64,7 @@ app:
   email:
     enabled: ${EMAIL_ENABLED:true}
     provider: ${EMAIL_PROVIDER:console}
-    from-address: ${EMAIL_FROM_ADDRESS:noreply@craftive.io}
+    from-address: ${EMAIL_FROM_ADDRESS:hello@craftive.io}
     from-name: ${EMAIL_FROM_NAME:Craftive}
     log-content: ${EMAIL_LOG_CONTENT:false}
   otp:
