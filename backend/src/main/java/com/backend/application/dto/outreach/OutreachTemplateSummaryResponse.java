@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.response.outreach;
+package com.backend.application.dto.outreach;
 
 import com.backend.infrastructure.persistence.platform.entity.PlatformOutreachTemplate;
 

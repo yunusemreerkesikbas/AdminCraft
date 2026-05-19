@@ -1,15 +1,17 @@
-package com.backend.presentation.dto.request.outreach;
+package com.backend.application.dto.outreach;
 
 import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public record CreateOutreachCampaignRequest(
     @NotBlank String name,
-    @NotNull Long templateId,
-    @NotEmpty List<Long> contactIds,
+    @Positive Long templateId,
+    @NotEmpty @Size(max = 500) List<@NotNull @Positive Long> contactIds,
     String subjectOverride
 ) {
 }

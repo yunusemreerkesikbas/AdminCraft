@@ -1,6 +1,7 @@
-package com.backend.presentation.dto.response.outreach;
+package com.backend.application.dto.outreach;
 
 import com.backend.infrastructure.persistence.platform.entity.PlatformOutreachContact;
+import com.backend.shared.util.ResponseValueFilter;
 
 public record OutreachContactResponse(
     Long id,
@@ -19,9 +20,9 @@ public record OutreachContactResponse(
             contact.getUuid(),
             contact.getFullName(),
             contact.getEmail(),
-            contact.getCompanyName(),
-            contact.getCity(),
-            contact.getNotes(),
+            ResponseValueFilter.filterEmptyString(contact.getCompanyName()),
+            ResponseValueFilter.filterEmptyString(contact.getCity()),
+            ResponseValueFilter.filterEmptyString(contact.getNotes()),
             contact.getStatus() != null ? contact.getStatus().name() : null,
             contact.getCreatedAt() != null ? contact.getCreatedAt().toString() : null
         );

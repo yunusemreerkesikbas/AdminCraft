@@ -1,6 +1,7 @@
-package com.backend.presentation.dto.response.outreach;
+package com.backend.application.dto.outreach;
 
 import com.backend.infrastructure.persistence.platform.entity.PlatformOutreachCampaignContact;
+import com.backend.shared.util.ResponseValueFilter;
 
 public record OutreachCampaignOutboxEntryResponse(
     Long id,
@@ -19,8 +20,8 @@ public record OutreachCampaignOutboxEntryResponse(
             cc.getContact() != null ? cc.getContact().getFullName() : null,
             cc.getRenderedSubject(),
             cc.getStatus() != null ? cc.getStatus().name() : null,
-            cc.getProviderMessageId(),
-            cc.getErrorMessage(),
+            ResponseValueFilter.filterEmptyString(cc.getProviderMessageId()),
+            ResponseValueFilter.filterEmptyString(cc.getErrorMessage()),
             cc.getCreatedAt() != null ? cc.getCreatedAt().toString() : null
         );
     }

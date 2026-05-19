@@ -78,8 +78,10 @@ CREATE TABLE platform_outreach_campaign_contacts (
   PRIMARY KEY (id),
   UNIQUE KEY uk_pocc_uuid (uuid),
   UNIQUE KEY uk_pocc_uid (uid),
+  UNIQUE KEY uk_pocc_campaign_contact (campaign_id, contact_id),
   INDEX idx_pocc_campaign (campaign_id),
   INDEX idx_pocc_status (status),
+  INDEX idx_pocc_campaign_status (campaign_id, status),
   CONSTRAINT fk_pocc_campaign FOREIGN KEY (campaign_id) REFERENCES platform_outreach_campaigns(id) ON DELETE CASCADE,
   CONSTRAINT fk_pocc_contact FOREIGN KEY (contact_id) REFERENCES platform_outreach_contacts(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

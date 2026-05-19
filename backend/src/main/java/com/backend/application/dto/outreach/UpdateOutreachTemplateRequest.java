@@ -1,14 +1,14 @@
-package com.backend.presentation.dto.request.outreach;
+package com.backend.application.dto.outreach;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UpdateOutreachTemplateRequest(
     @NotBlank String name,
     @NotBlank @Size(max = 500) String subject,
     @NotBlank String content,
-    @NotNull String language,
+    @NotBlank @Pattern(regexp = "(?i)(TR|EN)") String language,
     Boolean isActive
 ) {
 }

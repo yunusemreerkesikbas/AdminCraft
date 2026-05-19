@@ -2,6 +2,7 @@ package com.backend.application.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -14,10 +15,20 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.email.EmailResult;
+import com.backend.application.dto.outreach.CreateOutreachCampaignRequest;
+import com.backend.application.dto.outreach.CreateOutreachContactRequest;
+import com.backend.application.dto.outreach.CreateOutreachTemplateRequest;
+import com.backend.application.dto.outreach.OutreachCampaignOutboxEntryResponse;
+import com.backend.application.dto.outreach.OutreachCampaignResponse;
+import com.backend.application.dto.outreach.OutreachContactResponse;
+import com.backend.application.dto.outreach.OutreachTemplateResponse;
+import com.backend.application.dto.outreach.UpdateOutreachContactRequest;
+import com.backend.application.dto.outreach.UpdateOutreachTemplateRequest;
 import com.backend.application.service.mail.TemplateVariableRenderer;
 import com.backend.domain.enums.OutreachCampaignContactStatus;
 import com.backend.domain.enums.OutreachCampaignStatus;
 import com.backend.domain.enums.OutreachContactStatus;
+import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.port.MailConfigPort;
 import com.backend.domain.port.MailSenderPort;
 import com.backend.infrastructure.persistence.platform.entity.PlatformOutreachCampaign;
@@ -28,15 +39,6 @@ import com.backend.infrastructure.persistence.platform.repository.PlatformOutrea
 import com.backend.infrastructure.persistence.platform.repository.PlatformOutreachCampaignRepository;
 import com.backend.infrastructure.persistence.platform.repository.PlatformOutreachContactRepository;
 import com.backend.infrastructure.persistence.platform.repository.PlatformOutreachTemplateRepository;
-import com.backend.presentation.dto.request.outreach.CreateOutreachCampaignRequest;
-import com.backend.presentation.dto.request.outreach.CreateOutreachContactRequest;
-import com.backend.presentation.dto.request.outreach.CreateOutreachTemplateRequest;
-import com.backend.presentation.dto.request.outreach.UpdateOutreachContactRequest;
-import com.backend.presentation.dto.request.outreach.UpdateOutreachTemplateRequest;
-import com.backend.presentation.dto.response.outreach.OutreachCampaignOutboxEntryResponse;
-import com.backend.presentation.dto.response.outreach.OutreachCampaignResponse;
-import com.backend.presentation.dto.response.outreach.OutreachContactResponse;
-import com.backend.presentation.dto.response.outreach.OutreachTemplateResponse;
 import com.backend.shared.common.LogSanitizer;
 import com.backend.shared.common.SecurityHelper;
 
@@ -47,6 +49,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class PlatformOutreachService {
+
+    private static final Set<String> CONTACT_SORT_FIELDS = Set.of("createdAt", "fullName", "email", "status");
+    private static final Set<String> CAMPAIGN_SORT_FIELDS = Set.of("createdAt", "name", "status");
 
     private final PlatformOutreachContactRepository contactRepository;
     private final PlatformOutreachTemplateRepository templateRepository;
@@ -61,7 +66,7 @@ public class PlatformOutreachService {
 
     @Transactional(value = "platformTransactionManager", readOnly = true)
     public Page<OutreachContactResponse> getContacts(int page, int size, String sort, String search) {
-        Sort sortObj = parseSortOrDefault(sort, "createdAt,desc");
+        Sort sortObj = parseSortOrDefault(sort, "createdAt,desc", CONTACT_SORT_FIELDS);
         var pageable = PageRequest.of(page, size, sortObj);
         Page<PlatformOutreachContact> resultPage = contactRepository.searchContacts(search, pageable);
         List<OutreachContactResponse> content = resultPage.getContent().stream()
@@ -104,17 +109,17 @@ public class PlatformOutreachService {
         contact.setCompanyName(req.companyName());
         contact.setCity(req.city());
         contact.setNotes(req.notes());
-        if (req.status() != null && !req.status().isBlank()) {
-            contact.setStatus(OutreachContactStatus.valueOf(req.status().toUpperCase()));
+        if (req.status() != null) {
+            contact.setStatus(req.status());
         }
         return OutreachContactResponse.from(contactRepository.save(contact));
     }
 
     @Transactional("platformTransactionManager")
-    public void deleteContact(Long id) {
+    public OutreachContactResponse deleteContact(Long id) {
         PlatformOutreachContact contact = loadContact(id);
         contact.setStatus(OutreachContactStatus.UNSUBSCRIBED);
-        contactRepository.save(contact);
+        return OutreachContactResponse.from(contactRepository.save(contact));
     }
 
     @Transactional(value = "platformTransactionManager", readOnly = true)
@@ -166,7 +171,7 @@ public class PlatformOutreachService {
 
     @Transactional(value = "platformTransactionManager", readOnly = true)
     public Page<OutreachCampaignResponse> getCampaigns(int page, int size, String sort) {
-        Sort sortObj = parseSortOrDefault(sort, "createdAt,desc");
+        Sort sortObj = parseSortOrDefault(sort, "createdAt,desc", CAMPAIGN_SORT_FIELDS);
         var pageable = PageRequest.of(page, size, sortObj);
         Page<PlatformOutreachCampaign> resultPage = campaignRepository.findAll(pageable);
         List<OutreachCampaignResponse> content = resultPage.getContent().stream()
@@ -178,9 +183,13 @@ public class PlatformOutreachService {
     @Transactional("platformTransactionManager")
     public OutreachCampaignResponse createCampaign(CreateOutreachCampaignRequest req) {
         PlatformOutreachTemplate template = loadTemplate(req.templateId());
-        List<PlatformOutreachContact> contacts = contactRepository.findByIdIn(req.contactIds());
+        List<Long> requestedIds = req.contactIds().stream().distinct().toList();
+        List<PlatformOutreachContact> contacts = contactRepository.findByIdIn(requestedIds);
         if (contacts.isEmpty()) {
             throw new IllegalArgumentException("outreach.campaign.contacts.empty");
+        }
+        if (contacts.size() != requestedIds.size()) {
+            throw new BusinessRuleViolationException("outreach.campaign.contacts.invalid");
         }
 
         String subject = (req.subjectOverride() != null && !req.subjectOverride().isBlank())
@@ -224,7 +233,7 @@ public class PlatformOutreachService {
             PlatformOutreachCampaign campaign = campaignRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new IllegalArgumentException("outreach.campaign.not.found"));
             if (campaign.getStatus() != OutreachCampaignStatus.DRAFT) {
-                throw new IllegalStateException("outreach.campaign.already.sent");
+                throw new BusinessRuleViolationException("outreach.campaign.already.sent");
             }
             campaign.setStatus(OutreachCampaignStatus.SENDING);
             campaignRepository.save(campaign);
@@ -240,8 +249,8 @@ public class PlatformOutreachService {
             for (PlatformOutreachCampaignContact detachedCc : setup.contacts()) {
                 boolean success = Boolean.TRUE.equals(tx.execute(status -> {
                     PlatformOutreachCampaignContact cc = campaignContactRepository.findById(detachedCc.getId())
-                        .orElseThrow(() -> new IllegalStateException("outreach.campaign.contact.not.found"));
-                    PlatformOutreachContact contact = detachedCc.getContact();
+                        .orElseThrow(() -> new IllegalArgumentException("outreach.campaign.contact.not.found"));
+                    PlatformOutreachContact contact = cc.getContact();
                     PlatformOutreachCampaign campaign = cc.getCampaign();
 
                     String fromName = mailConfigPort.getFromName();
@@ -280,18 +289,23 @@ public class PlatformOutreachService {
             }
         } catch (Exception e) {
             log.error("Campaign {} failed catastrophically during send, marking as FAILED", setup.campaignId(), e);
-            tx.execute(status -> {
-                PlatformOutreachCampaign campaign = loadCampaign(setup.campaignId());
-                campaign.setStatus(OutreachCampaignStatus.FAILED);
-                campaignRepository.save(campaign);
-                return null;
-            });
+            try {
+                tx.execute(status -> {
+                    campaignRepository.findById(setup.campaignId()).ifPresent(c -> {
+                        c.setStatus(OutreachCampaignStatus.FAILED);
+                        campaignRepository.save(c);
+                    });
+                    return null;
+                });
+            } catch (Exception rollbackEx) {
+                log.error("Failed to mark campaign {} as FAILED after catastrophic error", setup.campaignId(), rollbackEx);
+            }
             throw e;
         }
 
         int finalSent = sent;
         int finalFailed = failed;
-        return tx.execute(status -> {
+        OutreachCampaignResponse result = tx.execute(status -> {
             PlatformOutreachCampaign campaign = loadCampaign(setup.campaignId());
             campaign.setSentCount(finalSent);
             campaign.setFailedCount(finalFailed);
@@ -300,6 +314,10 @@ public class PlatformOutreachService {
                 : OutreachCampaignStatus.COMPLETED);
             return OutreachCampaignResponse.from(campaignRepository.save(campaign));
         });
+        if (result == null) {
+            throw new IllegalStateException("outreach.campaign.send.finalization.failed");
+        }
+        return result;
     }
 
     @Transactional(value = "platformTransactionManager", readOnly = true)
@@ -339,13 +357,16 @@ public class PlatformOutreachService {
         return value != null ? value : "";
     }
 
-    private Sort parseSortOrDefault(String sort, String defaultSort) {
+    private Sort parseSortOrDefault(String sort, String defaultSort, Set<String> allowedFields) {
         String effective = (sort == null || sort.isBlank()) ? defaultSort : sort;
         String[] parts = effective.split(",");
         if (parts.length != 2) {
             parts = defaultSort.split(",");
         }
         String field = parts[0].trim();
+        if (!allowedFields.contains(field)) {
+            field = defaultSort.split(",")[0].trim();
+        }
         Sort.Direction direction = "asc".equalsIgnoreCase(parts[1].trim())
             ? Sort.Direction.ASC
             : Sort.Direction.DESC;
