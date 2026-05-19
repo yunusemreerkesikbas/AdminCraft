@@ -1,0 +1,52 @@
+<spa-dialog
+    [title]="dialogTitleKeySig() | transloco"
+    [size]="'md'"
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmittingSig()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.cancel"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
+>
+    <form [formGroup]="form" class="flex flex-col gap-4 p-1">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <spa-input
+                formControlName="fullName"
+                [label]="'admin.outreach.contacts.fields.fullName' | transloco"
+            ></spa-input>
+
+            <spa-input
+                formControlName="email"
+                [label]="'admin.outreach.contacts.fields.email' | transloco"
+                [readonly]="data.mode === 'edit'"
+            ></spa-input>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <spa-input
+                formControlName="companyName"
+                [label]="'admin.outreach.contacts.fields.companyName' | transloco"
+            ></spa-input>
+
+            <spa-input
+                formControlName="city"
+                [label]="'admin.outreach.contacts.fields.city' | transloco"
+            ></spa-input>
+        </div>
+
+        <spa-textarea
+            formControlName="notes"
+            [label]="'admin.outreach.contacts.fields.notes' | transloco"
+            [rows]="3"
+        ></spa-textarea>
+
+        @if (data.mode === 'edit') {
+            <spa-select
+                formControlName="status"
+                [label]="'admin.outreach.contacts.fields.status' | transloco"
+                [options]="statusOptions"
+            ></spa-select>
+        }
+    </form>
+</spa-dialog>

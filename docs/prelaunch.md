@@ -45,6 +45,13 @@ Asagidaki degerler stage ve prod icin ayrik uretilmeli, guvenli secret store'da 
 | `GRAFANA_CLOUD_LOKI_USER` | Required | Required | Loki user/tenant |
 | `GRAFANA_CLOUD_LOKI_TOKEN` | Required | Required | Loki token |
 
+Asagidaki key'ler ENV_STAGE / ENV_PROD icine degil, **ayri GitHub secret olarak** tanimlanmali (Docker Compose v5 env-file parser >2KB bug'i nedeniyle):
+
+| Key | Stage Secret | Prod Secret | Notes |
+| --- | --- | --- | --- |
+| `CMS_PREVIEW_SECRET` | `CMS_PREVIEW_SECRET_STAGE` | `CMS_PREVIEW_SECRET_PROD` | Min 32 byte; HMAC-SHA256 signing icin |
+| `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64` | `APP_ANALYTICS_GA4_JSON_BASE64_STAGE` | `APP_ANALYTICS_GA4_JSON_BASE64_PROD` | GCP service account JSON, base64-encoded (~3KB) |
+
 Important distinction:
 
 - `RECAPTCHA_MASTER_KEY` deploy-time encryption key'dir; Google reCAPTCHA key'i degildir.

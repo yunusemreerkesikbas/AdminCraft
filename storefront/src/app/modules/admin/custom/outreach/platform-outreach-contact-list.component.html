@@ -1,0 +1,71 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent sm:absolute sm:inset-0 sm:overflow-hidden"
+>
+    <admin-page-header
+        title="admin.outreach.contacts.title"
+        subtitle="admin.outreach.contacts.subtitle"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.common.create'"
+        [isLoading]="store.isLoading()"
+        (createClick)="createContact()"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.common.searchPlaceholder'"
+        (search)="searchInputControl.setValue($event)"
+    >
+        @if (availableSortsSig().length > 0) {
+            <ng-container actions>
+                <spa-admin-sort-dropdown
+                    [availableSorts]="availableSortsSig()"
+                    [sortCode]="sortCodeSig()"
+                    (sortChange)="onSortChange($event)"
+                >
+                </spa-admin-sort-dropdown>
+            </ng-container>
+        }
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="store.items()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="store.isLoading()"
+                [emptyIcon]="'contacts'"
+                [emptyTitle]="'admin.outreach.contacts.messages.noData'"
+                [emptyDescription]="'admin.outreach.contacts.messages.noDataHint'"
+                (actionClick)="onGridAction($event)"
+            >
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    (click)="createContact()"
+                >
+                    <mat-icon>add</mat-icon>
+                    {{ 'admin.common.create' | transloco }}
+                </button>
+            </spa-admin-grid>
+        </div>
+
+        @if (totalElementsSig() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [length]="totalElementsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                (pageCallback)="onPageChange($event)"
+            >
+            </spa-admin-paginator>
+        }
+    </div>
+</div>
+
+<ng-template #statusTemplate let-contact>
+    <span
+        class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
+        [ngClass]="statusClass(contact.status)"
+    >
+        {{ contact.status }}
+    </span>
+</ng-template>

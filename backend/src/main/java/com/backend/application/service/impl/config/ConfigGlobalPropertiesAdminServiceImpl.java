@@ -90,7 +90,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private static final Set<String> ALLOWED_PROVIDER_VALUES = Set.of("console", "postmark");
 
     private static final String DEFAULT_EMAIL_PROVIDER = "console";
-    private static final String DEFAULT_EMAIL_FROM_ADDRESS = "noreply@craftive.io";
+    private static final String DEFAULT_EMAIL_FROM_ADDRESS = "hello@craftive.io";
     private static final String DEFAULT_EMAIL_FROM_NAME = "Craftive";
     private static final String DEFAULT_FRONTEND_BASE_URL = "http://%s.localhost:4200";
     private static final String DEFAULT_GA4_ENABLED = "false";

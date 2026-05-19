@@ -238,18 +238,26 @@ The `base/` folder now contains only theme-neutral catalogs and optional non-the
 
 ### Execution order (fresh tenant — Mulayim portfolio homepage)
 
+> **Site entity prerequisite:** `site_settings_technical.sql` step 3 inserts into `site_technical_settings` via a subquery on the `sites` table. Provisioning only creates the schema — it does not insert into `sites`. Before running `site_settings_technical.sql`, trigger the lazy site auto-creation by calling:
+> ```
+> GET /api/cms/robots.txt   (Header: X-Tenant-Subdomain: <tenant-slug>)
+> ```
+> From Windows: `Invoke-WebRequest -Uri "https://api.craftive.io/api/cms/robots.txt" -Headers @{"X-Tenant-Subdomain"="mulayim"}`
+> This invokes `SiteTechnicalServiceImpl.getFirstSite()` which inserts a default site row. Without this, the `site_technical_settings` insert silently produces 0 rows and the storefront returns "Site config not found".
+
 ```text
 1. base/base_site_settings.sql           — default site settings and i18n
 2. base/base_media_formats.sql           — system media format presets
 3. base/base_product_types.sql           — product types and attribute definitions
 4. theme/mulayim/mulayim_foundation.sql  — theme-owned page templates, template slots, shared chrome components, navigation
-5. theme/mulayim/site_settings_technical.sql — Mulayim site settings + technical dashboard defaults (site_settings, site_technical_settings)
-6. [upload media via Admin UI]           — upload port-1.jpg through port-8.jpg, logo.png, logo-white.png
-7. theme/mulayim/portfolio_homepage.sql  — homepage IntroBannerBlock, PortfolioCardGrid, StatementCtaBlock, Section1-Section3 slot wiring, media UID alignment
-8. theme/mulayim/portfolio_page.sql      — /portfolio listing page hero and filterable 4-column grid
-9. theme/mulayim/portfolio_detail_pages.sql — all /portfolio/{slug} detail pages using PortfolioDetailPageTemplate and PortfolioDetailsComponent
-10. [upload brand logos via Admin UI]    — upload brand-1.jpg through brand-15.jpg (references logo wall assets); must complete before the next step so media UID alignment runs correctly
-11. theme/mulayim/references_page.sql    — /references landing page hero, 15-logo references wall, StatementCtaBlock reuse
+5. [trigger site entity creation]        — GET /api/cms/robots.txt with X-Tenant-Subdomain header (see note above)
+6. theme/mulayim/site_settings_technical.sql — Mulayim site settings + technical dashboard defaults (site_settings, site_technical_settings)
+7. [upload media via Admin UI]           — upload port-1.jpg through port-8.jpg, logo.png, logo-white.png
+8. theme/mulayim/portfolio_homepage.sql  — homepage IntroBannerBlock, PortfolioCardGrid, StatementCtaBlock, Section1-Section3 slot wiring, media UID alignment
+9. theme/mulayim/portfolio_page.sql      — /portfolio listing page hero and filterable 4-column grid
+10. theme/mulayim/portfolio_detail_pages.sql — all /portfolio/{slug} detail pages using PortfolioDetailPageTemplate and PortfolioDetailsComponent
+11. [upload brand logos via Admin UI]    — upload brand-1.jpg through brand-15.jpg (references logo wall assets); must complete before the next step so media UID alignment runs correctly
+12. theme/mulayim/references_page.sql    — /references landing page hero, 15-logo references wall, StatementCtaBlock reuse
 ```
 
 Mulayim foundation/homepage scripts include their required generic component type seeds. Running `base_component_types.sql` and `base_entry_field_definitions.sql` first is still safe, but not required for the Mulayim path.
