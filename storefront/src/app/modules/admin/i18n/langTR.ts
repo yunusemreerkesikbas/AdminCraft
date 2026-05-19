@@ -2213,6 +2213,10 @@ export const langTR = {
             platformDashboard: 'Platform Paneli',
             platformSettings: 'Platform Ayarları',
             platformMail: 'Platform Mail',
+            platformOutreach: 'Platform Outreach',
+            platformOutreachContacts: 'Kişiler',
+            platformOutreachTemplates: 'Şablonlar',
+            platformOutreachCampaigns: 'Kampanyalar',
             platformDemoRequests: 'Demo talepleri',
             contactRequests: 'İletişim talepleri',
             tenantManagement: 'Tenant Yönetimi',
@@ -2719,6 +2723,104 @@ export const langTR = {
                     unsubscribeTokenInvalid: 'Geçersiz newsletter abonelikten çıkış tokenı',
                     tenantContextRequired: 'Tenant context zorunludur',
                     moduleNotEnabled: 'Mail marketing modülü tenant için etkin değil',
+                },
+            },
+        },
+        outreach: {
+            contacts: {
+                title: 'Platform Outreach Kişileri',
+                subtitle: 'B2B outreach kişi kayıtlarını yönetin',
+                dialog: {
+                    createTitle: 'Kişi Oluştur',
+                    editTitle: 'Kişi Düzenle',
+                },
+                fields: {
+                    fullName: 'Ad Soyad',
+                    email: 'E-posta',
+                    companyName: 'Şirket',
+                    city: 'Şehir',
+                    notes: 'Notlar',
+                    status: 'Durum',
+                    createdAt: 'Oluşturulma',
+                },
+                messages: {
+                    noData: 'Kişi bulunamadı',
+                    noDataHint:
+                        'Outreach kitlenizi oluşturmak için bir kişi ekleyin',
+                    confirmDelete:
+                        'Bu kişi silinsin mi? Bu işlem geri alınamaz.',
+                },
+            },
+            templates: {
+                title: 'E-posta Şablonları',
+                subtitle: 'Outreach e-posta şablonlarını ve değişkenlerini yönetin',
+                dialog: {
+                    createTitle: 'Şablon Oluştur',
+                    editTitle: 'Şablon Düzenle',
+                },
+                fields: {
+                    name: 'Ad',
+                    subject: 'Konu',
+                    language: 'Dil',
+                    content: 'İçerik',
+                    isActive: 'Aktif',
+                    createdAt: 'Oluşturulma',
+                },
+                placeholders: {
+                    name: 'örn. B2B Tanıtım - TR',
+                    subject: 'örn. {{contactName}}, {{companyName}} için bir teklifimiz var',
+                    content: 'HTML e-posta şablonunuzu buraya yapıştırın. {{contactName}}, {{companyName}}, {{city}}, {{email}}, {{fromName}} değişkenlerini kullanabilirsiniz.',
+                },
+                availableVariables: 'Kullanılabilir değişkenler',
+                messages: {
+                    noData: 'Şablon bulunamadı',
+                    noDataHint:
+                        'Outreach kampanyalarında kullanmak için bir şablon oluşturun',
+                    confirmDelete:
+                        'Bu şablon silinsin mi? Bu işlem geri alınamaz.',
+                },
+            },
+            campaigns: {
+                title: 'Outreach Kampanyaları',
+                subtitle:
+                    'Kişilere outreach kampanyaları oluşturun ve gönderin',
+                dialog: {
+                    createTitle: 'Kampanya Oluştur',
+                },
+                fields: {
+                    name: 'Kampanya Adı',
+                    subject: 'Konu',
+                    status: 'Durum',
+                    counts: 'Gönderim',
+                    createdBy: 'Oluşturan',
+                    createdAt: 'Oluşturulma',
+                    template: 'Şablon',
+                    templateSubject: 'Şablon Konusu',
+                    subjectOverride: 'Konu Geçersiz Kılma',
+                    contacts: 'Kişiler',
+                    total: 'Toplam',
+                    sent: 'Gönderildi',
+                    failed: 'Başarısız',
+                },
+                actions: {
+                    new: 'Yeni Kampanya',
+                    send: 'Gönder',
+                    viewLog: 'Giden Kutusunu Görüntüle',
+                },
+                messages: {
+                    noData: 'Kampanya bulunamadı',
+                    noDataHint:
+                        'Outreach e-postaları göndermek için bir kampanya oluşturun',
+                    confirmSend:
+                        '"{{name}}" kampanyası şimdi gönderilsin mi? Seçili tüm kişilere e-posta gönderilecek.',
+                    contactsRequired: 'En az bir kişi seçin.',
+                },
+                outbox: {
+                    title: 'Kampanya Giden Kutusu',
+                    loadError: 'Giden kutu detayları yüklenemedi',
+                    noEntries: 'Henüz giden kutu kaydı yok',
+                    subject: 'Konu',
+                    error: 'Hata',
                 },
             },
         },

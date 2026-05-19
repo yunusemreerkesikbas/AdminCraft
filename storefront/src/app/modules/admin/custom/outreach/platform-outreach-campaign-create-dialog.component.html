@@ -1,0 +1,123 @@
+<spa-dialog
+    [title]="'admin.outreach.campaigns.dialog.createTitle' | transloco"
+    [size]="'lg'"
+    [submitDisabled]="form.invalid || selectedCountSig() === 0 || isSubmittingSig()"
+    [isSubmitting]="isSubmittingSig()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.cancel"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
+>
+    @if (loadingDataSig()) {
+        <div class="flex items-center justify-center py-16">
+            <div class="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-primary-500"></div>
+        </div>
+    } @else {
+        <form [formGroup]="form" class="flex flex-col gap-4 p-1">
+            <spa-input
+                formControlName="name"
+                [label]="'admin.outreach.campaigns.fields.name' | transloco"
+            ></spa-input>
+
+            <spa-select
+                formControlName="templateId"
+                [label]="'admin.outreach.campaigns.fields.template' | transloco"
+                [options]="templateOptions()"
+            ></spa-select>
+
+            @if (selectedTemplateSig()) {
+                <div class="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-900/30 dark:bg-blue-900/10 dark:text-blue-300">
+                    <span class="font-semibold">{{ 'admin.outreach.campaigns.fields.templateSubject' | transloco }}:</span>
+                    {{ selectedTemplateSig()!.subject }}
+                </div>
+            }
+
+            <spa-input
+                formControlName="subjectOverride"
+                [label]="'admin.outreach.campaigns.fields.subjectOverride' | transloco"
+            ></spa-input>
+
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold">
+                        {{ 'admin.outreach.campaigns.fields.contacts' | transloco }}
+                        @if (selectedCountSig() > 0) {
+                            <span class="ml-1.5 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-bold text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
+                                {{ selectedCountSig() }}
+                            </span>
+                        }
+                    </p>
+                    <input
+                        class="w-56 rounded-lg border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-primary-500 dark:border-slate-600 dark:bg-slate-800"
+                        [formControl]="contactSearchControl"
+                        [placeholder]="'admin.common.searchPlaceholder' | transloco"
+                        type="search"
+                    />
+                </div>
+
+                <div class="overflow-auto rounded-lg border border-slate-200 dark:border-slate-700" style="max-height: 280px;">
+                    @if (filteredContactsSig().length === 0) {
+                        <div class="flex flex-col items-center gap-2 py-8 text-secondary">
+                            <p class="text-sm">{{ 'admin.outreach.contacts.messages.noData' | transloco }}</p>
+                        </div>
+                    } @else {
+                        <table class="w-full text-sm">
+                            <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800">
+                                <tr class="border-b">
+                                    <th class="px-3 py-2 text-left">
+                                        <mat-checkbox
+                                            [checked]="allFilteredSelected()"
+                                            [indeterminate]="someFilteredSelected()"
+                                            (change)="toggleSelectAll()"
+                                        ></mat-checkbox>
+                                    </th>
+                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-secondary">
+                                        {{ 'admin.outreach.contacts.fields.fullName' | transloco }}
+                                    </th>
+                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-secondary">
+                                        {{ 'admin.outreach.contacts.fields.email' | transloco }}
+                                    </th>
+                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-secondary">
+                                        {{ 'admin.outreach.contacts.fields.companyName' | transloco }}
+                                    </th>
+                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-secondary">
+                                        {{ 'admin.outreach.contacts.fields.city' | transloco }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (contact of filteredContactsSig(); track contact.id) {
+                                    <tr
+                                        class="cursor-pointer border-b transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                        [class.bg-primary-50]="isContactSelected(contact)"
+                                        [class.dark:bg-primary-900]="isContactSelected(contact)"
+                                        (click)="toggleContact(contact)"
+                                    >
+                                        <td class="px-3 py-2">
+                                            <mat-checkbox
+                                                [checked]="isContactSelected(contact)"
+                                                (change)="toggleContact(contact)"
+                                                (click)="$event.stopPropagation()"
+                                            ></mat-checkbox>
+                                        </td>
+                                        <td class="px-3 py-2 font-medium">{{ contact.fullName }}</td>
+                                        <td class="px-3 py-2 text-secondary">{{ contact.email }}</td>
+                                        <td class="px-3 py-2 text-secondary">{{ contact.companyName ?? '—' }}</td>
+                                        <td class="px-3 py-2 text-secondary">{{ contact.city ?? '—' }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+                @if (selectedCountSig() === 0 && form.touched) {
+                    <p class="text-xs text-red-500">
+                        {{ 'admin.outreach.campaigns.messages.contactsRequired' | transloco }}
+                    </p>
+                }
+            </div>
+        </form>
+    }
+</spa-dialog>

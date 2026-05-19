@@ -200,6 +200,17 @@ export const SPA_ENDPOINTS_CONFIG = {
     platformPublicNewsletterSubscribe: 'platform/public/newsletter/subscribe',
     platformPublicNewsletterConfirm: 'platform/public/newsletter/confirm',
     platformPublicNewsletterUnsubscribe: 'platform/public/newsletter/unsubscribe',
+
+    // ----- PLATFORM OUTREACH -----
+    platformOutreachContacts: 'platform/outreach/contacts',
+    platformOutreachContactById: 'platform/outreach/contacts/${id}',
+    platformOutreachTemplates: 'platform/outreach/templates',
+    platformOutreachTemplateById: 'platform/outreach/templates/${id}',
+    platformOutreachCampaigns: 'platform/outreach/campaigns',
+    platformOutreachCampaignById: 'platform/outreach/campaigns/${id}',
+    platformOutreachCampaignSend: 'platform/outreach/campaigns/${id}/send',
+    platformOutreachCampaignOutbox: 'platform/outreach/campaigns/${id}/outbox',
+
     tenantProvisioningJobs: 'tenants/${tenantId}/provisioning-jobs',
 
     // ----- PROVISIONING -----

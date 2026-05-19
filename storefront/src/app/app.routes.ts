@@ -285,6 +285,38 @@ export const appRoutes: Route[] = [
                 ],
             },
             {
+                path: 'platform-outreach',
+                canActivate: [superAdminGuard],
+                children: [
+                    {
+                        path: '',
+                        redirectTo: 'contacts',
+                        pathMatch: 'full',
+                    },
+                    {
+                        path: 'contacts',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/outreach/platform-outreach-contact-list.component'
+                            ).then((m) => m.SpaPlatformOutreachContactListComponent),
+                    },
+                    {
+                        path: 'templates',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/outreach/platform-outreach-template-list.component'
+                            ).then((m) => m.SpaPlatformOutreachTemplateListComponent),
+                    },
+                    {
+                        path: 'campaigns',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/outreach/platform-outreach-campaign-list.component'
+                            ).then((m) => m.SpaPlatformOutreachCampaignListComponent),
+                    },
+                ],
+            },
+            {
                 path: 'media',
                 canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
