@@ -47,7 +47,7 @@ public class PlatformOutreachController {
     @GetMapping("/contacts")
     public ResponseEntity<ApiResponse<Page<OutreachContactResponse>>> getContacts(
         @RequestParam(defaultValue = "0") @Min(0) int page,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+        @RequestParam(defaultValue = "20") @Min(1) @Max(500) int size,
         @RequestParam(required = false) String sort,
         @RequestParam(required = false) String search
     ) {
