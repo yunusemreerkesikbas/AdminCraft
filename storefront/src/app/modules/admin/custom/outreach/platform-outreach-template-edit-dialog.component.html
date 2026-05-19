@@ -1,0 +1,60 @@
+<spa-dialog
+    [title]="dialogTitleKeySig() | transloco"
+    [size]="'lg'"
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmittingSig()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.cancel"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
+>
+    <form [formGroup]="form" class="flex flex-col gap-4 p-1">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <spa-input
+                formControlName="name"
+                [label]="'admin.outreach.templates.fields.name' | transloco"
+                [placeholder]="'admin.outreach.templates.placeholders.name' | transloco"
+            ></spa-input>
+
+            <spa-select
+                formControlName="language"
+                [label]="'admin.outreach.templates.fields.language' | transloco"
+                [options]="languageOptions"
+            ></spa-select>
+        </div>
+
+        <spa-input
+            formControlName="subject"
+            [label]="'admin.outreach.templates.fields.subject' | transloco"
+            [placeholder]="'admin.outreach.templates.placeholders.subject' | transloco"
+        ></spa-input>
+
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-secondary">
+                {{ 'admin.outreach.templates.availableVariables' | transloco }}
+            </p>
+            <div class="flex flex-wrap gap-1.5">
+                @for (variable of availableVariables; track variable) {
+                    <span class="rounded bg-white px-2 py-0.5 font-mono text-xs text-blue-700 shadow-sm ring-1 ring-slate-200 dark:bg-slate-700 dark:text-blue-300 dark:ring-slate-600">
+                        {{ variable }}
+                    </span>
+                }
+            </div>
+        </div>
+
+        <spa-textarea
+            formControlName="content"
+            [label]="'admin.outreach.templates.fields.content' | transloco"
+            [placeholder]="'admin.outreach.templates.placeholders.content' | transloco"
+            [rows]="12"
+        ></spa-textarea>
+
+        @if (data.mode === 'edit') {
+            <spa-toggle
+                formControlName="isActive"
+                [label]="'admin.outreach.templates.fields.isActive' | transloco"
+            ></spa-toggle>
+        }
+    </form>
+</spa-dialog>

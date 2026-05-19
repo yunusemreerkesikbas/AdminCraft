@@ -1,0 +1,94 @@
+<h2 mat-dialog-title class="text-base font-semibold">
+    {{ 'admin.outreach.campaigns.outbox.title' | transloco }}
+    <span class="ml-1.5 text-sm font-normal text-secondary">— {{ data.campaignName }}</span>
+</h2>
+
+<mat-dialog-content class="!pt-2">
+    <div class="mb-4 grid grid-cols-3 gap-3 text-center text-sm">
+        <div class="rounded-lg bg-slate-100 p-2 dark:bg-slate-800">
+            <p class="text-xs text-secondary">{{ 'admin.outreach.campaigns.fields.total' | transloco }}</p>
+            <p class="font-bold">{{ data.campaign.totalCount }}</p>
+        </div>
+        <div class="rounded-lg bg-green-50 p-2 dark:bg-green-900/20">
+            <p class="text-xs text-secondary">{{ 'admin.outreach.campaigns.fields.sent' | transloco }}</p>
+            <p class="font-bold text-green-600 dark:text-green-400">{{ data.campaign.sentCount }}</p>
+        </div>
+        <div class="rounded-lg bg-red-50 p-2 dark:bg-red-900/20">
+            <p class="text-xs text-secondary">{{ 'admin.outreach.campaigns.fields.failed' | transloco }}</p>
+            <p class="font-bold text-red-600 dark:text-red-400">{{ data.campaign.failedCount }}</p>
+        </div>
+    </div>
+
+    <div class="border-t pt-4">
+        @if (loadingSig()) {
+            <div class="space-y-2">
+                @for (i of [1, 2, 3]; track i) {
+                    <div class="h-12 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800"></div>
+                }
+            </div>
+        } @else if (errorSig()) {
+            <div class="flex flex-col items-center gap-2 py-6 text-secondary">
+                <mat-icon class="icon-size-8 text-red-500">error_outline</mat-icon>
+                <p class="text-sm">{{ 'admin.outreach.campaigns.outbox.loadError' | transloco }}</p>
+            </div>
+        } @else if (entriesSig().length === 0) {
+            <div class="flex flex-col items-center gap-2 py-6 text-secondary">
+                <mat-icon class="icon-size-8 text-green-500">check_circle</mat-icon>
+                <p class="text-sm">{{ 'admin.outreach.campaigns.outbox.noEntries' | transloco }}</p>
+            </div>
+        } @else {
+            <div class="max-h-96 overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead class="sticky top-0 bg-white dark:bg-gray-900">
+                        <tr class="border-b text-left text-xs font-semibold uppercase tracking-wider text-secondary">
+                            <th class="px-3 py-2">{{ 'admin.outreach.contacts.fields.email' | transloco }}</th>
+                            <th class="px-3 py-2">{{ 'admin.outreach.campaigns.outbox.subject' | transloco }}</th>
+                            <th class="px-3 py-2">{{ 'admin.outreach.campaigns.fields.status' | transloco }}</th>
+                            <th class="px-3 py-2">{{ 'admin.outreach.campaigns.outbox.error' | transloco }}</th>
+                            <th class="px-3 py-2">{{ 'admin.outreach.contacts.fields.createdAt' | transloco }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (entry of entriesSig(); track entry.id) {
+                            <tr class="border-b hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td class="px-3 py-2">
+                                    <div class="font-medium">{{ entry.contactEmail }}</div>
+                                    @if (entry.contactName) {
+                                        <div class="text-xs text-secondary">{{ entry.contactName }}</div>
+                                    }
+                                </td>
+                                <td class="max-w-[180px] truncate px-3 py-2 text-secondary text-xs">
+                                    {{ entry.renderedSubject ?? '—' }}
+                                </td>
+                                <td class="px-3 py-2">
+                                    <span
+                                        class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
+                                        [ngClass]="statusClass(entry.status)"
+                                    >
+                                        {{ entry.status }}
+                                    </span>
+                                </td>
+                                <td class="max-w-[200px] px-3 py-2 text-xs text-red-500">
+                                    @if (entry.errorMessage) {
+                                        {{ entry.errorMessage }}
+                                    } @else {
+                                        —
+                                    }
+                                </td>
+                                <td class="px-3 py-2 text-xs text-secondary">
+                                    {{ entry.createdAt | date: 'd MMM yyyy, HH:mm' }}
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onClose()">
+        {{ 'admin.common.close' | transloco }}
+    </button>
+</mat-dialog-actions>

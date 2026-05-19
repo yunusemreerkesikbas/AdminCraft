@@ -1,0 +1,95 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent sm:absolute sm:inset-0 sm:overflow-hidden"
+>
+    <admin-page-header
+        title="admin.outreach.templates.title"
+        subtitle="admin.outreach.templates.subtitle"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.common.create'"
+        [isLoading]="loadingSig()"
+        (createClick)="createTemplate()"
+    >
+        <ng-container actions>
+            <button mat-icon-button (click)="onRefresh()" [disabled]="loadingSig()">
+                <mat-icon>refresh</mat-icon>
+            </button>
+        </ng-container>
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-y-auto p-6">
+        @if (loadingSig()) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @for (i of [1, 2, 3]; track i) {
+                    <div class="h-36 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800"></div>
+                }
+            </div>
+        } @else if (itemsSig().length === 0) {
+            <div class="flex flex-col items-center gap-3 py-16 text-secondary">
+                <mat-icon class="icon-size-12">description</mat-icon>
+                <p class="text-base font-medium">{{ 'admin.outreach.templates.messages.noData' | transloco }}</p>
+                <p class="text-sm">{{ 'admin.outreach.templates.messages.noDataHint' | transloco }}</p>
+                <button mat-flat-button color="primary" (click)="createTemplate()">
+                    <mat-icon>add</mat-icon>
+                    {{ 'admin.common.create' | transloco }}
+                </button>
+            </div>
+        } @else {
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[640px] border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b text-left text-xs font-semibold uppercase tracking-wider text-secondary">
+                            <th class="px-4 py-3">{{ 'admin.outreach.templates.fields.name' | transloco }}</th>
+                            <th class="px-4 py-3">{{ 'admin.outreach.templates.fields.subject' | transloco }}</th>
+                            <th class="px-4 py-3">{{ 'admin.outreach.templates.fields.language' | transloco }}</th>
+                            <th class="px-4 py-3">{{ 'admin.outreach.templates.fields.isActive' | transloco }}</th>
+                            <th class="px-4 py-3">{{ 'admin.outreach.templates.fields.createdAt' | transloco }}</th>
+                            <th class="px-4 py-3 text-right">{{ 'admin.common.actions' | transloco }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (template of itemsSig(); track template.id) {
+                            <tr class="border-b transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td class="px-4 py-3 font-medium">{{ template.name }}</td>
+                                <td class="max-w-xs truncate px-4 py-3 text-secondary">{{ template.subject }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="rounded bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                                        {{ template.language }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if (template.isActive) {
+                                        <span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                                            {{ 'admin.common.status.active' | transloco }}
+                                        </span>
+                                    } @else {
+                                        <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-400">
+                                            {{ 'admin.common.status.inactive' | transloco }}
+                                        </span>
+                                    }
+                                </td>
+                                <td class="px-4 py-3 text-secondary">{{ template.createdAt | date: 'd MMM yyyy' }}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <button
+                                        mat-icon-button
+                                        (click)="editTemplate(template)"
+                                        [attr.aria-label]="'admin.common.edit' | transloco"
+                                    >
+                                        <mat-icon svgIcon="heroicons_outline:pencil-square"></mat-icon>
+                                    </button>
+                                    <button
+                                        mat-icon-button
+                                        color="warn"
+                                        (click)="deleteTemplate(template)"
+                                        [attr.aria-label]="'admin.common.delete' | transloco"
+                                    >
+                                        <mat-icon svgIcon="heroicons_outline:trash"></mat-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

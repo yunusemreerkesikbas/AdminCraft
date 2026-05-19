@@ -1,0 +1,78 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent sm:absolute sm:inset-0 sm:overflow-hidden"
+>
+    <admin-page-header
+        title="admin.outreach.campaigns.title"
+        subtitle="admin.outreach.campaigns.subtitle"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.outreach.campaigns.actions.new'"
+        [isLoading]="store.isLoading()"
+        (createClick)="createCampaign()"
+    >
+        @if (availableSortsSig().length > 0) {
+            <ng-container actions>
+                <spa-admin-sort-dropdown
+                    [availableSorts]="availableSortsSig()"
+                    [sortCode]="sortCodeSig()"
+                    (sortChange)="onSortChange($event)"
+                >
+                </spa-admin-sort-dropdown>
+            </ng-container>
+        }
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="store.items()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="store.isLoading()"
+                [emptyIcon]="'campaign'"
+                [emptyTitle]="'admin.outreach.campaigns.messages.noData'"
+                [emptyDescription]="'admin.outreach.campaigns.messages.noDataHint'"
+                (actionClick)="onGridAction($event)"
+            >
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    (click)="createCampaign()"
+                >
+                    <mat-icon>add</mat-icon>
+                    {{ 'admin.outreach.campaigns.actions.new' | transloco }}
+                </button>
+            </spa-admin-grid>
+        </div>
+
+        @if (totalElementsSig() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [length]="totalElementsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                (pageCallback)="onPageChange($event)"
+            >
+            </spa-admin-paginator>
+        }
+    </div>
+</div>
+
+<ng-template #statusTemplate let-campaign>
+    <span
+        class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
+        [ngClass]="campaignStatusClass(campaign.status)"
+    >
+        {{ campaign.status }}
+    </span>
+</ng-template>
+
+<ng-template #countsTemplate let-campaign>
+    <div class="flex items-center gap-2 text-xs">
+        <span class="text-secondary">{{ campaign.totalCount }}</span>
+        <span class="font-medium text-green-600 dark:text-green-400">✓ {{ campaign.sentCount }}</span>
+        @if (campaign.failedCount > 0) {
+            <span class="font-medium text-red-600 dark:text-red-400">✗ {{ campaign.failedCount }}</span>
+        }
+    </div>
+</ng-template>
