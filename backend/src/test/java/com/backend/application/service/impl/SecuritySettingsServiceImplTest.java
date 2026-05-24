@@ -3,6 +3,7 @@ package com.backend.application.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -24,6 +25,7 @@ import com.backend.application.dto.TwoFactorPolicyChangeRequestResult;
 import com.backend.application.service.EmailService;
 import com.backend.application.service.OtpBypassVerifier;
 import com.backend.application.service.OtpRateLimitService;
+import com.backend.application.service.OtpResendCooldownService;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.TwoFactorPolicyChangeMetadata;
 import com.backend.domain.entity.Tenant;
@@ -64,6 +66,8 @@ class SecuritySettingsServiceImplTest {
     @Mock
     private OtpRateLimitService otpRateLimitService;
     @Mock
+    private OtpResendCooldownService otpResendCooldownService;
+    @Mock
     private OtpBypassVerifier otpBypassVerifier;
     @Mock
     private OtpConfig otpConfig;
@@ -93,6 +97,7 @@ class SecuritySettingsServiceImplTest {
         when(securityHelper.getCurrentUserId()).thenReturn(10L);
         when(userRepository.findById(10L)).thenReturn(Optional.of(admin));
         when(otpConfig.getExpirySeconds()).thenReturn(300);
+        when(otpResendCooldownService.resolveTenantCooldownSeconds(tenant)).thenReturn(180);
     }
 
     @Test
@@ -118,6 +123,10 @@ class SecuritySettingsServiceImplTest {
 
         assertThat(result.pendingChangeId()).isEqualTo("pending-session");
         assertThat(result.targetPolicy()).isEqualTo(TwoFactorPolicy.REQUIRED);
+        assertThat(result.resendCooldownSeconds()).isEqualTo(180);
+        assertThat(result.emailSent()).isTrue();
+        verify(otpRateLimitService).enforceResendCooldown("admin@acme.test", "1:operation", 180);
+        verify(otpRateLimitService).recordOtpSend("admin@acme.test", "1:operation");
         verify(emailService).sendOperationOtpEmail("admin@acme.test", "123456", Language.EN);
     }
 
@@ -132,8 +141,28 @@ class SecuritySettingsServiceImplTest {
                 "JUnit"))
                 .isInstanceOf(com.backend.domain.exception.TenantNotFoundException.class);
 
-        verify(otpRateLimitService, never()).checkRateLimit(any());
+        verify(otpRateLimitService, never()).enforceResendCooldown(any(), any(), anyInt());
         verify(emailService, never()).sendOperationOtpEmail(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("requestTwoFactorPolicyChange does not record cooldown when email fails")
+    void requestTwoFactorPolicyChange_ShouldNotRecordCooldownWhenEmailFails() {
+        when(otpService.createOperationOtpToken(eq(admin), eq(TwoFactorPolicy.REQUIRED), any(), any()))
+                .thenReturn(new OtpService.OperationOtpResult("123456", "pending-session"));
+        org.mockito.Mockito.doThrow(new RuntimeException("smtp down"))
+                .when(emailService)
+                .sendOperationOtpEmail("admin@acme.test", "123456", Language.EN);
+
+        assertThatThrownBy(() -> service.requestTwoFactorPolicyChange(
+                TwoFactorPolicy.REQUIRED,
+                "127.0.0.1",
+                "JUnit"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("smtp down");
+
+        verify(otpRateLimitService).enforceResendCooldown("admin@acme.test", "1:operation", 180);
+        verify(otpRateLimitService, never()).recordOtpSend(any(), any());
     }
 
     @Test
@@ -187,5 +216,6 @@ class SecuritySettingsServiceImplTest {
                 .isInstanceOf(com.backend.domain.exception.TenantNotFoundException.class);
 
         verify(tenantRepository, never()).save(tenant);
+        verify(verificationTokenRepository, never()).save(token);
     }
 }

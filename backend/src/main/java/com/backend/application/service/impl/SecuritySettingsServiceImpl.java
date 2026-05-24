@@ -8,7 +8,9 @@ import com.backend.application.dto.TwoFactorPolicyChangeRequestResult;
 import com.backend.application.dto.UpdateSecuritySettingsCommand;
 import com.backend.application.service.EmailService;
 import com.backend.application.service.OtpBypassVerifier;
+import com.backend.application.service.OtpRateLimitScopes;
 import com.backend.application.service.OtpRateLimitService;
+import com.backend.application.service.OtpResendCooldownService;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.SecuritySettingsService;
 import com.backend.application.service.TwoFactorPolicyChangeMetadata;
@@ -48,6 +50,7 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
     private final OtpService otpService;
     private final EmailService emailService;
     private final OtpRateLimitService otpRateLimitService;
+    private final OtpResendCooldownService otpResendCooldownService;
     private final OtpBypassVerifier otpBypassVerifier;
     private final OtpConfig otpConfig;
 
@@ -87,8 +90,9 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
         }
 
         User actingUser = getActingUser();
-        ensureTenantActive(tenant);
-        otpRateLimitService.checkRateLimit(actingUser.getEmail());
+        String scopeKey = OtpRateLimitScopes.tenantOperation(tenant.getId());
+        int cooldownSeconds = otpResendCooldownService.resolveTenantCooldownSeconds(tenant);
+        otpRateLimitService.enforceResendCooldown(actingUser.getEmail(), scopeKey, cooldownSeconds);
 
         OtpService.OperationOtpResult otpResult = otpService.createOperationOtpToken(
                 actingUser,
@@ -98,6 +102,7 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
 
         Language language = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
         emailService.sendOperationOtpEmail(actingUser.getEmail(), otpResult.otpCode(), language);
+        otpRateLimitService.recordOtpSend(actingUser.getEmail(), scopeKey);
 
         log.info("Two-factor policy change OTP requested for tenant {} by user {} -> {}",
                 tenant.getId(), actingUser.getId(), targetPolicy);
@@ -106,7 +111,9 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
                 otpResult.sessionToken(),
                 LogSanitizer.maskEmail(actingUser.getEmail()),
                 targetPolicy,
-                otpConfig.getExpirySeconds());
+                otpConfig.getExpirySeconds(),
+                cooldownSeconds,
+                true);
     }
 
     @Override
@@ -129,6 +136,9 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
             throw new InvalidTokenException("Invalid or expired verification session");
         }
 
+        Tenant tenant = getCurrentTenant();
+        ensureTenantActive(tenant);
+
         boolean isBypassCode = otpBypassVerifier.isBypassCode(otpCode);
         String otpHash = otpService.hashToken(otpCode);
         boolean isValid = isBypassCode || otpHash.equals(token.getTargetValue());
@@ -146,8 +156,6 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
         verificationTokenRepository.save(token);
 
         TwoFactorPolicy targetPolicy = TwoFactorPolicyChangeMetadata.parse(token.getUserAgent());
-        Tenant tenant = getCurrentTenant();
-        ensureTenantActive(tenant);
         log.info("Applying two-factor policy change for tenant {} from {} to {}",
                 tenant.getId(), tenant.getTwoFactorPolicy(), targetPolicy);
         tenant.setTwoFactorPolicy(targetPolicy);

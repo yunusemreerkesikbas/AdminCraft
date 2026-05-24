@@ -437,7 +437,9 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private Map<Long, List<ComponentEntry>> groupEntriesByComponentId(List<ComponentEntry> entries) {
                 return entries.stream()
-                                .sorted(Comparator.comparingInt(entry -> entry.getSortOrder() != null ? entry.getSortOrder() : 0))
+                                .sorted(Comparator
+                                                .comparingInt((ComponentEntry entry) -> entry.getSortOrder() != null ? entry.getSortOrder() : 0)
+                                                .thenComparingLong(entry -> entry.getId() != null ? entry.getId() : Long.MIN_VALUE))
                                 .collect(Collectors.groupingBy(ComponentEntry::getComponentId, LinkedHashMap::new, Collectors.toList()));
         }
 

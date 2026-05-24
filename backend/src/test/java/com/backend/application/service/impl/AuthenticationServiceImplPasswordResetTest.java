@@ -83,6 +83,12 @@ class AuthenticationServiceImplPasswordResetTest {
     private OtpBypassVerifier otpBypassVerifier;
 
     @Mock
+    private com.backend.application.service.OtpRateLimitService otpRateLimitService;
+
+    @Mock
+    private com.backend.application.service.OtpResendCooldownService otpResendCooldownService;
+
+    @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
@@ -113,6 +119,8 @@ class AuthenticationServiceImplPasswordResetTest {
                 verificationTokenRepository,
                 otpConfig,
                 otpBypassVerifier,
+                otpRateLimitService,
+                otpResendCooldownService,
                 refreshTokenRepository,
                 platformRefreshTokenRepository,
                 tenantTransactionManager,

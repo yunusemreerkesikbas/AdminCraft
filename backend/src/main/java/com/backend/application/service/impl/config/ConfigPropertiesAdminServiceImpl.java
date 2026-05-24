@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.backend.application.dto.config.ConfigPrincipal;
 import com.backend.application.dto.config.ConfigPropertyResult;
+import com.backend.application.service.OtpResendCooldownService;
 import com.backend.application.service.TenantDbExecutor;
 import com.backend.application.service.config.ConfigPropertiesAdminService;
 import com.backend.application.service.config.ConfigPropertyService;
@@ -44,6 +45,7 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     private static final String KEY_GA4_PROPERTY_ID = "analytics.ga4.property_id";
     private static final String KEY_SEO_INSIGHTS_ENABLED = "seo.insights.enabled";
     private static final String KEY_SEARCH_CONSOLE_PROPERTY_URL = "seo.search_console.property_url";
+    private static final String KEY_OTP_RESEND_COOLDOWN_SECONDS = OtpResendCooldownService.CONFIG_KEY;
     private static final Pattern GA4_PROPERTY_ID_PATTERN = Pattern.compile("^\\d+$");
     private static final Pattern SEARCH_CONSOLE_PROPERTY_PATTERN = Pattern.compile("^(sc-domain:.+|https?://.+)$");
     private static final List<String> MANAGED_KEYS = List.of(
@@ -53,7 +55,8 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
             KEY_GA4_ENABLED,
             KEY_GA4_PROPERTY_ID,
             KEY_SEO_INSIGHTS_ENABLED,
-            KEY_SEARCH_CONSOLE_PROPERTY_URL);
+            KEY_SEARCH_CONSOLE_PROPERTY_URL,
+            KEY_OTP_RESEND_COOLDOWN_SECONDS);
     private static final Set<String> MANAGED_KEYS_SET = Set.copyOf(MANAGED_KEYS);
 
     private final TenantRepository tenantRepository;
@@ -243,6 +246,12 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
                     false,
                     null,
                     null);
+            case KEY_OTP_RESEND_COOLDOWN_SECONDS -> new ConfigPropertyResult(
+                    key,
+                    String.valueOf(OtpResendCooldownService.DEFAULT_COOLDOWN_SECONDS),
+                    false,
+                    null,
+                    null);
             default -> throw new IllegalArgumentException("Unsupported managed property key: " + key);
         };
     }
@@ -285,6 +294,29 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
             }
             if (value != null && !SEARCH_CONSOLE_PROPERTY_PATTERN.matcher(value).matches()) {
                 throw new IllegalArgumentException("Search Console property URL must start with sc-domain: or http(s)://");
+            }
+        }
+
+        if (KEY_OTP_RESEND_COOLDOWN_SECONDS.equals(key)) {
+            if (secret) {
+                throw new IllegalArgumentException("OTP resend cooldown cannot be stored as secret");
+            }
+            if (value == null || value.isBlank()) {
+                throw new IllegalArgumentException("OTP resend cooldown seconds is required");
+            }
+            int seconds;
+            try {
+                seconds = Integer.parseInt(value.trim());
+            } catch (NumberFormatException ex) {
+                throw new IllegalArgumentException("OTP resend cooldown seconds must be a number");
+            }
+            if (seconds < OtpResendCooldownService.MIN_COOLDOWN_SECONDS
+                    || seconds > OtpResendCooldownService.MAX_COOLDOWN_SECONDS) {
+                throw new IllegalArgumentException(
+                        "OTP resend cooldown seconds must be between "
+                                + OtpResendCooldownService.MIN_COOLDOWN_SECONDS
+                                + " and "
+                                + OtpResendCooldownService.MAX_COOLDOWN_SECONDS);
             }
         }
     }

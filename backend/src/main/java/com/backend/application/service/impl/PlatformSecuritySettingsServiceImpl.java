@@ -10,7 +10,9 @@ import com.backend.application.dto.TwoFactorPolicyChangeRequestResult;
 import com.backend.application.dto.response.PlatformSettingsData;
 import com.backend.application.service.EmailService;
 import com.backend.application.service.OtpBypassVerifier;
+import com.backend.application.service.OtpRateLimitScopes;
 import com.backend.application.service.OtpRateLimitService;
+import com.backend.application.service.OtpResendCooldownService;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.PlatformSecuritySettingsService;
 import com.backend.application.service.PlatformSettingsService;
@@ -45,6 +47,7 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
     private final OtpService otpService;
     private final EmailService emailService;
     private final OtpRateLimitService otpRateLimitService;
+    private final OtpResendCooldownService otpResendCooldownService;
     private final OtpBypassVerifier otpBypassVerifier;
     private final OtpConfig otpConfig;
     private final PlatformSettingsService platformSettingsService;
@@ -55,19 +58,23 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
             TwoFactorPolicy targetPolicy,
             String ipAddress,
             String userAgent) {
-        TwoFactorPolicy currentPolicy = platformSettingsPort.getTwoFactorPolicy() != null
-                ? platformSettingsPort.getTwoFactorPolicy()
+        TwoFactorPolicy fetchedPolicy = platformSettingsPort.getTwoFactorPolicy();
+        TwoFactorPolicy currentPolicy = fetchedPolicy != null
+                ? fetchedPolicy
                 : TwoFactorPolicy.DISABLED;
         if (currentPolicy == targetPolicy) {
             throw new IllegalArgumentException("Two-factor policy is already " + targetPolicy.name());
         }
 
         PlatformAdminUser admin = getActingAdmin();
-        otpRateLimitService.checkRateLimit(admin.getEmail(), "platform");
+        String scopeKey = OtpRateLimitScopes.PLATFORM_OPERATION;
+        int cooldownSeconds = otpResendCooldownService.resolvePlatformCooldownSeconds();
+        otpRateLimitService.enforceResendCooldown(admin.getEmail(), scopeKey, cooldownSeconds);
 
         PlatformOperationOtpResult otpResult = createPlatformOperationOtpToken(admin, targetPolicy, ipAddress, userAgent);
         Language language = resolvePlatformLanguage();
         emailService.sendOperationOtpEmail(admin.getEmail(), otpResult.otpCode(), language);
+        otpRateLimitService.recordOtpSend(admin.getEmail(), scopeKey);
 
         log.info("Platform two-factor policy change OTP requested by admin {} -> {}",
                 admin.getId(), targetPolicy);
@@ -76,7 +83,9 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
                 otpResult.sessionToken(),
                 LogSanitizer.maskEmail(admin.getEmail()),
                 targetPolicy,
-                otpConfig.getExpirySeconds());
+                otpConfig.getExpirySeconds(),
+                cooldownSeconds,
+                true);
     }
 
     @Override
@@ -144,7 +153,7 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
                 .attemptCount(0)
                 .maxAttempts(otpConfig.getMaxAttempts())
                 .ipAddress(ipAddress)
-                .userAgent(TwoFactorPolicyChangeMetadata.format(pendingPolicy, userAgent))
+                .userAgent(TwoFactorPolicyChangeMetadata.format(pendingPolicy))
                 .build();
 
         platformVerificationTokenRepository.save(token);

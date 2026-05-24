@@ -60,6 +60,8 @@ class RefreshTokenReplayTest {
     @Mock private VerificationTokenRepository verificationTokenRepository;
     @Mock private OtpConfig otpConfig;
     @Mock private OtpBypassVerifier otpBypassVerifier;
+    @Mock private com.backend.application.service.OtpRateLimitService otpRateLimitService;
+    @Mock private com.backend.application.service.OtpResendCooldownService otpResendCooldownService;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private PlatformRefreshTokenRepository platformRefreshTokenRepository;
     @Mock private PlatformTransactionManager tenantTransactionManager;
@@ -74,7 +76,7 @@ class RefreshTokenReplayTest {
                 tenantRepository, platformAdminUserRepository, platformSettingsPort,
                 platformVerificationTokenRepository, tenantContext,
                 otpService, emailService, trustedDeviceService, verificationTokenRepository,
-                otpConfig, otpBypassVerifier,
+                otpConfig, otpBypassVerifier, otpRateLimitService, otpResendCooldownService,
                 refreshTokenRepository, platformRefreshTokenRepository,
                 tenantTransactionManager, platformTransactionManager);
     }

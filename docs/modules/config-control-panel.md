@@ -60,6 +60,7 @@ Tenant reCAPTCHA keys managed in panel:
 - `analytics.ga4.property_id`
 - `seo.insights.enabled`
 - `seo.search_console.property_url`
+- `security.otp.resend_cooldown_seconds` (integer seconds, default `180`, allowed `60`–`3600`) — minimum wait before another **tenant** OTP email of the same kind (login vs policy change use separate rate-limit scopes but the same configured duration). Platform admin flows use fixed cooldown from `app.security.otp.resend-cooldown-seconds` in `application.yml` (default `180`), not this tenant key.
 
 Note: `security.recaptcha.threshold` may exist historically in tenant data but is not managed by Config Panel in current scope.
 Runtime note: tenant reCAPTCHA now reads only from `config_properties`; `sites` is no longer a source of truth.
@@ -157,7 +158,7 @@ Tenant management APIs (`CONFIG_TENANT_ADMIN`):
 Tenant properties list behavior:
 
 - `GET /api/config/admin/properties` always returns the managed tenant reCAPTCHA keys, `analytics.ga4.enabled`, and `analytics.ga4.property_id`
-- `GET /api/config/admin/properties` also returns `seo.insights.enabled` and `seo.search_console.property_url`
+- `GET /api/config/admin/properties` also returns `seo.insights.enabled`, `seo.search_console.property_url`, and `security.otp.resend_cooldown_seconds`
 - if `config_properties` has no tenant override yet, managed keys still appear with config-store defaults (`false` / empty)
 - additional tenant-specific custom keys stored in `config_properties` are appended after the managed keys
 
@@ -204,7 +205,7 @@ Session behavior:
 - Tenant context for config login can be supplied via the `subdomain` query param (`/config?subdomain={tenantSubdomain}`).
 - Tenant config sessions can silently refresh in the same browser when the access token expires (`POST /api/config/auth/refresh`).
 - `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, a fresh login is required again (including OTP if enabled).
-- **Console email provider:** when `app.email.provider` resolves to `console` (Postmark not configured), login and operation OTP emails log only the code at INFO level (`[MAIL:CONSOLE] OTP type=... recipient=... code=...`) without rendering HTML. Use application logs to retrieve OTP codes during development or when Postmark is disabled.
+- **Console email provider:** when `app.email.provider` resolves explicitly to `console` (Postmark not configured), login and operation OTP emails log only the masked recipient and OTP code at INFO level (`[MAIL:CONSOLE] OTP type=... recipient=... code=...`) without rendering HTML. Use this for local/development recovery only; unsupported provider values do not fall back to this behavior.
 - **Tenant / main auth OTP** (`OtpServiceImpl`): global runtime bypass and `OTP_BYPASS_CODE` env bypass are **disabled when the Spring `prod` profile is active** (constant-time compare elsewhere).
 - **Config panel platform OTP** (`verifyPlatformOtp` in `ConfigAuthenticationServiceImpl`): still honors `OTP_BYPASS_CODE` when non-blank, independent of profile — **leave unset in production** unless you explicitly accept that risk.
 

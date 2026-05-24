@@ -136,7 +136,7 @@ public class OtpServiceImpl implements OtpService {
                 .attemptCount(0)
                 .maxAttempts(otpConfig.getMaxAttempts())
                 .ipAddress(ipAddress)
-                .userAgent(TwoFactorPolicyChangeMetadata.format(pendingPolicy, userAgent))
+                .userAgent(TwoFactorPolicyChangeMetadata.format(pendingPolicy))
                 .build();
 
         tokenRepository.save(token);

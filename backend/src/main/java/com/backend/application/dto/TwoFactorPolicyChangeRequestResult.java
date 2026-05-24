@@ -6,5 +6,7 @@ public record TwoFactorPolicyChangeRequestResult(
         String pendingChangeId,
         String maskedEmail,
         TwoFactorPolicy targetPolicy,
-        int expiresInSeconds) {
+        int expiresInSeconds,
+        int resendCooldownSeconds,
+        boolean emailSent) {
 }

@@ -168,7 +168,9 @@ class PlatformSettingsControllerIntegrationTest {
                         "pending-1",
                         "a****@craftive.io",
                         TwoFactorPolicy.REQUIRED,
-                        300));
+                        300,
+                        180,
+                        true));
         when(messageSource.getMessage(eq("platform.settings.security.twoFactor.otp.sent"), any(), any()))
                 .thenReturn("OTP sent");
 
@@ -181,7 +183,9 @@ class PlatformSettingsControllerIntegrationTest {
                         """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.pendingChangeId").value("pending-1"))
-                .andExpect(jsonPath("$.data.targetPolicy").value("REQUIRED"));
+                .andExpect(jsonPath("$.data.targetPolicy").value("REQUIRED"))
+                .andExpect(jsonPath("$.data.resendCooldownSeconds").value(180))
+                .andExpect(jsonPath("$.data.emailSent").value(true));
     }
 
     @Test

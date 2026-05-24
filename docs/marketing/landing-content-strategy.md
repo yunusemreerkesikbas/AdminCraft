@@ -17,6 +17,7 @@ Marka iki cümleyle özetlenir:
 İkisi birlikte şunu söyler: **Tek bir paylaşılan altyapı, her projeye göre yeniden yapılandırılır; ve bu yapılandırmayı sizin yerinize biz kurarız.**
 
 ### Bu dokümanın özet kararları
+
 | # | Karar | Sonuç |
 |---|---|---|
 | 1 | Dil | Tüm landing TR; slogan EN olarak korunur |
@@ -233,7 +234,7 @@ Aşağıdaki kelimeleri **hiçbir copy'de** kullanmayın:
 
 ### 8 üst sayfa + 5 Çözümler alt sayfası
 
-```
+```text
 Anasayfa
 │
 ├── Çözümler (hub)
@@ -1806,12 +1807,12 @@ Landing page lansmanı sonrası ölçülmesi gereken metrikler:
 > - 1 anonim case study (Kullanım Alanları için temel materyal)
 > - Form için gerçek e-posta adresi + LinkedIn sayfası
 > - İlk pillar yazısı taslağı (Blog'un boş açılmaması için)
-
+>
 > **Lansman sonrası 30 gün içinde:**
 > - 2 testimonial alıntısı + 1 ilk gerçek case study
 > - Demo→teklif dönüşümünün ilk ölçümü
 > - İlk 3 destekleyici blog yazısı
-
+>
 > **3 ay sonra değerlendirme:**
 > - İngilizce versiyon kararı
 > - Karşılaştırma sayfası kararı
@@ -1839,4 +1840,3 @@ Bu doküman canlı bir referanstır. Yeni vakalar, yeni mesaj testleri, yeni mü
 - `docs/marketing/customer-project-briefing-tr.md` — müşteriye giden brief şablonu
 - `docs/marketing/customer-presentation-deck-outline-tr.md` — sunum yapısı
 - `docs/marketing/landing-seo.md` — landing SEO (varsa daha eski not)
-

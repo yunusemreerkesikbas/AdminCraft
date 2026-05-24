@@ -56,6 +56,8 @@ app:
   security:
     trust-cf-connecting-ip: ${APP_SECURITY_TRUST_CF_CONNECTING_IP:false}
     trusted-proxy-cidrs: []
+    otp:
+      resend-cooldown-seconds: ${APP_SECURITY_OTP_RESEND_COOLDOWN_SECONDS:180}
     public-contact-per-ip-per-minute: ${APP_SECURITY_PUBLIC_CONTACT_PER_IP:10}
     public-contact-per-tenant-per-minute: ${APP_SECURITY_PUBLIC_CONTACT_PER_TENANT:120}
     contact-request-retention-days: ${APP_CONTACT_REQUEST_RETENTION_DAYS:90}

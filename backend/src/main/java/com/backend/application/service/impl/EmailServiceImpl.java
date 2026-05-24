@@ -166,7 +166,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private boolean isConsoleEmailProvider() {
-        return !"postmark".equalsIgnoreCase(globalRuntimeConfigService.getEmailProvider());
+        return "console".equalsIgnoreCase(globalRuntimeConfigService.getEmailProvider());
     }
 
     private EmailResult logConsoleOtp(EmailType emailType, String toEmail, String otpCode) {
