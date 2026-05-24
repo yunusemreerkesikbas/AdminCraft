@@ -17,9 +17,25 @@ import styles from "./shell.module.css";
 
 function CloseIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <path d="M1 1L13 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M1 1L13 13"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M13 1L1 13"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -28,7 +44,7 @@ function renderLink(
   link: LayoutLinkDelivery,
   className: string,
   key: string,
-  onClick?: () => void
+  onClick?: () => void,
 ) {
   if (link.isExternal || link.target === "_blank") {
     return (
@@ -56,7 +72,7 @@ function renderMenuSection(
   section: NavigationSectionDelivery,
   isOpen: boolean,
   onToggle: () => void,
-  onClick?: () => void
+  onClick?: () => void,
 ) {
   if (section.links.length === 0 && section.href) {
     return renderLink(
@@ -95,12 +111,18 @@ function renderMenuSection(
               aria-label={`${section.title} submenu`}
               aria-expanded={isOpen}
             >
-              <span className={styles.panelNavToggle}>{isOpen ? "−" : "+"}</span>
+              <span className={styles.panelNavToggle}>
+                {isOpen ? "−" : "+"}
+              </span>
             </button>
           ) : null}
         </div>
-        <div className={`${styles.panelNavSubmenu} ${isOpen ? styles.panelNavSubmenuOpen : ""}`}>
-          {section.links.map((link) => renderLink(link, styles.panelNavSubmenuLink, link.uid, onClick))}
+        <div
+          className={`${styles.panelNavSubmenu} ${isOpen ? styles.panelNavSubmenuOpen : ""}`}
+        >
+          {section.links.map((link) =>
+            renderLink(link, styles.panelNavSubmenuLink, link.uid, onClick),
+          )}
         </div>
       </div>
     );
@@ -117,8 +139,12 @@ function renderMenuSection(
         <span>{section.title}</span>
         <span className={styles.panelNavToggle}>{isOpen ? "−" : "+"}</span>
       </button>
-      <div className={`${styles.panelNavSubmenu} ${isOpen ? styles.panelNavSubmenuOpen : ""}`}>
-        {section.links.map((link) => renderLink(link, styles.panelNavSubmenuLink, link.uid, onClick))}
+      <div
+        className={`${styles.panelNavSubmenu} ${isOpen ? styles.panelNavSubmenuOpen : ""}`}
+      >
+        {section.links.map((link) =>
+          renderLink(link, styles.panelNavSubmenuLink, link.uid, onClick),
+        )}
       </div>
     </div>
   );
@@ -131,8 +157,17 @@ function renderPrimaryInfoBlock(
   return (
     <div key={block.uid} {...smartEditBlockAttributes(block)}>
       {block.title ? <p className={styles.panelLabel}>{block.title}</p> : null}
-      {block.links.map((link) => renderLink(link, styles.panelInfoLink, `${block.uid}-${link.uid}`, onClick))}
-      {block.description ? <p className={styles.panelInfoText}>{block.description}</p> : null}
+      {block.links.map((link) =>
+        renderLink(
+          link,
+          styles.panelInfoLink,
+          `${block.uid}-${link.uid}`,
+          onClick,
+        ),
+      )}
+      {block.description ? (
+        <p className={styles.panelInfoText}>{block.description}</p>
+      ) : null}
     </div>
   );
 }
@@ -146,15 +181,26 @@ function renderSecondaryBlock(
       {block.title ? <p className={styles.panelLabel}>{block.title}</p> : null}
       {block.links.length > 0 ? (
         <div className={styles.panelSocial}>
-          {block.links.map((link) => renderLink(link, styles.panelSocialTextLink, `${block.uid}-${link.uid}`, onClick))}
+          {block.links.map((link) =>
+            renderLink(
+              link,
+              styles.panelSocialTextLink,
+              `${block.uid}-${link.uid}`,
+              onClick,
+            ),
+          )}
         </div>
       ) : null}
-      {block.description ? <p className={styles.panelInfoText}>{block.description}</p> : null}
+      {block.description ? (
+        <p className={styles.panelInfoText}>{block.description}</p>
+      ) : null}
     </div>
   );
 }
 
-function smartEditBlockAttributes(block: LayoutBlockDelivery | null | undefined) {
+function smartEditBlockAttributes(
+  block: LayoutBlockDelivery | null | undefined,
+) {
   if (!block) {
     return {};
   }
@@ -179,7 +225,9 @@ export default function SiteHeader({
 }: {
   lang: string;
   brand: string;
-  mainNavigation: (NavigationDeliveryResponse & { sections?: NavigationSectionDelivery[] }) | null;
+  mainNavigation:
+    | (NavigationDeliveryResponse & { sections?: NavigationSectionDelivery[] })
+    | null;
   mainNavigationBlock?: LayoutBlockDelivery | null;
   primaryBlocks: LayoutBlockDelivery[];
   secondaryBlocks: LayoutBlockDelivery[];
@@ -242,7 +290,9 @@ export default function SiteHeader({
     setMenuOpen((current) => {
       const nextOpen = !current;
       if (nextOpen) {
-        setOpenSectionUid((currentSectionUid) => currentSectionUid ?? sections[0]?.uid ?? null);
+        setOpenSectionUid(
+          (currentSectionUid) => currentSectionUid ?? sections[0]?.uid ?? null,
+        );
       }
       return nextOpen;
     });
@@ -250,10 +300,16 @@ export default function SiteHeader({
 
   return (
     <>
-      <header className={`${styles.headerShell} ${isSticky ? styles.headerSticky : ""} ${menuOpen ? styles.headerHidden : ""}`}>
+      <header
+        className={`${styles.headerShell} ${isSticky ? styles.headerSticky : ""} ${menuOpen ? styles.headerHidden : ""}`}
+      >
         <div className={styles.headerInner}>
           <div>
-            <Link href={homeHref} className={styles.logoGroup} aria-label={brand}>
+            <Link
+              href={homeHref}
+              className={styles.logoGroup}
+              aria-label={brand}
+            >
               <span className={`${styles.logoLink} ${styles.logoDark}`}>
                 {logoUrl && (
                   <Image
@@ -301,14 +357,22 @@ export default function SiteHeader({
         onClick={() => setMenuOpen(false)}
       />
 
-      <div className={`${styles.offcanvasShell} ${menuOpen ? styles.offcanvasShellOpen : ""}`} aria-hidden={!menuOpen}>
+      <div
+        className={`${styles.offcanvasShell} ${menuOpen ? styles.offcanvasShellOpen : ""}`}
+        aria-hidden={!menuOpen}
+      >
         <div className={`${styles.offcanvasBg} ${styles.offcanvasBgLeft}`} />
         <div className={`${styles.offcanvasBg} ${styles.offcanvasBgRight}`} />
 
         <aside className={styles.offcanvasWrapper}>
           <div className={styles.offcanvasLeft}>
             <div className={styles.offcanvasLeftTop}>
-              <Link href={homeHref} className={styles.offcanvasLogo} aria-label={brand} onClick={() => setMenuOpen(false)}>
+              <Link
+                href={homeHref}
+                className={styles.offcanvasLogo}
+                aria-label={brand}
+                onClick={() => setMenuOpen(false)}
+              >
                 {(logoDarkUrl ?? logoUrl) && (
                   <Image
                     src={logoDarkUrl ?? logoUrl ?? ""}
@@ -336,7 +400,10 @@ export default function SiteHeader({
               </button>
             </div>
 
-            <nav className={styles.panelNav} {...smartEditBlockAttributes(mainNavigationBlock)}>
+            <nav
+              className={styles.panelNav}
+              {...smartEditBlockAttributes(mainNavigationBlock)}
+            >
               {sections.map((section) =>
                 renderMenuSection(
                   section,
@@ -346,7 +413,7 @@ export default function SiteHeader({
                       current === section.uid ? null : section.uid,
                     ),
                   () => setMenuOpen(false),
-                )
+                ),
               )}
             </nav>
           </div>
@@ -370,17 +437,15 @@ export default function SiteHeader({
 
             <div className={styles.offcanvasRightInner}>
               <div className={styles.panelSideInfo}>
-                {primaryBlocks.length > 0
-                  ? primaryBlocks.map((block) => renderPrimaryInfoBlock(block, () => setMenuOpen(false)))
-                  : (
-                    <Link href={homeHref} className={styles.panelInfoLink} onClick={() => setMenuOpen(false)}>
-                      {brand}
-                    </Link>
-                  )}
+                {primaryBlocks.map((block) =>
+                  renderPrimaryInfoBlock(block, () => setMenuOpen(false)),
+                )}
               </div>
 
               <div className={styles.panelMeta}>
-                {secondaryBlocks.map((block) => renderSecondaryBlock(block, () => setMenuOpen(false)))}
+                {secondaryBlocks.map((block) =>
+                  renderSecondaryBlock(block, () => setMenuOpen(false)),
+                )}
 
                 {enabledLanguages.length > 1 ? (
                   <div>

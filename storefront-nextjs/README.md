@@ -65,6 +65,18 @@ Route orchestration uses loader helpers:
 - search page: `loadSearchPage(lang, query)`
 - shell/header/footer: `loadShellData(lang)`
 
+## SmartEdit
+
+SmartEdit preview uses the public query contract `?preview=<ticket>&previewPageId=<pageId>`. When `preview` is present, CMS delivery requests send `X-Cms-Preview-Ticket` and bypass ISR caching so metadata and visible page content render from the same draft payload.
+
+Set `NEXT_PUBLIC_SMARTEDIT_ALLOWED_ORIGINS` to a comma-separated list of admin panel origins to enable iframe editing. The value is used for the `postMessage` allow-list and the `frame-ancestors` CSP header. When it is empty or unset, the bridge script and CSP header are disabled.
+
+Environment defaults:
+
+- development: `http://localhost:4200`
+- staging: `https://s1-app.craftive.io`
+- production: `https://app.craftive.io`
+
 ## Development
 
 ```bash

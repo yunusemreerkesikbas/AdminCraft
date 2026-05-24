@@ -6,8 +6,12 @@
     >
         <div class="mx-auto w-full max-w-80 sm:mx-0 sm:w-80">
             <!-- Logo -->
-            <div class="max-w-[12rem] w-full">
-                <img class="h-8 w-auto max-w-full object-contain object-left" src="images/logo/logo.svg" alt="" />
+            <div class="w-full max-w-[12rem]">
+                <img
+                    class="h-8 w-auto max-w-full object-contain object-left"
+                    src="images/logo/logo.svg"
+                    alt=""
+                />
             </div>
 
             <!-- Title -->
@@ -18,7 +22,11 @@
             </div>
             @if (!showOtpFormSig()) {
                 <!-- Sign in form -->
-                <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">
+                <form
+                    class="mt-8"
+                    [formGroup]="signInForm"
+                    #signInNgForm="ngForm"
+                >
                     <!-- Workspace field -->
                     <spa-input
                         [label]="'auth.signIn.workspace' | transloco"
@@ -26,7 +34,9 @@
                         [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="workspace"
-                        [placeholder]="'auth.signIn.workspacePlaceholder' | transloco"
+                        [placeholder]="
+                            'auth.signIn.workspacePlaceholder' | transloco
+                        "
                         autocomplete="organization"
                     ></spa-input>
 
@@ -37,7 +47,9 @@
                         [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="email"
-                        [placeholder]="'auth.common.emailPlaceholder' | transloco"
+                        [placeholder]="
+                            'auth.common.emailPlaceholder' | transloco
+                        "
                     ></spa-input>
 
                     <!-- Password field -->
@@ -48,7 +60,9 @@
                         [styleClasses]="'w-full mb-4'"
                         [fullWidth]="true"
                         formControlName="password"
-                        [placeholder]="'auth.common.passwordPlaceholder' | transloco"
+                        [placeholder]="
+                            'auth.common.passwordPlaceholder' | transloco
+                        "
                     >
                         <button
                             mat-icon-button
@@ -90,8 +104,10 @@
                                 class="text-md font-medium text-primary-500 hover:underline"
                                 [routerLink]="['/forgot-password']"
                                 [queryParams]="{
-                                    subdomain:
-                                        signInForm.get('workspace')?.value?.trim()?.toLowerCase()
+                                    subdomain: signInForm
+                                        .get('workspace')
+                                        ?.value?.trim()
+                                        ?.toLowerCase(),
                                 }"
                                 >{{ 'auth.signIn.forgotPassword' | transloco }}
                             </a>
@@ -124,9 +140,14 @@
 
             @if (showOtpFormSig()) {
                 <!-- OTP Verification form -->
-                <div class="mt-6 mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                <div
+                    class="mb-4 mt-6 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                >
                     <div class="flex items-center">
-                        <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:shield-check'"></mat-icon>
+                        <mat-icon
+                            class="mr-2 icon-size-5"
+                            [svgIcon]="'heroicons_outline:shield-check'"
+                        ></mat-icon>
                         {{ 'auth.signIn.2fa.info' | transloco }}
                     </div>
                     <div class="mt-1 text-xs">
@@ -148,6 +169,31 @@
                         pattern="[0-9]*"
                     ></spa-input>
 
+                    <div class="mt-3 text-center">
+                        @if (otpResendCooldownSig() > 0) {
+                            <p class="text-sm text-slate-600">
+                                {{
+                                    'auth.signIn.2fa.resendIn'
+                                        | transloco
+                                            : {
+                                                  seconds:
+                                                      otpResendCooldownSig(),
+                                              }
+                                }}
+                            </p>
+                        } @else {
+                            <button
+                                type="button"
+                                mat-button
+                                [color]="'primary'"
+                                [disabled]="otpForm.disabled"
+                                (click)="resendOtp()"
+                            >
+                                {{ 'auth.signIn.2fa.resend' | transloco }}
+                            </button>
+                        }
+                    </div>
+
                     <!-- Trust device checkbox -->
                     @if (!isPlatformHostSig()) {
                         <div class="mt-4">
@@ -159,7 +205,10 @@
                                 {{ 'auth.signIn.2fa.trustDevice' | transloco }}
                             </mat-checkbox>
                             <div class="ml-6 text-xs text-gray-500">
-                                {{ 'auth.signIn.2fa.trustDeviceHint' | transloco }}
+                                {{
+                                    'auth.signIn.2fa.trustDeviceHint'
+                                        | transloco
+                                }}
                             </div>
                         </div>
                     }

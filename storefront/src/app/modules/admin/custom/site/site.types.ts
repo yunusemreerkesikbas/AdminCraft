@@ -17,7 +17,7 @@ export {
     SiteSettingsPatchRequest,
     SiteSettingsResponseDto,
     SocialLinksDto,
-    UpdateSiteRequest
+    UpdateSiteRequest,
 } from '../sites/sites.types';
 
 // ========== Site Overview Types ==========
@@ -349,6 +349,32 @@ export interface UpdateSecuritySettingsRequest {
     twoFactorPolicy: TwoFactorPolicy;
 }
 
+export interface RequestTwoFactorPolicyChangeRequest {
+    twoFactorPolicy: TwoFactorPolicy;
+}
+
+export interface TwoFactorPolicyChangeRequestResponse {
+    pendingChangeId: string;
+    maskedEmail: string;
+    targetPolicy: TwoFactorPolicy;
+    expiresInSeconds: number;
+    resendCooldownSeconds: number;
+    emailSent: boolean;
+}
+
+export interface PendingOtpPolicySession {
+    pendingChangeId: string;
+    maskedEmail: string;
+    targetPolicy: TwoFactorPolicy;
+    expiresAt: number;
+    resendCooldownSeconds: number;
+}
+
+export interface ConfirmTwoFactorPolicyChangeRequest {
+    pendingChangeId: string;
+    otpCode: string;
+}
+
 // ========== Activity Trend Types ==========
 
 export interface SiteActivityTrendDay {
@@ -364,11 +390,7 @@ export type SiteActivityTrendResponse = PageWithSort<SiteActivityTrendDay>;
 
 // ========== Dashboard Tab Types ==========
 
-export type SiteDashboardTab =
-    | 'overview'
-    | 'settings'
-    | 'seo'
-    | 'advanced';
+export type SiteDashboardTab = 'overview' | 'settings' | 'seo' | 'advanced';
 
 export interface TabConfig {
     id: SiteDashboardTab;

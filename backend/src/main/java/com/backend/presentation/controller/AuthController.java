@@ -516,7 +516,8 @@ public class AuthController {
                                         authResult.email(),
                                         authResult.pendingToken(),
                                         authResult.subdomain(),
-                                        authResult.tenantId());
+                                        authResult.tenantId(),
+                                        authResult.resendCooldownSeconds());
                 }
                 return new LoginResponse(
                                 authResult.accessToken(),
@@ -530,6 +531,7 @@ public class AuthController {
                                 authResult.subdomain(),
                                 authResult.tenantId(),
                                 false,
+                                null,
                                 null);
         }
 

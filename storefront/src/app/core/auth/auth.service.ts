@@ -12,7 +12,14 @@ import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { User } from 'app/core/user/user.types';
 import { NotificationService } from 'app/shared/notifications/notification.service';
-import { catchError, finalize, Observable, of, shareReplay, switchMap } from 'rxjs';
+import {
+    catchError,
+    finalize,
+    Observable,
+    of,
+    shareReplay,
+    switchMap,
+} from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -38,6 +45,11 @@ export class AuthService {
 
     #accessTokenSig = signal<string>('');
     #refreshInProgress: Observable<boolean> | null = null;
+
+    #otpResendCooldownSig = signal(0);
+    readonly otpResendCooldownSig: Signal<number> =
+        this.#otpResendCooldownSig.asReadonly();
+    #otpResendCooldownTimer: ReturnType<typeof setInterval> | null = null;
 
     #setAccessToken(token: string): void {
         this.#accessTokenSig.set(token);
@@ -165,14 +177,19 @@ export class AuthService {
                             tenantId: response.data.tenantId,
                             subdomain: response.data.subdomain,
                         });
+                        this.#startOtpResendCooldown(
+                            response.data.resendCooldownSeconds ?? 180
+                        );
                         this.#notificationService.info(response.message ?? '');
                         return of('requires2FA' as const);
                     }
+                    this.#clearOtpResendCooldown();
                     return this.#completeSignIn(
                         response.data,
                         response.message
                     );
                 } else {
+                    this.#clearOtpResendCooldown();
                     this.#notificationService.alert(response.message);
                     return of(false);
                 }
@@ -180,6 +197,20 @@ export class AuthService {
             catchError((error) => {
                 const message = error?.error?.message || error?.message;
                 const errorCode = error?.error?.data?.errorCode;
+                const status = error?.status;
+
+                if (status === 429 || errorCode === 'OTP_RATE_LIMIT_EXCEEDED') {
+                    const retryAfter = Number(
+                        error?.error?.data?.retryAfterSeconds
+                    );
+                    this.#startOtpResendCooldown(
+                        Number.isFinite(retryAfter) && retryAfter > 0
+                            ? retryAfter
+                            : 60
+                    );
+                    this.#notificationService.alert(message);
+                    return of(false);
+                }
 
                 if (errorCode === 'ACCOUNT_LOCKED') {
                     this.#notificationService.warning(message, {
@@ -188,6 +219,7 @@ export class AuthService {
                 } else {
                     this.#notificationService.alert(message);
                 }
+                this.#clearOtpResendCooldown();
                 return of(false);
             })
         );
@@ -199,6 +231,7 @@ export class AuthService {
                 if (response.result === 'SUCCESS' && response.data) {
                     this.#requires2FASig.set(false);
                     this.#twoFactorPendingSig.set(null);
+                    this.#clearOtpResendCooldown();
                     return this.#completeSignIn(
                         response.data,
                         response.message
@@ -219,6 +252,36 @@ export class AuthService {
     cancel2FA(): void {
         this.#requires2FASig.set(false);
         this.#twoFactorPendingSig.set(null);
+        this.#clearOtpResendCooldown();
+    }
+
+    #startOtpResendCooldown(seconds: number): void {
+        this.#clearOtpResendCooldownTimer();
+        this.#otpResendCooldownSig.set(seconds);
+        if (seconds <= 0) {
+            return;
+        }
+        this.#otpResendCooldownTimer = setInterval(() => {
+            const remaining = this.#otpResendCooldownSig() - 1;
+            if (remaining <= 0) {
+                this.#otpResendCooldownSig.set(0);
+                this.#clearOtpResendCooldownTimer();
+            } else {
+                this.#otpResendCooldownSig.set(remaining);
+            }
+        }, 1000);
+    }
+
+    #clearOtpResendCooldownTimer(): void {
+        if (this.#otpResendCooldownTimer !== null) {
+            clearInterval(this.#otpResendCooldownTimer);
+            this.#otpResendCooldownTimer = null;
+        }
+    }
+
+    #clearOtpResendCooldown(): void {
+        this.#clearOtpResendCooldownTimer();
+        this.#otpResendCooldownSig.set(0);
     }
 
     #completeSignIn(
@@ -302,7 +365,10 @@ export class AuthService {
                 .custom<LoginResponse>('POST', 'refresh', {})
                 .pipe(
                     switchMap((response) => {
-                        if (response.result === 'SUCCESS' && response.data?.accessToken) {
+                        if (
+                            response.result === 'SUCCESS' &&
+                            response.data?.accessToken
+                        ) {
                             this.#setAccessToken(response.data.accessToken);
                             this.#authenticatedSig.set(true);
                             return of(true);
@@ -310,7 +376,9 @@ export class AuthService {
                         return of(false);
                     }),
                     catchError(() => of(false)),
-                    finalize(() => { this.#refreshInProgress = null; }),
+                    finalize(() => {
+                        this.#refreshInProgress = null;
+                    }),
                     shareReplay(1)
                 );
         }
@@ -333,7 +401,9 @@ export class AuthService {
             return this.signInUsingToken();
         }
         return this.refresh().pipe(
-            switchMap((refreshed) => (refreshed ? this.signInUsingToken() : of(false)))
+            switchMap((refreshed) =>
+                refreshed ? this.signInUsingToken() : of(false)
+            )
         );
     }
 

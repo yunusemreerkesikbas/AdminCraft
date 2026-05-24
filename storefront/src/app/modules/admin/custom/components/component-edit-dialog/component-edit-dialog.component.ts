@@ -270,6 +270,14 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         }
     }
 
+    protected onEntryDraftSaved(): void {
+        if (this.data.component) {
+            this.close(
+                this.data.component as unknown as ComponentCompositeResponse
+            );
+        }
+    }
+
     #createComponentComposite(
         translations: Record<Language, ComponentI18nRequest>
     ): void {
@@ -318,7 +326,10 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         const generalData = this.generalForm.value;
         const uid = (generalData.uid as string)?.trim();
 
-        this.#resolveResponsiveMediaIdForComposite(componentId, !!this.data.draftMode)
+        this.#resolveResponsiveMediaIdForComposite(
+            componentId,
+            !!this.data.draftMode
+        )
             .pipe(
                 take(1),
                 switchMap(({ responsiveMediaId, clearAfter }) => {
@@ -333,21 +344,23 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
                         ...this.#buildNavigationPayload(generalData),
                     };
                     const update$ = this.data.draftMode
-                        ? this.#componentService.updateDraftCompositeWithResponse(componentId, request)
-                        : this.#componentService.updateCompositeWithResponse(componentId, request);
-                    return update$
-                        .pipe(
-                            switchMap((response) =>
-                                clearAfter && !this.data.draftMode
-                                    ? this.#componentService
-                                          .assignResponsiveMedia(
-                                              componentId,
-                                              null
-                                          )
-                                          .pipe(map(() => response))
-                                    : of(response)
-                            )
-                        );
+                        ? this.#componentService.updateDraftCompositeWithResponse(
+                              componentId,
+                              request
+                          )
+                        : this.#componentService.updateCompositeWithResponse(
+                              componentId,
+                              request
+                          );
+                    return update$.pipe(
+                        switchMap((response) =>
+                            clearAfter && !this.data.draftMode
+                                ? this.#componentService
+                                      .assignResponsiveMedia(componentId, null)
+                                      .pipe(map(() => response))
+                                : of(response)
+                        )
+                    );
                 }),
                 take(1)
             )
@@ -431,6 +444,13 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             this.generalForm.get('responsiveMedia')?.value;
         const currentSetId = this.data.component?.responsiveMedia?.id;
 
+        if (draftMode) {
+            return of({
+                responsiveMediaId: currentSetId,
+                clearAfter: false,
+            });
+        }
+
         const desktopMediaId = this.#extractMediaId(
             responsiveValue?.desktopMedia
         );
@@ -458,7 +478,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             mobileMediaId: mobileId ?? desktopId,
         };
 
-        if (currentSetId && !draftMode) {
+        if (currentSetId) {
             return this.#mediaService
                 .updateResponsiveMedia(currentSetId, responsiveMediaRequest)
                 .pipe(

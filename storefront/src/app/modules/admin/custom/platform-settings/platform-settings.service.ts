@@ -2,7 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
 import { ApiResponse } from '@core/crud/api.types';
 import { Observable, map } from 'rxjs';
-import { PatchPlatformSettingsRequest, PlatformSettingsResponse } from './platform-settings.types';
+import {
+    ConfirmTwoFactorPolicyChangeRequest,
+    PatchPlatformSettingsRequest,
+    PlatformSettingsResponse,
+    RequestTwoFactorPolicyChangeRequest,
+    TwoFactorPolicyChangeRequestResponse,
+} from './platform-settings.types';
 
 @Injectable({ providedIn: 'root' })
 export class PlatformSettingsService {
@@ -14,9 +20,30 @@ export class PlatformSettingsService {
             .pipe(map((response) => response.data));
     }
 
-    patchSettings(payload: PatchPlatformSettingsRequest): Observable<PlatformSettingsResponse> {
+    patchSettings(
+        payload: PatchPlatformSettingsRequest
+    ): Observable<PlatformSettingsResponse> {
         return this.#apiClient
-            .patch<ApiResponse<PlatformSettingsResponse>>('platformSettings', payload)
+            .patch<
+                ApiResponse<PlatformSettingsResponse>
+            >('platformSettings', payload)
             .pipe(map((response) => response.data));
+    }
+
+    requestTwoFactorPolicyChange(
+        payload: RequestTwoFactorPolicyChangeRequest
+    ): Observable<ApiResponse<TwoFactorPolicyChangeRequestResponse>> {
+        return this.#apiClient.post<
+            ApiResponse<TwoFactorPolicyChangeRequestResponse>
+        >('platformSettingsTwoFactorRequestChange', payload);
+    }
+
+    confirmTwoFactorPolicyChange(
+        payload: ConfirmTwoFactorPolicyChangeRequest
+    ): Observable<ApiResponse<PlatformSettingsResponse>> {
+        return this.#apiClient.post<ApiResponse<PlatformSettingsResponse>>(
+            'platformSettingsTwoFactorConfirmChange',
+            payload
+        );
     }
 }

@@ -10,68 +10,135 @@
 
 <!-- Centered Content -->
 <mat-dialog-content class="modal-content">
-    @for (section of config.sections; track $index) {
-        <!-- Clean Text Section (formerly Alert Box) -->
-        @if (section.type === 'alert-box') {
-            <div class="alert-box">
-                @if (section.title) {
-                    <strong>{{ section.title }}</strong>
-                }
-                @if (section.content) {
-                    {{ section.content }}
-                }
+    @if (isOtpVariant && otpData) {
+        <div class="info-box">
+            @if (otpData.description) {
+                <div class="mb-2">{{ otpData.description }}</div>
+            }
+            <div
+                class="font-mono text-sm font-semibold text-slate-800 dark:text-slate-100"
+            >
+                {{ otpData.maskedEmail }}
+            </div>
+        </div>
+
+        @if (errorMessageSig()) {
+            <div class="alert-box alert-box-error mt-4">
+                {{ errorMessageSig() }}
             </div>
         }
 
-        <!-- Info Box (Retained for detailed info) -->
-        @if (section.type === 'info-box') {
-            <div class="info-box">
-                @if (section.title) {
-                    <strong>{{ section.title }}</strong>
-                }
-                @if (section.content) {
-                    <div>{{ section.content }}</div>
-                }
-            </div>
-        }
+        <form
+            class="spa-otp-form mt-4 w-full"
+            [formGroup]="otpForm"
+            (ngSubmit)="submitOtp()"
+        >
+            <spa-otp-input formControlName="otpCode"></spa-otp-input>
+            @if (expiresRemainingSig()) {
+                <p class="otp-expiry-counter mt-3 text-sm text-slate-600">
+                    {{ otpData.expiresInLabel }}
+                    {{ expiresRemainingSig() }}
+                </p>
+            }
+            @if (otpExpiredSig() && otpData.expiredLabel) {
+                <p class="mt-2 text-sm text-red-600">
+                    {{ otpData.expiredLabel }}
+                </p>
+            }
+        </form>
+    } @else {
+        @for (section of config.sections; track $index) {
+            @if (section.type === 'alert-box') {
+                <div
+                    class="alert-box"
+                    [class.alert-box-error]="section.alertType === 'error'"
+                >
+                    @if (section.title) {
+                        <strong>{{ section.title }}</strong>
+                    }
+                    @if (section.content) {
+                        {{ section.content }}
+                    }
+                </div>
+            }
 
-        <!-- Copyable Fields (Retained structure) -->
-        @if (section.type === 'copyable-fields') {
-            <div class="copyable-fields-section">
-                @if (section.title) {
-                    <h3 class="mb-2 font-semibold">{{ section.title }}</h3>
-                }
-                @for (field of section.fields; track field.label) {
-                    <div
-                        class="mb-2 flex items-center justify-between rounded border bg-gray-50 p-2 dark:bg-gray-800"
-                    >
-                        <div class="flex flex-col overflow-hidden">
-                            <span
-                                class="text-secondary text-xs font-bold uppercase"
-                                >{{ field.label }}</span
-                            >
-                            <span class="truncate font-mono text-sm">{{
-                                field.value
-                            }}</span>
-                        </div>
-                        <button
-                            mat-icon-button
-                            (click)="copyToClipboard(field.value, field.label)"
+            @if (section.type === 'info-box') {
+                <div class="info-box">
+                    @if (section.title) {
+                        <strong>{{ section.title }}</strong>
+                    }
+                    @if (section.content) {
+                        <div>{{ section.content }}</div>
+                    }
+                </div>
+            }
+
+            @if (section.type === 'copyable-fields') {
+                <div class="copyable-fields-section">
+                    @if (section.title) {
+                        <h3 class="mb-2 font-semibold">{{ section.title }}</h3>
+                    }
+                    @for (field of section.fields; track field.label) {
+                        <div
+                            class="mb-2 flex items-center justify-between rounded border bg-gray-50 p-2 dark:bg-gray-800"
                         >
-                            <mat-icon class="icon-size-4"
-                                >content_copy</mat-icon
+                            <div class="flex flex-col overflow-hidden">
+                                <span
+                                    class="text-secondary text-xs font-bold uppercase"
+                                    >{{ field.label }}</span
+                                >
+                                <span class="truncate font-mono text-sm">{{
+                                    field.value
+                                }}</span>
+                            </div>
+                            <button
+                                mat-icon-button
+                                (click)="
+                                    copyToClipboard(field.value, field.label)
+                                "
                             >
-                        </button>
-                    </div>
-                }
-            </div>
+                                <mat-icon class="icon-size-4"
+                                    >content_copy</mat-icon
+                                >
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
         }
     }
 </mat-dialog-content>
 
 <!-- Centered Actions -->
 <mat-dialog-actions align="center">
-    @if (config.actions && config.actions.length > 0) {
+    @if (isOtpVariant && otpData) {
+        <button
+            mat-button
+            class="text-secondary px-6"
+            type="button"
+            [disabled]="confirmingSig()"
+            (click)="close()"
+        >
+            {{ otpData.cancelLabel || 'Cancel' }}
+        </button>
+        <button
+            mat-flat-button
+            color="primary"
+            class="px-6"
+            type="button"
+            [disabled]="confirmingSig() || otpForm.invalid || otpExpiredSig()"
+            (click)="submitOtp()"
+        >
+            @if (confirmingSig()) {
+                <mat-progress-spinner
+                    class="mr-2 inline-block"
+                    [diameter]="20"
+                    [mode]="'indeterminate'"
+                ></mat-progress-spinner>
+            }
+            {{ otpData.confirmLabel || 'Confirm' }}
+        </button>
+    } @else if (config.actions && config.actions.length > 0) {
         @for (action of config.actions; track action.label) {
             @if (action.color) {
                 <button

@@ -238,6 +238,99 @@
     }
 }
 
+.se-section-title {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    h3 {
+        margin: 0;
+    }
+
+    button {
+        width: 36px;
+        height: 36px;
+        margin: 0;
+    }
+}
+
+.se-draft-badge {
+    min-width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.se-draft-list {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.se-draft-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    padding: 10px;
+
+    &__head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+
+        strong {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        button {
+            width: 32px;
+            height: 32px;
+            margin: 0;
+        }
+    }
+
+    &__meta {
+        display: flex;
+        gap: 4px;
+        color: #64748b;
+        font-size: 11px;
+        margin-top: 2px;
+    }
+}
+
+.se-draft-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+
+    span {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        padding: 2px 8px;
+        color: #475569;
+        font-size: 11px;
+    }
+}
+
 .se-selection-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;

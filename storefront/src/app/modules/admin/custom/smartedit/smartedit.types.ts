@@ -34,7 +34,9 @@ export interface SmartEditSlotSelection {
     rect: SmartEditRectInfo;
 }
 
-export type SmartEditSelection = SmartEditComponentSelection | SmartEditSlotSelection;
+export type SmartEditSelection =
+    | SmartEditComponentSelection
+    | SmartEditSlotSelection;
 
 export interface SmartEditSelectMessage {
     type: 'smartedit:select';
@@ -46,7 +48,9 @@ export interface SmartEditReloadMessage {
     payload?: undefined;
 }
 
-export type SmartEditInboundMessage = SmartEditReadyMessage | SmartEditSelectMessage;
+export type SmartEditInboundMessage =
+    | SmartEditReadyMessage
+    | SmartEditSelectMessage;
 export type SmartEditOutboundMessage = SmartEditReloadMessage;
 
 export interface PreviewTicketResponse {
@@ -57,4 +61,38 @@ export interface PreviewTicketResponse {
 
 export interface PreviewTicketIssueRequest {
     pageId?: number;
+}
+
+export type SmartEditDraftTargetType =
+    | 'COMPONENT'
+    | 'COMPONENT_I18N'
+    | 'COMPONENT_ENTRY'
+    | 'COMPONENT_ENTRY_I18N';
+
+export interface SmartEditDraftFieldChange {
+    field: string;
+    label: string;
+    before: unknown;
+    after: unknown;
+    valueType: string;
+}
+
+export interface SmartEditDraftItem {
+    draftId: number;
+    targetType: SmartEditDraftTargetType;
+    targetId: number;
+    language?: string | null;
+    componentId?: number | null;
+    componentUid?: string | null;
+    componentName?: string | null;
+    entryId?: number | null;
+    entryUid?: string | null;
+    fieldChanges: SmartEditDraftFieldChange[];
+    updatedAt?: string | null;
+    updatedBy?: number | null;
+}
+
+export interface SmartEditDraftOverview {
+    count: number;
+    drafts: SmartEditDraftItem[];
 }

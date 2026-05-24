@@ -5,7 +5,9 @@
 .spa-generic-modal-backdrop {
     background: rgba(15, 23, 42, 0.16) !important;
     backdrop-filter: blur(0);
-    transition: backdrop-filter 240ms ease, opacity 180ms ease,
+    transition:
+        backdrop-filter 240ms ease,
+        opacity 180ms ease,
         background-color 240ms ease;
 }
 
@@ -117,6 +119,14 @@
         color: var(--fuse-text-default);
         margin-bottom: 0.25rem;
     }
+
+    &.alert-box-error {
+        color: var(--fuse-warn);
+        background: rgba(var(--fuse-warn-rgb), 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        width: 100%;
+    }
 }
 
 // Info & Copyable styling (kept but modernized)
@@ -127,6 +137,16 @@
     padding: 1rem;
     width: 100%;
     margin-bottom: 1rem;
+}
+
+.spa-otp-form {
+    width: 100%;
+}
+
+.otp-expiry-counter {
+    width: 100%;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
 .copyable-fields-section {
