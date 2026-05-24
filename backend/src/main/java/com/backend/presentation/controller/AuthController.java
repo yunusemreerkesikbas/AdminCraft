@@ -34,6 +34,7 @@ import com.backend.presentation.dto.request.SetInitialPasswordRequest;
 import com.backend.presentation.dto.request.VerifyOtpRequest;
 import com.backend.presentation.dto.response.LoginResponse;
 import com.backend.presentation.dto.response.TokenValidationResponse;
+import com.backend.presentation.support.OtpRateLimitResponseFactory;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.RequestUtils;
 
@@ -131,6 +132,9 @@ public class AuthController {
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
+                } catch (OtpRateLimitExceededException ex) {
+                        return OtpRateLimitResponseFactory.tooManyRequests(
+                                        messageSource, languageCode, ex);
                 } catch (Exception ex) {
                         log.error("Login failed: {}", ex.getMessage());
                         String message = messageSource.getMessage("auth.login.error", null,

@@ -2,6 +2,7 @@ package com.backend.application.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,8 +132,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .stream()
         .map(this::cloneComponentEntry)
         .toList();
-    Map<Long, List<ComponentEntry>> entriesByComponentId = allEntries.stream()
-        .collect(Collectors.groupingBy(ComponentEntry::getComponentId));
+    Map<Long, List<ComponentEntry>> entriesByComponentId = groupEntriesByComponentId(allEntries);
     List<Long> entryIds = allEntries.stream()
         .map(ComponentEntry::getId)
         .toList();
@@ -141,6 +141,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       Map<Long, com.backend.application.cms.preview.ComponentEntryDraftPayload> entryDrafts =
           cmsDraftOverrideService.findComponentEntryDrafts(entryIds);
       allEntries.forEach(entry -> cmsDraftOverrideService.apply(entry, entryDrafts.get(entry.getId())));
+      entriesByComponentId = groupEntriesByComponentId(allEntries);
     }
 
     Map<Long, ComponentEntryI18n> entryI18nMap = new LinkedHashMap<>(componentEntryI18nRepository
@@ -311,6 +312,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       Map<Long, com.backend.application.cms.preview.ComponentEntryDraftPayload> entryDrafts =
           cmsDraftOverrideService.findComponentEntryDrafts(entryIds);
       entries.forEach(entry -> cmsDraftOverrideService.apply(entry, entryDrafts.get(entry.getId())));
+      entries = sortEntries(entries);
     }
     Map<Long, ComponentEntryI18n> entryI18nMap = entryIds.isEmpty()
         ? Map.of()
@@ -428,6 +430,19 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       return null;
     }
     return type.getUid() != null ? type.getUid() : type.getName();
+  }
+
+  private Map<Long, List<ComponentEntry>> groupEntriesByComponentId(List<ComponentEntry> entries) {
+    return sortEntries(entries).stream()
+        .collect(Collectors.groupingBy(ComponentEntry::getComponentId, LinkedHashMap::new, Collectors.toList()));
+  }
+
+  private List<ComponentEntry> sortEntries(List<ComponentEntry> entries) {
+    return entries.stream()
+        .sorted(Comparator
+            .comparingInt((ComponentEntry entry) -> entry.getSortOrder() != null ? entry.getSortOrder() : 0)
+            .thenComparingLong(entry -> entry.getId() != null ? entry.getId() : Long.MIN_VALUE))
+        .toList();
   }
 
   private Map<String, Object> buildComponentCustomFields(Component component, Long componentTypeId, Language lang) {

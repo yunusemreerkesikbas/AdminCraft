@@ -67,7 +67,7 @@ public class PlatformSettingsController {
     }
 
     @PostMapping("/two-factor/request-change")
-    public ResponseEntity<ApiResponse<TwoFactorPolicyChangeRequestResponse>> requestTwoFactorPolicyChange(
+    public ResponseEntity<?> requestTwoFactorPolicyChange(
             @Valid @RequestBody RequestTwoFactorPolicyChangeRequest request,
             HttpServletRequest httpRequest,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -80,10 +80,8 @@ public class PlatformSettingsController {
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, TwoFactorPolicyChangeRequestResponse.from(result)));
         } catch (OtpRateLimitExceededException ex) {
-            String message = messageSource.getMessage("auth.otp.rateLimit", null,
-                    Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(ApiResponse.error(message));
+            return com.backend.presentation.support.OtpRateLimitResponseFactory.tooManyRequests(
+                    messageSource, languageCode, ex);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(ex.getMessage()));
@@ -115,7 +113,7 @@ public class PlatformSettingsController {
         } catch (InvalidCredentialsException ex) {
             String message = messageSource.getMessage("auth.otp.invalid", null,
                     Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Error confirming platform two-factor policy change", ex);

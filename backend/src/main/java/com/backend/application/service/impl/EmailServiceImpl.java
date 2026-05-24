@@ -9,6 +9,7 @@ import com.backend.application.dto.email.EmailContext;
 import com.backend.application.dto.email.EmailResult;
 import com.backend.application.service.EmailService;
 import com.backend.application.service.TenantMailMarketingService;
+import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.application.service.TenantModuleAccessService;
 import com.backend.application.service.mail.TemplateVariableRenderer;
 import com.backend.domain.entity.MailTemplate;
@@ -17,6 +18,7 @@ import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ModuleCode;
 import com.backend.domain.port.EmailTemplateRendererPort;
 import com.backend.domain.port.MailSenderPort;
+import com.backend.domain.port.OtpConfig;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.MailTemplateRepository;
 import com.backend.shared.common.LogSanitizer;
@@ -38,6 +40,8 @@ public class EmailServiceImpl implements EmailService {
     private final TenantMailMarketingService tenantMailMarketingService;
     private final MailTemplateRepository mailTemplateRepository;
     private final TemplateVariableRenderer templateVariableRenderer;
+    private final OtpConfig otpConfig;
+    private final GlobalRuntimeConfigService globalRuntimeConfigService;
     @Value("${app.frontend.admin-url:http://localhost:4200}")
     private String adminPanelUrl;
 
@@ -60,13 +64,17 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public EmailResult sendOtpEmail(String toEmail, String otpCode, Language language) {
         log.info("[MAIL] otp dispatch requested | recipient={}", LogSanitizer.maskEmail(toEmail));
+        if (isConsoleEmailProvider()) {
+            return logConsoleOtp(EmailType.LOGIN_OTP, toEmail, otpCode);
+        }
+
         EmailContext context = EmailContext.builder()
                 .to(toEmail)
                 .emailType(EmailType.LOGIN_OTP)
                 .language(language)
                 .variables(Map.of(
                         "otpCode", otpCode,
-                        "expiryMinutes", 5
+                        "expiryMinutes", expiryMinutes()
                 ))
                 .build();
 
@@ -76,13 +84,17 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public EmailResult sendOperationOtpEmail(String toEmail, String otpCode, Language language) {
         log.info("[MAIL] operation-otp dispatch requested | recipient={}", LogSanitizer.maskEmail(toEmail));
+        if (isConsoleEmailProvider()) {
+            return logConsoleOtp(EmailType.OPERATION_OTP, toEmail, otpCode);
+        }
+
         EmailContext context = EmailContext.builder()
                 .to(toEmail)
                 .emailType(EmailType.OPERATION_OTP)
                 .language(language)
                 .variables(Map.of(
                         "otpCode", otpCode,
-                        "expiryMinutes", 5
+                        "expiryMinutes", expiryMinutes()
                 ))
                 .build();
 
@@ -151,6 +163,23 @@ public class EmailServiceImpl implements EmailService {
         Language normalized = (language == Language.TR) ? Language.TR : Language.EN;
         String subjectKey = "email.subject." + emailType.getCode();
         return templateRenderer.getSubject(subjectKey, normalized);
+    }
+
+    private boolean isConsoleEmailProvider() {
+        return "console".equalsIgnoreCase(globalRuntimeConfigService.getEmailProvider());
+    }
+
+    private EmailResult logConsoleOtp(EmailType emailType, String toEmail, String otpCode) {
+        log.info(
+                "[MAIL:CONSOLE] OTP type={} recipient={} code={}",
+                emailType,
+                LogSanitizer.maskEmail(toEmail),
+                otpCode);
+        return EmailResult.success("console-otp");
+    }
+
+    private int expiryMinutes() {
+        return Math.max(1, otpConfig.getExpirySeconds() / 60);
     }
 
     private String buildPasswordResetLink(String token, String subdomain) {

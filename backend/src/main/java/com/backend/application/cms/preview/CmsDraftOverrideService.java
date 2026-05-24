@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +50,9 @@ import com.backend.domain.repository.SlotComponentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CmsDraftOverrideService {
@@ -782,7 +785,10 @@ public class CmsDraftOverrideService {
         try {
             return objectMapper.readValue(payload, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
         } catch (Exception ex) {
-            return Map.of();
+            String correlationId = MDC.get("correlationId");
+            log.error("Failed to parse CMS draft custom data payload correlationId={} payloadLength={}",
+                correlationId, payload.length(), ex);
+            throw new IllegalStateException("Failed to parse CMS draft custom data payload", ex);
         }
     }
 
@@ -791,7 +797,11 @@ public class CmsDraftOverrideService {
         String componentName = "draft";
         if (draft.getTargetType() == CmsDraftTargetType.COMPONENT_ENTRY || draft.getTargetType() == CmsDraftTargetType.COMPONENT_ENTRY_I18N) {
             Optional<ComponentEntry> entry = componentEntryRepository.findById(draft.getTargetId());
-            componentId = entry.map(ComponentEntry::getComponentId).orElse(draft.getTargetId());
+            componentId = entry.map(ComponentEntry::getComponentId).orElse(null);
+        }
+        if (componentId == null) {
+            log.warn("Skipping draft discard activity because component could not be resolved for draft {}", draft.getId());
+            return;
         }
         Optional<Component> component = componentRepository.findById(componentId);
         if (component.isPresent()) {

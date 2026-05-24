@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
@@ -30,6 +31,9 @@ class EmailTemplatesRenderTest {
                 .contains("Craftive")
                 .contains(templateCase.expectedText())
                 .doesNotContain("${");
+        if (templateCase.variables().containsKey("otpCode")) {
+            assertThat(html).contains(templateCase.variables().get("otpCode").toString());
+        }
     }
 
     static Stream<TemplateCase> templates() {
@@ -92,7 +96,7 @@ class EmailTemplatesRenderTest {
         resolver.setCharacterEncoding("UTF-8");
         resolver.setCacheable(false);
 
-        TemplateEngine engine = new TemplateEngine();
+        TemplateEngine engine = new SpringTemplateEngine();
         engine.setTemplateResolver(resolver);
         return engine;
     }

@@ -16,6 +16,7 @@ It supports a split model:
 Security scope note:
 
 - Tenant `twoFactorPolicy` is managed from Site Dashboard Security tab via a **two-step email verification** flow (`POST /api/sites/security/two-factor/request-change` then `confirm-change`). Direct `PATCH /api/sites/security` with `twoFactorPolicy` is rejected.
+- The admin UI keeps a **pending OTP session** (`pendingChangeId`, expiry, masked email). Closing the OTP modal does not revert the form; saving the same policy again while the session is still valid reopens the modal **without** calling `request-change` again (no duplicate email). OTP resend cooldown for this flow follows tenant `security.otp.resend_cooldown_seconds` (see [Config Control Panel](config-control-panel.md)).
 - This remains separate from Config Control Panel global runtime email overrides.
 
 ## Admin API (tenant-scoped, authenticated)

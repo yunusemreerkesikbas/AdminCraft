@@ -13,6 +13,11 @@ public class OtpConfigImpl implements OtpConfig {
     private final OtpProperties otpProperties;
 
     @Override
+    public int getLength() {
+        return otpProperties.getLength();
+    }
+
+    @Override
     public int getExpirySeconds() {
         return otpProperties.getExpirySeconds();
     }

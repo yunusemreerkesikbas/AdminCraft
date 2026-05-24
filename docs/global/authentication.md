@@ -343,7 +343,7 @@ Set-Cookie: craftive_rt=eyJ...; HttpOnly; Secure; SameSite=Strict; Path=/api/aut
 
 **Error Responses**:
 - `401 Unauthorized`: Invalid OTP code or expired session
-- `429 Too Many Requests`: OTP request rate limit exceeded (3 per 5 minutes)
+- `429 Too Many Requests`: OTP resend cooldown active (`auth.otp.rate.limit.exceeded`); response `data.retryAfterSeconds` is seconds until the next OTP email may be sent
 
 ### OTP Configuration
 
@@ -352,8 +352,8 @@ Set-Cookie: craftive_rt=eyJ...; HttpOnly; Secure; SameSite=Strict; Path=/api/aut
 | OTP Length | 6 digits | All |
 | OTP Expiry | 5 minutes | All |
 | Max Attempts | 5 | All |
-| Request Rate Limit | 3 per 5 minutes | All |
-| Rate Limit Cleanup | Every 5 minutes | All |
+| Resend cooldown (tenant) | `security.otp.resend_cooldown_seconds` in tenant `config_properties` (default `180`, range `60`–`3600`) | Tenant `LOGIN_OTP` and tenant `OPERATION_OTP` |
+| Resend cooldown (platform) | `app.security.otp.resend-cooldown-seconds` in `application.yml` (default `180`) | Platform admin `LOGIN_OTP` and platform `OPERATION_OTP` |
 | Bypass Code (`OTP_BYPASS_CODE`) | unset / empty by default | Optional: only honored when Spring active profiles include **`dev` or `stage`** (`OtpProperties` clears the value at startup for other profiles). Never commit a weak bypass. |
 
 Configuration in `application.yml`:
@@ -364,6 +364,9 @@ app:
     expiry-seconds: 300
     max-attempts: 5
     bypass-code: ${OTP_BYPASS_CODE:}  # optional; dev/stage only (see OtpProperties)
+  security:
+    otp:
+      resend-cooldown-seconds: ${APP_SECURITY_OTP_RESEND_COOLDOWN_SECONDS:180}
 ```
 
 **Security Notes**:
@@ -850,8 +853,7 @@ CREATE TABLE refresh_tokens (
 - **Constant-time comparison** (`MessageDigest.isEqual()`) used during OTP validation — prevents timing attacks
 - 5-minute expiry window
 - Max 5 verification attempts before token invalidation
-- **Request rate limiting**: Max 3 OTP requests per email per 5-minute window
-- **Rate limiter cleanup**: Scheduled task removes expired entries every 5 minutes (prevents memory leak)
+- **Resend cooldown**: After each OTP email, the same email + rate-limit scope cannot trigger another send until cooldown elapses (`OtpRateLimitService`). Duration is shared per tenant/platform via `security.otp.resend_cooldown_seconds` (tenant) or `app.security.otp.resend-cooldown-seconds` (platform), but **LOGIN_OTP and OPERATION_OTP use separate scope keys** (`{tenantId}:login` vs `{tenantId}:operation`, `platform:login` vs `platform:operation`) so a login OTP does not block a policy-change OTP. HTTP `429` includes localized `message` and `data.retryAfterSeconds`. `POST /auth/login` returns 429 via `OtpRateLimitResponseFactory` when cooldown is active (not 401).
 - IP address and user agent logged
 - **Bypass code protection**: Automatically disabled in non-dev profiles
 

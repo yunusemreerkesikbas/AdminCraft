@@ -13,10 +13,10 @@ public final class TwoFactorPolicyChangeMetadata {
         return PREFIX + policy.name();
     }
 
-    public static TwoFactorPolicy parse(String userAgent) {
-        if (userAgent == null || !userAgent.startsWith(PREFIX)) {
+    public static TwoFactorPolicy parse(String metadata) {
+        if (metadata == null || !metadata.startsWith(PREFIX)) {
             throw new IllegalStateException("Missing pending two-factor policy metadata on verification token");
         }
-        return TwoFactorPolicy.valueOf(userAgent.substring(PREFIX.length()));
+        return TwoFactorPolicy.valueOf(metadata.substring(PREFIX.length()));
     }
 }

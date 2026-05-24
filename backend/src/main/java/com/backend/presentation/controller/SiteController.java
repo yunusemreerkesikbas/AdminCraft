@@ -602,7 +602,7 @@ public class SiteController {
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/security/two-factor/request-change")
     @Operation(summary = "Request two-factor policy change", description = "Sends an operation OTP to the acting admin email before applying a policy change")
-    public ResponseEntity<ApiResponse<TwoFactorPolicyChangeRequestResponse>> requestTwoFactorPolicyChange(
+    public ResponseEntity<?> requestTwoFactorPolicyChange(
             @Valid @RequestBody RequestTwoFactorPolicyChangeRequest request,
             HttpServletRequest httpRequest,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -617,10 +617,8 @@ public class SiteController {
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, TwoFactorPolicyChangeRequestResponse.from(result)));
         } catch (OtpRateLimitExceededException ex) {
-            String message = messageSource.getMessage("auth.otp.rateLimit", null,
-                    Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(ApiResponse.error(message));
+            return com.backend.presentation.support.OtpRateLimitResponseFactory.tooManyRequests(
+                    messageSource, languageCode, ex);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(ex.getMessage()));
@@ -654,7 +652,7 @@ public class SiteController {
         } catch (InvalidCredentialsException ex) {
             String message = messageSource.getMessage("auth.otp.invalid", null,
                     Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Error confirming two-factor policy change", ex);
