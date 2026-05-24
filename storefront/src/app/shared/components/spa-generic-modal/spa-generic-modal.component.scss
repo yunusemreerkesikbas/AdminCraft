@@ -5,7 +5,9 @@
 .spa-generic-modal-backdrop {
     background: rgba(15, 23, 42, 0.16) !important;
     backdrop-filter: blur(0);
-    transition: backdrop-filter 240ms ease, opacity 180ms ease,
+    transition:
+        backdrop-filter 240ms ease,
+        opacity 180ms ease,
         background-color 240ms ease;
 }
 

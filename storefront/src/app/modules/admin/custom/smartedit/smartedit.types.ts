@@ -34,7 +34,9 @@ export interface SmartEditSlotSelection {
     rect: SmartEditRectInfo;
 }
 
-export type SmartEditSelection = SmartEditComponentSelection | SmartEditSlotSelection;
+export type SmartEditSelection =
+    | SmartEditComponentSelection
+    | SmartEditSlotSelection;
 
 export interface SmartEditSelectMessage {
     type: 'smartedit:select';
@@ -46,7 +48,9 @@ export interface SmartEditReloadMessage {
     payload?: undefined;
 }
 
-export type SmartEditInboundMessage = SmartEditReadyMessage | SmartEditSelectMessage;
+export type SmartEditInboundMessage =
+    | SmartEditReadyMessage
+    | SmartEditSelectMessage;
 export type SmartEditOutboundMessage = SmartEditReloadMessage;
 
 export interface PreviewTicketResponse {

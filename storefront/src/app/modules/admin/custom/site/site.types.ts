@@ -17,7 +17,7 @@ export {
     SiteSettingsPatchRequest,
     SiteSettingsResponseDto,
     SocialLinksDto,
-    UpdateSiteRequest
+    UpdateSiteRequest,
 } from '../sites/sites.types';
 
 // ========== Site Overview Types ==========
@@ -390,11 +390,7 @@ export type SiteActivityTrendResponse = PageWithSort<SiteActivityTrendDay>;
 
 // ========== Dashboard Tab Types ==========
 
-export type SiteDashboardTab =
-    | 'overview'
-    | 'settings'
-    | 'seo'
-    | 'advanced';
+export type SiteDashboardTab = 'overview' | 'settings' | 'seo' | 'advanced';
 
 export interface TabConfig {
     id: SiteDashboardTab;

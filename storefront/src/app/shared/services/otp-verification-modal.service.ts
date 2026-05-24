@@ -48,11 +48,11 @@ export class OtpVerificationModalService {
                 expiredLabel: options.expiredLabel,
                 onConfirm: options.onConfirm,
                 cancelLabel:
-                    options.cancelLabel
-                    ?? this.#transloco.translate('common.cancel'),
+                    options.cancelLabel ??
+                    this.#transloco.translate('common.cancel'),
                 confirmLabel:
-                    options.confirmLabel
-                    ?? this.#transloco.translate('common.confirm'),
+                    options.confirmLabel ??
+                    this.#transloco.translate('common.confirm'),
             },
             sections: [],
         };

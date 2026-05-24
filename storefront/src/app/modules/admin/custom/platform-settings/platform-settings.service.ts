@@ -20,19 +20,22 @@ export class PlatformSettingsService {
             .pipe(map((response) => response.data));
     }
 
-    patchSettings(payload: PatchPlatformSettingsRequest): Observable<PlatformSettingsResponse> {
+    patchSettings(
+        payload: PatchPlatformSettingsRequest
+    ): Observable<PlatformSettingsResponse> {
         return this.#apiClient
-            .patch<ApiResponse<PlatformSettingsResponse>>('platformSettings', payload)
+            .patch<
+                ApiResponse<PlatformSettingsResponse>
+            >('platformSettings', payload)
             .pipe(map((response) => response.data));
     }
 
     requestTwoFactorPolicyChange(
         payload: RequestTwoFactorPolicyChangeRequest
     ): Observable<ApiResponse<TwoFactorPolicyChangeRequestResponse>> {
-        return this.#apiClient.post<ApiResponse<TwoFactorPolicyChangeRequestResponse>>(
-            'platformSettingsTwoFactorRequestChange',
-            payload
-        );
+        return this.#apiClient.post<
+            ApiResponse<TwoFactorPolicyChangeRequestResponse>
+        >('platformSettingsTwoFactorRequestChange', payload);
     }
 
     confirmTwoFactorPolicyChange(

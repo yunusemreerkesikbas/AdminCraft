@@ -12,10 +12,7 @@ import {
     inject,
     signal,
 } from '@angular/core';
-import {
-    ControlValueAccessor,
-    NG_VALUE_ACCESSOR,
-} from '@angular/forms';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 const OTP_LENGTH = 6;
 
@@ -34,13 +31,17 @@ const OTP_LENGTH = 6;
         },
     ],
 })
-export class SpaOtpInputComponent implements ControlValueAccessor, AfterViewInit {
+export class SpaOtpInputComponent
+    implements ControlValueAccessor, AfterViewInit
+{
     readonly #cdr = inject(ChangeDetectorRef);
 
     @Input() label = '';
     @Input() length = OTP_LENGTH;
 
-    @ViewChildren('digitInput') digitInputs!: QueryList<ElementRef<HTMLInputElement>>;
+    @ViewChildren('digitInput') digitInputs!: QueryList<
+        ElementRef<HTMLInputElement>
+    >;
 
     protected readonly digitsSig = signal<string[]>(Array(OTP_LENGTH).fill(''));
 
@@ -57,8 +58,13 @@ export class SpaOtpInputComponent implements ControlValueAccessor, AfterViewInit
     }
 
     writeValue(value: string | null): void {
-        const normalized = (value ?? '').replace(/\D/g, '').slice(0, this.length);
-        const digits = Array.from({ length: this.length }, (_, index) => normalized[index] ?? '');
+        const normalized = (value ?? '')
+            .replace(/\D/g, '')
+            .slice(0, this.length);
+        const digits = Array.from(
+            { length: this.length },
+            (_, index) => normalized[index] ?? ''
+        );
         this.digitsSig.set(digits);
         this.#cdr.markForCheck();
     }
@@ -103,7 +109,11 @@ export class SpaOtpInputComponent implements ControlValueAccessor, AfterViewInit
             return;
         }
 
-        if (event.key === 'Backspace' && !this.digitsSig()[index] && index > 0) {
+        if (
+            event.key === 'Backspace' &&
+            !this.digitsSig()[index] &&
+            index > 0
+        ) {
             event.preventDefault();
             const next = [...this.digitsSig()];
             next[index - 1] = '';
@@ -137,7 +147,10 @@ export class SpaOtpInputComponent implements ControlValueAccessor, AfterViewInit
             return;
         }
 
-        const next = Array.from({ length: this.length }, (_, index) => normalized[index] ?? '');
+        const next = Array.from(
+            { length: this.length },
+            (_, index) => normalized[index] ?? ''
+        );
         this.digitsSig.set(next);
         this.#emitValue(next);
         this.#focusIndex(Math.min(normalized.length, this.length - 1));

@@ -12,7 +12,14 @@ import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { User } from 'app/core/user/user.types';
 import { NotificationService } from 'app/shared/notifications/notification.service';
-import { catchError, finalize, Observable, of, shareReplay, switchMap } from 'rxjs';
+import {
+    catchError,
+    finalize,
+    Observable,
+    of,
+    shareReplay,
+    switchMap,
+} from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -170,14 +177,19 @@ export class AuthService {
                             tenantId: response.data.tenantId,
                             subdomain: response.data.subdomain,
                         });
+                        this.#startOtpResendCooldown(
+                            response.data.resendCooldownSeconds ?? 180
+                        );
                         this.#notificationService.info(response.message ?? '');
                         return of('requires2FA' as const);
                     }
+                    this.#clearOtpResendCooldown();
                     return this.#completeSignIn(
                         response.data,
                         response.message
                     );
                 } else {
+                    this.#clearOtpResendCooldown();
                     this.#notificationService.alert(response.message);
                     return of(false);
                 }
@@ -187,10 +199,7 @@ export class AuthService {
                 const errorCode = error?.error?.data?.errorCode;
                 const status = error?.status;
 
-                if (
-                    status === 429 ||
-                    errorCode === 'OTP_RATE_LIMIT_EXCEEDED'
-                ) {
+                if (status === 429 || errorCode === 'OTP_RATE_LIMIT_EXCEEDED') {
                     const retryAfter = Number(
                         error?.error?.data?.retryAfterSeconds
                     );
@@ -210,6 +219,7 @@ export class AuthService {
                 } else {
                     this.#notificationService.alert(message);
                 }
+                this.#clearOtpResendCooldown();
                 return of(false);
             })
         );
@@ -221,6 +231,7 @@ export class AuthService {
                 if (response.result === 'SUCCESS' && response.data) {
                     this.#requires2FASig.set(false);
                     this.#twoFactorPendingSig.set(null);
+                    this.#clearOtpResendCooldown();
                     return this.#completeSignIn(
                         response.data,
                         response.message
@@ -354,7 +365,10 @@ export class AuthService {
                 .custom<LoginResponse>('POST', 'refresh', {})
                 .pipe(
                     switchMap((response) => {
-                        if (response.result === 'SUCCESS' && response.data?.accessToken) {
+                        if (
+                            response.result === 'SUCCESS' &&
+                            response.data?.accessToken
+                        ) {
                             this.#setAccessToken(response.data.accessToken);
                             this.#authenticatedSig.set(true);
                             return of(true);
@@ -362,7 +376,9 @@ export class AuthService {
                         return of(false);
                     }),
                     catchError(() => of(false)),
-                    finalize(() => { this.#refreshInProgress = null; }),
+                    finalize(() => {
+                        this.#refreshInProgress = null;
+                    }),
                     shareReplay(1)
                 );
         }
@@ -385,7 +401,9 @@ export class AuthService {
             return this.signInUsingToken();
         }
         return this.refresh().pipe(
-            switchMap((refreshed) => (refreshed ? this.signInUsingToken() : of(false)))
+            switchMap((refreshed) =>
+                refreshed ? this.signInUsingToken() : of(false)
+            )
         );
     }
 

@@ -6,9 +6,16 @@ import {
     inject,
     signal,
 } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+    FormBuilder,
+    FormGroup,
+    ReactiveFormsModule,
+    Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
+import { ApiResponse } from '@core/crud/api.types';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
@@ -22,9 +29,7 @@ import {
     readApiErrorMessage,
     readOtpRateLimitRetrySeconds,
 } from '@shared/utils/otp-rate-limit.util';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { map, of, switchMap } from 'rxjs';
-import { ApiResponse } from '@core/crud/api.types';
 import { PlatformSettingsService } from './platform-settings.service';
 import {
     PatchPlatformSettingsRequest,
@@ -69,7 +74,10 @@ export class SpaPlatformSettingsComponent implements OnInit {
         platformName: ['', [Validators.required, Validators.maxLength(100)]],
         defaultLanguage: ['', Validators.required],
         defaultCurrency: ['', Validators.required],
-        emailFromAddress: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+        emailFromAddress: [
+            '',
+            [Validators.required, Validators.email, Validators.maxLength(255)],
+        ],
         emailFromName: ['', [Validators.required, Validators.maxLength(100)]],
         twoFactorPolicy: ['DISABLED', Validators.required],
     });
@@ -86,16 +94,22 @@ export class SpaPlatformSettingsComponent implements OnInit {
         { value: 'GBP', label: 'GBP - British Pound' },
     ];
 
-    protected readonly policyOptions: { value: TwoFactorPolicy; label: string; description: string }[] = [
+    protected readonly policyOptions: {
+        value: TwoFactorPolicy;
+        label: string;
+        description: string;
+    }[] = [
         {
             value: 'DISABLED',
             label: 'admin.platform.settings.security.twoFactor.policy.disabled',
-            description: 'admin.platform.settings.security.twoFactor.policy.disabledDesc',
+            description:
+                'admin.platform.settings.security.twoFactor.policy.disabledDesc',
         },
         {
             value: 'REQUIRED',
             label: 'admin.platform.settings.security.twoFactor.policy.required',
-            description: 'admin.platform.settings.security.twoFactor.policy.requiredDesc',
+            description:
+                'admin.platform.settings.security.twoFactor.policy.requiredDesc',
         },
     ];
 
@@ -122,7 +136,9 @@ export class SpaPlatformSettingsComponent implements OnInit {
             return;
         }
 
-        const dirty = FormUtils.getDirtyValues<PatchPlatformSettingsRequest>(this.form);
+        const dirty = FormUtils.getDirtyValues<PatchPlatformSettingsRequest>(
+            this.form
+        );
         const { twoFactorPolicy, ...rest } = dirty;
 
         if (twoFactorPolicy) {
@@ -151,8 +167,8 @@ export class SpaPlatformSettingsComponent implements OnInit {
                     this.#cacheSession(response.data);
                     if (response.data.emailSent !== false) {
                         this.#notify.success(
-                            response.message
-                                || 'admin.platform.settings.security.twoFactor.otpSent'
+                            response.message ||
+                                'admin.platform.settings.security.twoFactor.otpSent'
                         );
                     }
                     this.#openOtpModal(response.data);
@@ -252,7 +268,8 @@ export class SpaPlatformSettingsComponent implements OnInit {
             expiredLabel: this.#transloco.translate(
                 'admin.platform.settings.security.twoFactor.expired'
             ),
-            onConfirm: (otpCode) => this.#confirmTwoFactorChange(pendingChangeId, otpCode),
+            onConfirm: (otpCode) =>
+                this.#confirmTwoFactorChange(pendingChangeId, otpCode),
         });
 
         this.#otpModalHandle.dialogRef
@@ -282,11 +299,14 @@ export class SpaPlatformSettingsComponent implements OnInit {
                     }
                     return this.#service.patchSettings(pending).pipe(
                         map(
-                            (patched): ApiResponse<PlatformSettingsResponse> => ({
+                            (
+                                patched
+                            ): ApiResponse<PlatformSettingsResponse> => ({
                                 ...response,
                                 data: {
                                     ...patched,
-                                    twoFactorPolicy: response.data.twoFactorPolicy,
+                                    twoFactorPolicy:
+                                        response.data.twoFactorPolicy,
                                 },
                             })
                         )
@@ -303,7 +323,8 @@ export class SpaPlatformSettingsComponent implements OnInit {
                     this.#pendingPatchSig.set({});
                     this.#populateForm(response.data);
                     this.#notify.success(
-                        response.message || 'admin.platform.settings.messages.saveSuccess'
+                        response.message ||
+                            'admin.platform.settings.messages.saveSuccess'
                     );
                 },
                 error: (error) => {
@@ -322,12 +343,15 @@ export class SpaPlatformSettingsComponent implements OnInit {
                 next: (data) => {
                     this.#populateForm(data);
                     this.savingSig.set(false);
-                    this.#notify.success('admin.platform.settings.messages.saveSuccess');
+                    this.#notify.success(
+                        'admin.platform.settings.messages.saveSuccess'
+                    );
                 },
                 error: (error) => {
                     this.savingSig.set(false);
                     this.#notify.alert(
-                        error?.error?.message || 'admin.platform.settings.messages.saveFailed'
+                        error?.error?.message ||
+                            'admin.platform.settings.messages.saveFailed'
                     );
                 },
             });
@@ -345,7 +369,9 @@ export class SpaPlatformSettingsComponent implements OnInit {
                 },
                 error: () => {
                     this.loadingSig.set(false);
-                    this.#notify.alert('admin.platform.settings.messages.loadFailed');
+                    this.#notify.alert(
+                        'admin.platform.settings.messages.loadFailed'
+                    );
                 },
             });
     }

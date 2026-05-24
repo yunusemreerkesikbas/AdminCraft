@@ -96,7 +96,9 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
 
     protected canSaveSig = computed(
         () =>
-            this.generalForm?.valid && !this.isSubmitting() && !this.isLoadingSig()
+            this.generalForm?.valid &&
+            !this.isSubmitting() &&
+            !this.isLoadingSig()
     );
 
     protected readonly tabsSig = computed<TabDefinition[]>(() => [
@@ -129,7 +131,10 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         });
     }
 
-    #buildResponsiveMediaValue(): { desktopMedia: any; mobileMedia: any } | null {
+    #buildResponsiveMediaValue(): {
+        desktopMedia: any;
+        mobileMedia: any;
+    } | null {
         const responsive = this.data.entry?.responsiveMedia;
         if (responsive) {
             return {
@@ -159,6 +164,10 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         const mediaValue = this.generalForm.value.responsiveMedia;
         const currentSetId = this.data.entry?.responsiveMedia?.id;
 
+        if (this.data.draftMode) {
+            return of(currentSetId);
+        }
+
         const desktopMediaId = this.#extractMediaId(mediaValue?.desktopMedia);
         const mobileMediaId = this.#extractMediaId(mediaValue?.mobileMedia);
 
@@ -171,7 +180,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             mobileMediaId,
         };
 
-        if (currentSetId && !this.data.draftMode) {
+        if (currentSetId) {
             return this.#mediaService
                 .updateResponsiveMedia(currentSetId, request)
                 .pipe(map(() => currentSetId));
@@ -413,7 +422,8 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
 
         Object.keys(formData).forEach((key) => {
             const value = formData[key];
-            const shouldSkipMediaUid = shouldClearLegacyMediaUid && key === 'mediaUid';
+            const shouldSkipMediaUid =
+                shouldClearLegacyMediaUid && key === 'mediaUid';
 
             if (
                 baseFields.includes(key) ||

@@ -1,15 +1,33 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, TemplateRef, viewChild, input, output } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    inject,
+    input,
+    output,
+    TemplateRef,
+    viewChild,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { TranslocoModule } from '@jsverse/transloco';
-import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
+import {
+    GridAction,
+    GridColumn,
+    SpaAdminGridComponent,
+} from '@shared/components/spa-admin-grid';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { finalize, take } from 'rxjs';
-import { ComponentEntry, CreateEntryRequest, UpdateEntryRequest } from '../../models/component-entry.types';
+import {
+    ComponentEntry,
+    CreateEntryRequest,
+    UpdateEntryRequest,
+} from '../../models/component-entry.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { ComponentEntryFormComponent } from '../component-entry-form/component-entry-form.component';
 
@@ -24,10 +42,17 @@ import { ComponentEntryFormComponent } from '../component-entry-form/component-e
         MatIconModule,
         MatTooltipModule,
         TranslocoModule,
-        SpaAdminGridComponent
-    ]
+        SpaAdminGridComponent,
+    ],
 })
-export class ComponentEntryListComponent extends BaseCrudListComponent<ComponentEntry, CreateEntryRequest, UpdateEntryRequest> implements AfterViewInit {
+export class ComponentEntryListComponent
+    extends BaseCrudListComponent<
+        ComponentEntry,
+        CreateEntryRequest,
+        UpdateEntryRequest
+    >
+    implements AfterViewInit
+{
     protected service = inject(ComponentEntryService);
     protected store = new CrudStore<ComponentEntry>();
 
@@ -42,17 +67,31 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     protected draftMode = input<boolean>(false);
     readonly draftSaved = output<void>();
 
-    protected infoTemplate = viewChild.required<TemplateRef<any>>('infoTemplate');
+    protected infoTemplate =
+        viewChild.required<TemplateRef<any>>('infoTemplate');
 
     protected columns: GridColumn<ComponentEntry>[] = [];
 
     protected readonly liveActions: GridAction<ComponentEntry>[] = [
-        { icon: 'heroicons_outline:pencil-square', label: 'admin.common.edit', action: 'edit' },
-        { icon: 'heroicons_outline:trash', label: 'admin.common.delete', action: 'delete', color: 'warn' }
+        {
+            icon: 'heroicons_outline:pencil-square',
+            label: 'admin.common.edit',
+            action: 'edit',
+        },
+        {
+            icon: 'heroicons_outline:trash',
+            label: 'admin.common.delete',
+            action: 'delete',
+            color: 'warn',
+        },
     ];
 
     protected readonly draftActions: GridAction<ComponentEntry>[] = [
-        { icon: 'heroicons_outline:pencil-square', label: 'admin.common.edit', action: 'edit' }
+        {
+            icon: 'heroicons_outline:pencil-square',
+            label: 'admin.common.edit',
+            action: 'edit',
+        },
     ];
 
     protected actions: GridAction<ComponentEntry>[] = this.liveActions;
@@ -68,14 +107,14 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                 label: 'admin.common.grid.name',
                 type: 'custom',
                 template: this.infoTemplate(),
-                width: '1fr'
+                width: '1fr',
             },
             {
                 key: 'isVisible',
                 label: 'admin.common.fields.isVisible',
                 type: 'text',
-                width: '120px'
-            }
+                width: '120px',
+            },
         ];
         this.actions = this.draftMode() ? this.draftActions : this.liveActions;
         this.#cdr.markForCheck();
@@ -86,7 +125,9 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     }
 
     protected override onLoadSuccess(items: ComponentEntry[]): void {
-        const sortedItems = [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+        const sortedItems = [...items].sort(
+            (a, b) => a.sortOrder - b.sortOrder
+        );
         this.store.setItems(sortedItems);
     }
 
@@ -94,7 +135,10 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
         this.#notify.alert(error?.error?.message ?? '');
     }
 
-    protected onGridAction(event: { action: string; item: ComponentEntry }): void {
+    protected onGridAction(event: {
+        action: string;
+        item: ComponentEntry;
+    }): void {
         switch (event.action) {
             case 'edit':
                 this.editEntry(event.item.id);
@@ -120,11 +164,12 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                 componentId: this.componentId(),
                 componentTypeId: this.componentTypeId(),
                 languages: this.languages(),
-                sortOrder
-            }
+                sortOrder,
+            },
         });
 
-        dialogRef.afterClosed()
+        dialogRef
+            .afterClosed()
             .pipe(take(1))
             .subscribe((success) => {
                 if (success) {
@@ -137,38 +182,43 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
         const items = this.store.items();
         if (items.length === 0) return 0;
 
-        const maxSortOrder = Math.max(...items.map(item => item.sortOrder));
+        const maxSortOrder = Math.max(...items.map((item) => item.sortOrder));
         return maxSortOrder + 1;
     }
 
     protected editEntry(entryId: number): void {
         this.store.setLoading(true);
-        this.service.getEntryDetail(entryId)
+        this.service
+            .getEntryDetail(entryId)
             .pipe(
                 take(1),
                 finalize(() => this.store.setLoading(false))
             )
             .subscribe({
                 next: (detail) => {
-                    const dialogRef = this.#dialog.open(ComponentEntryFormComponent, {
-                        width: '800px',
-                        maxHeight: '90vh',
-                        disableClose: true,
-                        data: {
-                            mode: 'edit',
-                            componentId: this.componentId(),
-                            componentTypeId: this.componentTypeId(),
-                            languages: this.languages(),
-                            entryId: entryId,
-                            entry: detail,
-                            translations: detail.translations,
-                            draftMode: this.draftMode()
+                    const dialogRef = this.#dialog.open(
+                        ComponentEntryFormComponent,
+                        {
+                            width: '800px',
+                            maxHeight: '90vh',
+                            disableClose: true,
+                            data: {
+                                mode: 'edit',
+                                componentId: this.componentId(),
+                                componentTypeId: this.componentTypeId(),
+                                languages: this.languages(),
+                                entryId: entryId,
+                                entry: detail,
+                                translations: detail.translations,
+                                draftMode: this.draftMode(),
+                            },
                         }
-                    });
+                    );
 
-                    dialogRef.afterClosed()
+                    dialogRef
+                        .afterClosed()
                         .pipe(take(1))
-                        .subscribe(success => {
+                        .subscribe((success) => {
                             if (success) {
                                 this.loadItems();
                                 if (this.draftMode()) {
@@ -179,7 +229,7 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                 },
                 error: (err) => {
                     this.#notify.alert(err?.error?.message ?? '');
-                }
+                },
             });
     }
 
@@ -187,15 +237,17 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
         if (this.draftMode()) {
             return;
         }
-        this.#confirmation.confirm(
-            'admin.components.entries.deleteTitle',
-            'admin.components.entries.confirmDelete'
-        )
+        this.#confirmation
+            .confirm(
+                'admin.components.entries.deleteTitle',
+                'admin.components.entries.confirmDelete'
+            )
             .pipe(take(1))
             .subscribe((confirmed) => {
                 if (!confirmed) return;
 
-                this.service.deleteWithResponse(entry.id)
+                this.service
+                    .deleteWithResponse(entry.id)
                     .pipe(take(1))
                     .subscribe({
                         next: (response) => {
@@ -204,7 +256,7 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                         },
                         error: (error) => {
                             this.#notify.alert(error?.error?.message ?? '');
-                        }
+                        },
                     });
             });
     }

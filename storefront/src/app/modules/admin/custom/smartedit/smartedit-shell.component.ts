@@ -19,30 +19,48 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ActivatedRoute, ActivatedRouteSnapshot, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import {
+    ActivatedRoute,
+    ActivatedRouteSnapshot,
+    RouterLink,
+} from '@angular/router';
+import { ApiResponse } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { ApiResponse } from '@core/crud';
 import { forkJoin, interval, take } from 'rxjs';
 
 import {
     ComponentEditDialogComponent,
     ComponentEditDialogData,
 } from '../components/component-edit-dialog/component-edit-dialog.component';
-import { ComponentDetailDto, ComponentTypeDto } from '../components/models/component-library.types';
+import {
+    ComponentDetailDto,
+    ComponentTypeDto,
+} from '../components/models/component-library.types';
 import { ComponentLibraryService } from '../components/services/component-library.service';
 import { PageBuilderService } from '../pages/page-builder.service';
-import { Language, PageDetailDto, PageI18nDto } from '../pages/page-builder.types';
-import { PageEditDialogComponent, PageEditDialogData } from '../pages/page-edit-dialog/page-edit-dialog.component';
+import {
+    Language,
+    PageDetailDto,
+    PageI18nDto,
+} from '../pages/page-builder.types';
+import {
+    PageEditDialogComponent,
+    PageEditDialogData,
+} from '../pages/page-edit-dialog/page-edit-dialog.component';
 import { PageSlotService } from '../pages/slots/page-slot.service';
 import { PageSlotResponse } from '../pages/slots/page-slot.types';
 
+import { SmartEditPublishReviewDialogComponent } from './publish-review-dialog.component';
 import { SmartEditGatewayService } from './services/smartedit-gateway.service';
 import { SmartEditPreviewService } from './services/smartedit-preview.service';
-import { SmartEditPublishReviewDialogComponent } from './publish-review-dialog.component';
-import { PreviewTicketResponse, SmartEditDraftOverview, SmartEditSelection } from './smartedit.types';
+import {
+    PreviewTicketResponse,
+    SmartEditDraftOverview,
+    SmartEditSelection,
+} from './smartedit.types';
 
 type Viewport = 'desktop' | 'tablet' | 'mobile';
 
@@ -78,7 +96,8 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
     readonly #transloco = inject(TranslocoService);
     readonly #destroyRef = inject(DestroyRef);
 
-    @ViewChild('iframe', { static: false }) protected iframeRef?: ElementRef<HTMLIFrameElement>;
+    @ViewChild('iframe', { static: false })
+    protected iframeRef?: ElementRef<HTMLIFrameElement>;
 
     protected readonly pageIdSig = signal<number | null>(null);
     protected readonly langParamSig = signal<string>('tr');
@@ -94,7 +113,10 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
     protected readonly viewportSig = signal<Viewport>('desktop');
     protected readonly currentLangSig = signal<Language>(Language.TR);
     protected readonly nowSig = signal(Date.now());
-    protected readonly draftsSig = signal<SmartEditDraftOverview>({ count: 0, drafts: [] });
+    protected readonly draftsSig = signal<SmartEditDraftOverview>({
+        count: 0,
+        drafts: [],
+    });
 
     protected readonly isTicketExpiringSig = computed(() => {
         const preview = this.previewSig();
@@ -147,7 +169,11 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         // current route returns null. Walk the snapshot tree until we find it.
         const langParam = this.#resolveAncestorParam('lang');
         if (!langParam) {
-            this.errorSig.set(this.#transloco.translate('admin.smartedit.errors.invalidPageId'));
+            this.errorSig.set(
+                this.#transloco.translate(
+                    'admin.smartedit.errors.invalidPageId'
+                )
+            );
             return;
         }
         this.langParamSig.set(langParam);
@@ -155,14 +181,22 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         const pageIdParam = this.#route.snapshot.paramMap.get('pageId');
         const pageId = pageIdParam ? Number(pageIdParam) : NaN;
         if (!Number.isFinite(pageId) || pageId <= 0) {
-            this.errorSig.set(this.#transloco.translate('admin.smartedit.errors.invalidPageId'));
+            this.errorSig.set(
+                this.#transloco.translate(
+                    'admin.smartedit.errors.invalidPageId'
+                )
+            );
             return;
         }
 
         this.pageIdSig.set(pageId);
         const initialLang = this.#resolveInitialLanguage(langParam);
         if (initialLang === null) {
-            this.errorSig.set(this.#transloco.translate('admin.smartedit.errors.pageLoadFailed'));
+            this.errorSig.set(
+                this.#transloco.translate(
+                    'admin.smartedit.errors.pageLoadFailed'
+                )
+            );
             return;
         }
         this.currentLangSig.set(initialLang);
@@ -208,18 +242,21 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
                 : this.#componentService.getComponentDetailByUid(selection.id);
 
         this.busySig.set(true);
-        detail$
-            .pipe(take(1))
-            .subscribe({
-                next: (detail) => {
-                    this.busySig.set(false);
-                    this.#openComponentDialog(detail);
-                },
-                error: (error: HttpErrorResponse) => {
-                    this.busySig.set(false);
-                    this.#notify.alert(error.error?.message ?? this.#transloco.translate('admin.smartedit.errors.componentNotFound'));
-                },
-            });
+        detail$.pipe(take(1)).subscribe({
+            next: (detail) => {
+                this.busySig.set(false);
+                this.#openComponentDialog(detail);
+            },
+            error: (error: HttpErrorResponse) => {
+                this.busySig.set(false);
+                this.#notify.alert(
+                    error.error?.message ??
+                        this.#transloco.translate(
+                            'admin.smartedit.errors.componentNotFound'
+                        )
+                );
+            },
+        });
     }
 
     editPageMetadata(): void {
@@ -345,7 +382,9 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
 
     #defaultLanguage(): Language | null {
         const def = this.#languageContext.getDefaultLanguage()?.toUpperCase();
-        const candidate = Object.values(Language).find((value) => value === def);
+        const candidate = Object.values(Language).find(
+            (value) => value === def
+        );
         return (candidate as Language) ?? null;
     }
 
@@ -401,12 +440,19 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
                     let origin: string;
                     try {
                         const parsed = new URL(response.storefrontBaseUrl);
-                        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                        if (
+                            parsed.protocol !== 'http:' &&
+                            parsed.protocol !== 'https:'
+                        ) {
                             throw new Error('Invalid protocol');
                         }
                         origin = parsed.origin;
                     } catch {
-                        this.errorSig.set(this.#transloco.translate('admin.smartedit.errors.pageLoadFailed'));
+                        this.errorSig.set(
+                            this.#transloco.translate(
+                                'admin.smartedit.errors.pageLoadFailed'
+                            )
+                        );
                         this.busySig.set(false);
                         return;
                     }
@@ -433,10 +479,14 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         const slug = this.#resolveSlugForCurrentLanguage();
         const lang = this.currentLangSig().toLowerCase();
         const path = slug && slug !== '/' ? slug : '';
-        const url = new URL(`${preview.storefrontBaseUrl.replace(/\/$/, '')}/${lang}${path}`);
+        const url = new URL(
+            `${preview.storefrontBaseUrl.replace(/\/$/, '')}/${lang}${path}`
+        );
         url.searchParams.set('preview', preview.ticket);
         url.searchParams.set('previewPageId', String(pageId));
-        this.iframeUrlSig.set(this.#sanitizer.bypassSecurityTrustResourceUrl(url.toString()));
+        this.iframeUrlSig.set(
+            this.#sanitizer.bypassSecurityTrustResourceUrl(url.toString())
+        );
     }
 
     #loadDrafts(): void {
@@ -447,22 +497,29 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
             .pipe(take(1))
             .subscribe({
                 next: (drafts) => this.draftsSig.set(drafts),
-                error: (error: HttpErrorResponse | Error) => this.#notify.alert(this.#errorMessage(error)),
+                error: (error: HttpErrorResponse | Error) =>
+                    this.#notify.alert(this.#errorMessage(error)),
             });
     }
 
     #openPublishReview(review: SmartEditDraftOverview): void {
-        const dialogRef = this.#dialog.open(SmartEditPublishReviewDialogComponent, {
-            width: '720px',
-            maxHeight: '80vh',
-            data: review,
-        });
-
-        dialogRef.afterClosed().pipe(take(1)).subscribe((confirmed) => {
-            if (confirmed) {
-                this.#publishAfterReview();
+        const dialogRef = this.#dialog.open(
+            SmartEditPublishReviewDialogComponent,
+            {
+                width: '720px',
+                maxHeight: '80vh',
+                data: review,
             }
-        });
+        );
+
+        dialogRef
+            .afterClosed()
+            .pipe(take(1))
+            .subscribe((confirmed) => {
+                if (confirmed) {
+                    this.#publishAfterReview();
+                }
+            });
     }
 
     #publishAfterReview(): void {
@@ -494,9 +551,16 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
 
     #errorMessage(error: HttpErrorResponse | Error): string {
         if (error instanceof HttpErrorResponse) {
-            return error.error?.message ?? error.message ?? this.#transloco.translate('admin.common.errors.server');
+            return (
+                error.error?.message ??
+                error.message ??
+                this.#transloco.translate('admin.common.errors.server')
+            );
         }
-        return error.message || this.#transloco.translate('admin.common.errors.server');
+        return (
+            error.message ||
+            this.#transloco.translate('admin.common.errors.server')
+        );
     }
 
     #resolveSlugForCurrentLanguage(): string {

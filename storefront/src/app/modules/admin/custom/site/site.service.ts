@@ -6,20 +6,19 @@ import { ApiResponse } from '@modules/admin/custom/pages/page-builder.types';
 import { Observable, finalize, map, switchMap, take, tap } from 'rxjs';
 import { TenantDetailResponse } from '../tenants/tenants.types';
 import {
+    ConfirmTwoFactorPolicyChangeRequest,
+    RequestTwoFactorPolicyChangeRequest,
     SecuritySettingsResponse,
     Site,
-    SiteAnalyticsSummaryResponse,
-    SiteInsightsSummaryResponse,
     SiteActivityFeedResponse,
     SiteActivityTrendResponse,
+    SiteAnalyticsSummaryResponse,
+    SiteInsightsSummaryResponse,
     SiteOverviewResponse,
     SiteSettingsPatchRequest,
     SiteSettingsResponseDto,
     SiteTechnicalPatchRequest,
     SiteTechnicalResponse,
-    ConfirmTwoFactorPolicyChangeRequest,
-    RequestTwoFactorPolicyChangeRequest,
-    TwoFactorPolicy,
     TwoFactorPolicyChangeRequestResponse,
     UpdateSecuritySettingsRequest,
 } from './site.types';
@@ -51,17 +50,17 @@ export class SiteService {
 
     getAnalyticsSummary(): Observable<SiteAnalyticsSummaryResponse> {
         return this.#apiClient
-            .get<ApiResponse<SiteAnalyticsSummaryResponse>>(
-                'siteAnalyticsSummary'
-            )
+            .get<
+                ApiResponse<SiteAnalyticsSummaryResponse>
+            >('siteAnalyticsSummary')
             .pipe(map((response) => response.data));
     }
 
     getInsightsSummary(): Observable<SiteInsightsSummaryResponse> {
         return this.#apiClient
-            .get<ApiResponse<SiteInsightsSummaryResponse>>(
-                'siteInsightsSummary'
-            )
+            .get<
+                ApiResponse<SiteInsightsSummaryResponse>
+            >('siteInsightsSummary')
             .pipe(map((response) => response.data));
     }
 
@@ -151,7 +150,9 @@ export class SiteService {
     ): Observable<ApiResponse<SecuritySettingsResponse>> {
         this.loadingSig.set(true);
         return this.#apiClient
-            .patch<ApiResponse<SecuritySettingsResponse>>('siteSecuritySettings', payload)
+            .patch<
+                ApiResponse<SecuritySettingsResponse>
+            >('siteSecuritySettings', payload)
             .pipe(
                 tap((response) => {
                     this.securitySig.set(response.data);
@@ -163,10 +164,9 @@ export class SiteService {
     requestTwoFactorPolicyChange(
         payload: RequestTwoFactorPolicyChangeRequest
     ): Observable<ApiResponse<TwoFactorPolicyChangeRequestResponse>> {
-        return this.#apiClient.post<ApiResponse<TwoFactorPolicyChangeRequestResponse>>(
-            'siteSecurityTwoFactorRequestChange',
-            payload
-        );
+        return this.#apiClient.post<
+            ApiResponse<TwoFactorPolicyChangeRequestResponse>
+        >('siteSecurityTwoFactorRequestChange', payload);
     }
 
     confirmTwoFactorPolicyChange(

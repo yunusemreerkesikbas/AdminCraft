@@ -7,13 +7,13 @@ import {
     inject,
     signal,
 } from '@angular/core';
-import {
-    FormBuilder,
-    ReactiveFormsModule,
-    Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+    MAT_DIALOG_DATA,
+    MatDialogModule,
+    MatDialogRef,
+} from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -120,7 +120,10 @@ export class SpaGenericModalComponent<T = unknown> implements OnDestroy {
         );
     }
 
-    protected executeAction(action?: { handler?: () => void; value?: unknown }): void {
+    protected executeAction(action?: {
+        handler?: () => void;
+        value?: unknown;
+    }): void {
         if (action?.handler) {
             action.handler();
         }
@@ -159,7 +162,9 @@ export class SpaGenericModalComponent<T = unknown> implements OnDestroy {
                 this.otpForm.disable({ emitEvent: false });
                 this.#clearExpiryTimer();
             } else {
-                this.expiresRemainingSig.set(this.#formatRemaining(remainingMs));
+                this.expiresRemainingSig.set(
+                    this.#formatRemaining(remainingMs)
+                );
                 this.otpExpiredSig.set(false);
             }
             this.#cdr.markForCheck();

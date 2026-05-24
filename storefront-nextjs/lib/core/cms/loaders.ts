@@ -1,23 +1,11 @@
 import { cache } from "react";
-import {
-  getCategoryProducts,
-  getCmsPage,
-  getProduct,
-  getShell,
-  getSiteConfig,
-  searchProducts,
-} from "./client";
+import { getCategoryProducts, getCmsPage, getProduct, getShell, getSiteConfig, searchProducts } from "./client";
 import { requireEntityOrNotFound, requirePageOrNotFound, requireSiteConfig } from "../errors/invariants";
 
-export const loadSiteConfig = cache(async (lang?: string) =>
-  requireSiteConfig(await getSiteConfig(lang)),
-);
+export const loadSiteConfig = cache(async (lang?: string) => requireSiteConfig(await getSiteConfig(lang)));
 
 export const loadShellData = cache(async (lang: string, previewTicket?: string) => {
-  const [site, shell] = await Promise.all([
-    getSiteConfig(lang, previewTicket),
-    getShell(lang, previewTicket),
-  ]);
+  const [site, shell] = await Promise.all([getSiteConfig(lang, previewTicket), getShell(lang, previewTicket)]);
 
   return {
     site: requireSiteConfig(site),
@@ -37,46 +25,40 @@ export const loadHomepage = cache(async (lang: string, previewTicket?: string, p
   };
 });
 
-export const loadContentPage = cache(async (
-  lang: string,
-  slugPath?: string,
-  previewTicket?: string,
-  previewPageId?: number,
-) => {
-  const loadPage = async () => {
-    if (!slugPath) {
-      return getCmsPage(lang, { previewTicket, previewPageId });
-    }
+export const loadContentPage = cache(
+  async (lang: string, slugPath?: string, previewTicket?: string, previewPageId?: number) => {
+    const loadPage = async () => {
+      if (!slugPath) {
+        return getCmsPage(lang, { previewTicket, previewPageId });
+      }
 
-    const contentPage = await getCmsPage(lang, {
-      pageType: "ContentPage",
-      pageLabelOrId: slugPath,
-      previewTicket,
-      previewPageId,
-    });
+      const contentPage = await getCmsPage(lang, {
+        pageType: "ContentPage",
+        pageLabelOrId: slugPath,
+        previewTicket,
+        previewPageId,
+      });
 
-    if (contentPage) {
-      return contentPage;
-    }
+      if (contentPage) {
+        return contentPage;
+      }
 
-    return getCmsPage(lang, {
-      pageType: "LandingPage",
-      pageLabelOrId: slugPath,
-      previewTicket,
-      previewPageId,
-    });
-  };
+      return getCmsPage(lang, {
+        pageType: "LandingPage",
+        pageLabelOrId: slugPath,
+        previewTicket,
+        previewPageId,
+      });
+    };
 
-  const [page, site] = await Promise.all([
-    loadPage(),
-    getSiteConfig(lang, previewTicket),
-  ]);
+    const [page, site] = await Promise.all([loadPage(), getSiteConfig(lang, previewTicket)]);
 
-  return {
-    page: requirePageOrNotFound(page),
-    site: requireSiteConfig(site),
-  };
-});
+    return {
+      page: requirePageOrNotFound(page),
+      site: requireSiteConfig(site),
+    };
+  },
+);
 
 export const loadProductPage = cache(async (lang: string, uid: string) => {
   const [page, site, product] = await Promise.all([

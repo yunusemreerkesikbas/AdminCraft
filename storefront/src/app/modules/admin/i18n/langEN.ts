@@ -75,13 +75,16 @@ export const langEN = {
         },
         recaptcha: {
             keys: {
-                required: 'reCAPTCHA site key and secret key are required when reCAPTCHA is enabled',
+                required:
+                    'reCAPTCHA site key and secret key are required when reCAPTCHA is enabled',
             },
             siteKey: {
-                invalid: 'Invalid reCAPTCHA site key format (40 alphanumeric characters, hyphens and underscores)',
+                invalid:
+                    'Invalid reCAPTCHA site key format (40 alphanumeric characters, hyphens and underscores)',
             },
             secretKey: {
-                invalid: 'Invalid reCAPTCHA secret key format (40 alphanumeric characters, hyphens and underscores)',
+                invalid:
+                    'Invalid reCAPTCHA secret key format (40 alphanumeric characters, hyphens and underscores)',
             },
             threshold: {
                 min: 'reCAPTCHA threshold must be at least 0.0',
@@ -536,7 +539,8 @@ export const langEN = {
                 publishCurrentLang: 'Publish current language',
                 confirmPublish: 'Publish',
                 discardDraft: 'Discard draft',
-                discardCurrentLanguageDrafts: 'Discard drafts for this language',
+                discardCurrentLanguageDrafts:
+                    'Discard drafts for this language',
                 renewTicket: 'Renew session',
             },
             viewport: {
@@ -566,12 +570,16 @@ export const langEN = {
                 reviewEmpty: 'There are no field changes to publish.',
             },
             warnings: {
-                ticketExpiringSoon: 'Preview session expires in less than 2 minutes.',
-                ticketExpired: 'Preview session has expired. Renew to continue editing.',
+                ticketExpiringSoon:
+                    'Preview session expires in less than 2 minutes.',
+                ticketExpired:
+                    'Preview session has expired. Renew to continue editing.',
             },
             help: {
-                clickToSelect: 'Click any component inside the preview iframe to start editing.',
-                slotEditing: 'Slot structure is managed in the template editor — here you can only change content.',
+                clickToSelect:
+                    'Click any component inside the preview iframe to start editing.',
+                slotEditing:
+                    'Slot structure is managed in the template editor — here you can only change content.',
             },
             loading: {
                 iframe: 'Loading preview…',
@@ -686,7 +694,8 @@ export const langEN = {
             addComponentSuccess: 'Component added to slot',
             addComponentError: 'Failed to add component',
             removeComponentTitle: 'Remove Component',
-            removeComponentMessage: 'Are you sure you want to remove this component from the slot?',
+            removeComponentMessage:
+                'Are you sure you want to remove this component from the slot?',
             removeComponentSuccess: 'Component removed from slot',
             removeComponentError: 'Failed to remove component',
             reorderError: 'Failed to reorder components',
@@ -732,9 +741,11 @@ export const langEN = {
                 updateFailed: 'Failed to update page template',
                 deleteSuccess: 'Page template deleted successfully',
                 deleteFailed: 'Failed to delete page template',
-                bulkDeleteSuccess: 'Selected page templates deleted successfully',
+                bulkDeleteSuccess:
+                    'Selected page templates deleted successfully',
                 loadFailed: 'Failed to load page templates',
-                systemTemplateCannotModify: 'Cannot modify system template: {{templateUid}}',
+                systemTemplateCannotModify:
+                    'Cannot modify system template: {{templateUid}}',
             },
             confirmDelete: 'Are you sure you want to delete "{{name}}"?',
             bulkDeleteConfirmTitle: 'Delete selected page templates',
@@ -856,7 +867,8 @@ export const langEN = {
                 },
                 bind: {
                     title: 'Bind Media',
-                    subtitle: 'Link this media to a component or one of its entries.',
+                    subtitle:
+                        'Link this media to a component or one of its entries.',
                     open: 'Bind Media',
                     submit: 'Save Binding',
                     targetType: 'Target Type',
@@ -1195,22 +1207,27 @@ export const langEN = {
                     subtitle: 'Configure security options for your tenant',
                     twoFactor: {
                         title: 'Two-Factor Authentication',
-                        description: 'Control how users authenticate to your site. Two-factor authentication adds an extra layer of security by requiring a verification code sent to the user\'s email.',
+                        description:
+                            "Control how users authenticate to your site. Two-factor authentication adds an extra layer of security by requiring a verification code sent to the user's email.",
                         info: 'When 2FA is required, users will need to enter a verification code sent to their email during login. Trusted devices can skip this step for 30 days. Policy changes are confirmed with a verification code sent to your registered admin email.',
                         otpTitle: 'Confirm policy change',
-                        otpDescription: 'Enter the verification code sent to your email to apply this security policy change.',
+                        otpDescription:
+                            'Enter the verification code sent to your email to apply this security policy change.',
                         otpLabel: 'Verification code',
                         otpSent: 'Verification code sent to your email',
                         otpRequestFailed: 'Could not send verification code',
                         confirm: 'Confirm change',
                         expiresIn: 'Code expires in',
-                        expired: 'This code has expired. Save again to request a new code.',
+                        expired:
+                            'This code has expired. Save again to request a new code.',
                     },
                     policy: {
                         disabled: 'Disabled',
-                        disabledDesc: 'Two-factor authentication is not available for users',
+                        disabledDesc:
+                            'Two-factor authentication is not available for users',
                         required: 'Required',
-                        requiredDesc: 'All users must use two-factor authentication',
+                        requiredDesc:
+                            'All users must use two-factor authentication',
                     },
                     messages: {
                         saveSuccess: 'Security settings saved successfully',
@@ -1294,8 +1311,7 @@ export const langEN = {
                                     title: 'About active users',
                                     summary:
                                         'Shows the number of unique users who meaningfully engaged with your site during the selected 7-day window.',
-                                    source:
-                                        'The value is fetched from the tenant GA4 property through the Google Analytics Data API and compared with the previous 7 days.',
+                                    source: 'The value is fetched from the tenant GA4 property through the Google Analytics Data API and compared with the previous 7 days.',
                                     interpretation:
                                         'Read it together with new users and engagement rate. If traffic grows while this metric barely moves, acquisition quality or retention may be weakening.',
                                 },
@@ -1307,8 +1323,7 @@ export const langEN = {
                                     title: 'About views',
                                     summary:
                                         'Shows the total number of page and screen views. The same user can generate multiple views.',
-                                    source:
-                                        'This card uses the last 7-day total of page and screen view signals recorded in the tenant GA4 property.',
+                                    source: 'This card uses the last 7-day total of page and screen view signals recorded in the tenant GA4 property.',
                                     interpretation:
                                         'Growth alongside active users usually means deeper content consumption. A sharp increase on its own can also point to refresh-heavy behavior or navigation issues.',
                                 },
@@ -1320,8 +1335,7 @@ export const langEN = {
                                     title: 'About new users',
                                     summary:
                                         'Shows users who visited your site for the first time during this period.',
-                                    source:
-                                        'The metric comes from the tenant GA4 property and the overview compares it against the previous 7-day period.',
+                                    source: 'The metric comes from the tenant GA4 property and the overview compares it against the previous 7-day period.',
                                     interpretation:
                                         'Review it next to active users. A very high share can mean weak return usage, while a very low share can signal limited acquisition.',
                                 },
@@ -1333,8 +1347,7 @@ export const langEN = {
                                     title: 'About engagement rate',
                                     summary:
                                         'Shows the percentage of sessions that counted as engaged sessions out of all sessions.',
-                                    source:
-                                        'The calculation follows GA4 engaged-session rules and is reported from the tenant GA4 property for the last 7 days.',
+                                    source: 'The calculation follows GA4 engaged-session rules and is reported from the tenant GA4 property for the last 7 days.',
                                     interpretation:
                                         'If traffic rises while this rate drops, the landing experience, content fit, or traffic quality may not be meeting user intent.',
                                 },
@@ -1388,8 +1401,7 @@ export const langEN = {
                                         title: 'About clicks',
                                         summary:
                                             'Shows how many times users clicked through to your site from Google Search in the last 28 days.',
-                                        source:
-                                            'The value is fetched from the tenant Search Console property through the backend and compared with the previous period.',
+                                        source: 'The value is fetched from the tenant Search Console property through the backend and compared with the previous period.',
                                         interpretation:
                                             'Track it together with impressions and CTR. If impressions rise but clicks do not, your snippets or rankings may need work.',
                                     },
@@ -1401,8 +1413,7 @@ export const langEN = {
                                         title: 'About impressions',
                                         summary:
                                             'Shows how often your site appeared in Google search results.',
-                                        source:
-                                            'The overview uses the tenant Search Console performance report for the last 28 days.',
+                                        source: 'The overview uses the tenant Search Console performance report for the last 28 days.',
                                         interpretation:
                                             'This is an early signal. Impressions can grow before clicks when your pages begin ranking for more queries.',
                                     },
@@ -1414,8 +1425,7 @@ export const langEN = {
                                         title: 'About CTR',
                                         summary:
                                             'Shows what percentage of impressions turned into clicks.',
-                                        source:
-                                            'CTR is derived from clicks and impressions within the same 28-day Search Console window.',
+                                        source: 'CTR is derived from clicks and impressions within the same 28-day Search Console window.',
                                         interpretation:
                                             'If position is strong but CTR is weak, title and meta copy may need improvement. If position is also weak, ranking gains usually matter first.',
                                     },
@@ -1427,8 +1437,7 @@ export const langEN = {
                                         title: 'About average position',
                                         summary:
                                             'Shows the average ranking position across the queries where your site appeared.',
-                                        source:
-                                            'The metric comes from the average position value reported by the tenant Search Console property.',
+                                        source: 'The metric comes from the average position value reported by the tenant Search Console property.',
                                         interpretation:
                                             'Lower is better. Read it with impressions because changes in query mix can move the average even when individual pages stay stable.',
                                     },
@@ -1616,38 +1625,31 @@ export const langEN = {
                             label: 'Priority actions',
                             reviewMaintenance: {
                                 title: 'Review maintenance mode',
-                                detail:
-                                    'Maintenance mode is active. Re-open the site when publishing checks are complete.',
+                                detail: 'Maintenance mode is active. Re-open the site when publishing checks are complete.',
                             },
                             enableIndexing: {
                                 title: 'Enable search indexing',
-                                detail:
-                                    'Search engines are currently blocked. Turn indexing back on to restore discoverability.',
+                                detail: 'Search engines are currently blocked. Turn indexing back on to restore discoverability.',
                             },
                             enableSitemap: {
                                 title: 'Enable sitemap generation',
-                                detail:
-                                    'Turn sitemap generation back on so crawlers can discover new content faster.',
+                                detail: 'Turn sitemap generation back on so crawlers can discover new content faster.',
                             },
                             publishPages: {
                                 title: 'Publish remaining pages',
-                                detail:
-                                    '{{count}} pages are still in draft and are lowering launch readiness.',
+                                detail: '{{count}} pages are still in draft and are lowering launch readiness.',
                             },
                             requireTwoFactor: {
                                 title: 'Require 2FA for tenant users',
-                                detail:
-                                    'Strengthen admin access before launch by enabling mandatory two-factor authentication.',
+                                detail: 'Strengthen admin access before launch by enabling mandatory two-factor authentication.',
                             },
                             connectDomain: {
                                 title: 'Finalize domain setup',
-                                detail:
-                                    'Connect and verify the preferred public domain when the brand site is ready.',
+                                detail: 'Connect and verify the preferred public domain when the brand site is ready.',
                             },
                             healthy: {
                                 title: 'Operational signals look strong',
-                                detail:
-                                    'The main launch signals are in a healthy state. Continue monitoring recent changes.',
+                                detail: 'The main launch signals are in a healthy state. Continue monitoring recent changes.',
                             },
                         },
                     },
@@ -1729,9 +1731,11 @@ export const langEN = {
                     ogTitle: 'Open Graph Title',
                     ogTitleHint: 'Title displayed when shared on social media',
                     ogDescription: 'Open Graph Description',
-                    ogDescriptionHint: 'Description displayed when shared on social media',
+                    ogDescriptionHint:
+                        'Description displayed when shared on social media',
                     twitterCard: 'Twitter Card Type',
-                    twitterCardHint: 'Determines how content appears on Twitter',
+                    twitterCardHint:
+                        'Determines how content appears on Twitter',
                 },
                 technical: {
                     title: 'Technical Settings',
@@ -1750,7 +1754,8 @@ export const langEN = {
                     sitemapEnabledDesc: 'Generate automatic sitemap.xml',
                     robotsTxt: 'robots.txt',
                     robotsTxtHint: 'Define rules for search engine bots',
-                    robotsTxtPlaceholder: 'User-agent: *\nAllow: /\n\nSitemap: /sitemap.xml',
+                    robotsTxtPlaceholder:
+                        'User-agent: *\nAllow: /\n\nSitemap: /sitemap.xml',
                     verification: 'Verification Codes',
                     verificationDesc:
                         'Search engine webmaster tools verification codes',
@@ -1762,7 +1767,8 @@ export const langEN = {
                     cookieConsentEnabledDesc:
                         'Show cookie consent banner to users',
                     cookieConsentText: 'Cookie Consent Text',
-                    cookieConsentTextPlaceholder: 'This site uses cookies to enhance your experience.',
+                    cookieConsentTextPlaceholder:
+                        'This site uses cookies to enhance your experience.',
                 },
                 placeholders: {
                     mediaUid: 'e.g. abc-123-def',
@@ -1880,7 +1886,8 @@ export const langEN = {
                 },
                 fields: {
                     navigationAware: 'Navigation Component',
-                    navigationAwareHint: 'When enabled, this component type supports navigation node binding',
+                    navigationAwareHint:
+                        'When enabled, this component type supports navigation node binding',
                 },
                 capabilities: {
                     supportsNavigationNode: 'Supports navigation node',
@@ -1973,7 +1980,8 @@ export const langEN = {
                 create: 'Create New Entry',
                 edit: 'Edit Entry',
                 noEntries: 'No entries yet',
-                noEntriesDesc: 'No entries have been created for this component yet.',
+                noEntriesDesc:
+                    'No entries have been created for this component yet.',
                 noItems: 'No entries yet',
                 addEntry: 'Add Entry',
                 addItem: 'Add Entry',
@@ -2319,9 +2327,11 @@ export const langEN = {
             },
             confirm: {
                 deleteTitle: 'Delete Tenant',
-                deleteMessage: 'Are you sure you want to delete this tenant? This action cannot be undone.',
+                deleteMessage:
+                    'Are you sure you want to delete this tenant? This action cannot be undone.',
                 syncTitle: 'Sync Migrations',
-                syncMessage: 'This will apply pending migrations to the tenant database. Continue?',
+                syncMessage:
+                    'This will apply pending migrations to the tenant database. Continue?',
             },
             modal: {
                 adminCreated: 'Admin User Created Successfully',
@@ -2428,7 +2438,8 @@ export const langEN = {
                 },
                 messages: {
                     loadFailed: 'Failed to load dashboard data',
-                    retryFailed: 'Retry limit exceeded. Please refresh manually.',
+                    retryFailed:
+                        'Retry limit exceeded. Please refresh manually.',
                     refreshSuccess: 'Dashboard data refreshed successfully',
                 },
             },
@@ -2450,34 +2461,44 @@ export const langEN = {
                 security: {
                     twoFactor: {
                         title: 'Two-Factor Authentication',
-                        description: 'Configure super admin OTP policy for platform login.',
+                        description:
+                            'Configure super admin OTP policy for platform login.',
                         otpTitle: 'Confirm policy change',
-                        otpDescription: 'Enter the verification code sent to your email to apply this security policy change.',
+                        otpDescription:
+                            'Enter the verification code sent to your email to apply this security policy change.',
                         otpLabel: 'Verification code',
                         otpSent: 'Verification code sent to your email',
                         otpRequestFailed: 'Could not send verification code',
                         confirm: 'Confirm change',
                         expiresIn: 'Code expires in',
-                        expired: 'This code has expired. Save again to request a new code.',
+                        expired:
+                            'This code has expired. Save again to request a new code.',
                         policy: {
                             disabled: 'Disabled',
-                            disabledDesc: 'Super admins can sign in with email and password only.',
+                            disabledDesc:
+                                'Super admins can sign in with email and password only.',
                             required: 'Required',
-                            requiredDesc: 'All super admins must complete OTP verification on each login.',
+                            requiredDesc:
+                                'All super admins must complete OTP verification on each login.',
                         },
                     },
                     recaptcha: {
                         title: 'reCAPTCHA Protection',
-                        description: 'Configure Google reCAPTCHA v3 for super admin login.',
+                        description:
+                            'Configure Google reCAPTCHA v3 for super admin login.',
                         enabled: 'Enable reCAPTCHA',
-                        enabledHint: 'Require bot verification on platform sign-in.',
+                        enabledHint:
+                            'Require bot verification on platform sign-in.',
                         siteKey: 'Site Key',
                         siteKeyHint: 'Public key used by frontend.',
                         secretKey: 'Secret Key',
-                        secretKeyHint: 'Private key used by backend verification.',
-                        secretKeyPlaceholder: 'Leave empty to keep existing key',
+                        secretKeyHint:
+                            'Private key used by backend verification.',
+                        secretKeyPlaceholder:
+                            'Leave empty to keep existing key',
                         threshold: 'Score Threshold',
-                        thresholdHint: '0.0 = lenient, 1.0 = strict. Recommended: 0.5',
+                        thresholdHint:
+                            '0.0 = lenient, 1.0 = strict. Recommended: 0.5',
                     },
                 },
                 messages: {
@@ -2487,7 +2508,8 @@ export const langEN = {
                 },
                 confirm: {
                     resetTitle: 'Reset Settings',
-                    resetMessage: 'Are you sure you want to reset to default values?',
+                    resetMessage:
+                        'Are you sure you want to reset to default values?',
                 },
             },
             demoRequests: {
@@ -2562,12 +2584,14 @@ export const langEN = {
 
         impex: {
             title: 'Data Import (ImpEx)',
-            subtitle: 'Execute SQL import scripts on the current tenant database',
+            subtitle:
+                'Execute SQL import scripts on the current tenant database',
             editor: {
                 title: 'SQL Editor',
                 hint: 'Paste your SQL script here. Only INSERT and UPDATE statements are allowed.',
                 label: 'SQL Script',
-                placeholder: '-- #CRAFTIVE_IMPEX\n-- Paste your SQL here...\n\nINSERT INTO ...',
+                placeholder:
+                    '-- #CRAFTIVE_IMPEX\n-- Paste your SQL here...\n\nINSERT INTO ...',
                 markerInfo: 'Script must start with the marker:',
                 run: 'Execute',
                 running: 'Executing...',
@@ -2575,7 +2599,8 @@ export const langEN = {
             },
             confirm: {
                 title: 'Execute SQL Script',
-                message: 'This will run the SQL statements on the tenant database. Only INSERT and UPDATE operations are permitted. Continue?',
+                message:
+                    'This will run the SQL statements on the tenant database. Only INSERT and UPDATE operations are permitted. Continue?',
                 run: 'Execute',
             },
             result: {
@@ -2591,15 +2616,19 @@ export const langEN = {
         mailMarketing: {
             tenant: {
                 title: 'Mail Marketing',
-                subtitle: 'Manage tenant templates, provider settings and campaign sends',
+                subtitle:
+                    'Manage tenant templates, provider settings and campaign sends',
                 detailTitle: 'Mail Template Detail',
-                detailSubtitle: 'Edit tenant template content and send campaign by language',
+                detailSubtitle:
+                    'Edit tenant template content and send campaign by language',
             },
             platform: {
                 title: 'Platform Mail',
-                subtitle: 'Manage platform templates and newsletter campaign sends',
+                subtitle:
+                    'Manage platform templates and newsletter campaign sends',
                 detailTitle: 'Platform Template Detail',
-                detailSubtitle: 'Edit platform template content and send campaign by language',
+                detailSubtitle:
+                    'Edit platform template content and send campaign by language',
             },
             sections: {
                 templates: 'Templates',
@@ -2680,7 +2709,8 @@ export const langEN = {
                 },
                 messages: {
                     noData: 'No subscribers found',
-                    noDataHint: 'Create a subscriber to start building your campaign audience',
+                    noDataHint:
+                        'Create a subscriber to start building your campaign audience',
                     duplicateTemplate:
                         'The same template type cannot be selected more than once',
                     loadDetailFailed: 'Failed to load subscriber detail',
@@ -2746,13 +2776,16 @@ export const langEN = {
                 templatesLoadFailed: 'Failed to load template types',
                 exportFailed: 'CSV export failed',
                 noTemplates: 'No template type found',
-                noTemplatesHint: 'Template types will appear here after initialization',
+                noTemplatesHint:
+                    'Template types will appear here after initialization',
                 backend: {
                     templatesFetched: 'Mail templates fetched successfully',
                     subscribersFetched: 'Mail subscribers fetched successfully',
                     templateUpdated: 'Mail template updated successfully',
-                    providerFetched: 'Mail provider configuration fetched successfully',
-                    providerSaved: 'Mail provider configuration saved successfully',
+                    providerFetched:
+                        'Mail provider configuration fetched successfully',
+                    providerSaved:
+                        'Mail provider configuration saved successfully',
                     campaignSent: 'Mail campaign send process completed',
                     campaignFetched: 'Mail campaign fetched successfully',
                     subscribeSent: 'Subscription confirmation email sent',
@@ -2764,10 +2797,13 @@ export const langEN = {
                     providerNotConfigured: 'Mail provider is not configured',
                     providerNotActive: 'Mail provider is not active',
                     providerTokenMissing: 'Mail provider token is missing',
-                    confirmTokenInvalid: 'Invalid newsletter confirmation token',
-                    unsubscribeTokenInvalid: 'Invalid newsletter unsubscribe token',
+                    confirmTokenInvalid:
+                        'Invalid newsletter confirmation token',
+                    unsubscribeTokenInvalid:
+                        'Invalid newsletter unsubscribe token',
                     tenantContextRequired: 'Tenant context is required',
-                    moduleNotEnabled: 'Mail marketing module is not enabled for tenant',
+                    moduleNotEnabled:
+                        'Mail marketing module is not enabled for tenant',
                 },
             },
         },
@@ -2790,7 +2826,8 @@ export const langEN = {
                 },
                 messages: {
                     noData: 'No contacts found',
-                    noDataHint: 'Create a contact to start building your outreach audience',
+                    noDataHint:
+                        'Create a contact to start building your outreach audience',
                     confirmDelete:
                         'Delete this contact? This action cannot be undone.',
                 },
@@ -2812,13 +2849,16 @@ export const langEN = {
                 },
                 placeholders: {
                     name: 'e.g. B2B Intro - TR',
-                    subject: 'e.g. {{contactName}}, we have something for {{companyName}}',
-                    content: 'Paste your HTML email template here. Use {{contactName}}, {{companyName}}, {{city}}, {{email}}, {{fromName}} as dynamic variables.',
+                    subject:
+                        'e.g. {{contactName}}, we have something for {{companyName}}',
+                    content:
+                        'Paste your HTML email template here. Use {{contactName}}, {{companyName}}, {{city}}, {{email}}, {{fromName}} as dynamic variables.',
                 },
                 availableVariables: 'Available variables',
                 messages: {
                     noData: 'No templates found',
-                    noDataHint: 'Create a template to use in outreach campaigns',
+                    noDataHint:
+                        'Create a template to use in outreach campaigns',
                     confirmDelete:
                         'Delete this template? This action cannot be undone.',
                 },
@@ -2909,7 +2949,8 @@ export const langEN = {
                 emailRequired: 'Email address is required',
                 emailInvalid: 'Please enter a valid email address',
                 passwordRequired: 'Password is required',
-                passwordMinLength: 'Password must be at least {{count}} characters',
+                passwordMinLength:
+                    'Password must be at least {{count}} characters',
                 passwordConfirmRequired: 'Password confirmation is required',
             },
             right: {
@@ -2933,9 +2974,8 @@ export const langEN = {
             submit: 'Send reset link',
             alerts: {
                 success:
-                    "If this email is registered, you will receive reset instructions shortly.",
-                error:
-                    'We could not complete this request. Check the email address or contact your administrator.',
+                    'If this email is registered, you will receive reset instructions shortly.',
+                error: 'We could not complete this request. Check the email address or contact your administrator.',
             },
         },
         resetPassword: {

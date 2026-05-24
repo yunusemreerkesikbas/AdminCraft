@@ -16,8 +16,10 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- SITE SECURITY -----
     siteSecuritySettings: 'sites/security',
-    siteSecurityTwoFactorRequestChange: 'sites/security/two-factor/request-change',
-    siteSecurityTwoFactorConfirmChange: 'sites/security/two-factor/confirm-change',
+    siteSecurityTwoFactorRequestChange:
+        'sites/security/two-factor/request-change',
+    siteSecurityTwoFactorConfirmChange:
+        'sites/security/two-factor/confirm-change',
 
     // ----- USERS -----
     users: 'users',
@@ -89,7 +91,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- MAIL MARKETING (TENANT) -----
     mailTemplateTypes: 'mail/templates/types',
     mailTemplateTypeDetail: 'mail/templates/types/${templateType}',
-    mailTemplateTypeTranslation: 'mail/templates/types/${templateType}/translations/${language}',
+    mailTemplateTypeTranslation:
+        'mail/templates/types/${templateType}/translations/${language}',
     mailTemplates: 'mail/templates',
     mailTemplateById: 'mail/templates/${id}',
     mailSubscribers: 'mail/subscribers',
@@ -169,7 +172,8 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- COMPONENT LIBRARY: ENTRY FIELDS -----
     componentTypeEntryFields: 'components/types/${typeId}/entry-fields',
-    componentTypeEntryFieldById: 'components/types/${typeId}/entry-fields/${id}',
+    componentTypeEntryFieldById:
+        'components/types/${typeId}/entry-fields/${id}',
 
     // ----- COMPONENT LIBRARY: ENTRIES -----
     componentEntriesList: 'components/${componentId}/entries',
@@ -183,18 +187,23 @@ export const SPA_ENDPOINTS_CONFIG = {
     componentEntryPublish: 'components/entries/${entryId}/publish/${language}',
     componentEntryComposite: 'components/entries/composite',
     componentEntryCompositeById: 'components/entries/${id}/composite',
-    componentEntryCompositeDraftById: 'components/entries/${id}/composite/draft',
+    componentEntryCompositeDraftById:
+        'components/entries/${id}/composite/draft',
 
     // ----- PLATFORM -----
     platformDashboard: 'platform/dashboard',
     platformSettings: 'platform/settings',
-    platformSettingsTwoFactorRequestChange: 'platform/settings/two-factor/request-change',
-    platformSettingsTwoFactorConfirmChange: 'platform/settings/two-factor/confirm-change',
+    platformSettingsTwoFactorRequestChange:
+        'platform/settings/two-factor/request-change',
+    platformSettingsTwoFactorConfirmChange:
+        'platform/settings/two-factor/confirm-change',
     platformDemoRequests: 'platform/demo-requests',
     platformDemoRequestById: 'platform/demo-requests/${id}',
     platformMailTemplateTypes: 'platform/mail/templates/types',
-    platformMailTemplateTypeDetail: 'platform/mail/templates/types/${templateType}',
-    platformMailTemplateTypeTranslation: 'platform/mail/templates/types/${templateType}/translations/${language}',
+    platformMailTemplateTypeDetail:
+        'platform/mail/templates/types/${templateType}',
+    platformMailTemplateTypeTranslation:
+        'platform/mail/templates/types/${templateType}/translations/${language}',
     platformMailTemplates: 'platform/mail/templates',
     platformMailTemplateById: 'platform/mail/templates/${id}',
     platformMailSubscribers: 'platform/mail/subscribers',
@@ -207,7 +216,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     platformMailSubscribersExport: 'platform/mail/subscribers/admin/export',
     platformPublicNewsletterSubscribe: 'platform/public/newsletter/subscribe',
     platformPublicNewsletterConfirm: 'platform/public/newsletter/confirm',
-    platformPublicNewsletterUnsubscribe: 'platform/public/newsletter/unsubscribe',
+    platformPublicNewsletterUnsubscribe:
+        'platform/public/newsletter/unsubscribe',
 
     // ----- PLATFORM OUTREACH -----
     platformOutreachContacts: 'platform/outreach/contacts',

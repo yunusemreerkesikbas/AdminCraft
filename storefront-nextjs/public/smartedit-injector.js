@@ -15,7 +15,9 @@
   var rawAllowed = metaTag ? metaTag.getAttribute("content") : "";
   var allowedOrigins = (rawAllowed || "")
     .split(",")
-    .map(function (s) { return s.trim(); })
+    .map(function (s) {
+      return s.trim();
+    })
     .filter(Boolean);
   if (allowedOrigins.length === 0) {
     return;

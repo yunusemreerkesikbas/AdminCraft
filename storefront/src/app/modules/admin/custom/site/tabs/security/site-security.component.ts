@@ -74,7 +74,11 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
     #saveCooldownTimer: ReturnType<typeof setInterval> | null = null;
     #pendingSession: PendingOtpPolicySession | null = null;
 
-    readonly policyOptions: { value: TwoFactorPolicy; label: string; description: string }[] = [
+    readonly policyOptions: {
+        value: TwoFactorPolicy;
+        label: string;
+        description: string;
+    }[] = [
         {
             value: 'DISABLED',
             label: 'admin.site.dashboard.security.policy.disabled',
@@ -152,8 +156,8 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
                     this.#cacheSession(response.data);
                     if (response.data.emailSent !== false) {
                         this.#notificationService.success(
-                            response.message
-                                || 'admin.site.dashboard.security.twoFactor.otpSent'
+                            response.message ||
+                                'admin.site.dashboard.security.twoFactor.otpSent'
                         );
                     }
                     this.#openOtpModal(response.data);
@@ -253,7 +257,8 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
                 'admin.site.dashboard.security.twoFactor.expired'
             ),
             disableClose: false,
-            onConfirm: (otpCode) => this.#confirmChange(pendingChangeId, otpCode),
+            onConfirm: (otpCode) =>
+                this.#confirmChange(pendingChangeId, otpCode),
         });
 
         this.#otpModalHandle.dialogRef
@@ -284,7 +289,8 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
                     this.#pendingSession = null;
                     this.#populateForm(response.data);
                     this.#notificationService.success(
-                        response.message || 'admin.site.dashboard.security.messages.saveSuccess'
+                        response.message ||
+                            'admin.site.dashboard.security.messages.saveSuccess'
                     );
                     this.securityUpdated.emit(response.data);
                 },
@@ -295,7 +301,9 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
             });
     }
 
-    #populateForm(security: SecuritySettingsResponse | null = this.security): void {
+    #populateForm(
+        security: SecuritySettingsResponse | null = this.security
+    ): void {
         if (!security) {
             return;
         }

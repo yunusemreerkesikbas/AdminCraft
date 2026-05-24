@@ -1,9 +1,16 @@
-<div class="spa-otp-input w-full" [class.spa-otp-input--disabled]="isDisabled()">
+<div
+    class="spa-otp-input w-full"
+    [class.spa-otp-input--disabled]="isDisabled()"
+>
     @if (label) {
         <label class="spa-otp-input__label">{{ label }}</label>
     }
 
-    <div class="spa-otp-input__boxes" role="group" [attr.aria-label]="label || 'Verification code'">
+    <div
+        class="spa-otp-input__boxes"
+        role="group"
+        [attr.aria-label]="label || 'Verification code'"
+    >
         @for (index of indices; track index) {
             <input
                 #digitInput

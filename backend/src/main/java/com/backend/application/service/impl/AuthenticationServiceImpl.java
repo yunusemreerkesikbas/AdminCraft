@@ -247,9 +247,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (!deviceTrusted) {
                 log.info("2FA required for user: {}, generating OTP", maskEmail(user.getEmail()));
 
-                OtpService.LoginOtpResult otpResult = issueTenantLoginOtp(user, tenant, ipAddress, userAgent);
+                LoginOtpIssue otpIssue = issueTenantLoginOtp(user, tenant, ipAddress, userAgent);
 
-                return AuthResult.requiring2FA(user.getEmail(), otpResult.sessionToken(), subdomain, tenantId);
+                return AuthResult.requiring2FA(
+                        user.getEmail(),
+                        otpIssue.sessionToken(),
+                        subdomain,
+                        tenantId,
+                        otpIssue.cooldownSeconds());
             } else {
                 log.info("Device trusted for user: {}, skipping 2FA", user.getId());
                 trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
@@ -313,7 +318,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         if (isPlatformTwoFactorRequired()) {
             PlatformLoginOtpResult otpResult = issuePlatformLoginOtp(admin, ipAddress, userAgent);
-            return AuthResult.requiring2FA(admin.getEmail(), otpResult.sessionToken(), null, null);
+            return AuthResult.requiring2FA(
+                    admin.getEmail(),
+                    otpResult.sessionToken(),
+                    null,
+                    null,
+                    otpResult.cooldownSeconds());
         }
 
         // Record successful login
@@ -371,7 +381,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             if (isPlatformTwoFactorRequired()) {
                 PlatformLoginOtpResult otpResult = issuePlatformLoginOtp(admin, ipAddress, userAgent);
-                return AuthResult.requiring2FA(admin.getEmail(), otpResult.sessionToken(), null, null);
+                return AuthResult.requiring2FA(
+                        admin.getEmail(),
+                        otpResult.sessionToken(),
+                        null,
+                        null,
+                        otpResult.cooldownSeconds());
             }
 
             String newAccessToken = jwtProviderPort.createAccessToken(
@@ -454,8 +469,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                 trustedDeviceService.isDeviceTrusted(user.getId(), deviceFingerprint);
                         if (!deviceTrusted) {
                             log.info("2FA required on refresh for userId: {}", user.getId());
-                            OtpService.LoginOtpResult otpResult = issueTenantLoginOtp(user, tenant, ipAddress, userAgent);
-                            return AuthResult.requiring2FA(user.getEmail(), otpResult.sessionToken(), tenant.getSubdomain(), tenantId);
+                            LoginOtpIssue otpIssue = issueTenantLoginOtp(user, tenant, ipAddress, userAgent);
+                            return AuthResult.requiring2FA(
+                                    user.getEmail(),
+                                    otpIssue.sessionToken(),
+                                    tenant.getSubdomain(),
+                                    tenantId,
+                                    otpIssue.cooldownSeconds());
                         }
                         trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
                     }
@@ -954,7 +974,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         platformVerificationTokenRepository.save(token);
-        return new PlatformLoginOtpResult(otp, sessionToken);
+        return new PlatformLoginOtpResult(otp, sessionToken, 0);
     }
 
     /**
@@ -1053,7 +1073,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return email.charAt(0) + "***" + email.substring(atIndex - 1);
     }
 
-    private OtpService.LoginOtpResult issueTenantLoginOtp(
+    private LoginOtpIssue issueTenantLoginOtp(
             User user,
             Tenant tenant,
             String ipAddress,
@@ -1066,7 +1086,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Language userLanguage = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
         emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), userLanguage);
         otpRateLimitService.recordOtpSend(user.getEmail(), scopeKey);
-        return otpResult;
+        return new LoginOtpIssue(otpResult.sessionToken(), cooldownSeconds);
     }
 
     private PlatformLoginOtpResult issuePlatformLoginOtp(
@@ -1081,10 +1101,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Language language = resolvePlatformLanguage();
         emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), language);
         otpRateLimitService.recordOtpSend(admin.getEmail(), scopeKey);
-        return otpResult;
+        return new PlatformLoginOtpResult(otpResult.otpCode(), otpResult.sessionToken(), cooldownSeconds);
     }
 
-    private record PlatformLoginOtpResult(String otpCode, String sessionToken) {
+    private record LoginOtpIssue(String sessionToken, int cooldownSeconds) {
+    }
+
+    private record PlatformLoginOtpResult(String otpCode, String sessionToken, int cooldownSeconds) {
     }
 
     private String hashRefreshToken(String token) {

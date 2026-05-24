@@ -15,7 +15,9 @@
             @if (otpData.description) {
                 <div class="mb-2">{{ otpData.description }}</div>
             }
-            <div class="font-mono text-sm font-semibold text-slate-800 dark:text-slate-100">
+            <div
+                class="font-mono text-sm font-semibold text-slate-800 dark:text-slate-100"
+            >
                 {{ otpData.maskedEmail }}
             </div>
         </div>
@@ -26,7 +28,11 @@
             </div>
         }
 
-        <form class="spa-otp-form mt-4 w-full" [formGroup]="otpForm" (ngSubmit)="submitOtp()">
+        <form
+            class="spa-otp-form mt-4 w-full"
+            [formGroup]="otpForm"
+            (ngSubmit)="submitOtp()"
+        >
             <spa-otp-input formControlName="otpCode"></spa-otp-input>
             @if (expiresRemainingSig()) {
                 <p class="otp-expiry-counter mt-3 text-sm text-slate-600">
@@ -87,7 +93,9 @@
                             </div>
                             <button
                                 mat-icon-button
-                                (click)="copyToClipboard(field.value, field.label)"
+                                (click)="
+                                    copyToClipboard(field.value, field.label)
+                                "
                             >
                                 <mat-icon class="icon-size-4"
                                     >content_copy</mat-icon
