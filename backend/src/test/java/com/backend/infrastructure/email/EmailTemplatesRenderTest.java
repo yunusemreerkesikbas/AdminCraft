@@ -59,6 +59,14 @@ class EmailTemplatesRenderTest {
                         Map.of("otpCode", "123456", "expiryMinutes", 5),
                         "Doğrulama Kodu"),
                 new TemplateCase(
+                        "email/operation-otp-en",
+                        Map.of("otpCode", "123456", "expiryMinutes", 5),
+                        "Confirm Security Change"),
+                new TemplateCase(
+                        "email/operation-otp-tr",
+                        Map.of("otpCode", "123456", "expiryMinutes", 5),
+                        "Güvenlik Değişikliğini Onaylayın"),
+                new TemplateCase(
                         "email/newsletter-confirm-en",
                         Map.of("confirmLink", "https://example.test/newsletter/confirm?token=abc"),
                         "Confirm Subscription"),

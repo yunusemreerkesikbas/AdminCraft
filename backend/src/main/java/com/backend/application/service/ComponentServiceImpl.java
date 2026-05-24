@@ -409,7 +409,7 @@ public class ComponentServiceImpl implements ComponentService {
         ComponentType componentType = componentTypeRepository.findById(component.getComponentTypeId())
                 .orElseThrow(() -> new EntityNotFoundException("ComponentType", component.getComponentTypeId()));
 
-        cmsDraftOverrideService.saveComponentDraft(id, request);
+        cmsDraftOverrideService.saveComponentDraft(id, request, securityHelper.getCurrentUserIdOrNull());
 
         Component previewComponent = cloneComponent(component);
         cmsDraftOverrideService.findComponentDraft(id)
@@ -440,8 +440,6 @@ public class ComponentServiceImpl implements ComponentService {
                     .ifPresent(draft -> cmsDraftOverrideService.apply(i18n, draft));
         }
 
-        activityPublisher.publishComponentEvent(component.getId(), component.getName(),
-                ActivityAction.UPDATED, securityHelper.getCurrentUserIdOrNull(), null, null);
         return ComponentCompositeResponse.from(previewComponent, componentType.getUid(), i18nList);
     }
 

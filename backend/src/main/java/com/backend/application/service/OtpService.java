@@ -3,6 +3,7 @@ package com.backend.application.service;
 import com.backend.domain.entity.User;
 import com.backend.domain.entity.VerificationToken;
 import com.backend.domain.enums.TokenType;
+import com.backend.domain.enums.TwoFactorPolicy;
 
 public interface OtpService {
 
@@ -12,7 +13,11 @@ public interface OtpService {
 
     LoginOtpResult createLoginOtpToken(User user, String ipAddress, String userAgent);
 
+    OperationOtpResult createOperationOtpToken(User user, TwoFactorPolicy pendingPolicy, String ipAddress, String userAgent);
+
     record LoginOtpResult(String otpCode, String sessionToken) {}
+
+    record OperationOtpResult(String otpCode, String sessionToken) {}
 
     record PasswordResetTokenResult(VerificationToken token, String plainToken) {}
 

@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.SecuritySettingsResult;
+import com.backend.application.dto.TwoFactorPolicyChangeRequestResult;
 import com.backend.application.dto.UpdateSecuritySettingsCommand;
 import com.backend.application.dto.request.CreateSiteRequest;
 import com.backend.application.dto.request.SiteTechnicalPatchRequest;
@@ -41,7 +42,14 @@ import com.backend.application.service.SiteOverviewService;
 import com.backend.application.service.SiteService;
 import com.backend.application.service.SiteTechnicalService;
 import com.backend.domain.enums.Language;
+import com.backend.domain.exception.InvalidCredentialsException;
+import com.backend.domain.exception.InvalidTokenException;
+import com.backend.domain.exception.OtpRateLimitExceededException;
+import com.backend.domain.exception.TwoFactorPolicyVerificationRequiredException;
+import com.backend.presentation.dto.request.ConfirmTwoFactorPolicyChangeRequest;
+import com.backend.presentation.dto.request.RequestTwoFactorPolicyChangeRequest;
 import com.backend.presentation.dto.request.UpdateSecuritySettingsRequest;
+import com.backend.presentation.dto.response.TwoFactorPolicyChangeRequestResponse;
 import com.backend.presentation.dto.response.SecuritySettingsResponse;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SiteAnalyticsSummaryResponse;
@@ -51,6 +59,7 @@ import com.backend.presentation.dto.response.SiteResponse;
 import com.backend.presentation.dto.response.SortConfig;
 import com.backend.presentation.dto.response.SiteTechnicalResponse;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.RequestUtils;
 import com.backend.shared.common.SecurityHelper;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
@@ -59,6 +68,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -573,12 +583,83 @@ public class SiteController {
             String message = messageSource.getMessage("site.security.updated.success", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, toSecuritySettingsResponse(result)));
+        } catch (TwoFactorPolicyVerificationRequiredException ex) {
+            String message = messageSource.getMessage("site.security.verification.required", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Error updating security settings", ex);
             String message = messageSource.getMessage("site.security.update.error", null,
                     Locale.forLanguageTag(languageCode));
             if (message.length() > 500)
                 message = message.substring(0, 500);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
+        }
+    }
+
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
+    @PostMapping("/security/two-factor/request-change")
+    @Operation(summary = "Request two-factor policy change", description = "Sends an operation OTP to the acting admin email before applying a policy change")
+    public ResponseEntity<ApiResponse<TwoFactorPolicyChangeRequestResponse>> requestTwoFactorPolicyChange(
+            @Valid @RequestBody RequestTwoFactorPolicyChangeRequest request,
+            HttpServletRequest httpRequest,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
+            String userAgent = RequestUtils.getUserAgent(httpRequest);
+            TwoFactorPolicyChangeRequestResult result = securitySettingsService.requestTwoFactorPolicyChange(
+                    request.twoFactorPolicy(),
+                    ipAddress,
+                    userAgent);
+            String message = messageSource.getMessage("site.security.twoFactor.otp.sent", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, TwoFactorPolicyChangeRequestResponse.from(result)));
+        } catch (OtpRateLimitExceededException ex) {
+            String message = messageSource.getMessage("auth.otp.rateLimit", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponse.error(message));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(ex.getMessage()));
+        } catch (Exception ex) {
+            log.error("Error requesting two-factor policy change", ex);
+            String message = messageSource.getMessage("site.security.twoFactor.otp.request.error", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
+        }
+    }
+
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
+    @PostMapping("/security/two-factor/confirm-change")
+    @Operation(summary = "Confirm two-factor policy change", description = "Verifies the operation OTP and applies the pending two-factor policy")
+    public ResponseEntity<ApiResponse<SecuritySettingsResponse>> confirmTwoFactorPolicyChange(
+            @Valid @RequestBody ConfirmTwoFactorPolicyChangeRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            SecuritySettingsResult result = securitySettingsService.confirmTwoFactorPolicyChange(
+                    request.pendingChangeId(),
+                    request.otpCode());
+            String message = messageSource.getMessage("site.security.updated.success", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, toSecuritySettingsResponse(result)));
+        } catch (InvalidTokenException ex) {
+            String message = messageSource.getMessage("site.security.twoFactor.otp.invalid", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
+        } catch (InvalidCredentialsException ex) {
+            String message = messageSource.getMessage("auth.otp.invalid", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(message));
+        } catch (Exception ex) {
+            log.error("Error confirming two-factor policy change", ex);
+            String message = messageSource.getMessage("site.security.update.error", null,
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
         }

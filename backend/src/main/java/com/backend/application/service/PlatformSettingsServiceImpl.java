@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.request.PatchPlatformSettingsRequest;
 import com.backend.application.dto.response.PlatformSettingsData;
 import com.backend.domain.enums.TwoFactorPolicy;
+import com.backend.domain.exception.TwoFactorPolicyVerificationRequiredException;
 import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
 import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
@@ -47,7 +48,7 @@ public class PlatformSettingsServiceImpl implements PlatformSettingsService {
             entity.setEmailFromName(request.emailFromName());
         }
         if (request.twoFactorPolicy() != null) {
-            entity.setTwoFactorPolicy(request.twoFactorPolicy());
+            throw new TwoFactorPolicyVerificationRequiredException();
         }
 
         PlatformSettings saved = platformSettingsRepository.save(entity);

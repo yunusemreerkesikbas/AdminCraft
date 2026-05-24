@@ -61,7 +61,9 @@ New endpoints under `/api/sites`:
 | `GET`   | `/sites/technical` | Technical settings                                    |
 | `PATCH` | `/sites/technical` | Update technical settings                             |
 | `GET`   | `/sites/security`  | Security settings (2FA policy)                        |
-| `PATCH` | `/sites/security`  | Update security settings                              |
+| `PATCH` | `/sites/security`  | Legacy partial update (does not apply `twoFactorPolicy`; returns 409 if sent) |
+| `POST`  | `/sites/security/two-factor/request-change` | Request email OTP before changing 2FA policy |
+| `POST`  | `/sites/security/two-factor/confirm-change` | Confirm OTP and apply pending 2FA policy |
 
 > **Note:** The public robots.txt endpoint is not in `SiteController`. It is served by `CmsDeliveryController` as `GET /api/cms/robots.txt` (no auth, no app-level rate limit). See [cms-delivery.md](./cms-delivery.md#robotstxt).
 

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -20,6 +21,7 @@ import org.springframework.transaction.support.SimpleTransactionStatus;
 import com.backend.application.service.EmailService;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.TrustedDeviceService;
+import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
 import com.backend.domain.enums.Language;
@@ -79,6 +81,12 @@ class AuthenticationServiceImplPasswordResetTest {
     private OtpConfig otpConfig;
 
     @Mock
+    private GlobalRuntimeConfigService globalRuntimeConfigService;
+
+    @Mock
+    private Environment environment;
+
+    @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
@@ -108,6 +116,8 @@ class AuthenticationServiceImplPasswordResetTest {
                 trustedDeviceService,
                 verificationTokenRepository,
                 otpConfig,
+                globalRuntimeConfigService,
+                environment,
                 refreshTokenRepository,
                 platformRefreshTokenRepository,
                 tenantTransactionManager,
