@@ -148,6 +148,28 @@
                         pattern="[0-9]*"
                     ></spa-input>
 
+                    <div class="mt-3 text-center">
+                        @if (otpResendCooldownSig() > 0) {
+                            <p class="text-sm text-slate-600">
+                                {{
+                                    'auth.signIn.2fa.resendIn'
+                                        | transloco
+                                            : { seconds: otpResendCooldownSig() }
+                                }}
+                            </p>
+                        } @else {
+                            <button
+                                type="button"
+                                mat-button
+                                [color]="'primary'"
+                                [disabled]="otpForm.disabled"
+                                (click)="resendOtp()"
+                            >
+                                {{ 'auth.signIn.2fa.resend' | transloco }}
+                            </button>
+                        }
+                    </div>
+
                     <!-- Trust device checkbox -->
                     @if (!isPlatformHostSig()) {
                         <div class="mt-4">

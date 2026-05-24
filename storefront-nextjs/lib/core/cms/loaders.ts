@@ -43,10 +43,32 @@ export const loadContentPage = cache(async (
   previewTicket?: string,
   previewPageId?: number,
 ) => {
+  const loadPage = async () => {
+    if (!slugPath) {
+      return getCmsPage(lang, { previewTicket, previewPageId });
+    }
+
+    const contentPage = await getCmsPage(lang, {
+      pageType: "ContentPage",
+      pageLabelOrId: slugPath,
+      previewTicket,
+      previewPageId,
+    });
+
+    if (contentPage) {
+      return contentPage;
+    }
+
+    return getCmsPage(lang, {
+      pageType: "LandingPage",
+      pageLabelOrId: slugPath,
+      previewTicket,
+      previewPageId,
+    });
+  };
+
   const [page, site] = await Promise.all([
-    slugPath
-      ? getCmsPage(lang, { pageType: "ContentPage", pageLabelOrId: slugPath, previewTicket, previewPageId })
-      : getCmsPage(lang, { previewTicket, previewPageId }),
+    loadPage(),
     getSiteConfig(lang, previewTicket),
   ]);
 

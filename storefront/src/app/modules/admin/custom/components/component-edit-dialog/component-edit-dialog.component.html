@@ -172,6 +172,8 @@
                     [componentId]="data.component.id"
                     [componentTypeId]="data.component.componentTypeId"
                     [languages]="languages"
+                    [draftMode]="!!data.draftMode"
+                    (draftSaved)="onEntryDraftSaved()"
                 >
                 </spa-component-entry-list>
             </ng-template>

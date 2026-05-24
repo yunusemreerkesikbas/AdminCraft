@@ -39,6 +39,11 @@ export class AuthService {
     #accessTokenSig = signal<string>('');
     #refreshInProgress: Observable<boolean> | null = null;
 
+    #otpResendCooldownSig = signal(0);
+    readonly otpResendCooldownSig: Signal<number> =
+        this.#otpResendCooldownSig.asReadonly();
+    #otpResendCooldownTimer: ReturnType<typeof setInterval> | null = null;
+
     #setAccessToken(token: string): void {
         this.#accessTokenSig.set(token);
     }
@@ -180,6 +185,23 @@ export class AuthService {
             catchError((error) => {
                 const message = error?.error?.message || error?.message;
                 const errorCode = error?.error?.data?.errorCode;
+                const status = error?.status;
+
+                if (
+                    status === 429 ||
+                    errorCode === 'OTP_RATE_LIMIT_EXCEEDED'
+                ) {
+                    const retryAfter = Number(
+                        error?.error?.data?.retryAfterSeconds
+                    );
+                    this.#startOtpResendCooldown(
+                        Number.isFinite(retryAfter) && retryAfter > 0
+                            ? retryAfter
+                            : 60
+                    );
+                    this.#notificationService.alert(message);
+                    return of(false);
+                }
 
                 if (errorCode === 'ACCOUNT_LOCKED') {
                     this.#notificationService.warning(message, {
@@ -219,6 +241,36 @@ export class AuthService {
     cancel2FA(): void {
         this.#requires2FASig.set(false);
         this.#twoFactorPendingSig.set(null);
+        this.#clearOtpResendCooldown();
+    }
+
+    #startOtpResendCooldown(seconds: number): void {
+        this.#clearOtpResendCooldownTimer();
+        this.#otpResendCooldownSig.set(seconds);
+        if (seconds <= 0) {
+            return;
+        }
+        this.#otpResendCooldownTimer = setInterval(() => {
+            const remaining = this.#otpResendCooldownSig() - 1;
+            if (remaining <= 0) {
+                this.#otpResendCooldownSig.set(0);
+                this.#clearOtpResendCooldownTimer();
+            } else {
+                this.#otpResendCooldownSig.set(remaining);
+            }
+        }, 1000);
+    }
+
+    #clearOtpResendCooldownTimer(): void {
+        if (this.#otpResendCooldownTimer !== null) {
+            clearInterval(this.#otpResendCooldownTimer);
+            this.#otpResendCooldownTimer = null;
+        }
+    }
+
+    #clearOtpResendCooldown(): void {
+        this.#clearOtpResendCooldownTimer();
+        this.#otpResendCooldownSig.set(0);
     }
 
     #completeSignIn(

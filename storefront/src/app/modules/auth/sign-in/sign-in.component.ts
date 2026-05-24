@@ -82,7 +82,20 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
 
     readonly requires2FASig = this.#authService.requires2FASig;
     readonly twoFactorPendingSig = this.#authService.twoFactorPendingSig;
+    readonly otpResendCooldownSig = this.#authService.otpResendCooldownSig;
     readonly showOtpFormSig = computed(() => this.requires2FASig());
+    readonly canResendOtpSig = computed(
+        () => this.otpResendCooldownSig() <= 0
+    );
+
+    #lastLoginCredentials: {
+        email: string;
+        password: string;
+        workspace?: string;
+        rememberMe?: boolean;
+        deviceFingerprint?: string;
+        recaptchaToken?: string;
+    } | null = null;
 
     ngOnInit(): void {
         const routeSubdomain = this.#tenantContext.normalizeSubdomain(
@@ -168,6 +181,12 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
                 recaptchaToken: await this.#getRecaptchaToken(),
                 rememberMe: this.signInForm.get('rememberMe')?.value ?? false,
             };
+            this.#lastLoginCredentials = {
+                email: credentials.email,
+                password: credentials.password,
+                workspace: credentials.workspace,
+                rememberMe: credentials.rememberMe,
+            };
 
             this.#authService
                 .signIn(credentials)
@@ -245,8 +264,45 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             });
     }
 
+    async resendOtp(): Promise<void> {
+        if (!this.canResendOtpSig() || !this.#lastLoginCredentials) {
+            return;
+        }
+        this.otpForm.disable();
+        try {
+            const pending = this.#lastLoginCredentials;
+            const credentials = {
+                email: pending.email,
+                password: pending.password,
+                workspace: pending.workspace,
+                rememberMe: pending.rememberMe,
+                recaptchaToken: await this.#getRecaptchaToken(),
+                deviceFingerprint:
+                    await this.#deviceFingerprintService.getDeviceFingerprint(),
+            };
+            this.#authService
+                .signIn(credentials)
+                .pipe(takeUntil(this.#destroySubject))
+                .subscribe({
+                    next: (result) => {
+                        this.otpForm.enable();
+                        if (result === 'requires2FA') {
+                            this.otpForm.reset();
+                            this.otpSubmittedSig.set(false);
+                        }
+                    },
+                    error: () => {
+                        this.otpForm.enable();
+                    },
+                });
+        } catch {
+            this.otpForm.enable();
+        }
+    }
+
     cancelOtp(): void {
         this.#authService.cancel2FA();
+        this.#lastLoginCredentials = null;
         this.signInForm.enable();
         this.signInForm.reset();
         this.otpForm.reset();

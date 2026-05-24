@@ -530,6 +530,9 @@ export const langTR = {
                 editPageMetadata: 'Sayfa bilgilerini düzenle',
                 editComponent: 'Bileşeni düzenle',
                 publishCurrentLang: 'Geçerli dili yayınla',
+                confirmPublish: 'Yayınla',
+                discardDraft: 'Taslağı sil',
+                discardCurrentLanguageDrafts: 'Bu dildeki taslakları sil',
                 renewTicket: 'Oturumu yenile',
             },
             viewport: {
@@ -551,6 +554,12 @@ export const langTR = {
             },
             messages: {
                 publishSuccess: 'Geçerli dil için içerik yayınlandı',
+            },
+            drafts: {
+                title: 'Taslaklar',
+                empty: 'Bu sayfa ve dil için yayınlanabilir taslak yok.',
+                reviewTitle: 'Yayın öncesi kontrol',
+                reviewEmpty: 'Yayınlanacak alan değişikliği yok.',
             },
             warnings: {
                 ticketExpiringSoon: 'Önizleme oturumunun süresi 2 dakikadan az kaldı.',
@@ -1185,7 +1194,15 @@ export const langTR = {
                     twoFactor: {
                         title: 'İki Faktörlü Kimlik Doğrulama',
                         description: 'Kullanıcıların sitenize nasıl giriş yapacağını kontrol edin. İki faktörlü kimlik doğrulama, kullanıcının e-postasına gönderilen bir doğrulama kodu gerektirerek ekstra güvenlik katmanı ekler.',
-                        info: '2FA zorunlu olduğunda, kullanıcıların giriş yaparken e-postalarına gönderilen doğrulama kodunu girmeleri gerekir. Güvenilir cihazlar 30 gün boyunca bu adımı atlayabilir.',
+                        info: '2FA zorunlu olduğunda, kullanıcıların giriş yaparken e-postalarına gönderilen doğrulama kodunu girmeleri gerekir. Güvenilir cihazlar 30 gün boyunca bu adımı atlayabilir. Politika değişiklikleri kayıtlı yönetici e-postanıza gönderilen kod ile onaylanır.',
+                        otpTitle: 'Politika değişikliğini onaylayın',
+                        otpDescription: 'Bu güvenlik politika değişikliğini uygulamak için e-postanıza gönderilen doğrulama kodunu girin.',
+                        otpLabel: 'Doğrulama kodu',
+                        otpSent: 'Doğrulama kodu e-posta adresinize gönderildi',
+                        otpRequestFailed: 'Doğrulama kodu gönderilemedi',
+                        confirm: 'Değişikliği onayla',
+                        expiresIn: 'Kod geçerlilik süresi',
+                        expired: 'Bu kodun süresi doldu. Yeni kod için tekrar kaydedin.',
                     },
                     policy: {
                         disabled: 'Devre Dışı',
@@ -2414,6 +2431,14 @@ export const langTR = {
                     twoFactor: {
                         title: 'İki Faktörlü Kimlik Doğrulama',
                         description: 'Super admin girişleri için OTP politikasını yapılandırın.',
+                        otpTitle: 'Politika değişikliğini onaylayın',
+                        otpDescription: 'Bu güvenlik politika değişikliğini uygulamak için e-postanıza gönderilen doğrulama kodunu girin.',
+                        otpLabel: 'Doğrulama kodu',
+                        otpSent: 'Doğrulama kodu e-posta adresinize gönderildi',
+                        otpRequestFailed: 'Doğrulama kodu gönderilemedi',
+                        confirm: 'Değişikliği onayla',
+                        expiresIn: 'Kod geçerlilik süresi',
+                        expired: 'Bu kodun süresi doldu. Yeni kod için tekrar kaydedin.',
                         policy: {
                             disabled: 'Kapalı',
                             disabledDesc: 'Super admin kullanıcıları yalnızca e-posta ve şifre ile giriş yapar.',
@@ -3015,6 +3040,12 @@ export const langTR = {
         auth: {
             title: 'Config Control Panel',
             subtitle: 'Yapılandırma paneline giriş',
+            workspace: 'Çalışma Alanı',
+            workspacePlaceholder: 'sirketiniz',
+            workspaceHint:
+                'Global platform ayarları için boş bırakın; site yapılandırması için kiracı alt alan adını girin.',
+            workspaceInvalid:
+                'Geçerli bir çalışma alanı girin (yalnızca küçük harf, rakam ve tire).',
             emailLabel: 'E-posta adresi',
             passwordLabel: 'Şifre',
             submit: 'Devam Et',

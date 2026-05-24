@@ -29,7 +29,7 @@
     for (var i = 0; i < allowedOrigins.length; i++) {
       try {
         window.parent.postMessage(message, allowedOrigins[i]);
-      } catch (e) {
+      } catch {
         // swallow: cross-origin restrictions
       }
     }

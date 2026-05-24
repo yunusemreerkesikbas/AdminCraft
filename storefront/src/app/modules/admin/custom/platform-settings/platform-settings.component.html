@@ -73,7 +73,10 @@
                             <div>
                                 <h4 class="mb-2 text-base font-medium">{{ 'admin.platform.settings.security.twoFactor.title' | transloco }}</h4>
                                 <p class="mb-4 text-sm text-secondary">{{ 'admin.platform.settings.security.twoFactor.description' | transloco }}</p>
-                                <mat-radio-group formControlName="twoFactorPolicy" class="flex flex-col gap-3">
+                                <mat-radio-group
+                                    formControlName="twoFactorPolicy"
+                                    class="flex flex-col gap-3"
+                                >
                                     @for (option of policyOptions; track option.value) {
                                         <div class="rounded-lg border p-4">
                                             <mat-radio-button [value]="option.value" color="primary">
@@ -88,12 +91,25 @@
                     </div>
 
                     <!-- Save Button -->
-                    <div class="flex justify-end pb-8">
+                    <div class="flex flex-col items-end gap-2 pb-8">
+                        @if (saveCooldownSig() > 0) {
+                            <p class="text-sm text-slate-600">
+                                {{
+                                    'auth.signIn.2fa.resendIn'
+                                        | transloco: { seconds: saveCooldownSig() }
+                                }}
+                            </p>
+                        }
                         <button
                             mat-flat-button
                             [color]="'primary'"
                             type="submit"
-                            [disabled]="form.pristine || form.invalid || savingSig()"
+                            [disabled]="
+                                form.pristine ||
+                                form.invalid ||
+                                savingSig() ||
+                                saveCooldownSig() > 0
+                            "
                         >
                             @if (savingSig()) {
                                 <div class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

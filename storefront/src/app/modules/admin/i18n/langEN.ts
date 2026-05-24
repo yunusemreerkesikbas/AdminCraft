@@ -534,6 +534,9 @@ export const langEN = {
                 editPageMetadata: 'Edit page metadata',
                 editComponent: 'Edit component',
                 publishCurrentLang: 'Publish current language',
+                confirmPublish: 'Publish',
+                discardDraft: 'Discard draft',
+                discardCurrentLanguageDrafts: 'Discard drafts for this language',
                 renewTicket: 'Renew session',
             },
             viewport: {
@@ -555,6 +558,12 @@ export const langEN = {
             },
             messages: {
                 publishSuccess: 'Content published for the current language',
+            },
+            drafts: {
+                title: 'Drafts',
+                empty: 'No publishable drafts for this page and language.',
+                reviewTitle: 'Publish review',
+                reviewEmpty: 'There are no field changes to publish.',
             },
             warnings: {
                 ticketExpiringSoon: 'Preview session expires in less than 2 minutes.',
@@ -1187,7 +1196,15 @@ export const langEN = {
                     twoFactor: {
                         title: 'Two-Factor Authentication',
                         description: 'Control how users authenticate to your site. Two-factor authentication adds an extra layer of security by requiring a verification code sent to the user\'s email.',
-                        info: 'When 2FA is required, users will need to enter a verification code sent to their email during login. Trusted devices can skip this step for 30 days.',
+                        info: 'When 2FA is required, users will need to enter a verification code sent to their email during login. Trusted devices can skip this step for 30 days. Policy changes are confirmed with a verification code sent to your registered admin email.',
+                        otpTitle: 'Confirm policy change',
+                        otpDescription: 'Enter the verification code sent to your email to apply this security policy change.',
+                        otpLabel: 'Verification code',
+                        otpSent: 'Verification code sent to your email',
+                        otpRequestFailed: 'Could not send verification code',
+                        confirm: 'Confirm change',
+                        expiresIn: 'Code expires in',
+                        expired: 'This code has expired. Save again to request a new code.',
                     },
                     policy: {
                         disabled: 'Disabled',
@@ -2434,6 +2451,14 @@ export const langEN = {
                     twoFactor: {
                         title: 'Two-Factor Authentication',
                         description: 'Configure super admin OTP policy for platform login.',
+                        otpTitle: 'Confirm policy change',
+                        otpDescription: 'Enter the verification code sent to your email to apply this security policy change.',
+                        otpLabel: 'Verification code',
+                        otpSent: 'Verification code sent to your email',
+                        otpRequestFailed: 'Could not send verification code',
+                        confirm: 'Confirm change',
+                        expiresIn: 'Code expires in',
+                        expired: 'This code has expired. Save again to request a new code.',
                         policy: {
                             disabled: 'Disabled',
                             disabledDesc: 'Super admins can sign in with email and password only.',
@@ -2995,6 +3020,12 @@ export const langEN = {
         auth: {
             title: 'Config Control Panel',
             subtitle: 'Sign in to the config panel',
+            workspace: 'Workspace',
+            workspacePlaceholder: 'your-company',
+            workspaceHint:
+                'Leave empty for global platform settings; enter the tenant subdomain for site configuration.',
+            workspaceInvalid:
+                'Enter a valid workspace (lowercase letters, numbers, and hyphens only).',
             emailLabel: 'Email address',
             passwordLabel: 'Password',
             submit: 'Continue',

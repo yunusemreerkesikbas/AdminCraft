@@ -16,6 +16,8 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- SITE SECURITY -----
     siteSecuritySettings: 'sites/security',
+    siteSecurityTwoFactorRequestChange: 'sites/security/two-factor/request-change',
+    siteSecurityTwoFactorConfirmChange: 'sites/security/two-factor/confirm-change',
 
     // ----- USERS -----
     users: 'users',
@@ -135,6 +137,9 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- SMARTEDIT PREVIEW -----
     cmsPreviewTickets: 'cms/preview/tickets',
+    cmsPreviewPageDrafts: 'cms/preview/pages/${pageId}/drafts',
+    cmsPreviewPublishReview: 'cms/preview/pages/${pageId}/publish-review',
+    cmsPreviewDraftById: 'cms/preview/drafts/${draftId}',
 
     // ----- PAGE BUILDER: SLOTS -----
     pageSlots: 'pages/${id}/slots',
@@ -178,10 +183,13 @@ export const SPA_ENDPOINTS_CONFIG = {
     componentEntryPublish: 'components/entries/${entryId}/publish/${language}',
     componentEntryComposite: 'components/entries/composite',
     componentEntryCompositeById: 'components/entries/${id}/composite',
+    componentEntryCompositeDraftById: 'components/entries/${id}/composite/draft',
 
     // ----- PLATFORM -----
     platformDashboard: 'platform/dashboard',
     platformSettings: 'platform/settings',
+    platformSettingsTwoFactorRequestChange: 'platform/settings/two-factor/request-change',
+    platformSettingsTwoFactorConfirmChange: 'platform/settings/two-factor/confirm-change',
     platformDemoRequests: 'platform/demo-requests',
     platformDemoRequestById: 'platform/demo-requests/${id}',
     platformMailTemplateTypes: 'platform/mail/templates/types',

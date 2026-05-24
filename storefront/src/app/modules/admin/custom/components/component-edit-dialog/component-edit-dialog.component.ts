@@ -270,6 +270,12 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         }
     }
 
+    protected onEntryDraftSaved(): void {
+        if (this.data.component) {
+            this.close(this.data.component as unknown as ComponentCompositeResponse);
+        }
+    }
+
     #createComponentComposite(
         translations: Record<Language, ComponentI18nRequest>
     ): void {

@@ -48,6 +48,7 @@ interface ComponentEntryFormData {
     entry?: ComponentEntry;
     translations?: Record<string, EntryI18nDto>;
     sortOrder?: number;
+    draftMode?: boolean;
 }
 
 @Component({
@@ -170,15 +171,14 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             mobileMediaId,
         };
 
-        if (currentSetId) {
+        if (currentSetId && !this.data.draftMode) {
             return this.#mediaService
                 .updateResponsiveMedia(currentSetId, request)
                 .pipe(map(() => currentSetId));
-        } else {
-            return this.#mediaService
-                .createResponsiveMedia(request)
-                .pipe(map((set) => set.id));
         }
+        return this.#mediaService
+            .createResponsiveMedia(request)
+            .pipe(map((set) => set.id));
     }
 
     #extractMediaId(media: unknown): number | undefined {
@@ -294,10 +294,15 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
                             responsiveMediaId,
                             translations,
                         };
-                        return this.#entryService.updateCompositeWithResponse(
-                            this.data.entry!.id,
-                            payload
-                        );
+                        return this.data.draftMode
+                            ? this.#entryService.updateCompositeDraftWithResponse(
+                                  this.data.entry!.id,
+                                  payload
+                              )
+                            : this.#entryService.updateCompositeWithResponse(
+                                  this.data.entry!.id,
+                                  payload
+                              );
                     }
                 }),
                 take(1)

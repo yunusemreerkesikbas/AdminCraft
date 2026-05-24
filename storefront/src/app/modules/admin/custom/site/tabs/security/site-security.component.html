@@ -31,10 +31,23 @@
                     </div>
                 </div>
 
+                @if (saveCooldownSig() > 0) {
+                    <p class="text-sm text-slate-600">
+                        {{
+                            'auth.signIn.2fa.resendIn'
+                                | transloco: { seconds: saveCooldownSig() }
+                        }}
+                    </p>
+                }
                 <button
                     mat-stroked-button
                     class="spa-site-dashboard__save-button"
-                    [disabled]="savingSig() || form.invalid || form.pristine"
+                    [disabled]="
+                        savingSig() ||
+                        saveCooldownSig() > 0 ||
+                        form.invalid ||
+                        !form.dirty
+                    "
                     (click)="save()"
                 >
                     @if (savingSig()) {
@@ -59,7 +72,7 @@
                                 'border-primary/30 bg-primary/10 shadow-[0_24px_54px_-44px_rgba(79,70,229,0.9)]': form.get('twoFactorPolicy')?.value === option.value,
                                 'border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white': form.get('twoFactorPolicy')?.value !== option.value
                             }"
-                            (click)="form.get('twoFactorPolicy')?.setValue(option.value)"
+                            (click)="selectPolicy(option.value)"
                         >
                             <mat-radio-button
                                 [value]="option.value"

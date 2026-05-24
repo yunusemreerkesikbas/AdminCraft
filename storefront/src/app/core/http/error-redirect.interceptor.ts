@@ -46,9 +46,18 @@ export const errorRedirectInterceptor = (
             const isAuthEndpoint = authPaths.some((path) =>
                 req.url.includes(path)
             );
+            const twoFactorPolicyPaths = [
+                '/security/two-factor/confirm-change',
+                '/security/two-factor/request-change',
+                '/platform/settings/two-factor/confirm-change',
+                '/platform/settings/two-factor/request-change',
+            ];
+            const isTwoFactorPolicyEndpoint = twoFactorPolicyPaths.some((path) =>
+                req.url.includes(path)
+            );
             const isConfigAdminEndpoint = req.url.includes('/config/admin');
 
-            if (isAuthEndpoint) {
+            if (isAuthEndpoint || isTwoFactorPolicyEndpoint) {
                 return throwError(() => error);
             }
 

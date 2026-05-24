@@ -17,7 +17,10 @@ import {
     SiteSettingsResponseDto,
     SiteTechnicalPatchRequest,
     SiteTechnicalResponse,
+    ConfirmTwoFactorPolicyChangeRequest,
+    RequestTwoFactorPolicyChangeRequest,
     TwoFactorPolicy,
+    TwoFactorPolicyChangeRequestResponse,
     UpdateSecuritySettingsRequest,
 } from './site.types';
 
@@ -155,6 +158,24 @@ export class SiteService {
                 }),
                 finalize(() => this.loadingSig.set(false))
             );
+    }
+
+    requestTwoFactorPolicyChange(
+        payload: RequestTwoFactorPolicyChangeRequest
+    ): Observable<ApiResponse<TwoFactorPolicyChangeRequestResponse>> {
+        return this.#apiClient.post<ApiResponse<TwoFactorPolicyChangeRequestResponse>>(
+            'siteSecurityTwoFactorRequestChange',
+            payload
+        );
+    }
+
+    confirmTwoFactorPolicyChange(
+        payload: ConfirmTwoFactorPolicyChangeRequest
+    ): Observable<ApiResponse<SecuritySettingsResponse>> {
+        return this.#apiClient.post<ApiResponse<SecuritySettingsResponse>>(
+            'siteSecurityTwoFactorConfirmChange',
+            payload
+        );
     }
 
     getTenantDetail(): Observable<TenantDetailResponse> {

@@ -128,6 +128,50 @@
             </section>
 
             <section class="se-inspector__section">
+                <div class="se-section-title">
+                    <h3>{{ t('admin.smartedit.drafts.title') }}</h3>
+                    <span class="se-draft-badge">{{ draftCountSig() }}</span>
+                    <button mat-icon-button (click)="refreshDrafts()" [disabled]="busySig()" [matTooltip]="t('admin.common.actions.refresh')">
+                        <mat-icon>refresh</mat-icon>
+                    </button>
+                </div>
+
+                @if (draftsSig().drafts.length === 0) {
+                    <p class="se-help-text">{{ t('admin.smartedit.drafts.empty') }}</p>
+                } @else {
+                    <div class="se-draft-list">
+                        @for (draft of draftsSig().drafts; track draft.draftId) {
+                            <article class="se-draft-card">
+                                <div class="se-draft-card__head">
+                                    <strong>{{ draft.componentName || draft.componentUid || draft.targetId }}</strong>
+                                    <button mat-icon-button (click)="discardDraft(draft.draftId)" [disabled]="busySig()" [matTooltip]="t('admin.smartedit.actions.discardDraft')">
+                                        <mat-icon>delete_outline</mat-icon>
+                                    </button>
+                                </div>
+                                <span class="se-draft-card__meta">
+                                    {{ draft.targetType }}
+                                    @if (draft.entryUid) {
+                                        <span>· {{ draft.entryUid }}</span>
+                                    }
+                                </span>
+                                @if (draft.fieldChanges.length > 0) {
+                                    <div class="se-draft-fields">
+                                        @for (change of draft.fieldChanges.slice(0, 3); track change.field) {
+                                            <span>{{ change.label }}</span>
+                                        }
+                                    </div>
+                                }
+                            </article>
+                        }
+                    </div>
+                    <button mat-stroked-button color="warn" (click)="discardCurrentLanguageDrafts()" [disabled]="busySig()">
+                        <mat-icon>delete_sweep</mat-icon>
+                        {{ t('admin.smartedit.actions.discardCurrentLanguageDrafts') }}
+                    </button>
+                }
+            </section>
+
+            <section class="se-inspector__section">
                 <h3>{{ t('admin.smartedit.inspector.selection') }}</h3>
                 @if (selectionSig(); as selection) {
                     <div class="se-selection-card" [attr.data-kind]="selection.kind">

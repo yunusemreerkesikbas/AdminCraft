@@ -203,8 +203,6 @@ export default async function SiteFooter({
   lifted?: boolean;
   logoUrl?: string;
 }) {
-  const year = new Date().getFullYear();
-
   return (
     <footer className={`${styles.footerShell} ${lifted ? styles.footerLifted : ""}`}>
       <div className={styles.footerPrimary}>
@@ -217,10 +215,6 @@ export default async function SiteFooter({
 
       <div className={styles.footerCopyright}>
         <div className={styles.footerCopyrightInner}>
-          <p className={styles.footerCopyrightText}>
-            {`All rights reserved - ${year} © ${brand}`}
-          </p>
-
           {bottomBlocks.map((block) => renderBottomBlock(block))}
         </div>
       </div>

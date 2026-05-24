@@ -44,16 +44,20 @@ export function CookieConsentManager({
   );
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === null) {
-      setConsented(null);
-    } else {
-      const accepted = stored === "true";
-      setConsented(accepted);
-      if (accepted) {
-        window.gtag?.("consent", "update", CONSENT_GRANTED);
+    const timeoutId = window.setTimeout(() => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === null) {
+        setConsented(null);
+      } else {
+        const accepted = stored === "true";
+        setConsented(accepted);
+        if (accepted) {
+          window.gtag?.("consent", "update", CONSENT_GRANTED);
+        }
       }
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const accept = () => {

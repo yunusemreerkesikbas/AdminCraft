@@ -80,4 +80,15 @@ export class ComponentEntryService extends CrudHttpService<ComponentEntry, Creat
             { id }
         );
     }
+
+    updateCompositeDraftWithResponse(
+        id: number,
+        data: UpdateComponentEntryCompositeRequest
+    ): Observable<ApiResponse<ComponentEntryCompositeResponse>> {
+        return this.api.put<ApiResponse<ComponentEntryCompositeResponse>>(
+            'componentEntryCompositeDraftById',
+            data,
+            { id }
+        );
+    }
 }

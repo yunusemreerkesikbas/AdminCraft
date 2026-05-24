@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, TemplateRef, viewChild, input } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, TemplateRef, viewChild, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -39,15 +39,23 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     protected componentId = input.required<number>();
     protected componentTypeId = input.required<number>();
     protected languages = input<string[]>(['tr', 'en']);
+    protected draftMode = input<boolean>(false);
+    readonly draftSaved = output<void>();
 
     protected infoTemplate = viewChild.required<TemplateRef<any>>('infoTemplate');
 
     protected columns: GridColumn<ComponentEntry>[] = [];
 
-    protected actions: GridAction<ComponentEntry>[] = [
+    protected readonly liveActions: GridAction<ComponentEntry>[] = [
         { icon: 'heroicons_outline:pencil-square', label: 'admin.common.edit', action: 'edit' },
         { icon: 'heroicons_outline:trash', label: 'admin.common.delete', action: 'delete', color: 'warn' }
     ];
+
+    protected readonly draftActions: GridAction<ComponentEntry>[] = [
+        { icon: 'heroicons_outline:pencil-square', label: 'admin.common.edit', action: 'edit' }
+    ];
+
+    protected actions: GridAction<ComponentEntry>[] = this.liveActions;
 
     override ngOnInit(): void {
         super.ngOnInit();
@@ -69,6 +77,7 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                 width: '120px'
             }
         ];
+        this.actions = this.draftMode() ? this.draftActions : this.liveActions;
         this.#cdr.markForCheck();
     }
 
@@ -97,6 +106,9 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     }
 
     createEntry(): void {
+        if (this.draftMode()) {
+            return;
+        }
         const sortOrder = this.#calculateNextSortOrder();
 
         const dialogRef = this.#dialog.open(ComponentEntryFormComponent, {
@@ -149,7 +161,8 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                             languages: this.languages(),
                             entryId: entryId,
                             entry: detail,
-                            translations: detail.translations
+                            translations: detail.translations,
+                            draftMode: this.draftMode()
                         }
                     });
 
@@ -158,6 +171,9 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                         .subscribe(success => {
                             if (success) {
                                 this.loadItems();
+                                if (this.draftMode()) {
+                                    this.draftSaved.emit();
+                                }
                             }
                         });
                 },
@@ -168,6 +184,9 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     }
 
     protected deleteEntry(entry: ComponentEntry): void {
+        if (this.draftMode()) {
+            return;
+        }
         this.#confirmation.confirm(
             'admin.components.entries.deleteTitle',
             'admin.components.entries.confirmDelete'

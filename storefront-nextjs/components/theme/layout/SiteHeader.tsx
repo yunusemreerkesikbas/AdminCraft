@@ -370,13 +370,7 @@ export default function SiteHeader({
 
             <div className={styles.offcanvasRightInner}>
               <div className={styles.panelSideInfo}>
-                {primaryBlocks.length > 0
-                  ? primaryBlocks.map((block) => renderPrimaryInfoBlock(block, () => setMenuOpen(false)))
-                  : (
-                    <Link href={homeHref} className={styles.panelInfoLink} onClick={() => setMenuOpen(false)}>
-                      {brand}
-                    </Link>
-                  )}
+                {primaryBlocks.map((block) => renderPrimaryInfoBlock(block, () => setMenuOpen(false)))}
               </div>
 
               <div className={styles.panelMeta}>

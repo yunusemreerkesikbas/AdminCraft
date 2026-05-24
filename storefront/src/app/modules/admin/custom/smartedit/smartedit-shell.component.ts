@@ -41,7 +41,8 @@ import { PageSlotResponse } from '../pages/slots/page-slot.types';
 
 import { SmartEditGatewayService } from './services/smartedit-gateway.service';
 import { SmartEditPreviewService } from './services/smartedit-preview.service';
-import { PreviewTicketResponse, SmartEditSelection } from './smartedit.types';
+import { SmartEditPublishReviewDialogComponent } from './publish-review-dialog.component';
+import { PreviewTicketResponse, SmartEditDraftOverview, SmartEditSelection } from './smartedit.types';
 
 type Viewport = 'desktop' | 'tablet' | 'mobile';
 
@@ -93,6 +94,7 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
     protected readonly viewportSig = signal<Viewport>('desktop');
     protected readonly currentLangSig = signal<Language>(Language.TR);
     protected readonly nowSig = signal(Date.now());
+    protected readonly draftsSig = signal<SmartEditDraftOverview>({ count: 0, drafts: [] });
 
     protected readonly isTicketExpiringSig = computed(() => {
         const preview = this.previewSig();
@@ -137,6 +139,8 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         const lang = this.currentLangSig();
         return Boolean(page.translations?.[lang]);
     });
+
+    protected readonly draftCountSig = computed(() => this.draftsSig().count);
 
     ngOnInit(): void {
         // `:lang` lives on an ancestor route, so paramMap.get('lang') on the
@@ -184,6 +188,7 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
     onLanguageChange(lang: Language): void {
         this.currentLangSig.set(lang);
         this.#refreshIframeUrl();
+        this.#loadDrafts();
     }
 
     onViewportChange(viewport: Viewport): void {
@@ -251,18 +256,56 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         const lang = this.currentLangSig();
 
         this.busySig.set(true);
-        this.#pageService
-            .publishPageI18n(pageId, lang)
+        this.#previewService
+            .getPublishReview(pageId, lang)
             .pipe(take(1))
             .subscribe({
-                next: (result: ApiResponse<PageI18nDto>) => {
-                    this.#notify.success(result.message ?? this.#transloco.translate('admin.smartedit.messages.publishSuccess'));
-                    this.#gateway.requestReload();
-                    this.#reloadPageData();
+                next: (review) => {
                     this.busySig.set(false);
+                    this.#openPublishReview(review);
                 },
                 error: (error: HttpErrorResponse) => {
-                    this.#notify.alert(error.error?.message ?? this.#transloco.translate('admin.common.errors.server'));
+                    this.#notify.alert(this.#errorMessage(error));
+                    this.busySig.set(false);
+                },
+            });
+    }
+
+    refreshDrafts(): void {
+        this.#loadDrafts();
+    }
+
+    discardDraft(draftId: number): void {
+        this.busySig.set(true);
+        this.#previewService
+            .discardDraft(draftId)
+            .pipe(take(1))
+            .subscribe({
+                next: (response) => {
+                    this.#notify.success(response.message ?? '');
+                    this.#afterDraftMutation();
+                },
+                error: (error: HttpErrorResponse) => {
+                    this.#notify.alert(this.#errorMessage(error));
+                    this.busySig.set(false);
+                },
+            });
+    }
+
+    discardCurrentLanguageDrafts(): void {
+        const pageId = this.pageIdSig();
+        if (!pageId) return;
+        this.busySig.set(true);
+        this.#previewService
+            .discardPageDrafts(pageId, this.currentLangSig())
+            .pipe(take(1))
+            .subscribe({
+                next: (response) => {
+                    this.#notify.success(response.message ?? '');
+                    this.#afterDraftMutation();
+                },
+                error: (error: HttpErrorResponse) => {
+                    this.#notify.alert(this.#errorMessage(error));
                     this.busySig.set(false);
                 },
             });
@@ -319,6 +362,7 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
                     this.pageSlotsSig.set(slots);
                     this.componentTypesSig.set(componentTypes);
                     this.#refreshIframeUrl();
+                    this.#loadDrafts();
                 },
                 error: (error: HttpErrorResponse) => {
                     this.errorSig.set(error.error?.message ?? null);
@@ -339,9 +383,10 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
                 next: ({ page, slots }) => {
                     this.pageSig.set(page);
                     this.pageSlotsSig.set(slots);
+                    this.#loadDrafts();
                 },
                 error: (error: HttpErrorResponse) => {
-                    this.#notify.alert(error.error?.message ?? this.#transloco.translate('admin.common.errors.server'));
+                    this.#notify.alert(this.#errorMessage(error));
                 },
             });
     }
@@ -371,8 +416,7 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
                     this.busySig.set(false);
                 },
                 error: (err: HttpErrorResponse | Error) => {
-                    const msg = err instanceof Error ? err.message : (err.error?.message ?? null);
-                    this.errorSig.set(msg);
+                    this.errorSig.set(this.#errorMessage(err));
                     this.busySig.set(false);
                 },
             });
@@ -393,6 +437,66 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         url.searchParams.set('preview', preview.ticket);
         url.searchParams.set('previewPageId', String(pageId));
         this.iframeUrlSig.set(this.#sanitizer.bypassSecurityTrustResourceUrl(url.toString()));
+    }
+
+    #loadDrafts(): void {
+        const pageId = this.pageIdSig();
+        if (!pageId) return;
+        this.#previewService
+            .listPageDrafts(pageId, this.currentLangSig())
+            .pipe(take(1))
+            .subscribe({
+                next: (drafts) => this.draftsSig.set(drafts),
+                error: (error: HttpErrorResponse | Error) => this.#notify.alert(this.#errorMessage(error)),
+            });
+    }
+
+    #openPublishReview(review: SmartEditDraftOverview): void {
+        const dialogRef = this.#dialog.open(SmartEditPublishReviewDialogComponent, {
+            width: '720px',
+            maxHeight: '80vh',
+            data: review,
+        });
+
+        dialogRef.afterClosed().pipe(take(1)).subscribe((confirmed) => {
+            if (confirmed) {
+                this.#publishAfterReview();
+            }
+        });
+    }
+
+    #publishAfterReview(): void {
+        const pageId = this.pageIdSig();
+        if (!pageId) return;
+        const lang = this.currentLangSig();
+        this.busySig.set(true);
+        this.#pageService
+            .publishPageI18n(pageId, lang)
+            .pipe(take(1))
+            .subscribe({
+                next: (result: ApiResponse<PageI18nDto>) => {
+                    this.#notify.success(result.message ?? '');
+                    this.#afterDraftMutation();
+                },
+                error: (error: HttpErrorResponse) => {
+                    this.#notify.alert(this.#errorMessage(error));
+                    this.busySig.set(false);
+                },
+            });
+    }
+
+    #afterDraftMutation(): void {
+        this.#gateway.requestReload();
+        this.#reloadPageData();
+        this.#loadDrafts();
+        this.busySig.set(false);
+    }
+
+    #errorMessage(error: HttpErrorResponse | Error): string {
+        if (error instanceof HttpErrorResponse) {
+            return error.error?.message ?? error.message ?? this.#transloco.translate('admin.common.errors.server');
+        }
+        return error.message || this.#transloco.translate('admin.common.errors.server');
     }
 
     #resolveSlugForCurrentLanguage(): string {
@@ -436,6 +540,7 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
                 if (result) {
                     this.#gateway.requestReload();
                     this.#reloadPageData();
+                    this.#loadDrafts();
                 }
             });
     }
