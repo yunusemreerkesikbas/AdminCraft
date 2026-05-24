@@ -52,6 +52,15 @@ class PlatformSettingsControllerIntegrationTest {
     @MockBean
     private com.backend.infrastructure.tenant.TenantFilter tenantFilter;
 
+    @MockBean
+    private com.backend.application.cms.preview.CmsPreviewTicketService cmsPreviewTicketService;
+
+    @MockBean
+    private com.backend.application.cms.preview.CmsRequestContext cmsRequestContext;
+
+    @MockBean
+    private com.backend.domain.port.TenantContextPort tenantContextPort;
+
     @Test
     @DisplayName("GET /platform/settings should return settings for SUPER_ADMIN")
     @WithMockUser(roles = "SUPER_ADMIN")

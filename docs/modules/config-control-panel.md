@@ -204,7 +204,7 @@ Session behavior:
 - Tenant context for config login can be supplied via the `subdomain` query param (`/config?subdomain={tenantSubdomain}`).
 - Tenant config sessions can silently refresh in the same browser when the access token expires (`POST /api/config/auth/refresh`).
 - `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, a fresh login is required again (including OTP if enabled).
-- **Console email provider:** when `app.email.provider` resolves to `console` (Postmark not configured), `ConsoleEmailSender` logs the full email content including the OTP code at INFO level (`[MAIL:CONSOLE] body:`). Use this to retrieve OTP codes from application logs during development or when Postmark is disabled.
+- **Console email provider:** when `app.email.provider` resolves to `console` (Postmark not configured), login and operation OTP emails log only the code at INFO level (`[MAIL:CONSOLE] OTP type=... recipient=... code=...`) without rendering HTML. Use application logs to retrieve OTP codes during development or when Postmark is disabled.
 - **Tenant / main auth OTP** (`OtpServiceImpl`): global runtime bypass and `OTP_BYPASS_CODE` env bypass are **disabled when the Spring `prod` profile is active** (constant-time compare elsewhere).
 - **Config panel platform OTP** (`verifyPlatformOtp` in `ConfigAuthenticationServiceImpl`): still honors `OTP_BYPASS_CODE` when non-blank, independent of profile — **leave unset in production** unless you explicitly accept that risk.
 

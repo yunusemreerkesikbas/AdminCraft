@@ -6,14 +6,12 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,9 +23,9 @@ import com.backend.application.dto.AuthResult;
 import com.backend.application.dto.TokenValidationResult;
 import com.backend.application.service.AuthenticationService;
 import com.backend.application.service.EmailService;
+import com.backend.application.service.OtpBypassVerifier;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.TrustedDeviceService;
-import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.entity.PlatformRefreshToken;
 import com.backend.domain.entity.RefreshToken;
 import com.backend.domain.entity.Tenant;
@@ -85,8 +83,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final TrustedDeviceService trustedDeviceService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final OtpConfig otpConfig;
-    private final GlobalRuntimeConfigService globalRuntimeConfigService;
-    private final Environment environment;
+    private final OtpBypassVerifier otpBypassVerifier;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PlatformRefreshTokenRepository platformRefreshTokenRepository;
 
@@ -1014,33 +1011,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private boolean isOtpBypassCode(String otpCode) {
-        if (isProductionProfile()) {
-            return false;
-        }
-
-        if (Boolean.TRUE.equals(globalRuntimeConfigService.getOtpBypassEnabled())) {
-            String configBypassCode = globalRuntimeConfigService.getOtpBypassCodeDecrypted();
-            if (constantTimeEquals(otpCode, configBypassCode)) {
-                log.warn("OTP bypass via config panel used in main auth - audit this access");
-                return true;
-            }
-        }
-
-        String envBypassCode = otpConfig.getBypassCode();
-        return envBypassCode != null && constantTimeEquals(otpCode, envBypassCode);
-    }
-
-    private boolean isProductionProfile() {
-        return Arrays.asList(environment.getActiveProfiles()).contains("prod");
-    }
-
-    private static boolean constantTimeEquals(String a, String b) {
-        if (a == null || b == null) {
-            return false;
-        }
-        return MessageDigest.isEqual(
-                a.getBytes(StandardCharsets.UTF_8),
-                b.getBytes(StandardCharsets.UTF_8));
+        return otpBypassVerifier.isBypassCode(otpCode);
     }
 
     private Tenant resolveTenant(Long tenantId, String subdomain) {

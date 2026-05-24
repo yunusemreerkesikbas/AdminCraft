@@ -7,6 +7,7 @@ import java.util.Locale;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -92,7 +93,8 @@ public class CmsPreviewController {
     public ResponseEntity<ApiResponse<Void>> discardDraft(
         @PathVariable Long draftId,
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-        cmsDraftOverrideService.discardDraft(draftId, currentUserId());
+        Long userId = requireCurrentUserId();
+        cmsDraftOverrideService.discardDraft(draftId, userId);
         return ResponseEntity.ok(ApiResponse.success(message("cms.preview.draft.discard.success", lang), null));
     }
 
@@ -103,7 +105,8 @@ public class CmsPreviewController {
         @PathVariable Long pageId,
         @RequestParam Language language,
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-        int deletedCount = cmsDraftOverrideService.discardPageDrafts(pageId, language, currentUserId());
+        Long userId = requireCurrentUserId();
+        int deletedCount = cmsDraftOverrideService.discardPageDrafts(pageId, language, userId);
         return ResponseEntity.ok(ApiResponse.success(
             message("cms.preview.drafts.discard.success", lang),
             Map.of("deletedCount", deletedCount)));
@@ -123,5 +126,13 @@ public class CmsPreviewController {
             return number.longValue();
         }
         return null;
+    }
+
+    private Long requireCurrentUserId() {
+        Long userId = currentUserId();
+        if (userId == null) {
+            throw new AccessDeniedException("Authenticated actor is required");
+        }
+        return userId;
     }
 }

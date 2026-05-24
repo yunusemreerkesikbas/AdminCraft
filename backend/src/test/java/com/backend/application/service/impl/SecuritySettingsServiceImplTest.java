@@ -30,16 +30,17 @@ import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
 import com.backend.domain.entity.VerificationToken;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.enums.TokenStatus;
 import com.backend.domain.enums.TokenType;
 import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.enums.UserRole;
 import com.backend.domain.exception.TwoFactorPolicyVerificationRequiredException;
+import com.backend.domain.port.OtpConfig;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
 import com.backend.domain.repository.VerificationTokenRepository;
-import com.backend.infrastructure.email.OtpProperties;
 import com.backend.shared.common.SecurityHelper;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,7 +66,7 @@ class SecuritySettingsServiceImplTest {
     @Mock
     private OtpBypassVerifier otpBypassVerifier;
     @Mock
-    private OtpProperties otpProperties;
+    private OtpConfig otpConfig;
 
     @InjectMocks
     private SecuritySettingsServiceImpl service;
@@ -78,6 +79,7 @@ class SecuritySettingsServiceImplTest {
         tenant = new Tenant();
         tenant.setId(1L);
         tenant.setSubdomain("acme");
+        tenant.setStatus(TenantStatus.ACTIVE);
         tenant.setTwoFactorPolicy(TwoFactorPolicy.DISABLED);
         tenant.setDefaultLanguage(Language.EN);
 
@@ -90,7 +92,7 @@ class SecuritySettingsServiceImplTest {
         when(tenantRepository.findById(1L)).thenReturn(Optional.of(tenant));
         when(securityHelper.getCurrentUserId()).thenReturn(10L);
         when(userRepository.findById(10L)).thenReturn(Optional.of(admin));
-        when(otpProperties.getExpirySeconds()).thenReturn(300);
+        when(otpConfig.getExpirySeconds()).thenReturn(300);
     }
 
     @Test
@@ -120,6 +122,21 @@ class SecuritySettingsServiceImplTest {
     }
 
     @Test
+    @DisplayName("requestTwoFactorPolicyChange rejects inactive tenants")
+    void requestTwoFactorPolicyChange_ShouldRejectInactiveTenant() {
+        tenant.setStatus(TenantStatus.SUSPENDED);
+
+        assertThatThrownBy(() -> service.requestTwoFactorPolicyChange(
+                TwoFactorPolicy.REQUIRED,
+                "127.0.0.1",
+                "JUnit"))
+                .isInstanceOf(com.backend.domain.exception.TenantNotFoundException.class);
+
+        verify(otpRateLimitService, never()).checkRateLimit(any());
+        verify(emailService, never()).sendOperationOtpEmail(any(), any(), any());
+    }
+
+    @Test
     @DisplayName("confirmTwoFactorPolicyChange applies policy when OTP is valid")
     void confirmTwoFactorPolicyChange_ShouldApplyPolicy() {
         VerificationToken token = VerificationToken.builder()
@@ -144,5 +161,31 @@ class SecuritySettingsServiceImplTest {
         assertThat(tenant.getTwoFactorPolicy()).isEqualTo(TwoFactorPolicy.REQUIRED);
         verify(tenantRepository).save(tenant);
         verify(verificationTokenRepository).save(token);
+    }
+
+    @Test
+    @DisplayName("confirmTwoFactorPolicyChange rejects inactive tenants before saving")
+    void confirmTwoFactorPolicyChange_ShouldRejectInactiveTenant() {
+        tenant.setStatus(TenantStatus.SUSPENDED);
+        VerificationToken token = VerificationToken.builder()
+                .user(admin)
+                .tokenType(TokenType.OPERATION_OTP)
+                .status(TokenStatus.ACTIVE)
+                .targetValue("otp-hash")
+                .userAgent(TwoFactorPolicyChangeMetadata.format(TwoFactorPolicy.REQUIRED))
+                .attemptCount(0)
+                .maxAttempts(5)
+                .expiresAt(java.time.LocalDateTime.now().plusMinutes(5))
+                .build();
+
+        when(otpService.hashToken("pending-session")).thenReturn("session-hash");
+        when(otpService.hashToken("123456")).thenReturn("otp-hash");
+        when(verificationTokenRepository.findByTokenHash("session-hash")).thenReturn(Optional.of(token));
+        when(otpBypassVerifier.isBypassCode("123456")).thenReturn(false);
+
+        assertThatThrownBy(() -> service.confirmTwoFactorPolicyChange("pending-session", "123456"))
+                .isInstanceOf(com.backend.domain.exception.TenantNotFoundException.class);
+
+        verify(tenantRepository, never()).save(tenant);
     }
 }

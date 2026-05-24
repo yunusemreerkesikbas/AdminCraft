@@ -23,9 +23,9 @@ import com.backend.domain.enums.TokenStatus;
 import com.backend.domain.enums.TokenType;
 import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.port.TenantContextPort;
+import com.backend.domain.port.OtpConfig;
 import com.backend.domain.repository.VerificationTokenRepository;
 import com.backend.infrastructure.email.EmailVerificationProperties;
-import com.backend.infrastructure.email.OtpProperties;
 import com.backend.infrastructure.email.PasswordResetProperties;
 
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OtpServiceImpl implements OtpService {
 
     private final VerificationTokenRepository tokenRepository;
-    private final OtpProperties otpProperties;
+    private final OtpConfig otpConfig;
     private final PasswordResetProperties passwordResetProperties;
     private final EmailVerificationProperties emailVerificationProperties;
     private final TenantContextPort tenantContext;
@@ -48,9 +48,9 @@ public class OtpServiceImpl implements OtpService {
 
     @Override
     public String generateOtp() {
-        int maxValue = (int) Math.pow(10, otpProperties.getLength());
+        int maxValue = (int) Math.pow(10, otpConfig.getLength());
         int otp = secureRandom.nextInt(maxValue);
-        return String.format("%0" + otpProperties.getLength() + "d", otp);
+        return String.format("%0" + otpConfig.getLength() + "d", otp);
     }
 
     @Override
@@ -70,9 +70,9 @@ public class OtpServiceImpl implements OtpService {
                 .tokenType(tokenType)
                 .status(TokenStatus.ACTIVE)
                 .targetValue(otpHash)
-                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .expiresAt(LocalDateTime.now().plusSeconds(otpConfig.getExpirySeconds()))
                 .attemptCount(0)
-                .maxAttempts(otpProperties.getMaxAttempts())
+                .maxAttempts(otpConfig.getMaxAttempts())
                 .ipAddress(ipAddress)
                 .userAgent(userAgent)
                 .build();
@@ -98,9 +98,9 @@ public class OtpServiceImpl implements OtpService {
                 .tokenType(TokenType.LOGIN_OTP)
                 .status(TokenStatus.ACTIVE)
                 .targetValue(hashToken(otp))  // Store hashed OTP for security
-                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .expiresAt(LocalDateTime.now().plusSeconds(otpConfig.getExpirySeconds()))
                 .attemptCount(0)
-                .maxAttempts(otpProperties.getMaxAttempts())
+                .maxAttempts(otpConfig.getMaxAttempts())
                 .ipAddress(ipAddress)
                 .userAgent(userAgent)
                 .build();
@@ -132,11 +132,11 @@ public class OtpServiceImpl implements OtpService {
                 .tokenType(TokenType.OPERATION_OTP)
                 .status(TokenStatus.ACTIVE)
                 .targetValue(hashToken(otp))
-                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .expiresAt(LocalDateTime.now().plusSeconds(otpConfig.getExpirySeconds()))
                 .attemptCount(0)
-                .maxAttempts(otpProperties.getMaxAttempts())
+                .maxAttempts(otpConfig.getMaxAttempts())
                 .ipAddress(ipAddress)
-                .userAgent(TwoFactorPolicyChangeMetadata.format(pendingPolicy))
+                .userAgent(TwoFactorPolicyChangeMetadata.format(pendingPolicy, userAgent))
                 .build();
 
         tokenRepository.save(token);
@@ -210,8 +210,8 @@ public class OtpServiceImpl implements OtpService {
                 return true;
             }
         }
-        if (!isProductionProfile() && otpProperties.getBypassCode() != null
-                && constantTimeEquals(otpCode, otpProperties.getBypassCode())) {
+        if (!isProductionProfile() && otpConfig.getBypassCode() != null
+                && constantTimeEquals(otpCode, otpConfig.getBypassCode())) {
             log.info("OTP bypass code (env var) used");
             return true;
         }

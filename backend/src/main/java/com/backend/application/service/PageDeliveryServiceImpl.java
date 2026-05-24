@@ -320,7 +320,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                                                 visibleComponentStatuses)
                                                 .stream()
                                                 .map(this::cloneComponentEntry)
-                                                .collect(Collectors.groupingBy(ComponentEntry::getComponentId));
+                                                .collect(Collectors.collectingAndThen(Collectors.toList(), this::groupEntriesByComponentId));
 
                 List<Long> entryIds = entriesByComponentId.values().stream()
                                 .flatMap(List::stream)
@@ -333,6 +333,9 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         entriesByComponentId.values().stream()
                                         .flatMap(List::stream)
                                         .forEach(entry -> cmsDraftOverrideService.apply(entry, entryDrafts.get(entry.getId())));
+                        entriesByComponentId = groupEntriesByComponentId(entriesByComponentId.values().stream()
+                                        .flatMap(List::stream)
+                                        .toList());
                 }
 
                 // Batch fetch responsive media sets with eagerly loaded media and translations
@@ -430,6 +433,12 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         result.put(slot.getSlotName(), compResponses);
                 }
                 return result;
+        }
+
+        private Map<Long, List<ComponentEntry>> groupEntriesByComponentId(List<ComponentEntry> entries) {
+                return entries.stream()
+                                .sorted(Comparator.comparingInt(entry -> entry.getSortOrder() != null ? entry.getSortOrder() : 0))
+                                .collect(Collectors.groupingBy(ComponentEntry::getComponentId, LinkedHashMap::new, Collectors.toList()));
         }
 
         private Map<String, List<ComponentDeliveryResponse>> buildSlotsMap(

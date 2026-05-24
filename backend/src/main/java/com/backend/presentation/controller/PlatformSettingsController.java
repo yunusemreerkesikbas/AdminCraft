@@ -115,7 +115,7 @@ public class PlatformSettingsController {
         } catch (InvalidCredentialsException ex) {
             String message = messageSource.getMessage("auth.otp.invalid", null,
                     Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Error confirming platform two-factor policy change", ex);

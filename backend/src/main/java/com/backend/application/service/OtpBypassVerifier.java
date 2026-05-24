@@ -8,7 +8,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import com.backend.application.service.config.GlobalRuntimeConfigService;
-import com.backend.infrastructure.email.OtpProperties;
+import com.backend.domain.port.OtpConfig;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OtpBypassVerifier {
 
     private final GlobalRuntimeConfigService globalRuntimeConfigService;
-    private final OtpProperties otpProperties;
+    private final OtpConfig otpConfig;
     private final Environment environment;
 
     public boolean isBypassCode(String otpCode) {
@@ -35,7 +35,7 @@ public class OtpBypassVerifier {
             }
         }
 
-        String envBypassCode = otpProperties.getBypassCode();
+        String envBypassCode = otpConfig.getBypassCode();
         return envBypassCode != null && constantTimeEquals(otpCode, envBypassCode);
     }
 

@@ -16,6 +16,7 @@ import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
 import com.backend.domain.entity.VerificationToken;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.enums.TokenType;
 import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.exception.InvalidCredentialsException;
@@ -23,11 +24,11 @@ import com.backend.domain.exception.InvalidTokenException;
 import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.exception.TwoFactorPolicyVerificationRequiredException;
 import com.backend.domain.exception.UserNotFoundException;
+import com.backend.domain.port.OtpConfig;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
 import com.backend.domain.repository.VerificationTokenRepository;
-import com.backend.infrastructure.email.OtpProperties;
 import com.backend.shared.common.LogSanitizer;
 import com.backend.shared.common.SecurityHelper;
 
@@ -48,7 +49,7 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
     private final EmailService emailService;
     private final OtpRateLimitService otpRateLimitService;
     private final OtpBypassVerifier otpBypassVerifier;
-    private final OtpProperties otpProperties;
+    private final OtpConfig otpConfig;
 
     @Override
     public SecuritySettingsResult getSecuritySettings() {
@@ -79,12 +80,14 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
             String ipAddress,
             String userAgent) {
         Tenant tenant = getCurrentTenant();
+        ensureTenantActive(tenant);
         TwoFactorPolicy currentPolicy = resolvePolicy(tenant);
         if (currentPolicy == targetPolicy) {
             throw new IllegalArgumentException("Two-factor policy is already " + targetPolicy.name());
         }
 
         User actingUser = getActingUser();
+        ensureTenantActive(tenant);
         otpRateLimitService.checkRateLimit(actingUser.getEmail());
 
         OtpService.OperationOtpResult otpResult = otpService.createOperationOtpToken(
@@ -103,7 +106,7 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
                 otpResult.sessionToken(),
                 LogSanitizer.maskEmail(actingUser.getEmail()),
                 targetPolicy,
-                otpProperties.getExpirySeconds());
+                otpConfig.getExpirySeconds());
     }
 
     @Override
@@ -144,6 +147,7 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
 
         TwoFactorPolicy targetPolicy = TwoFactorPolicyChangeMetadata.parse(token.getUserAgent());
         Tenant tenant = getCurrentTenant();
+        ensureTenantActive(tenant);
         log.info("Applying two-factor policy change for tenant {} from {} to {}",
                 tenant.getId(), tenant.getTwoFactorPolicy(), targetPolicy);
         tenant.setTwoFactorPolicy(targetPolicy);
@@ -174,6 +178,12 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
 
     private TwoFactorPolicy resolvePolicy(Tenant tenant) {
         return tenant.getTwoFactorPolicy() != null ? tenant.getTwoFactorPolicy() : TwoFactorPolicy.DISABLED;
+    }
+
+    private void ensureTenantActive(Tenant tenant) {
+        if (tenant.getStatus() != TenantStatus.ACTIVE) {
+            throw new TenantNotFoundException("Tenant is not active");
+        }
     }
 
     private String getPolicyDescription(TwoFactorPolicy policy) {

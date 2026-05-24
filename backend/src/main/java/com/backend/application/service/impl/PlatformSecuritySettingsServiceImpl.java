@@ -23,12 +23,10 @@ import com.backend.domain.enums.TokenType;
 import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.exception.InvalidCredentialsException;
 import com.backend.domain.exception.InvalidTokenException;
+import com.backend.domain.port.OtpConfig;
 import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.repository.PlatformAdminUserRepository;
 import com.backend.domain.repository.PlatformVerificationTokenRepository;
-import com.backend.infrastructure.email.OtpProperties;
-import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
-import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
 import com.backend.shared.common.LogSanitizer;
 import com.backend.shared.common.SecurityHelper;
 
@@ -41,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySettingsService {
 
     private final PlatformSettingsPort platformSettingsPort;
-    private final PlatformSettingsRepository platformSettingsRepository;
     private final PlatformAdminUserRepository platformAdminUserRepository;
     private final PlatformVerificationTokenRepository platformVerificationTokenRepository;
     private final SecurityHelper securityHelper;
@@ -49,7 +46,7 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
     private final EmailService emailService;
     private final OtpRateLimitService otpRateLimitService;
     private final OtpBypassVerifier otpBypassVerifier;
-    private final OtpProperties otpProperties;
+    private final OtpConfig otpConfig;
     private final PlatformSettingsService platformSettingsService;
 
     @Override
@@ -58,9 +55,8 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
             TwoFactorPolicy targetPolicy,
             String ipAddress,
             String userAgent) {
-        PlatformSettings entity = platformSettingsPort.getSingleton();
-        TwoFactorPolicy currentPolicy = entity.getTwoFactorPolicy() != null
-                ? entity.getTwoFactorPolicy()
+        TwoFactorPolicy currentPolicy = platformSettingsPort.getTwoFactorPolicy() != null
+                ? platformSettingsPort.getTwoFactorPolicy()
                 : TwoFactorPolicy.DISABLED;
         if (currentPolicy == targetPolicy) {
             throw new IllegalArgumentException("Two-factor policy is already " + targetPolicy.name());
@@ -70,7 +66,7 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
         otpRateLimitService.checkRateLimit(admin.getEmail(), "platform");
 
         PlatformOperationOtpResult otpResult = createPlatformOperationOtpToken(admin, targetPolicy, ipAddress, userAgent);
-        Language language = resolvePlatformLanguage(entity);
+        Language language = resolvePlatformLanguage();
         emailService.sendOperationOtpEmail(admin.getEmail(), otpResult.otpCode(), language);
 
         log.info("Platform two-factor policy change OTP requested by admin {} -> {}",
@@ -80,7 +76,7 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
                 otpResult.sessionToken(),
                 LogSanitizer.maskEmail(admin.getEmail()),
                 targetPolicy,
-                otpProperties.getExpirySeconds());
+                otpConfig.getExpirySeconds());
     }
 
     @Override
@@ -120,11 +116,9 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
         platformVerificationTokenRepository.save(token);
 
         TwoFactorPolicy targetPolicy = TwoFactorPolicyChangeMetadata.parse(token.getUserAgent());
-        PlatformSettings entity = platformSettingsPort.getSingleton();
         log.info("Applying platform two-factor policy change from {} to {}",
-                entity.getTwoFactorPolicy(), targetPolicy);
-        entity.setTwoFactorPolicy(targetPolicy);
-        platformSettingsRepository.save(entity);
+                platformSettingsPort.getTwoFactorPolicy(), targetPolicy);
+        platformSettingsPort.updateTwoFactorPolicy(targetPolicy);
 
         return platformSettingsService.getSettings();
     }
@@ -146,11 +140,11 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
                 .tokenType(TokenType.OPERATION_OTP)
                 .status(TokenStatus.ACTIVE)
                 .targetValue(otpService.hashToken(otp))
-                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .expiresAt(LocalDateTime.now().plusSeconds(otpConfig.getExpirySeconds()))
                 .attemptCount(0)
-                .maxAttempts(otpProperties.getMaxAttempts())
+                .maxAttempts(otpConfig.getMaxAttempts())
                 .ipAddress(ipAddress)
-                .userAgent(TwoFactorPolicyChangeMetadata.format(pendingPolicy))
+                .userAgent(TwoFactorPolicyChangeMetadata.format(pendingPolicy, userAgent))
                 .build();
 
         platformVerificationTokenRepository.save(token);
@@ -163,8 +157,8 @@ public class PlatformSecuritySettingsServiceImpl implements PlatformSecuritySett
                 .orElseThrow(InvalidCredentialsException::new);
     }
 
-    private Language resolvePlatformLanguage(PlatformSettings entity) {
-        return Language.fromCodeOrDefault(entity.getDefaultLanguage(), Language.TR);
+    private Language resolvePlatformLanguage() {
+        return Language.fromCodeOrDefault(platformSettingsPort.getDefaultLanguage(), Language.TR);
     }
 
     private record PlatformOperationOtpResult(String otpCode, String sessionToken) {
