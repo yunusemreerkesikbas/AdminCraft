@@ -244,6 +244,17 @@ For SUPER_ADMIN, the same policy values are used globally from platform settings
 
 > **Policy enforcement applies at login AND token refresh.** If a tenant admin changes policy from `DISABLED` to `REQUIRED`, active sessions will be challenged on their next token refresh (see [Refresh Token](#refresh-token)).
 
+### 2FA policy change (admin settings)
+
+Changing tenant or platform `twoFactorPolicy` requires a separate **operation OTP** (`OPERATION_OTP` / `EmailType.OPERATION_OTP`) sent to the **acting admin's registered email** before the policy is stored. This uses the same mail pipeline as login OTP (`console` or `postmark` via `app.email.provider`).
+
+| Step | Tenant endpoint | Platform endpoint |
+|------|-----------------|-------------------|
+| 1. Request OTP | `POST /api/sites/security/two-factor/request-change` | `POST /api/platform/settings/two-factor/request-change` |
+| 2. Confirm | `POST /api/sites/security/two-factor/confirm-change` | `POST /api/platform/settings/two-factor/confirm-change` |
+
+Direct `PATCH` bodies that include `twoFactorPolicy` are rejected (`409 Conflict`). Login continues to use `LOGIN_OTP` via `POST /api/auth/verify-otp`.
+
 ### Login Flow with 2FA
 
 ```

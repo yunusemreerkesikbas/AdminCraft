@@ -7,10 +7,15 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.context.MessageSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.backend.application.service.ComponentMediaLinkSyncService;
+import com.backend.application.service.SiteActivityPublisher;
 import com.backend.domain.repository.CmsDraftOverrideRepository;
+import com.backend.domain.repository.ComponentEntryI18nRepository;
+import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
@@ -30,6 +35,10 @@ class CmsDraftOverrideServiceLanguageTest {
   @Mock
   private ComponentI18nRepository componentI18nRepository;
   @Mock
+  private ComponentEntryRepository componentEntryRepository;
+  @Mock
+  private ComponentEntryI18nRepository componentEntryI18nRepository;
+  @Mock
   private PageSlotRepository pageSlotRepository;
   @Mock
   private SlotComponentRepository slotComponentRepository;
@@ -39,6 +48,12 @@ class CmsDraftOverrideServiceLanguageTest {
   private ComponentTypeRepository componentTypeRepository;
   @Mock
   private NavigationNodeRepository navigationNodeRepository;
+  @Mock
+  private ComponentMediaLinkSyncService componentMediaLinkSyncService;
+  @Mock
+  private SiteActivityPublisher siteActivityPublisher;
+  @Mock
+  private MessageSource messageSource;
 
   private CmsDraftOverrideService service;
 
@@ -48,11 +63,16 @@ class CmsDraftOverrideServiceLanguageTest {
         draftOverrideRepository,
         componentRepository,
         componentI18nRepository,
+        componentEntryRepository,
+        componentEntryI18nRepository,
         pageSlotRepository,
         slotComponentRepository,
         responsiveMediaSetRepository,
         componentTypeRepository,
         navigationNodeRepository,
+        componentMediaLinkSyncService,
+        siteActivityPublisher,
+        messageSource,
         new ObjectMapper());
   }
 

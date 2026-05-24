@@ -127,17 +127,45 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       }
     }
     List<ComponentEntry> allEntries = componentEntryRepository
-        .findByComponentIdInAndStatusInOrderBySortOrder(componentIds, visibleStatuses);
+        .findByComponentIdInAndStatusInOrderBySortOrder(componentIds, visibleStatuses)
+        .stream()
+        .map(this::cloneComponentEntry)
+        .toList();
     Map<Long, List<ComponentEntry>> entriesByComponentId = allEntries.stream()
         .collect(Collectors.groupingBy(ComponentEntry::getComponentId));
     List<Long> entryIds = allEntries.stream()
         .map(ComponentEntry::getId)
         .toList();
 
-    Map<Long, ComponentEntryI18n> entryI18nMap = componentEntryI18nRepository
+    if (cmsRequestContext.isPreview() && !entryIds.isEmpty()) {
+      Map<Long, com.backend.application.cms.preview.ComponentEntryDraftPayload> entryDrafts =
+          cmsDraftOverrideService.findComponentEntryDrafts(entryIds);
+      allEntries.forEach(entry -> cmsDraftOverrideService.apply(entry, entryDrafts.get(entry.getId())));
+    }
+
+    Map<Long, ComponentEntryI18n> entryI18nMap = new LinkedHashMap<>(componentEntryI18nRepository
         .findByEntryIdInAndLanguage(entryIds, lang)
         .stream()
-        .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
+        .map(this::cloneComponentEntryI18n)
+        .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i)));
+    if (cmsRequestContext.isPreview() && !entryIds.isEmpty()) {
+      Map<String, com.backend.application.cms.preview.ComponentEntryI18nDraftPayload> i18nDrafts =
+          cmsDraftOverrideService.findComponentEntryI18nDrafts(entryIds, lang);
+      for (Long entryId : entryIds) {
+        var draft = i18nDrafts.get(cmsDraftOverrideService.i18nKey(entryId, lang));
+        if (draft == null) {
+          continue;
+        }
+        ComponentEntryI18n i18n = entryI18nMap.get(entryId);
+        if (i18n == null) {
+          i18n = new ComponentEntryI18n();
+          i18n.setEntryId(entryId);
+          i18n.setLanguage(lang);
+          entryI18nMap.put(entryId, i18n);
+        }
+        cmsDraftOverrideService.apply(i18n, draft);
+      }
+    }
 
     List<Long> typeIds = componentMap.values().stream()
         .map(Component::getComponentTypeId)
@@ -272,10 +300,45 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
     Set<ComponentStatus> visibleStatuses = CmsVisibility.componentStatuses(cmsRequestContext.isPreview());
     List<ComponentEntry> entries = componentEntryRepository
-        .findByComponentIdInAndStatusInOrderBySortOrder(List.of(component.getId()), visibleStatuses);
+        .findByComponentIdInAndStatusInOrderBySortOrder(List.of(component.getId()), visibleStatuses)
+        .stream()
+        .map(this::cloneComponentEntry)
+        .toList();
+    List<Long> entryIds = entries.stream()
+        .map(ComponentEntry::getId)
+        .toList();
+    if (cmsRequestContext.isPreview() && !entryIds.isEmpty()) {
+      Map<Long, com.backend.application.cms.preview.ComponentEntryDraftPayload> entryDrafts =
+          cmsDraftOverrideService.findComponentEntryDrafts(entryIds);
+      entries.forEach(entry -> cmsDraftOverrideService.apply(entry, entryDrafts.get(entry.getId())));
+    }
+    Map<Long, ComponentEntryI18n> entryI18nMap = entryIds.isEmpty()
+        ? Map.of()
+        : new LinkedHashMap<>(componentEntryI18nRepository.findByEntryIdInAndLanguage(entryIds, lang)
+            .stream()
+            .map(this::cloneComponentEntryI18n)
+            .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i)));
+    if (cmsRequestContext.isPreview() && !entryIds.isEmpty()) {
+      Map<String, com.backend.application.cms.preview.ComponentEntryI18nDraftPayload> i18nDrafts =
+          cmsDraftOverrideService.findComponentEntryI18nDrafts(entryIds, lang);
+      for (Long entryId : entryIds) {
+        var draft = i18nDrafts.get(cmsDraftOverrideService.i18nKey(entryId, lang));
+        if (draft == null) {
+          continue;
+        }
+        ComponentEntryI18n i18n = entryI18nMap.get(entryId);
+        if (i18n == null) {
+          i18n = new ComponentEntryI18n();
+          i18n.setEntryId(entryId);
+          i18n.setLanguage(lang);
+          entryI18nMap.put(entryId, i18n);
+        }
+        cmsDraftOverrideService.apply(i18n, draft);
+      }
+    }
 
     List<EntryDeliveryResponse> entryResponses = entries.stream()
-        .map(entry -> buildEntryResponse(entry, component.getComponentTypeId(), lang))
+        .map(entry -> buildEntryResponseOptimized(entry, entryI18nMap.get(entry.getId()), component.getComponentTypeId(), lang))
         .toList();
 
     // Build responsive media for component
@@ -302,8 +365,30 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   }
 
   private EntryDeliveryResponse buildEntryResponse(ComponentEntry entry, Long componentTypeId, Language lang) {
+    if (cmsRequestContext.isPreview()) {
+      cmsDraftOverrideService.findComponentEntryDrafts(List.of(entry.getId()))
+          .values()
+          .stream()
+          .findFirst()
+          .ifPresent(draft -> cmsDraftOverrideService.apply(entry, draft));
+    }
     Optional<ComponentEntryI18n> i18nOpt = componentEntryI18nRepository
-        .findByEntryIdAndLanguage(entry.getId(), lang);
+        .findByEntryIdAndLanguage(entry.getId(), lang)
+        .map(this::cloneComponentEntryI18n);
+    if (cmsRequestContext.isPreview()) {
+      ComponentEntryI18n i18n = i18nOpt.orElseGet(() -> {
+        ComponentEntryI18n created = new ComponentEntryI18n();
+        created.setEntryId(entry.getId());
+        created.setLanguage(lang);
+        return created;
+      });
+      cmsDraftOverrideService.findComponentEntryI18nDrafts(List.of(entry.getId()), lang)
+          .values()
+          .stream()
+          .findFirst()
+          .ifPresent(draft -> cmsDraftOverrideService.apply(i18n, draft));
+      i18nOpt = Optional.of(i18n);
+    }
 
     Map<String, Object> customFields = new HashMap<>();
     i18nOpt.ifPresent(i18n -> {
@@ -412,6 +497,34 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
     copy.setTitle(source.getTitle());
     copy.setSubtitle(source.getSubtitle());
     copy.setDescription(source.getDescription());
+    copy.setStatus(source.getStatus());
+    return copy;
+  }
+
+  private ComponentEntry cloneComponentEntry(ComponentEntry source) {
+    ComponentEntry copy = new ComponentEntry();
+    copy.setId(source.getId());
+    copy.setUuid(source.getUuid());
+    copy.setUid(source.getUid());
+    copy.setComponentId(source.getComponentId());
+    copy.setSortOrder(source.getSortOrder());
+    copy.setIsVisible(source.getIsVisible());
+    copy.setStyleClasses(source.getStyleClasses());
+    copy.setStatus(source.getStatus());
+    copy.setResponsiveMedia(source.getResponsiveMedia());
+    return copy;
+  }
+
+  private ComponentEntryI18n cloneComponentEntryI18n(ComponentEntryI18n source) {
+    ComponentEntryI18n copy = new ComponentEntryI18n();
+    copy.setId(source.getId());
+    copy.setUuid(source.getUuid());
+    copy.setUid(source.getUid());
+    copy.setEntryId(source.getEntryId());
+    copy.setLanguage(source.getLanguage());
+    copy.setTitle(source.getTitle());
+    copy.setDescription(source.getDescription());
+    copy.setCustomData(source.getCustomData());
     copy.setStatus(source.getStatus());
     return copy;
   }

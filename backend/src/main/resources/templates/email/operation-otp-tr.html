@@ -1,0 +1,245 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>Güvenlik Ayarı Doğrulama Kodu</title>
+    <style>
+      body, table, td, a {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table, td {
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+      table {
+        border-collapse: collapse !important;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100% !important;
+        background-color: #eef2f7;
+        color: #0f172a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      .preheader {
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        color: transparent;
+        mso-hide: all;
+      }
+      .email-shell {
+        width: 100%;
+        background-color: #eef2f7;
+      }
+      .email-container {
+        width: 600px;
+        max-width: 600px;
+      }
+      .card {
+        background-color: #ffffff;
+        border: 1px solid #d8e0ea;
+        border-radius: 8px;
+      }
+      .content-padding {
+        padding: 40px 44px;
+      }
+      .brand {
+        color: #0f172a;
+        display: block;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 28px;
+        text-align: center;
+        word-break: break-word;
+      }
+      h1 {
+        margin: 14px 0 10px;
+        color: #0f172a;
+        font-size: 30px;
+        font-weight: 800;
+        line-height: 38px;
+        text-align: center;
+      }
+      p {
+        margin: 0;
+      }
+      .lead {
+        color: #475569;
+        font-size: 16px;
+        line-height: 25px;
+        text-align: center;
+      }
+      .body-copy {
+        color: #334155;
+        font-size: 16px;
+        line-height: 26px;
+      }
+      .otp-panel {
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+      }
+      .otp-label {
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        line-height: 18px;
+        text-transform: uppercase;
+      }
+      .code {
+        color: #0f172a;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 38px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        line-height: 48px;
+        text-indent: 0.18em;
+        font-variant-numeric: tabular-nums;
+      }
+      .warning {
+        background-color: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 8px;
+      }
+      .warning-copy {
+        color: #92400e;
+        font-size: 14px;
+        line-height: 22px;
+      }
+      .meta-note {
+        color: #334155;
+        font-size: 14px;
+        line-height: 22px;
+      }
+      .footer {
+        color: #64748b;
+        font-size: 13px;
+        line-height: 21px;
+      }
+      .footer-link {
+        color: #475569 !important;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      @media screen and (max-width: 620px) {
+        .email-container {
+          width: 100% !important;
+        }
+        .outer-padding {
+          padding: 18px 12px 32px !important;
+        }
+        .content-padding {
+          padding: 30px 22px !important;
+        }
+        h1 {
+          font-size: 26px !important;
+          line-height: 33px !important;
+        }
+        .code {
+          font-size: 31px !important;
+          line-height: 40px !important;
+          letter-spacing: 0.12em !important;
+          text-indent: 0.12em !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preheader">İki faktörlü kimlik doğrulama politika değişikliğini onaylamak için tek kullanımlık kodunuzu kullanın.</div>
+    <table role="presentation" class="email-shell" width="100%" cellpadding="0" cellspacing="0" bgcolor="#eef2f7">
+      <tr>
+        <td class="outer-padding" align="center" style="padding: 34px 16px 48px;">
+          <table role="presentation" class="email-container" width="600" cellpadding="0" cellspacing="0">
+            <tr>
+              <td align="center" style="padding: 0 0 18px;">
+                <span class="brand" translate="no" th:text="${fromName}">Craftive</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="card" bgcolor="#ffffff">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td class="content-padding">
+                      <h1>Güvenlik Değişikliğini Onaylayın</h1>
+                      <p class="lead">İki faktörlü kimlik doğrulama politika değişikliğini onaylamak için bu tek kullanımlık kodu kullanın.</p>
+
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="padding-top: 30px;">
+                            <p class="body-copy"><strong style="color: #0f172a;">Merhaba,</strong></p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding-top: 14px;">
+                            <p class="body-copy">Güvenlik politika değişikliğini uygulamak için aşağıdaki doğrulama kodunu girin.</p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="otp-panel" style="margin-top: 30px;">
+                        <tr>
+                          <td align="center" style="padding: 24px 18px 26px;">
+                            <p class="otp-label">Doğrulama Kodu</p>
+                            <p class="code" translate="no" th:text="${otpCode}">123456</p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p class="meta-note" style="margin-top: 20px;">
+                        Bu kod <strong th:text="${expiryMinutes}">5</strong> dakika içinde geçerliliğini yitirir.
+                      </p>
+
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="warning" style="margin-top: 24px;">
+                        <tr>
+                          <td style="padding: 16px 18px;">
+                            <p class="warning-copy">
+                              <strong>Güvenlik uyarısı:</strong> Bu kodu kimseyle paylaşmayın. Craftive çalışanları
+                              sizden asla doğrulama kodu istemez.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="padding-top: 28px;">
+                            <p class="body-copy">Bu işlemi siz yapmadıysanız bu e-postayı güvenle yok sayabilirsiniz.</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding-top: 30px; border-top: 1px solid #e2e8f0;">
+                            <p class="footer">Bu e-posta otomatik olarak gönderilmiştir. Lütfen yanıtlamayın.</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 22px 18px 0;">
+                <p class="footer">© <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2026</span> Craftive. Tüm hakları saklıdır.</p>
+                <p class="footer" style="margin-top: 8px;">
+                  <a href="https://craftive.io" class="footer-link">Web sitesi</a>
+                  <span style="color: #94a3b8;">&nbsp;•&nbsp;</span>
+                  <a href="https://www.linkedin.com/company/craftive" class="footer-link">LinkedIn</a>
+                  <span style="color: #94a3b8;">&nbsp;•&nbsp;</span>
+                  <a href="https://www.instagram.com/craftive.io" class="footer-link">Instagram</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

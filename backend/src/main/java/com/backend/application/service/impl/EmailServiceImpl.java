@@ -74,6 +74,22 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public EmailResult sendOperationOtpEmail(String toEmail, String otpCode, Language language) {
+        log.info("[MAIL] operation-otp dispatch requested | recipient={}", LogSanitizer.maskEmail(toEmail));
+        EmailContext context = EmailContext.builder()
+                .to(toEmail)
+                .emailType(EmailType.OPERATION_OTP)
+                .language(language)
+                .variables(Map.of(
+                        "otpCode", otpCode,
+                        "expiryMinutes", 5
+                ))
+                .build();
+
+        return sendEmail(context);
+    }
+
+    @Override
     public EmailResult sendPasswordResetEmail(String toEmail, String resetToken, String subdomain, Language language) {
         String resetLink = buildPasswordResetLink(resetToken, subdomain);
         log.info("[MAIL] password-reset dispatch requested | recipient={}", LogSanitizer.maskEmail(toEmail));

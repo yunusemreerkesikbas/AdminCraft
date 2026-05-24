@@ -15,7 +15,7 @@ It supports a split model:
 
 Security scope note:
 
-- Tenant `twoFactorPolicy` is managed from Site Dashboard Security tab (`/api/sites/security`).
+- Tenant `twoFactorPolicy` is managed from Site Dashboard Security tab via a **two-step email verification** flow (`POST /api/sites/security/two-factor/request-change` then `confirm-change`). Direct `PATCH /api/sites/security` with `twoFactorPolicy` is rejected.
 - This remains separate from Config Control Panel global runtime email overrides.
 
 ## Admin API (tenant-scoped, authenticated)
