@@ -379,16 +379,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .findByEmailAndIsActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException(email));
 
-            if (isPlatformTwoFactorRequired()) {
-                PlatformLoginOtpResult otpResult = issuePlatformLoginOtp(admin, ipAddress, userAgent);
-                return AuthResult.requiring2FA(
-                        admin.getEmail(),
-                        otpResult.sessionToken(),
-                        null,
-                        null,
-                        otpResult.cooldownSeconds());
-            }
-
             String newAccessToken = jwtProviderPort.createAccessToken(
                     admin.getEmail(),
                     "SUPER_ADMIN",
@@ -462,22 +452,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                 "User cannot refresh token - userId: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
                                 user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
                         throw new UserAccountDisabledException();
-                    }
-
-                    if (tenant.getTwoFactorPolicy() == TwoFactorPolicy.REQUIRED) {
-                        boolean deviceTrusted = deviceFingerprint != null && !deviceFingerprint.isBlank() &&
-                                trustedDeviceService.isDeviceTrusted(user.getId(), deviceFingerprint);
-                        if (!deviceTrusted) {
-                            log.info("2FA required on refresh for userId: {}", user.getId());
-                            LoginOtpIssue otpIssue = issueTenantLoginOtp(user, tenant, ipAddress, userAgent);
-                            return AuthResult.requiring2FA(
-                                    user.getEmail(),
-                                    otpIssue.sessionToken(),
-                                    tenant.getSubdomain(),
-                                    tenantId,
-                                    otpIssue.cooldownSeconds());
-                        }
-                        trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
                     }
 
                     boolean wasRememberMe = jwtProviderPort.isRememberMeToken(refreshToken);

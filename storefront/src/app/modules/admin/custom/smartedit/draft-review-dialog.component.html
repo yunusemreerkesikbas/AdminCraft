@@ -1,0 +1,100 @@
+<section class="se-draft-modal" *transloco="let t">
+    <header class="se-draft-modal__header">
+        <div>
+            <span class="se-draft-modal__eyebrow">
+                {{ t('admin.smartedit.drafts.reviewTitle') }}
+            </span>
+            <h2 mat-dialog-title>{{ data.group.title }}</h2>
+            <p>
+                {{ data.group.subtitle }}
+                <b>
+                    {{ data.group.fields.length }}
+                    {{ t('admin.smartedit.drafts.changeCount') }}
+                </b>
+            </p>
+        </div>
+        <button
+            mat-icon-button
+            type="button"
+            (click)="close()"
+            [attr.aria-label]="t('admin.common.close')"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </header>
+
+    <mat-dialog-content>
+        <div class="se-draft-modal__list">
+            @for (change of data.group.fields; track $index) {
+                <article class="se-draft-change">
+                    <h3>{{ change.label }}</h3>
+                    @if (change.isMedia) {
+                        <div class="se-media-compare">
+                            <div class="se-media-box">
+                                <span>{{
+                                    t('admin.smartedit.drafts.before')
+                                }}</span>
+                                @for (
+                                    media of change.mediaBefore;
+                                    track $index
+                                ) {
+                                    <figure>
+                                        @if (media.url) {
+                                            <img
+                                                [src]="media.url"
+                                                [alt]="media.label"
+                                            />
+                                        } @else {
+                                            <mat-icon>image</mat-icon>
+                                        }
+                                        <figcaption>
+                                            {{ media.label }}
+                                        </figcaption>
+                                    </figure>
+                                }
+                            </div>
+                            <mat-icon class="se-media-compare__arrow">
+                                arrow_forward
+                            </mat-icon>
+                            <div class="se-media-box">
+                                <span>{{
+                                    t('admin.smartedit.drafts.after')
+                                }}</span>
+                                @for (
+                                    media of change.mediaAfter;
+                                    track $index
+                                ) {
+                                    <figure>
+                                        @if (media.url) {
+                                            <img
+                                                [src]="media.url"
+                                                [alt]="media.label"
+                                            />
+                                        } @else {
+                                            <mat-icon>image</mat-icon>
+                                        }
+                                        <figcaption>
+                                            {{ media.label }}
+                                        </figcaption>
+                                    </figure>
+                                }
+                            </div>
+                        </div>
+                    } @else {
+                        <div class="se-text-compare">
+                            <code>{{ change.beforeText }}</code>
+                            <mat-icon>arrow_forward</mat-icon>
+                            <code>{{ change.afterText }}</code>
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-stroked-button type="button" (click)="close()">
+            {{ t('admin.common.close') }}
+        </button>
+    </mat-dialog-actions>
+</section>

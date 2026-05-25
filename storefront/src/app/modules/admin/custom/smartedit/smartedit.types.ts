@@ -75,6 +75,25 @@ export interface SmartEditDraftFieldChange {
     before: unknown;
     after: unknown;
     valueType: string;
+    beforeText: string;
+    afterText: string;
+    mediaBefore: SmartEditMediaPreview[];
+    mediaAfter: SmartEditMediaPreview[];
+    isMedia: boolean;
+}
+
+export interface SmartEditMediaPreview {
+    label: string;
+    url?: string | null;
+}
+
+export interface SmartEditDraftGroup {
+    key: string;
+    draftIds: number[];
+    title: string;
+    subtitle: string;
+    fields: SmartEditDraftFieldChange[];
+    updatedAt?: string | null;
 }
 
 export interface SmartEditDraftItem {
@@ -95,4 +114,6 @@ export interface SmartEditDraftItem {
 export interface SmartEditDraftOverview {
     count: number;
     drafts: SmartEditDraftItem[];
+    groupCount: number;
+    groups: SmartEditDraftGroup[];
 }

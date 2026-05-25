@@ -142,7 +142,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     cmsPreviewTickets: 'cms/preview/tickets',
     cmsPreviewPageDrafts: 'cms/preview/pages/${pageId}/drafts',
     cmsPreviewPublishReview: 'cms/preview/pages/${pageId}/publish-review',
-    cmsPreviewDraftById: 'cms/preview/drafts/${draftId}',
+    cmsPreviewDraftGroup:
+        'cms/preview/pages/${pageId}/draft-groups/${groupKey}',
 
     // ----- PAGE BUILDER: SLOTS -----
     pageSlots: 'pages/${id}/slots',

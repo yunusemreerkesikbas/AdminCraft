@@ -119,6 +119,8 @@ export const langEN = {
             searchPlaceholder: 'Search...',
             sort: 'Sort',
             noRecords: 'No records',
+            yes: 'Yes',
+            no: 'No',
             save: 'Save',
             cancel: 'Cancel',
             delete: 'Delete',
@@ -568,6 +570,10 @@ export const langEN = {
                 empty: 'No publishable drafts for this page and language.',
                 reviewTitle: 'Publish review',
                 reviewEmpty: 'There are no field changes to publish.',
+                changeCount: 'changes',
+                before: 'Before',
+                after: 'After',
+                emptyValue: 'Empty',
             },
             warnings: {
                 ticketExpiringSoon:

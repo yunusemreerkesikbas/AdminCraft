@@ -14,7 +14,7 @@ Current Phase 2A scope:
 | --- | --- |
 | Component and existing entry content edit via draft overrides (i18n strings, media, links, dynamic fields) | Full slot draft override model |
 | Open published pages in SmartEdit using published fallback | Add/remove/reorder components in a slot |
-| Draft panel, field-level publish review, single/page-language discard | Entry add/remove/reorder, shared header/footer publish |
+| Draft panel, backend-computed draft groups, field-level publish review, group/page-language discard | Entry add/remove/reorder, shared header/footer publish |
 | Per-language immediate Publish | Scheduled publish + SmartEdit draft merge, personalization, multi-variant |
 | Component UID fallback lookup | Page metadata draft override, workflow / approval / version history |
 
@@ -84,10 +84,11 @@ All endpoints below are tenant-scoped and require `TENANT_ADMIN`.
 | --- | --- | --- |
 | `GET` | `/api/cms/preview/pages/{pageId}/drafts?language=TR` | Lists publishable SmartEdit drafts for the page-specific, visible component graph. |
 | `GET` | `/api/cms/preview/pages/{pageId}/publish-review?language=TR` | Returns field-level before/after changes for the publish confirmation modal. |
-| `DELETE` | `/api/cms/preview/drafts/{draftId}` | Discards a single `cms_draft_overrides` row. |
+| `DELETE` | `/api/cms/preview/drafts/{draftId}` | Compatibility endpoint for discarding one raw `cms_draft_overrides` row; the SmartEdit inspector uses group discard. |
+| `DELETE` | `/api/cms/preview/pages/{pageId}/draft-groups/{groupKey}?language=TR` | Discards one backend-computed draft group in a single transaction. |
 | `DELETE` | `/api/cms/preview/pages/{pageId}/drafts?language=TR` | Discards current-language drafts for page-specific visible components and their entries. |
 
-Draft list/review responses are computed by the backend; Angular does not traverse the slot/component tree to infer draft scope. Each item includes `draftId`, `targetType`, `targetId`, `language`, component identity, optional entry identity, `fieldChanges`, `updatedAt`, and `updatedBy`.
+Draft list/review responses are computed by the backend; Angular does not traverse the slot/component tree to infer draft scope. Each response keeps raw `drafts` for compatibility and also returns backend-computed `groups` with `groupCount`. Each group includes `key`, `draftIds`, `title`, `subtitle`, `fields`, and `updatedAt`. Field changes include raw `before` / `after` values plus backend-normalized display values (`beforeText`, `afterText`, media previews, and `isMedia`).
 
 Component entry draft editing uses:
 
@@ -152,7 +153,7 @@ Preview responses must not be cached by storefront ISR or browser. The Next.js c
   - Cross-window message types: `smartedit.types.ts`
 - Route: `/:lang/smartedit/:pageId` — registered in `storefront/src/app/app.routes.ts` behind `tenantAdminGuard` + `moduleGuard:core`.
 - Entry point: "Open in SmartEdit" row action in `storefront/src/app/modules/admin/custom/pages/list/page-list.component.ts`.
-- API endpoint constants: `cmsPreviewTickets`, `cmsPreviewPageDrafts`, `cmsPreviewPublishReview`, `cmsPreviewDraftById`, and `componentEntryCompositeDraftById` in `storefront/src/app/modules/admin/api-endpoints.ts`.
+- API endpoint constants: `cmsPreviewTickets`, `cmsPreviewPageDrafts`, `cmsPreviewPublishReview`, `cmsPreviewDraftGroup`, and `componentEntryCompositeDraftById` in `storefront/src/app/modules/admin/api-endpoints.ts`.
 - i18n keys: `admin.smartedit.*` in `storefront/src/app/modules/admin/i18n/langTR.ts` and `langEN.ts`.
 
 ### Storefront (`storefront-nextjs/`)
@@ -280,9 +281,9 @@ When editing the dialog's entries tab in `draftMode`, existing entry edits call 
 
 ### Flow 4: Discard drafts
 
-The SmartEdit inspector loads `GET /api/cms/preview/pages/{pageId}/drafts?language={lang}` and shows a draft count plus field summary.
+The SmartEdit inspector loads `GET /api/cms/preview/pages/{pageId}/drafts?language={lang}` and renders the backend-computed `groups` list with `groupCount`.
 
-- Single discard calls `DELETE /api/cms/preview/drafts/{draftId}` and removes only that override row.
+- Group discard calls `DELETE /api/cms/preview/pages/{pageId}/draft-groups/{groupKey}?language={lang}`. The backend recomputes the page/language draft scope and removes only matching group rows in one transaction.
 - Current-language discard calls `DELETE /api/cms/preview/pages/{pageId}/drafts?language={lang}`. It removes page-specific visible `COMPONENT` no-language drafts, current-language `COMPONENT_I18N` drafts, related `COMPONENT_ENTRY` no-language drafts, and current-language `COMPONENT_ENTRY_I18N` drafts.
 - Shared slot/header/footer drafts are deliberately excluded.
 

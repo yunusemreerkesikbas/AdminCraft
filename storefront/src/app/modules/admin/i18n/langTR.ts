@@ -118,6 +118,8 @@ export const langTR = {
             noRecords: 'Kayıt bulunamadı',
 
             none: 'Yok',
+            yes: 'Evet',
+            no: 'Hayır',
             clearAll: 'Hepsini Temizle',
             cancel: 'İptal',
             close: 'Kapat',
@@ -563,6 +565,10 @@ export const langTR = {
                 empty: 'Bu sayfa ve dil için yayınlanabilir taslak yok.',
                 reviewTitle: 'Yayın öncesi kontrol',
                 reviewEmpty: 'Yayınlanacak alan değişikliği yok.',
+                changeCount: 'değişiklik',
+                before: 'Önce',
+                after: 'Sonra',
+                emptyValue: 'Boş',
             },
             warnings: {
                 ticketExpiringSoon:

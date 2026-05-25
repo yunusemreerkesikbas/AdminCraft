@@ -112,6 +112,21 @@ public class CmsPreviewController {
             Map.of("deletedCount", deletedCount)));
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
+    @DeleteMapping("/pages/{pageId}/draft-groups/{groupKey}")
+    @Operation(summary = "Discard one SmartEdit draft group for a page")
+    public ResponseEntity<ApiResponse<Map<String, Integer>>> discardDraftGroup(
+        @PathVariable Long pageId,
+        @PathVariable String groupKey,
+        @RequestParam Language language,
+        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+        Long userId = requireCurrentUserId();
+        int deletedCount = cmsDraftOverrideService.discardDraftGroup(pageId, language, groupKey, userId);
+        return ResponseEntity.ok(ApiResponse.success(
+            message("cms.preview.draft.discard.success", lang),
+            Map.of("deletedCount", deletedCount)));
+    }
+
     private String message(String key, String lang) {
         return messageSource.getMessage(key, null, Locale.forLanguageTag(lang));
     }
