@@ -31,10 +31,17 @@ export class SmartEditPreviewService {
         pageId: number,
         language: string
     ): Observable<SmartEditDraftOverview> {
+        const headerLanguage = language.toLowerCase();
         return this.#api
-            .get<
-                ApiResponse<SmartEditDraftOverview>
-            >('cmsPreviewPageDrafts', { pageId }, { language })
+            .custom<ApiResponse<SmartEditDraftOverview>>(
+                'GET',
+                'cmsPreviewPageDrafts',
+                {
+                    params: { pageId },
+                    queryParams: { language },
+                    language: headerLanguage,
+                }
+            )
             .pipe(map((response) => this.#requireData(response)));
     }
 
@@ -42,17 +49,30 @@ export class SmartEditPreviewService {
         pageId: number,
         language: string
     ): Observable<SmartEditDraftOverview> {
+        const headerLanguage = language.toLowerCase();
         return this.#api
-            .get<
-                ApiResponse<SmartEditDraftOverview>
-            >('cmsPreviewPublishReview', { pageId }, { language })
+            .custom<ApiResponse<SmartEditDraftOverview>>(
+                'GET',
+                'cmsPreviewPublishReview',
+                {
+                    params: { pageId },
+                    queryParams: { language },
+                    language: headerLanguage,
+                }
+            )
             .pipe(map((response) => this.#requireData(response)));
     }
 
-    discardDraft(draftId: number): Observable<ApiResponse<void>> {
-        return this.#api.delete<ApiResponse<void>>('cmsPreviewDraftById', {
-            draftId,
-        });
+    discardDraftGroup(
+        pageId: number,
+        groupKey: string,
+        language: string
+    ): Observable<ApiResponse<{ deletedCount: number }>> {
+        return this.#api.delete<ApiResponse<{ deletedCount: number }>>(
+            'cmsPreviewDraftGroup',
+            { pageId, groupKey },
+            { language }
+        );
     }
 
     discardPageDrafts(

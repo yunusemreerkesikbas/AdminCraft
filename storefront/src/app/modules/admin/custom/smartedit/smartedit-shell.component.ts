@@ -54,10 +54,12 @@ import { PageSlotService } from '../pages/slots/page-slot.service';
 import { PageSlotResponse } from '../pages/slots/page-slot.types';
 
 import { SmartEditPublishReviewDialogComponent } from './publish-review-dialog.component';
+import { SmartEditDraftReviewDialogComponent } from './draft-review-dialog.component';
 import { SmartEditGatewayService } from './services/smartedit-gateway.service';
 import { SmartEditPreviewService } from './services/smartedit-preview.service';
 import {
     PreviewTicketResponse,
+    SmartEditDraftGroup,
     SmartEditDraftOverview,
     SmartEditSelection,
 } from './smartedit.types';
@@ -116,6 +118,8 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
     protected readonly draftsSig = signal<SmartEditDraftOverview>({
         count: 0,
         drafts: [],
+        groupCount: 0,
+        groups: [],
     });
 
     protected readonly isTicketExpiringSig = computed(() => {
@@ -162,7 +166,12 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         return Boolean(page.translations?.[lang]);
     });
 
-    protected readonly draftCountSig = computed(() => this.draftsSig().count);
+    protected readonly draftGroupsSig = computed<SmartEditDraftGroup[]>(() =>
+        this.draftsSig().groups ?? []
+    );
+    protected readonly draftGroupCountSig = computed(
+        () => this.draftsSig().groupCount ?? this.draftGroupsSig().length
+    );
 
     ngOnInit(): void {
         // `:lang` lives on an ancestor route, so paramMap.get('lang') on the
@@ -312,10 +321,12 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
         this.#loadDrafts();
     }
 
-    discardDraft(draftId: number): void {
+    discardDraftGroup(groupKey: string): void {
+        const pageId = this.pageIdSig();
+        if (!pageId || !groupKey) return;
         this.busySig.set(true);
         this.#previewService
-            .discardDraft(draftId)
+            .discardDraftGroup(pageId, groupKey, this.currentLangSig())
             .pipe(take(1))
             .subscribe({
                 next: (response) => {
@@ -327,6 +338,16 @@ export class SmartEditShellComponent implements OnInit, AfterViewInit {
                     this.busySig.set(false);
                 },
             });
+    }
+
+    openDraftReview(draftGroup: SmartEditDraftGroup): void {
+        this.#dialog.open(SmartEditDraftReviewDialogComponent, {
+            width: '760px',
+            maxWidth: 'calc(100vw - 32px)',
+            maxHeight: '86vh',
+            panelClass: 'spa-compact-dialog',
+            data: { group: draftGroup },
+        });
     }
 
     discardCurrentLanguageDrafts(): void {

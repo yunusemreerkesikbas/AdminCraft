@@ -112,7 +112,7 @@ public class CmsDraftOverrideService {
             navigationNodeId,
             navigationType,
             searchBox);
-        saveOverride(CmsDraftTargetType.COMPONENT, component.getId(), CmsDraftOverride.NO_LANGUAGE, componentPayload, userId);
+        saveComponentOverride(component, componentPayload, userId);
 
         if (request.translations() == null) {
             activityPublisher.publishComponentEvent(component.getId(), component.getName(), ActivityAction.DRAFT_SAVED, userId, null, null);
@@ -131,7 +131,7 @@ public class CmsDraftOverrideService {
                 command.hasSubtitle(),
                 command.hasDescription() ? command.description() : null,
                 command.hasDescription());
-            saveOverride(CmsDraftTargetType.COMPONENT_I18N, component.getId(), entry.getKey().name(), payload, userId);
+            saveComponentI18nOverride(component.getId(), entry.getKey(), payload, userId);
         }
         activityPublisher.publishComponentEvent(component.getId(), component.getName(), ActivityAction.DRAFT_SAVED, userId, null, null);
     }
@@ -153,7 +153,7 @@ public class CmsDraftOverrideService {
             request.isVisible(),
             request.styleClasses(),
             request.responsiveMediaId());
-        saveOverride(CmsDraftTargetType.COMPONENT_ENTRY, entry.getId(), CmsDraftOverride.NO_LANGUAGE, entryPayload, userId);
+        saveComponentEntryOverride(entry, entryPayload, userId);
 
         if (request.translations() != null) {
             for (Map.Entry<Language, EntryI18nUpdateCommand> translation : request.translations().entrySet()) {
@@ -168,7 +168,7 @@ public class CmsDraftOverrideService {
                     command.hasDescription(),
                     command.hasDynamicFields() ? command.dynamicFields() : null,
                     command.hasDynamicFields());
-                saveOverride(CmsDraftTargetType.COMPONENT_ENTRY_I18N, entry.getId(), translation.getKey().name(), payload, userId);
+                saveComponentEntryI18nOverride(entry.getId(), translation.getKey(), payload, userId);
             }
         }
         activityPublisher.publishComponentEvent(component.getId(), component.getName(), ActivityAction.DRAFT_SAVED, userId, null, null);
@@ -362,6 +362,32 @@ public class CmsDraftOverrideService {
         return drafts.size();
     }
 
+    @Transactional(transactionManager = "tenantTransactionManager")
+    public int discardDraftGroup(Long pageId, Language language, String groupKey, Long userId) {
+        if (groupKey == null || groupKey.isBlank()) {
+            return 0;
+        }
+        List<SmartEditDraftItemResponse> matchingItems = buildPageDraftItems(pageId, language, Locale.getDefault())
+            .stream()
+            .filter(item -> groupKey.equals(SmartEditDraftGrouping.groupKey(item)))
+            .toList();
+        if (matchingItems.isEmpty()) {
+            return 0;
+        }
+        Set<Long> draftIds = matchingItems.stream()
+            .map(SmartEditDraftItemResponse::draftId)
+            .collect(Collectors.toSet());
+        Set<Long> componentIds = findPageComponentIds(pageId);
+        Set<Long> entryIds = findPageEntryIds(componentIds);
+        List<CmsDraftOverride> drafts = findPageScopedDraftRows(componentIds, entryIds, language)
+            .stream()
+            .filter(draft -> draftIds.contains(draft.getId()))
+            .toList();
+        drafts.forEach(draft -> publishDiscardActivity(draft, userId));
+        draftOverrideRepository.deleteAll(drafts);
+        return drafts.size();
+    }
+
     public Component apply(Component component, ComponentDraftPayload draft) {
         if (draft == null) {
             return component;
@@ -516,6 +542,7 @@ public class CmsDraftOverrideService {
 
         return drafts.stream()
             .map(draft -> toDraftItem(draft, componentMap, entryMap, componentI18nMap, entryI18nMap, locale))
+            .filter(item -> item.fieldChanges() != null && !item.fieldChanges().isEmpty())
             .sorted(Comparator.comparing(SmartEditDraftItemResponse::updatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
             .toList();
     }
@@ -534,20 +561,20 @@ public class CmsDraftOverrideService {
 
         if (draft.getTargetType() == CmsDraftTargetType.COMPONENT) {
             component = componentMap.get(draft.getTargetId());
-            changes = componentChanges(component, readPayload(draft.getPayload(), ComponentDraftPayload.class), locale);
+            changes = displayChanges(componentChanges(component, readPayload(draft.getPayload(), ComponentDraftPayload.class), locale), locale);
         } else if (draft.getTargetType() == CmsDraftTargetType.COMPONENT_I18N) {
             component = componentMap.get(draft.getTargetId());
-            changes = componentI18nChanges(componentI18nMap.get(draft.getTargetId()),
-                readPayload(draft.getPayload(), ComponentI18nDraftPayload.class), locale);
+            changes = displayChanges(componentI18nChanges(componentI18nMap.get(draft.getTargetId()),
+                readPayload(draft.getPayload(), ComponentI18nDraftPayload.class), locale), locale);
         } else if (draft.getTargetType() == CmsDraftTargetType.COMPONENT_ENTRY) {
             entry = entryMap.get(draft.getTargetId());
             component = entry != null ? componentMap.get(entry.getComponentId()) : null;
-            changes = entryChanges(entry, readPayload(draft.getPayload(), ComponentEntryDraftPayload.class), locale);
+            changes = displayChanges(entryChanges(entry, readPayload(draft.getPayload(), ComponentEntryDraftPayload.class), locale), locale);
         } else if (draft.getTargetType() == CmsDraftTargetType.COMPONENT_ENTRY_I18N) {
             entry = entryMap.get(draft.getTargetId());
             component = entry != null ? componentMap.get(entry.getComponentId()) : null;
-            changes = entryI18nChanges(entryI18nMap.get(draft.getTargetId()),
-                readPayload(draft.getPayload(), ComponentEntryI18nDraftPayload.class), locale);
+            changes = displayChanges(entryI18nChanges(entryI18nMap.get(draft.getTargetId()),
+                readPayload(draft.getPayload(), ComponentEntryI18nDraftPayload.class), locale), locale);
         }
 
         return new SmartEditDraftItemResponse(
@@ -643,6 +670,36 @@ public class CmsDraftOverrideService {
         return changes;
     }
 
+    private void saveComponentOverride(Component component, ComponentDraftPayload payload, Long userId) {
+        if (componentChanges(component, payload, Locale.getDefault()).isEmpty()) {
+            return;
+        }
+        saveOverride(CmsDraftTargetType.COMPONENT, component.getId(), CmsDraftOverride.NO_LANGUAGE, payload, userId);
+    }
+
+    private void saveComponentI18nOverride(Long componentId, Language language, ComponentI18nDraftPayload payload, Long userId) {
+        ComponentI18n i18n = componentI18nRepository.findByComponentIdAndLanguage(componentId, language).orElse(null);
+        if (componentI18nChanges(i18n, payload, Locale.getDefault()).isEmpty()) {
+            return;
+        }
+        saveOverride(CmsDraftTargetType.COMPONENT_I18N, componentId, language.name(), payload, userId);
+    }
+
+    private void saveComponentEntryOverride(ComponentEntry entry, ComponentEntryDraftPayload payload, Long userId) {
+        if (entryChanges(entry, payload, Locale.getDefault()).isEmpty()) {
+            return;
+        }
+        saveOverride(CmsDraftTargetType.COMPONENT_ENTRY, entry.getId(), CmsDraftOverride.NO_LANGUAGE, payload, userId);
+    }
+
+    private void saveComponentEntryI18nOverride(Long entryId, Language language, ComponentEntryI18nDraftPayload payload, Long userId) {
+        ComponentEntryI18n i18n = componentEntryI18nRepository.findByEntryIdAndLanguage(entryId, language).orElse(null);
+        if (entryI18nChanges(i18n, payload, Locale.getDefault()).isEmpty()) {
+            return;
+        }
+        saveOverride(CmsDraftTargetType.COMPONENT_ENTRY_I18N, entryId, language.name(), payload, userId);
+    }
+
     private List<SmartEditDraftFieldChange> componentI18nChanges(ComponentI18n i18n, ComponentI18nDraftPayload draft, Locale locale) {
         if (draft == null) return List.of();
         List<SmartEditDraftFieldChange> changes = new java.util.ArrayList<>();
@@ -678,15 +735,119 @@ public class CmsDraftOverrideService {
         return changes;
     }
 
+    private List<SmartEditDraftFieldChange> displayChanges(List<SmartEditDraftFieldChange> changes, Locale locale) {
+        return changes.stream()
+            .map(change -> displayChange(change, locale))
+            .toList();
+    }
+
+    private SmartEditDraftFieldChange displayChange(SmartEditDraftFieldChange change, Locale locale) {
+        boolean isMedia = "media".equals(change.valueType());
+        return new SmartEditDraftFieldChange(
+            change.field(),
+            change.label(),
+            change.before(),
+            change.after(),
+            change.valueType(),
+            formatDraftValue(change.before(), locale),
+            formatDraftValue(change.after(), locale),
+            mediaPreviews(change.before(), locale),
+            mediaPreviews(change.after(), locale),
+            isMedia);
+    }
+
+    private String formatDraftValue(Object value, Locale locale) {
+        if (value == null || (value instanceof String text && text.isBlank())) {
+            return label("cms.preview.value.empty", locale);
+        }
+        if (value instanceof Boolean bool) {
+            return bool ? label("cms.preview.value.yes", locale) : label("cms.preview.value.no", locale);
+        }
+        if (value instanceof Number || value instanceof String || value instanceof Enum<?>) {
+            return String.valueOf(value);
+        }
+        if (value instanceof Collection<?> collection) {
+            return collection.stream()
+                .map(item -> formatDraftValue(item, locale))
+                .collect(Collectors.joining(", "));
+        }
+        if (value instanceof Map<?, ?> map) {
+            Object label = firstPresent(map, "label", "originalName", "fileName", "code", "uid", "id");
+            if (label != null) {
+                return String.valueOf(label);
+            }
+        }
+        return String.valueOf(value);
+    }
+
+    private List<SmartEditMediaPreviewResponse> mediaPreviews(Object value, Locale locale) {
+        if (!(value instanceof Map<?, ?> map)) {
+            return List.of(new SmartEditMediaPreviewResponse(formatDraftValue(value, locale), null));
+        }
+        List<SmartEditMediaPreviewResponse> responsiveItems = new java.util.ArrayList<>();
+        addResponsiveMediaPreview(responsiveItems, map, "desktopMedia", label("cms.preview.value.desktop", locale), locale);
+        addResponsiveMediaPreview(responsiveItems, map, "mobileMedia", label("cms.preview.value.mobile", locale), locale);
+        if (!responsiveItems.isEmpty()) {
+            return responsiveItems;
+        }
+        return List.of(new SmartEditMediaPreviewResponse(formatDraftValue(value, locale), mediaUrl(map)));
+    }
+
+    private void addResponsiveMediaPreview(
+        List<SmartEditMediaPreviewResponse> items,
+        Map<?, ?> map,
+        String key,
+        String slotLabel,
+        Locale locale) {
+        Object value = map.get(key);
+        if (value != null) {
+            items.add(new SmartEditMediaPreviewResponse(slotLabel + ": " + formatDraftValue(value, locale), mediaUrl(value)));
+        }
+    }
+
+    private String mediaUrl(Object value) {
+        if (!(value instanceof Map<?, ?> map)) {
+            return null;
+        }
+        Object url = firstPresent(map, "thumbnailUrl", "previewUrl", "url", "publicUrl", "src");
+        return url instanceof String text && !text.isBlank() ? text : null;
+    }
+
+    private Object firstPresent(Map<?, ?> map, String... keys) {
+        for (String key : keys) {
+            Object value = map.get(key);
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
     private void addChange(List<SmartEditDraftFieldChange> changes, String field, String label, Object before, Object after, String valueType) {
         addChange(changes, field, label, before, after, valueType, after != null);
     }
 
     private void addChange(List<SmartEditDraftFieldChange> changes, String field, String label, Object before, Object after, String valueType, boolean present) {
-        if (!present || java.util.Objects.equals(before, after)) {
+        if (!present || equivalentDraftValue(before, after)) {
             return;
         }
         changes.add(new SmartEditDraftFieldChange(field, label, before, after, valueType));
+    }
+
+    private boolean equivalentDraftValue(Object before, Object after) {
+        if (before instanceof String || after instanceof String) {
+            String normalizedBefore = normalizeDraftText(before);
+            String normalizedAfter = normalizeDraftText(after);
+            return java.util.Objects.equals(normalizedBefore, normalizedAfter);
+        }
+        return java.util.Objects.equals(before, after);
+    }
+
+    private String normalizeDraftText(Object value) {
+        if (value == null) {
+            return "";
+        }
+        return value.toString().trim();
     }
 
     private String label(String key, Locale locale) {
@@ -756,6 +917,7 @@ public class CmsDraftOverrideService {
         } else if (media.getFileName() != null) {
             value.put("label", media.getFileName());
         }
+        value.put("publicUrl", media.getPublicUrl());
         return value;
     }
 
