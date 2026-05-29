@@ -32,7 +32,7 @@ export function HeroVisual({ alt }: { alt: string }) {
 
   return (
     <motion.div
-      className="relative w-full max-w-[640px] perspective-[1400px]"
+      className="relative w-full max-w-[min(1280px,100%)] perspective-[1400px]"
       initial={{ opacity: 0, y: 40, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -43,22 +43,9 @@ export function HeroVisual({ alt }: { alt: string }) {
         className="relative overflow-hidden rounded-2xl border border-neutral-200/60 bg-white shadow-[0_40px_100px_-28px_rgba(15,23,42,0.3)]"
         style={shouldReduce ? {} : { rotateX, rotateY }}
       >
-        {/* Browser chrome */}
-        <div className="flex items-center gap-2 border-b border-neutral-100 bg-neutral-50/80 px-4 py-2.5">
-          <div className="flex gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-            <div className="h-2.5 w-2.5 rounded-full bg-[#febb2e]" />
-            <div className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-          </div>
-          <div className="ml-2 flex-1 rounded-md bg-white px-3 py-1 text-[10px] text-neutral-400 border border-neutral-200/60">
-            app.craftive.io/en/site
-          </div>
-        </div>
-
-        {/* Dashboard screenshot */}
-        <div className="relative max-h-[420px] overflow-hidden">
+        <div className="relative max-h-[min(760px,84vh)] overflow-hidden sm:max-h-[min(860px,88vh)]">
           <img
-            src="/images/dashboard-full.png"
+            src="/images/hero-2.png"
             alt={alt}
             className="block w-full"
             loading="eager"

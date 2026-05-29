@@ -1,0 +1,126 @@
+{
+  "left": {
+    "tag": "div",
+    "name": "Left",
+    "text": null,
+    "img": null,
+    "bg": null,
+    "radius": null,
+    "fontSize": "12px",
+    "color": "rgb(0, 0, 0)",
+    "children": [
+      {
+        "tag": "div",
+        "name": null,
+        "text": null,
+        "img": null,
+        "bg": null,
+        "radius": null,
+        "fontSize": "12px",
+        "color": "rgb(0, 0, 0)",
+        "children": [
+          {
+            "tag": "div",
+            "name": null,
+            "text": null,
+            "img": null,
+            "bg": null,
+            "radius": "16px",
+            "fontSize": "12px",
+            "color": "rgb(0, 0, 0)",
+            "children": [
+              {
+                "tag": "div",
+                "name": null,
+                "text": null,
+                "img": null,
+                "bg": null,
+                "radius": "16px",
+                "fontSize": "12px",
+                "color": "rgb(0, 0, 0)",
+                "children": [
+                  {
+                    "tag": "img",
+                    "name": null,
+                    "text": null,
+                    "img": {
+                      "src": "https://framerusercontent.com/images/J6tYwRM8iq0YqS6ObBlnUEGwtk.svg?width=140&height=122",
+                      "alt": "Vector"
+                    },
+                    "bg": null,
+                    "radius": "16px",
+                    "fontSize": "12px",
+                    "color": "rgb(0, 0, 0)",
+                    "children": null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "right": {
+    "tag": "div",
+    "name": "Right",
+    "text": null,
+    "img": null,
+    "bg": null,
+    "radius": null,
+    "fontSize": "12px",
+    "color": "rgb(0, 0, 0)",
+    "children": [
+      {
+        "tag": "div",
+        "name": null,
+        "text": null,
+        "img": null,
+        "bg": null,
+        "radius": null,
+        "fontSize": "12px",
+        "color": "rgb(0, 0, 0)",
+        "children": [
+          {
+            "tag": "div",
+            "name": null,
+            "text": null,
+            "img": null,
+            "bg": null,
+            "radius": "16px",
+            "fontSize": "12px",
+            "color": "rgb(0, 0, 0)",
+            "children": [
+              {
+                "tag": "div",
+                "name": null,
+                "text": null,
+                "img": null,
+                "bg": null,
+                "radius": "16px",
+                "fontSize": "12px",
+                "color": "rgb(0, 0, 0)",
+                "children": [
+                  {
+                    "tag": "img",
+                    "name": null,
+                    "text": null,
+                    "img": {
+                      "src": "https://framerusercontent.com/images/nI2Ch2iiqtacQc0WAW4xJLQicfc.svg?width=242&height=179",
+                      "alt": "Vector"
+                    },
+                    "bg": null,
+                    "radius": "16px",
+                    "fontSize": "12px",
+                    "color": "rgb(0, 0, 0)",
+                    "children": null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

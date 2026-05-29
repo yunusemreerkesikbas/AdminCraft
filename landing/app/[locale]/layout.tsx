@@ -38,7 +38,8 @@ type LayoutProps = {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const isEN = locale === "en";
-  const canonical = `${SITE_URL}/${locale}/`;
+  const origin = SITE_URL || "https://craftive.io";
+  const canonical = `${origin}/${locale}/`;
 
   const title = isEN
     ? "Craftive — Multi-Tenant Project Platform"
@@ -48,14 +49,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     : "Tek altyapı, birçok proje. Blog sitesinden HR portalına, ajans panellerinden e-ticarete — Craftive her müşteri için altyapıyı baştan kurmadan uyum sağlar.";
 
   return {
+    metadataBase: new URL(origin),
     title,
     description,
     alternates: {
       canonical,
       languages: {
-        tr: `${SITE_URL}/tr/`,
-        en: `${SITE_URL}/en/`,
-        "x-default": `${SITE_URL}/en/`,
+        tr: `${origin}/tr/`,
+        en: `${origin}/en/`,
+        "x-default": `${origin}/en/`,
       },
     },
     openGraph: {
@@ -65,23 +67,27 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       siteName: "Craftive",
       locale: isEN ? "en_US" : "tr_TR",
       type: "website",
+      images: [{ url: OG_IMAGE_PATH, alt: "Craftive" }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: [OG_IMAGE_PATH],
     },
   };
 }
 
-const orgJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Craftive",
-  url: SITE_URL,
-  logo: `${SITE_URL}${OG_IMAGE_PATH}`,
-  contactPoint: { "@type": "ContactPoint", email: "hello@craftive.io" },
-};
+function buildOrgJsonLd(siteOrigin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Craftive",
+    url: siteOrigin,
+    logo: `${siteOrigin}${OG_IMAGE_PATH}`,
+    contactPoint: { "@type": "ContactPoint", email: "hello@craftive.io" },
+  };
+}
 
 const softwareJsonLd = {
   "@context": "https://schema.org",
@@ -118,6 +124,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
     notFound();
   }
 
+  const siteOrigin = SITE_URL || "https://craftive.io";
+  const orgJsonLd = buildOrgJsonLd(siteOrigin);
   const faqJsonLd = buildFaqJsonLd(locale);
 
   return (
