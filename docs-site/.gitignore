@@ -1,9 +1,0 @@
-node_modules/
-.docusaurus/
-build/
-.env
-.env.local
-.env.*.local
-.server*.log
-.server*.err.log
-.server*.out.log
