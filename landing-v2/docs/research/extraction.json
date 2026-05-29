@@ -1,0 +1,1055 @@
+{
+  "fontFamilies": [
+    "\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif",
+    "\"Google Sans Flex\", \"Google Sans Flex Placeholder\", sans-serif",
+    "\"Google Sans Flex Variable\", \"Google Sans Flex Variable Placeholder\", sans-serif",
+    "Geist, \"Geist Placeholder\", sans-serif",
+    "sans-serif",
+    "\"Times New Roman\""
+  ],
+  "fontUsageTopHeading": [
+    ["div|sans-serif|12px|400", 1027],
+    ["p|\"Google Sans Flex Variable\", \"Google Sans Flex Variable Placeholder\", sans-serif|14px|400", 133],
+    ["p|\"Google Sans Flex Variable\", \"Google Sans Flex Variable Placeholder\", sans-serif|18px|400", 98],
+    ["p|\"Google Sans Flex Variable\", \"Google Sans Flex Variable Placeholder\", sans-serif|16px|400", 70],
+    ["span|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|68px|500", 32],
+    ["h2|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|48px|500", 24],
+    ["div|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|68px|500", 19],
+    ["a|\"Google Sans Flex Variable\", \"Google Sans Flex Variable Placeholder\", sans-serif|18px|400", 15],
+    ["a|sans-serif|12px|400", 14],
+    ["h3|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|24px|500", 6],
+    ["div|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|20px|500", 6],
+    ["p|\"Google Sans Flex\", \"Google Sans Flex Placeholder\", sans-serif|15px|500", 5],
+    ["div|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|34px|500", 5],
+    ["h2|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|24px|500", 4],
+    ["p|\"Google Sans Flex Variable\", \"Google Sans Flex Variable Placeholder\", sans-serif|22px|400", 2],
+    ["p|Geist, \"Geist Placeholder\", sans-serif|12px|700", 2],
+    ["div|\"Google Sans Flex\", \"Google Sans Flex Placeholder\", sans-serif|18px|500", 2],
+    ["h1|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|90px|500", 1],
+    ["h2|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|120px|500", 1],
+    ["h2|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|34px|500", 1],
+    ["h3|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|34px|500", 1],
+    ["p|sans-serif|12px|400", 1],
+    ["button|sans-serif|12px|400", 1],
+    ["span|\"Google Sans Flex Variable\", \"Google Sans Flex Variable Placeholder\", sans-serif|14px|400", 1],
+    ["span|\"Times New Roman\"|16px|400", 1],
+    ["div|\"Google Sans Flex\", \"Google Sans Flex Placeholder\", sans-serif|22px|500", 1],
+    ["div|\"Stack Sans Headline\", \"Stack Sans Headline Placeholder\", sans-serif|24px|500", 1]
+  ],
+  "topColors": [
+    ["rgb(0, 0, 0)", 2043],
+    ["rgb(0, 0, 238)", 216],
+    ["rgb(19, 21, 21)", 138],
+    ["rgb(255, 255, 255)", 118],
+    ["rgb(73, 77, 77)", 71],
+    ["rgb(184, 184, 184)", 71],
+    ["rgb(232, 232, 232)", 10],
+    ["rgb(5, 8, 12)", 2],
+    ["rgb(255, 76, 0)", 1],
+    ["rgb(144, 0, 255)", 1],
+    ["rgb(0, 34, 255)", 1]
+  ],
+  "topBgs": [
+    ["rgb(255, 255, 255)", 76],
+    ["rgb(19, 21, 21)", 59],
+    ["rgb(232, 232, 232)", 32],
+    ["rgba(255, 255, 255, 0.05)", 31],
+    ["rgb(18, 167, 10)", 19],
+    ["rgb(0, 34, 255)", 13],
+    ["rgba(255, 255, 255, 0.2)", 12],
+    ["rgb(247, 247, 247)", 9],
+    ["rgb(255, 76, 0)", 9],
+    ["rgb(144, 0, 255)", 9],
+    ["rgb(2, 131, 167)", 8],
+    ["rgba(255, 255, 255, 0)", 7],
+    ["rgb(255, 0, 0)", 5],
+    ["rgb(0, 89, 255)", 4],
+    ["rgba(18, 167, 10, 0.5)", 3]
+  ],
+  "images": [
+    {
+      "src": "https://framerusercontent.com/images/3AsTMGQpJ4jcC8fwNEWoVEO0k.svg?width=134&height=32",
+      "srcset": "",
+      "alt": "Brand Logo",
+      "w": 134,
+      "h": 32,
+      "cssW": 134,
+      "cssH": 32,
+      "parentName": "Brand"
+    },
+    {
+      "src": "https://framerusercontent.com/images/BZYkl56vzaLH9uCPqEid8uQg9ZE.svg?width=22&height=22",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 22,
+      "h": 22,
+      "cssW": 22,
+      "cssH": 22,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/BZYkl56vzaLH9uCPqEid8uQg9ZE.svg?width=22&height=22",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 22,
+      "h": 22,
+      "cssW": 22,
+      "cssH": 22,
+      "parentName": "Hover Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/J4VPLNaOdWSrA6fBUpuZ0eLYNAI.svg?width=20&height=22",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 22,
+      "cssW": 22,
+      "cssH": 22,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/J4VPLNaOdWSrA6fBUpuZ0eLYNAI.svg?width=20&height=22",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 22,
+      "cssW": 22,
+      "cssH": 22,
+      "parentName": "Hover Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/tS0ZuZlJiNpvPvkALsbfBb1Eig.svg?width=16&height=18",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 16,
+      "h": 18,
+      "cssW": 16,
+      "cssH": 18,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/tS0ZuZlJiNpvPvkALsbfBb1Eig.svg?width=16&height=18",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 16,
+      "h": 18,
+      "cssW": 16,
+      "cssH": 18,
+      "parentName": "Hover Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/J6tYwRM8iq0YqS6ObBlnUEGwtk.svg?width=140&height=122",
+      "srcset": "",
+      "alt": "Vector",
+      "w": 140,
+      "h": 122,
+      "cssW": 228,
+      "cssH": 198.671875,
+      "parentName": "Left"
+    },
+    {
+      "src": "https://framerusercontent.com/images/craftive-app.png?width=453&height=729",
+      "srcset": "https://framerusercontent.com/images/craftive-app.png?width=453&height=729 453w",
+      "alt": "Vector",
+      "w": 267,
+      "h": 431,
+      "cssW": 348,
+      "cssH": 560.015625,
+      "parentName": "Center"
+    },
+    {
+      "src": "https://framerusercontent.com/images/nI2Ch2iiqtacQc0WAW4xJLQicfc.svg?width=242&height=179",
+      "srcset": "",
+      "alt": "Vector",
+      "w": 242,
+      "h": 179,
+      "cssW": 228,
+      "cssH": 168.640625,
+      "parentName": "Right"
+    },
+    {
+      "src": "https://framerusercontent.com/images/pUHkyH58LSJDgk8jqtzFiFqUyvY.svg?width=1920&height=530",
+      "srcset": "https://framerusercontent.com/images/pUHkyH58LSJDgk8jqtzFiFqUyvY.svg?scale-down-to=512&width=1920&height=530 512w,https://framerusercontent.com/images/pUHkyH58LSJDgk8jqtzFiFqUyvY.svg?scale-down-to=1024&width=1920&height=530 1024w,https://framerusercontent.com/images/pUHkyH58LSJDgk8jqtzFiFqUyvY.svg?width=1920&height=530 1920w",
+      "alt": "Vector",
+      "w": 1679,
+      "h": 463,
+      "cssW": 1665,
+      "cssH": 459.609375,
+      "parentName": "Blur Overlay Bottom"
+    },
+    {
+      "src": "https://framerusercontent.com/images/5AAyXsYWLAPDHoR0Qd3rIax2A4.jpg?width=1920&height=1400",
+      "srcset": "https://framerusercontent.com/images/5AAyXsYWLAPDHoR0Qd3rIax2A4.jpg?scale-down-to=512&width=1920&height=1400 512w,https://framerusercontent.com/images/5AAyXsYWLAPDHoR0Qd3rIax2A4.jpg?scale-down-to=1024&width=1920&height=1400 1024w,https://framerusercontent.com/images/5AAyXsYWLAPDHoR0Qd3rIax2A4.jpg?width=1920&height=1400 1920w",
+      "alt": "BG Image",
+      "w": 1440,
+      "h": 1050,
+      "cssW": 1425,
+      "cssH": 1281.8125,
+      "parentName": "BG Item"
+    },
+    {
+      "src": "https://framerusercontent.com/images/xWPekEuNbvgPERKSnbylJIlw5o.jpg?width=500&height=240",
+      "srcset": "",
+      "alt": "About Image",
+      "w": 500,
+      "h": 240,
+      "cssW": 92,
+      "cssH": 44,
+      "parentName": "01"
+    },
+    {
+      "src": "https://framerusercontent.com/images/tyQlVexPG6JIDCWExGwbiGuN5h8.jpg?width=500&height=240",
+      "srcset": "",
+      "alt": "About Image",
+      "w": 500,
+      "h": 240,
+      "cssW": 92,
+      "cssH": 44,
+      "parentName": "02"
+    },
+    {
+      "src": "https://framerusercontent.com/images/EvRLW1yV1DMzPgDGTRFL8268Y.jpg?width=500&height=240",
+      "srcset": "",
+      "alt": "About Image",
+      "w": 500,
+      "h": 240,
+      "cssW": 92,
+      "cssH": 44,
+      "parentName": "03"
+    },
+    {
+      "src": "https://framerusercontent.com/images/HXp1j2ozGA25sNyS8ZbVMkMuV3A.jpg?width=500&height=240",
+      "srcset": "",
+      "alt": "About Image",
+      "w": 500,
+      "h": 240,
+      "cssW": 92,
+      "cssH": 44,
+      "parentName": "04"
+    },
+    {
+      "src": "https://framerusercontent.com/images/38EivRTUD86UdDi4ptLVvUiyP8.svg?width=61&height=48",
+      "srcset": "",
+      "alt": "Vector",
+      "w": 61,
+      "h": 48,
+      "cssW": 60,
+      "cssH": 46,
+      "parentName": "Vector Wrapper"
+    },
+    {
+      "src": "https://framerusercontent.com/images/craftive-app.png?width=511&height=1050",
+      "srcset": "https://framerusercontent.com/images/craftive-app.png?width=511&height=1050 511w",
+      "alt": "Vector",
+      "w": 340,
+      "h": 698,
+      "cssW": 340,
+      "cssH": 698.625,
+      "parentName": "Center"
+    },
+    {
+      "src": "https://framerusercontent.com/images/8am9PwYG7ucvqP215quawba5N8.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/WvRGvc2l8SkYOYTv4oMiBGMYX4.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/DT4ikSP5puS82Z1ncPwIWiwsFY.svg?width=14&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 14,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/xGAsuu5UcfFaHNbH4vHyXTsE9A.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/f2N5l3AfnMk9zqb2ECDROX8EEMo.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/GsMwNqFuEInpXifqbAUBIX5BtbI.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/0Ya2WfYuMB8bcRa3zDwD1UqZ5tM.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/qMZFyawlggBHVBoh6ddN1JiBY.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "Thumbnail",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/8am9PwYG7ucvqP215quawba5N8.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/WvRGvc2l8SkYOYTv4oMiBGMYX4.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/DT4ikSP5puS82Z1ncPwIWiwsFY.svg?width=14&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 14,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/xGAsuu5UcfFaHNbH4vHyXTsE9A.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/f2N5l3AfnMk9zqb2ECDROX8EEMo.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/GsMwNqFuEInpXifqbAUBIX5BtbI.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/0Ya2WfYuMB8bcRa3zDwD1UqZ5tM.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/qMZFyawlggBHVBoh6ddN1JiBY.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "Thumbnail",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/GSq0AQhlDTiSQqrpHsVEbidQbY.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/fqGFx9fe7ocFZ2fppp0P3V8zCc.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/wU5kNj47IKPYXWgHeSZNEZGs0xY.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/5Y4qLvBGVPY87FFtnxrK7aKIYQw.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cGsM8G9PKFsgxV8zp5Np4Cb5cWM.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/O60jXYDk3ETktyW0xrtlLeC0.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/YUr6G8cFmrvztrSJrZGhMyYI96k.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/XJ6pIVMN5yKo34rV6wNJ6AFRcXk.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/GSq0AQhlDTiSQqrpHsVEbidQbY.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/fqGFx9fe7ocFZ2fppp0P3V8zCc.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/wU5kNj47IKPYXWgHeSZNEZGs0xY.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/5Y4qLvBGVPY87FFtnxrK7aKIYQw.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 149.99993896484375,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cGsM8G9PKFsgxV8zp5Np4Cb5cWM.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/O60jXYDk3ETktyW0xrtlLeC0.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/YUr6G8cFmrvztrSJrZGhMyYI96k.svg?width=24&height=24",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 24,
+      "h": 24,
+      "cssW": 24,
+      "cssH": 24,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/XJ6pIVMN5yKo34rV6wNJ6AFRcXk.jpg?width=500&height=500",
+      "srcset": "",
+      "alt": "BG Image",
+      "w": 500,
+      "h": 500,
+      "cssW": 150,
+      "cssH": 150,
+      "parentName": "Desktop"
+    },
+    {
+      "src": "https://framerusercontent.com/images/GCossAcVNeMN8AA0Y7whA6KYwc.svg?width=15&height=14",
+      "srcset": "",
+      "alt": "Star",
+      "w": 15,
+      "h": 14,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Badge"
+    },
+    {
+      "src": "https://framerusercontent.com/images/QRsZ0wW7yJBSQ74nFQSsWWEcc.svg?width=17&height=20",
+      "srcset": "",
+      "alt": "Star",
+      "w": 17,
+      "h": 20,
+      "cssW": 17,
+      "cssH": 20,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/QRsZ0wW7yJBSQ74nFQSsWWEcc.svg?width=17&height=20",
+      "srcset": "",
+      "alt": "Star",
+      "w": 17,
+      "h": 20,
+      "cssW": 17,
+      "cssH": 20,
+      "parentName": "Hover Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/km9Ow7UeQZU36Ew0wKlUvcSzm8.svg?width=17&height=20",
+      "srcset": "",
+      "alt": "Star",
+      "w": 17,
+      "h": 20,
+      "cssW": 17,
+      "cssH": 20,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/km9Ow7UeQZU36Ew0wKlUvcSzm8.svg?width=17&height=20",
+      "srcset": "",
+      "alt": "Star",
+      "w": 17,
+      "h": 20,
+      "cssW": 17,
+      "cssH": 20,
+      "parentName": "Hover Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/c5yKOUxAULPtn3CoxX5b92vgJ8U.png?width=2994&height=589",
+      "srcset": "https://framerusercontent.com/images/c5yKOUxAULPtn3CoxX5b92vgJ8U.png?scale-down-to=512&width=2994&height=589 512w,https://framerusercontent.com/images/c5yKOUxAULPtn3CoxX5b92vgJ8U.png?scale-down-to=1024&width=2994&height=589 1024w,https://framerusercontent.com/images/c5yKOUxAULPtn3CoxX5b92vgJ8U.png?scale-down-to=2048&width=2994&height=589 2048w,https://framerusercontent.com/images/c5yKOUxAULPtn3CoxX5b92vgJ8U.png?width=2994&height=589 2994w",
+      "alt": "Cloud",
+      "w": 2988,
+      "h": 587,
+      "cssW": 2988.90625,
+      "cssH": 588,
+      "parentName": "Cloud 01"
+    },
+    {
+      "src": "https://framerusercontent.com/images/bWh0pVd78Am5KRfPjOhMoF5Ddk.png?width=894&height=297",
+      "srcset": "https://framerusercontent.com/images/bWh0pVd78Am5KRfPjOhMoF5Ddk.png?scale-down-to=512&width=894&height=297 512w,https://framerusercontent.com/images/bWh0pVd78Am5KRfPjOhMoF5Ddk.png?width=894&height=297 894w",
+      "alt": "Cloud",
+      "w": 890,
+      "h": 296,
+      "cssW": 890.984375,
+      "cssH": 296,
+      "parentName": "Cloud 02"
+    },
+    {
+      "src": "https://framerusercontent.com/images/vK1naOOAfBeOfzjSqlloxH7w.png?width=749&height=448",
+      "srcset": "https://framerusercontent.com/images/vK1naOOAfBeOfzjSqlloxH7w.png?scale-down-to=512&width=749&height=448 512w,https://framerusercontent.com/images/vK1naOOAfBeOfzjSqlloxH7w.png?width=749&height=448 749w",
+      "alt": "Cloud",
+      "w": 752,
+      "h": 450,
+      "cssW": 501.5625,
+      "cssH": 300,
+      "parentName": "Cloud 03"
+    },
+    {
+      "src": "https://framerusercontent.com/images/FjJKfi9C6Ko7SX1a8tCVf24.svg?width=468&height=319",
+      "srcset": "",
+      "alt": "Vector",
+      "w": 468,
+      "h": 319,
+      "cssW": 505,
+      "cssH": 344.21875,
+      "parentName": "Wrap"
+    },
+    {
+      "src": "https://framerusercontent.com/images/hHSyrApn8x7xHrbWRcHKSwhKSE.svg?width=20&height=20",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 20,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/0S1fNf5DNEGVKsrr0flD4GTuYXw.svg?width=20&height=20",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 20,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/wIY3vmIzJKKcEVbobh1i2t9B7Y.svg?width=20&height=20",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 20,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/hDK1OyDT46XIMkoTnbcgeGggsB0.svg?width=20&height=16",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 16,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/oofAN1YbKDE9DM9qbQx694LytA.svg?width=20&height=20",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 20,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/hHSyrApn8x7xHrbWRcHKSwhKSE.svg?width=20&height=20",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 20,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/0S1fNf5DNEGVKsrr0flD4GTuYXw.svg?width=20&height=20",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 20,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/wIY3vmIzJKKcEVbobh1i2t9B7Y.svg?width=20&height=20",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 20,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/hDK1OyDT46XIMkoTnbcgeGggsB0.svg?width=20&height=16",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 16,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/oofAN1YbKDE9DM9qbQx694LytA.svg?width=20&height=20",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 20,
+      "h": 20,
+      "cssW": 14,
+      "cssH": 14,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/cJNAZOUM1pLCz9sFxSjsIxFGk.svg?width=10&height=8",
+      "srcset": "",
+      "alt": "Icon",
+      "w": 10,
+      "h": 8,
+      "cssW": 8,
+      "cssH": 5,
+      "parentName": "Icon"
+    },
+    {
+      "src": "https://framerusercontent.com/images/ubUH31gw3mKXQBS06KHaijaBY.jpg?scale-down-to=1024&width=1200&height=1340",
+      "srcset": "https://framerusercontent.com/images/ubUH31gw3mKXQBS06KHaijaBY.jpg?scale-down-to=1024&width=1200&height=1340 917w,https://framerusercontent.com/images/ubUH31gw3mKXQBS06KHaijaBY.jpg?width=1200&height=1340 1200w",
+      "alt": "BG Image",
+      "w": 585,
+      "h": 653,
+      "cssW": 585,
+      "cssH": 667.828125,
+      "parentName": "BG Item"
+    }
+  ],
+  "imageCount": 216,
+  "videos": [
+    {
+      "src": "https://framerusercontent.com/assets/yjuD7GFXupvQlqYR8xjXBuh5oc.mp4",
+      "poster": "",
+      "autoplay": true,
+      "loop": true,
+      "muted": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "src": "https://framerusercontent.com/assets/PRGg2Q31L3cBm9aIlNsOfMD8QL8.mp4",
+      "poster": "https://framerusercontent.com/images/gHoUIe36Bcus0ZhazwDHHC8.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/TwMQMPf1H0P9cYfxE88cxOnb0qU.mp4",
+      "poster": "https://framerusercontent.com/images/ScH3ZwJPywW2vDzikzfZOmO8Io.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/nG8aNSXF9bVc3wia1eVPP35Z5c8.mp4",
+      "poster": "https://framerusercontent.com/images/8YnVAVkpEqUzgHukyyxNv82sDxI.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/wBHfmVdBC9k7z6MAlqRq6AD7ZWw.mp4",
+      "poster": "https://framerusercontent.com/images/RhY3yQXATs5IFRd952bc9Mlbk8.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "src": "https://framerusercontent.com/assets/PRGg2Q31L3cBm9aIlNsOfMD8QL8.mp4",
+      "poster": "https://framerusercontent.com/images/gHoUIe36Bcus0ZhazwDHHC8.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "src": "https://framerusercontent.com/assets/TwMQMPf1H0P9cYfxE88cxOnb0qU.mp4",
+      "poster": "https://framerusercontent.com/images/ScH3ZwJPywW2vDzikzfZOmO8Io.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "src": "https://framerusercontent.com/assets/nG8aNSXF9bVc3wia1eVPP35Z5c8.mp4",
+      "poster": "https://framerusercontent.com/images/8YnVAVkpEqUzgHukyyxNv82sDxI.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/wBHfmVdBC9k7z6MAlqRq6AD7ZWw.mp4",
+      "poster": "https://framerusercontent.com/images/RhY3yQXATs5IFRd952bc9Mlbk8.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/PRGg2Q31L3cBm9aIlNsOfMD8QL8.mp4",
+      "poster": "https://framerusercontent.com/images/gHoUIe36Bcus0ZhazwDHHC8.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/TwMQMPf1H0P9cYfxE88cxOnb0qU.mp4",
+      "poster": "https://framerusercontent.com/images/ScH3ZwJPywW2vDzikzfZOmO8Io.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/nG8aNSXF9bVc3wia1eVPP35Z5c8.mp4",
+      "poster": "https://framerusercontent.com/images/8YnVAVkpEqUzgHukyyxNv82sDxI.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/wBHfmVdBC9k7z6MAlqRq6AD7ZWw.mp4",
+      "poster": "https://framerusercontent.com/images/RhY3yQXATs5IFRd952bc9Mlbk8.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/PRGg2Q31L3cBm9aIlNsOfMD8QL8.mp4",
+      "poster": "https://framerusercontent.com/images/gHoUIe36Bcus0ZhazwDHHC8.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/TwMQMPf1H0P9cYfxE88cxOnb0qU.mp4",
+      "poster": "https://framerusercontent.com/images/ScH3ZwJPywW2vDzikzfZOmO8Io.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/nG8aNSXF9bVc3wia1eVPP35Z5c8.mp4",
+      "poster": "https://framerusercontent.com/images/8YnVAVkpEqUzgHukyyxNv82sDxI.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    },
+    {
+      "src": "https://framerusercontent.com/assets/wBHfmVdBC9k7z6MAlqRq6AD7ZWw.mp4",
+      "poster": "https://framerusercontent.com/images/RhY3yQXATs5IFRd952bc9Mlbk8.png?width=720&height=1280",
+      "autoplay": false,
+      "loop": true,
+      "muted": true,
+      "width": 0,
+      "height": 0
+    }
+  ],
+  "svgCount": 3,
+  "bgImages": ["https://framerusercontent.com/images/7LHrHtfQE6CEvh827HEXAxs3Ya8.png?width=1000&height=50"],
+  "fontLinks": ["https://fonts.gstatic.com/", "https://fonts.gstatic.com/"],
+  "stylesheets": [],
+  "favicons": [
+    {
+      "rel": "icon",
+      "href": "https://framerusercontent.com/images/mgLl4d8oXQ04VoDrau128r1SEhI.png",
+      "sizes": ""
+    },
+    {
+      "rel": "icon",
+      "href": "https://framerusercontent.com/images/mgLl4d8oXQ04VoDrau128r1SEhI.png",
+      "sizes": ""
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://framerusercontent.com/images/LwJVSzgtkJYX0pzEYjeCgqaBmyU.png",
+      "sizes": ""
+    }
+  ],
+  "metaTags": {
+    "title": "Habitline - Health & Wellness Framer Template",
+    "description": "Launch your health or wellness app faster with this modern Framer template designed for startups and digital health platforms.",
+    "ogImage": "https://framerusercontent.com/assets/lFDyHHINpGJpVByWb3OhmmcOgU.jpg",
+    "ogTitle": "Habitline - Health & Wellness Framer Template",
+    "ogDescription": "Launch your health or wellness app faster with this modern Framer template designed for startups and digital health platforms."
+  }
+}
