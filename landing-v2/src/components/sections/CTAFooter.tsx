@@ -39,7 +39,7 @@ export function CTAFooter() {
             </Reveal>
             <Reveal delay={150}>
               <div className="mt-8 flex flex-row flex-wrap items-center gap-3">
-                <DemoButton className="px-7 py-4 rounded-full bg-ink text-white text-[15px] font-medium flex items-center gap-2.5 hover:bg-ink/90 transition-colors shadow-card">
+                <DemoButton location="cta_footer" className="px-7 py-4 rounded-full bg-ink text-white text-[15px] font-medium flex items-center gap-2.5 hover:bg-ink/90 transition-colors shadow-card">
                   {t("primaryCta")}
                   <ArrowRightIcon size={16} />
                 </DemoButton>

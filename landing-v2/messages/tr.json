@@ -3,6 +3,13 @@
     "title": "Craftive — Tek platform, her kuruluma uygun",
     "description": "Fikrinizi anlatın, dijital dönüşümünüze eşlik edelim. Craftive; markalar ve ajanslar için kurulum, içerik ve yayın süreçlerini sizin yerinize yürüten yönetilen bir dijital platformdur."
   },
+  "consent": {
+    "title": "Çerez tercihiniz",
+    "description": "Deneyiminizi iyileştirmek ve site trafiğini anlamak için analitik çerezler kullanıyoruz. Kabul ederek bunların kullanımına izin verirsiniz.",
+    "privacyLabel": "Gizlilik politikası",
+    "accept": "Kabul Et",
+    "reject": "Reddet"
+  },
   "nav": {
     "neler": "Neler Sunuyoruz",
     "portfolyo": "Portfolyo",
