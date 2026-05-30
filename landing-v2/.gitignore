@@ -47,3 +47,7 @@ next-env.d.ts
 
 # Local temp files
 temp/
+
+# Generated image artifacts — produced by scripts/optimize-all.mjs at build time
+public/images/**/*.webp
+src/lib/hero-lqip.ts
