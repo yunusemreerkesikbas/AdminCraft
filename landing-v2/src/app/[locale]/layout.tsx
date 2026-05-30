@@ -34,6 +34,7 @@ const googleSansFlex = localFont({
   ],
   variable: "--font-sans",
   display: "swap",
+  preload: false,
 });
 
 export function generateStaticParams() {

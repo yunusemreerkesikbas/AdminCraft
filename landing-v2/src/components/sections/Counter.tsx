@@ -60,6 +60,16 @@ export function Counter() {
     return Number.isFinite(parsed) ? parsed : 0;
   }, [t]);
 
+  const [globeRef, globeInView] = useInView<HTMLDivElement>(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (globeInView && videoRef.current && !videoRef.current.src) {
+      videoRef.current.src = ASSETS.videos.earth;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [globeInView]);
+
   return (
     <section id="metrics" className="relative overflow-hidden bg-surface pt-[80px] md:pt-[160px] pb-20">
       <div className="relative max-w-5xl mx-auto px-6 text-center z-10">
@@ -99,15 +109,15 @@ export function Counter() {
             maskImage: "linear-gradient(to bottom, black 55%, transparent 90%)",
           }}
         >
-          <div className="absolute inset-0 overflow-hidden bg-surface">
+          <div ref={globeRef} className="absolute inset-0 overflow-hidden bg-surface">
             <div className="absolute inset-x-0 top-0 aspect-[1080/800]" style={{ mixBlendMode: "darken" }}>
               <video
-                src={ASSETS.videos.earth}
+                ref={videoRef}
                 autoPlay
                 loop
                 muted
                 playsInline
-                preload="metadata"
+                preload="none"
                 className="w-full h-full object-cover"
                 style={{ objectPosition: "50% 50%" }}
               />

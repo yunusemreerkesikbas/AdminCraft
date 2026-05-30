@@ -167,6 +167,7 @@ export function About() {
           alt=""
           width={891}
           height={296}
+          sizes="(max-width: 768px) 55vw, 491px"
           className="absolute left-0 bottom-0 w-[55%] h-auto"
         />
         {/* Small cloud — right side */}
@@ -175,6 +176,7 @@ export function About() {
           alt=""
           width={502}
           height={300}
+          sizes="(max-width: 768px) 36vw, 181px"
           className="absolute right-0 bottom-4 w-[36%] h-auto"
         />
       </div>
