@@ -49,4 +49,3 @@ next-env.d.ts
 temp/
 
 # Generated image artifacts — produced by scripts/optimize-all.mjs at build time
-public/images/**/*.webp
