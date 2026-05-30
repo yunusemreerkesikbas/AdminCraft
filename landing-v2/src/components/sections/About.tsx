@@ -115,7 +115,7 @@ export function About() {
 
         <Reveal delay={140}>
           <div className="mt-7 flex items-center justify-center gap-3 flex-wrap">
-            <DemoButton className="px-6 py-3.5 rounded-full bg-ink text-white text-[14px] font-medium leading-none flex items-center gap-2 hover:bg-ink/90 transition-colors">
+            <DemoButton location="about" className="px-6 py-3.5 rounded-full bg-ink text-white text-[14px] font-medium leading-none flex items-center gap-2 hover:bg-ink/90 transition-colors">
               {t("primaryCta")}
               <ArrowRightIcon size={14} />
             </DemoButton>

@@ -1,19 +1,27 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   getCraftiveApiOrigin,
   NewsletterSubscribeError,
   subscribeNewsletter,
 } from "@/lib/platform-api";
+import { track } from "@/lib/analytics";
+import { toLocaleTag } from "@/lib/utils";
 
 export function NewsletterForm() {
   const locale = useLocale();
   const f = useTranslations("footer");
-  const localeTag = locale === "tr" ? "tr" : "en";
+  const localeTag = toLocaleTag(locale);
 
-  const formStartedAtRef = useRef<number>(Date.now());
+  // Records when the form became interactive — used for the anti-bot
+  // "submitted too fast" server check. Set on mount to keep render pure.
+  const formStartedAtRef = useRef<number>(0);
+  useEffect(() => {
+    formStartedAtRef.current = Date.now();
+  }, []);
+
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -40,6 +48,7 @@ export function NewsletterForm() {
         formStartedAtRef.current,
       );
       setSubmitted(true);
+      track("newsletter_subscribe", { source: "LANDING_FOOTER", locale: localeTag });
       void result;
     } catch (err) {
       if (NewsletterSubscribeError.is(err)) {
