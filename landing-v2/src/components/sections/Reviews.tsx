@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { XIcon } from "@/components/icons";
 import { Reveal } from "@/components/Reveal";
 
 const TECH_STACK = [
@@ -25,7 +24,7 @@ export function Reviews() {
   const [showAll, setShowAll] = useState(false);
 
   return (
-    <section id="reviews" className="bg-white py-20">
+    <section id="reviews" className="bg-white py-14 md:py-20">
       <div className="max-w-6xl mx-auto px-6">
 
         {/* Tech stack label + marquee */}
@@ -66,29 +65,21 @@ export function Reviews() {
         {/* Testimonials grid */}
         <Reveal delay={100}>
           <div className="relative">
-            <div className="columns-1 md:columns-3 gap-5 space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {testimonials.map((tItem, i) => {
                 const mobileHidden = !showAll && i > 3;
                 const mobilePartial = !showAll && i === 3;
                 return (
                   <div
                     key={i}
-                    className={`break-inside-avoid rounded-2xl bg-surface p-6 ${
+                    className={`rounded-2xl bg-surface p-6 flex flex-col ${
                       mobileHidden ? "hidden md:block" : ""
                     } ${mobilePartial ? "opacity-40 md:opacity-100" : ""}`}
                   >
-                    <p className="text-ink text-[15px] leading-relaxed">{tItem.quote}</p>
-                    <div className="mt-5 flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-ink font-semibold text-[14px] leading-tight">{tItem.name}</div>
-                        <div className="text-ink-muted text-[12px] mt-0.5">{tItem.role}</div>
-                      </div>
-                      <button
-                        aria-label="Kapat"
-                        className="size-8 rounded-full bg-white flex items-center justify-center text-ink-muted hover:text-ink transition-colors flex-shrink-0"
-                      >
-                        <XIcon size={15} />
-                      </button>
+                    <span className="font-heading text-[40px] leading-none text-ink/10 -mb-1">"</span>
+                    <p className="text-ink text-[15px] leading-relaxed flex-1">{tItem.quote}</p>
+                    <div className="mt-5 pt-4 border-t border-line">
+                      <div className="text-ink font-semibold text-[13px] leading-tight">{tItem.name}</div>
                     </div>
                   </div>
                 );
@@ -108,14 +99,6 @@ export function Reviews() {
           </div>
         </Reveal>
 
-        <div className={`text-center mt-12 ${!showAll ? "hidden md:block" : ""}`}>
-          <a
-            href="#cta-footer"
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-ink text-white text-[14px] font-medium hover:bg-ink/90 transition-colors"
-          >
-            {t("viewAll")}
-          </a>
-        </div>
 
       </div>
     </section>

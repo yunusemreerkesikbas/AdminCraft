@@ -48,9 +48,9 @@ export function UseCase() {
             </Reveal>
           </div>
 
-          {/* Tab row */}
+          {/* Tab row — mobilde 2×2 grid, desktop'ta flex */}
           <Reveal delay={120}>
-            <div className="flex flex-wrap items-center gap-2 mb-8 justify-center px-1">
+            <div className="grid grid-cols-2 md:flex md:flex-wrap items-center gap-2 mb-8 md:justify-center px-1">
               {tabsCopy.map((tab, i) => {
                 const Icon = TAB_ICONS[i];
                 const isActive = i === active;
@@ -58,11 +58,11 @@ export function UseCase() {
                   <button
                     key={tab.label}
                     onClick={() => setActive(i)}
-                    className={`flex items-center gap-2 px-5 py-3 rounded-full text-[14px] font-medium leading-none transition-colors ${
+                    className={`flex items-center justify-center gap-2 px-4 md:px-5 py-3 rounded-full text-[13px] md:text-[14px] font-medium leading-none transition-colors ${
                       isActive ? "bg-white text-ink shadow-soft" : "text-ink-muted hover:bg-white/60"
                     }`}
                   >
-                    <Icon size={17} className={isActive ? "text-ink" : "text-ink-muted"} />
+                    <Icon size={16} className={isActive ? "text-ink" : "text-ink-muted"} />
                     {tab.label}
                   </button>
                 );
@@ -72,26 +72,25 @@ export function UseCase() {
 
           {/* Image with combined info card */}
           <Reveal delay={160}>
-            <div className="relative rounded-3xl overflow-hidden h-[300px] md:h-[520px] bg-ink">
+            <div className="relative rounded-3xl overflow-hidden h-[360px] md:h-[520px] bg-ink">
               <Image
                 key={active}
                 src={TAB_IMAGES[active]}
                 alt=""
                 fill
-                priority
                 className="object-cover object-center transition-opacity duration-500"
                 sizes="(min-width: 1200px) 1080px, 100vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
 
               <div
                 key={cur.label}
-                className="absolute left-5 right-5 bottom-5 md:left-auto md:right-7 md:bottom-7 md:w-[360px] rounded-2xl bg-black/35 backdrop-blur-md border border-white/15 p-6 text-white animate-[fadeIn_0.35s_ease-out]"
+                className="absolute left-4 right-4 bottom-4 md:left-auto md:right-7 md:bottom-7 md:w-[360px] rounded-2xl bg-black/40 backdrop-blur-md border border-white/15 p-4 md:p-6 text-white animate-[fadeIn_0.35s_ease-out]"
               >
-                <p className="text-[17px] leading-snug font-medium">{cur.description}</p>
-                <div className="mt-5 flex items-baseline gap-3">
-                  <span className="font-heading text-[34px] md:text-[40px] font-medium leading-none">{cur.stat}</span>
-                  <span className="text-[13px] text-white/80">{cur.statLabel}</span>
+                <p className="text-[14px] md:text-[17px] leading-snug font-medium line-clamp-3 md:line-clamp-none">{cur.description}</p>
+                <div className="mt-3 md:mt-5 flex items-baseline gap-2 md:gap-3">
+                  <span className="font-heading text-[30px] md:text-[40px] font-medium leading-none">{cur.stat}</span>
+                  <span className="text-[12px] md:text-[13px] text-white/80">{cur.statLabel}</span>
                 </div>
               </div>
             </div>

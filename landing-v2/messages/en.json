@@ -69,9 +69,9 @@
     "subhead": "Craftive isn't a collection of tools — it's a platform designed together for speed, security, analytics, and open API. Every capability complements the others; you don't need to set up any of them separately.",
     "speed": {
       "title": "Not months — weeks",
-      "description": "A typical corporate site takes 4–8 weeks. We don't start from scratch; we place your content on our ready foundation.",
-      "kpiTitle": "Live in\n4–8 Weeks",
-      "kpiNote": "Less than half the time of typical projects starting from zero",
+      "description": "We don't start from scratch; we place your content on our ready foundation. We handle the technical setup so you can focus on your business.",
+      "kpiTitle": "Live in\nWeeks",
+      "kpiNote": "Ready infrastructure, less waiting — earlier growth",
       "pills": [
         "Design discovery",
         "Content architecture",
@@ -81,8 +81,8 @@
       ]
     },
     "managedDelivery": {
-      "title": "Ready templates and process",
-      "description": "We don't reinvent the wheel for every client. We adapt our previously built templates and modules to your project, so time and budget are clear.",
+      "title": "Operations on Us. Growth on You.",
+      "description": "Once your site is published, technical operations are not your burden. Content publishing, backups, updates — all automated or one-click. You just focus on growing your business.",
       "header": "Daily publishing flow",
       "subheader": "Tuesday, November 25",
       "progressLabel": "Completion",
@@ -212,14 +212,14 @@
   },
   "counter": {
     "badge": "Global reach & multilingual support",
-    "headline1": "One infrastructure,",
-    "headline2": "40+ languages reaching the world.",
+    "headline1": "The world got smaller.",
+    "headline2": "Your voice got bigger.",
     "bigNumberValue": "40",
     "bigNumberSuffix": "+",
-    "bigNumberLabel": "supported languages & locales — on a single infrastructure",
+    "bigNumberLabel": "languages & locales — reaching the world from one infrastructure",
     "stats": [
       { "value": "12", "suffix": "+", "label": "Countries with active site traffic" },
-      { "value": "<48", "suffix": "h", "label": "Time to add a new language" },
+      { "value": "7/24", "suffix": "", "label": "multilingual content support" },
       { "value": "100", "suffix": "%", "label": "Isolated data per client" }
     ],
     "statsNote": "Numbers reflect platform capacity and average project data."

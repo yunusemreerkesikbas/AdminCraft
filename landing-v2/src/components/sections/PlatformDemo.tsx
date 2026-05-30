@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { ASSETS } from "@/lib/assets";
 import { Reveal } from "@/components/Reveal";
@@ -68,11 +68,29 @@ export function PlatformDemo() {
   const tabs = t.raw("tabs") as TabCopy[];
   const [activeIdx, setActiveIdx] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [sectionVisible, setSectionVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSectionVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <>
     <DemoRequestModal open={modalOpen} onClose={() => setModalOpen(false)} locale={locale} />
-    <section id="platform-demo" className="bg-white py-20 md:py-28 overflow-hidden">
+    <section ref={sectionRef} id="platform-demo" className="bg-white py-20 md:py-28 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
 
         {/* Badge + headline */}
@@ -182,12 +200,12 @@ export function PlatformDemo() {
               {tabs.map((tab, i) => (
                 <div key={tab.id} className="w-full flex-shrink-0">
                   <video
-                    src={TAB_VIDEOS[i]}
+                    src={sectionVisible && activeIdx === i ? TAB_VIDEOS[i] : undefined}
                     autoPlay
                     loop
                     muted
                     playsInline
-                    preload="metadata"
+                    preload="none"
                     className="w-full aspect-video object-cover block"
                   />
                 </div>

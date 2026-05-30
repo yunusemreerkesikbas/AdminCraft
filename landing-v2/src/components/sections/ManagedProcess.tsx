@@ -17,7 +17,7 @@ type Tile = { title: string; body: string };
 const TILE_COLORS = ["#0059ff", "#ff1f3d", "#9000ff", "#12a70a"];
 const TILE_ICONS = [BellIcon, ListIcon, EyeIcon, BulbIcon];
 
-export function ManagedProcess() {
+export function AISuggestions() {
   const t = useTranslations("managedProcess");
   const chips = t.raw("chips") as Chip[];
   const tiles = t.raw("tiles") as Tile[];

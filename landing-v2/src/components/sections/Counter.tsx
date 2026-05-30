@@ -60,6 +60,16 @@ export function Counter() {
     return Number.isFinite(parsed) ? parsed : 0;
   }, [t]);
 
+  const [globeRef, globeInView] = useInView<HTMLDivElement>(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (globeInView && videoRef.current && !videoRef.current.src) {
+      videoRef.current.src = ASSETS.videos.earth;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [globeInView]);
+
   return (
     <section id="metrics" className="relative overflow-hidden bg-surface pt-[80px] md:pt-[160px] pb-20">
       <div className="relative max-w-5xl mx-auto px-6 text-center z-10">
@@ -71,7 +81,7 @@ export function Counter() {
 
         <Reveal delay={80}>
           <h2 className="font-heading text-[40px] md:text-[64px] leading-[1.1] font-medium tracking-[-0.03em] text-ink mb-8">
-            {t("headline1")}<br />{t("headline2")}
+            {t("headline1")} {t("headline2")}
           </h2>
         </Reveal>
 
@@ -83,7 +93,7 @@ export function Counter() {
             >
               <CountUp target={bigNumberTarget} suffix={t("bigNumberSuffix")} />
             </div>
-            <span className="absolute -bottom-2 right-0 md:translate-x-1/3 -rotate-6 rounded-full bg-white shadow-card px-3 md:px-4 py-1.5 md:py-2 text-[12px] md:text-[14px] text-ink whitespace-nowrap">
+            <span className="absolute -bottom-8 md:-bottom-2 left-1/2 md:left-auto md:right-0 -translate-x-1/2 md:translate-x-1/3 -rotate-3 md:-rotate-6 rounded-full bg-white shadow-card px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-[14px] text-ink whitespace-nowrap">
               {t("bigNumberLabel")}
             </span>
           </div>
@@ -99,23 +109,23 @@ export function Counter() {
             maskImage: "linear-gradient(to bottom, black 55%, transparent 90%)",
           }}
         >
-          <div className="absolute inset-0 overflow-hidden bg-surface">
+          <div ref={globeRef} className="absolute inset-0 overflow-hidden bg-surface">
             <div className="absolute inset-x-0 top-0 aspect-[1080/800]" style={{ mixBlendMode: "darken" }}>
               <video
-                src={ASSETS.videos.earth}
+                ref={videoRef}
                 autoPlay
                 loop
                 muted
                 playsInline
-                preload="metadata"
+                preload="none"
                 className="w-full h-full object-cover"
                 style={{ objectPosition: "50% 50%" }}
               />
             </div>
           </div>
-          <img src={ASSETS.clouds.counter} alt="" aria-hidden className="pointer-events-none select-none absolute" style={{ width: "49%", left: "-21.3%", top: "50%" }} />
-          <img src={ASSETS.clouds.small} alt="" aria-hidden className="pointer-events-none select-none absolute" style={{ width: "69.6%", left: "-2.8%", top: "65.9%" }} />
-          <img src={ASSETS.clouds.small} alt="" aria-hidden className="pointer-events-none select-none absolute" style={{ width: "69.6%", left: "53.5%", top: "11.4%" }} />
+          <img src={ASSETS.clouds.counter} alt="" aria-hidden loading="lazy" className="pointer-events-none select-none absolute" style={{ width: "49%", left: "-21.3%", top: "50%" }} />
+          <img src={ASSETS.clouds.small} alt="" aria-hidden loading="lazy" className="pointer-events-none select-none absolute" style={{ width: "69.6%", left: "-2.8%", top: "65.9%" }} />
+          <img src={ASSETS.clouds.small} alt="" aria-hidden loading="lazy" className="pointer-events-none select-none absolute" style={{ width: "90%", left: "15%", top: "60%" }} />
         </div>
       </Reveal>
 
