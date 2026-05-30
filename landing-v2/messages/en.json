@@ -3,6 +3,13 @@
     "title": "Craftive — One platform, every configuration",
     "description": "Tell us your idea, and we'll guide your digital transformation. Craftive is a managed digital platform that handles setup, content, and publishing for brands and agencies."
   },
+  "consent": {
+    "title": "Your cookie preferences",
+    "description": "We use analytics cookies to improve your experience and understand site traffic. By accepting, you allow their use.",
+    "privacyLabel": "Privacy policy",
+    "accept": "Accept",
+    "reject": "Reject"
+  },
   "nav": {
     "neler": "What We Offer",
     "portfolyo": "Portfolio",

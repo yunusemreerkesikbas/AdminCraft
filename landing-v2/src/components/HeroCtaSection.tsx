@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale } from "next-intl";
 import { PlayIcon } from "@/components/icons";
 import { DemoRequestModal } from "@/components/modals/DemoRequestModal";
+import { track } from "@/lib/analytics";
 
 type Props = {
   primaryCta: string;
@@ -18,13 +19,17 @@ export function HeroCtaSection({ primaryCta, secondaryCta }: Props) {
     <>
       <div className="mt-9 flex flex-col md:flex-row items-center gap-4 md:gap-3">
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            track("demo_open", { location: "hero" });
+            setModalOpen(true);
+          }}
           className="px-7 py-[13px] md:py-4 bg-white text-ink rounded-full text-[16px] md:text-[18px] font-medium leading-none hover:bg-white/90 active:scale-[0.98] transition-all"
         >
           {primaryCta}
         </button>
         <a
           href="#smart-assist"
+          onClick={() => track("cta_click", { cta_id: "hero_secondary", location: "hero" })}
           className="px-5 py-[13px] md:py-4 bg-white/10 backdrop-blur-md text-white rounded-full text-[16px] md:text-[18px] font-medium leading-none flex items-center gap-2 hover:bg-white/20 transition-colors border border-white/15"
         >
           <span className="size-5 rounded-full bg-white text-ink flex items-center justify-center">

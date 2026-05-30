@@ -4,6 +4,8 @@ import { Dialog } from "@base-ui/react/dialog";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { XIcon, CheckIcon, ArrowRightIcon } from "@/components/icons";
+import { track } from "@/lib/analytics";
+import { toLocaleTag } from "@/lib/utils";
 import {
   DemoSubmitError,
   fetchPlatformCmsConfig,
@@ -60,28 +62,27 @@ const lineTextarea =
 
 export function DemoRequestModal({ open, onClose, locale }: Props) {
   const t = useTranslations("demoModal");
-  const localeTag = locale === "tr" ? "tr" : "en";
+  const localeTag = toLocaleTag(locale);
+
+  const apiOrigin = getCraftiveApiOrigin();
 
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
-  const [cmsConfig, setCmsConfig] = useState<PlatformCmsConfig | null>(null);
+  // Without a configured API origin there is nothing to fetch — start resolved
+  // (recaptcha off) via lazy init so the effect needs no synchronous setState.
+  const [cmsConfig, setCmsConfig] = useState<PlatformCmsConfig | null>(() =>
+    apiOrigin ? null : { recaptchaEnabled: false, recaptchaSiteKey: "" },
+  );
   const [successMessage, setSuccessMessage] = useState("");
   const [successNote, setSuccessNote] = useState("");
 
-  const apiOrigin = getCraftiveApiOrigin();
-
   useEffect(() => {
-    if (!open) return;
-    if (!apiOrigin) {
-      setCmsConfig({ recaptchaEnabled: false, recaptchaSiteKey: "" });
-      return;
-    }
+    if (!open || !apiOrigin) return;
     let cancelled = false;
-    setConfigError(null);
     fetchPlatformCmsConfig(localeTag)
-      .then((cfg) => { if (!cancelled) setCmsConfig(cfg); })
+      .then((cfg) => { if (!cancelled) { setCmsConfig(cfg); setConfigError(null); } })
       .catch((err: unknown) => {
         if (!cancelled) {
           setCmsConfig({ recaptchaEnabled: false, recaptchaSiteKey: "" });
@@ -123,13 +124,17 @@ export function DemoRequestModal({ open, onClose, locale }: Props) {
       setSuccessMessage(result.message);
       setSuccessNote(result.followUpNote);
       setSubmitted(true);
+      track("demo_submit", { locale: localeTag });
     } catch (err) {
       if (DemoSubmitError.is(err)) {
         setFormError(err.apiMessage ?? (err.reason === "network" ? t("errNetwork") : t("errHttp")));
+        track("demo_submit_error", { reason: err.reason, status: err.status });
       } else if (err instanceof Error && err.message === "api_not_configured") {
         setFormError(t("errApiConfig"));
+        track("demo_submit_error", { reason: "api_not_configured" });
       } else {
         setFormError(t("errHttp"));
+        track("demo_submit_error", { reason: "unknown" });
       }
     } finally {
       setSubmitting(false);
@@ -142,6 +147,7 @@ export function DemoRequestModal({ open, onClose, locale }: Props) {
       setTimeout(() => {
         setSubmitted(false);
         setFormError(null);
+        setConfigError(null);
         setSuccessMessage("");
         setSuccessNote("");
       }, 350);

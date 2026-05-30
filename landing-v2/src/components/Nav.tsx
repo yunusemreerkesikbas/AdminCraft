@@ -7,6 +7,7 @@ import { ASSETS } from "@/lib/assets";
 import { MenuIcon, XIcon, ArrowRightIcon } from "@/components/icons";
 import { DemoRequestModal } from "@/components/modals/DemoRequestModal";
 import { routing } from "@/i18n/routing";
+import { track } from "@/lib/analytics";
 
 function switchLocale(newLocale: string) {
   // Build regex dynamically from routing config — stays correct if locales are added
@@ -34,6 +35,11 @@ export function Nav() {
 
   const [active, setActive] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
+
+  function openDemo() {
+    track("demo_open", { location: "nav" });
+    setModalOpen(true);
+  }
 
   useEffect(() => {
     const ids = NAV_LINKS.map((l) => l.id);
@@ -140,7 +146,7 @@ export function Nav() {
 
           {/* Demo CTA — desktop */}
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={openDemo}
             className="hidden md:inline-flex h-[48px] px-5 rounded-full bg-ink text-white items-center gap-2 text-[14px] font-medium whitespace-nowrap hover:bg-ink/90 transition-colors flex-shrink-0"
           >
             {t("demoCta")}
@@ -149,7 +155,7 @@ export function Nav() {
 
           {/* Demo CTA — mobile */}
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={openDemo}
             className="md:hidden h-[40px] px-4 rounded-full bg-ink text-white inline-flex items-center text-[13px] font-medium whitespace-nowrap hover:bg-ink/90 transition-colors flex-shrink-0"
           >
             {t("demoCta")}
