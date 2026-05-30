@@ -129,7 +129,7 @@ jobs:
 
             export APP_VERSION=${{ needs.build-and-push.outputs.tag }}
             export GHCR_ORG=${{ github.repository_owner }}
-            # These large/sensitive vars are kept as dedicated secrets, NOT in ENV_PROD,
+            # These vars are kept as dedicated secrets, NOT in ENV_PROD,
             # to avoid Docker Compose v5 env-file parser bug with long values (>2KB).
             export CMS_PREVIEW_SECRET="${{ secrets.CMS_PREVIEW_SECRET_PROD }}"
             export APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64="${{ secrets.APP_ANALYTICS_GA4_JSON_BASE64_PROD }}"
