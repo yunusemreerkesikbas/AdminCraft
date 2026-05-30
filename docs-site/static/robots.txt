@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /search
+Disallow: /en/search
+
+Sitemap: https://docs.craftive.io/sitemap.xml
