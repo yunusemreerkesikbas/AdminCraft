@@ -59,7 +59,7 @@ export function CTAFooter() {
           <Reveal delay={120}>
             <div className="flex justify-center">
               <Image
-                src="/images/icons/craftive-app.png"
+                src="/images/icons/craftive-app.webp"
                 alt={t("handPhoneAlt")}
                 width={420}
                 height={860}

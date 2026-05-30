@@ -143,6 +143,11 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <html lang={locale} className={`${stackSans.variable} ${googleSansFlex.variable} antialiased`}>
+      <head>
+        {/* Hero background — high-priority preload so the browser fetches before React hydrates */}
+        <link rel="preload" as="image" href="/images/photos/hero-v2.webp" fetchPriority="high" media="(min-width: 769px)" />
+        <link rel="preload" as="image" href="/images/photos/hero-v2-mobile.webp" fetchPriority="high" media="(max-width: 768px)" />
+      </head>
       <body className="min-h-screen bg-background text-foreground" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           {jsonLd.map((schema, i) => (

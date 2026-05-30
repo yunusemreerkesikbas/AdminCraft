@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ASSETS } from "@/lib/assets";
+import { HERO_LQIP } from "@/lib/hero-lqip";
 import { Reveal } from "@/components/Reveal";
 import { HeroCtaSection } from "@/components/HeroCtaSection";
 
@@ -12,14 +13,41 @@ export function Hero() {
     <section id="hero" className="relative w-full overflow-hidden min-h-screen flex items-center">
       {/* Full-bleed background */}
       <div className="absolute inset-0 -z-10">
-        <Image
-          src={ASSETS.hero.bg}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+        {/*
+         * <picture> serves mobile WebP on narrow screens, desktop WebP elsewhere.
+         * Next.js <Image> is bypassed here because unoptimized:true makes it a
+         * pass-through anyway — using <picture> gives us the media-query srcset
+         * without extra JS. fetchPriority="high" + rel="preload" (inserted by
+         * the layout) ensure the browser fetches this before paint.
+         */}
+        <picture>
+          <source
+            srcSet={ASSETS.hero.bgMobile}
+            media="(max-width: 768px)"
+            type="image/webp"
+          />
+          <source
+            srcSet={ASSETS.hero.bg}
+            type="image/webp"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={ASSETS.hero.bgFallback}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              backgroundImage: `url(${HERO_LQIP})`,
+              backgroundSize: "cover",
+            }}
+          />
+        </picture>
         {/* Subtle top fade for nav readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
         {/* Radial dark vignette — darkens center behind text */}

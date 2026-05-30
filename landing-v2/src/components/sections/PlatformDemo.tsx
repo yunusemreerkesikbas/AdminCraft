@@ -187,7 +187,7 @@ export function PlatformDemo() {
                     loop
                     muted
                     playsInline
-                    preload="metadata"
+                    preload="none"
                     className="w-full aspect-video object-cover block"
                   />
                 </div>

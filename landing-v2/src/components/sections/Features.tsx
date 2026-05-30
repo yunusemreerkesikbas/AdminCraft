@@ -410,7 +410,8 @@ function PortabilityCard({ copy }: { copy: PortabilityCopy }) {
               alt=""
               width={94}
               height={80}
-              className="absolute -left-[26px] -top-[49px] w-[94px] h-auto drop-shadow-xl"
+              className="absolute -left-[26px] -top-[49px] w-[94px] drop-shadow-xl"
+              style={{ height: "auto" }}
             />
             <div className="text-[12px] text-white/45">{copy.notification.label}</div>
             <div className="text-[20px] font-medium text-white mt-1 leading-tight">{copy.notification.title}</div>

@@ -113,9 +113,9 @@ export function Counter() {
               />
             </div>
           </div>
-          <img src={ASSETS.clouds.counter} alt="" aria-hidden className="pointer-events-none select-none absolute" style={{ width: "49%", left: "-21.3%", top: "50%" }} />
-          <img src={ASSETS.clouds.small} alt="" aria-hidden className="pointer-events-none select-none absolute" style={{ width: "69.6%", left: "-2.8%", top: "65.9%" }} />
-          <img src={ASSETS.clouds.small} alt="" aria-hidden className="pointer-events-none select-none absolute" style={{ width: "69.6%", left: "53.5%", top: "11.4%" }} />
+          <img src={ASSETS.clouds.counter} alt="" aria-hidden loading="lazy" className="pointer-events-none select-none absolute" style={{ width: "49%", left: "-21.3%", top: "50%" }} />
+          <img src={ASSETS.clouds.small} alt="" aria-hidden loading="lazy" className="pointer-events-none select-none absolute" style={{ width: "69.6%", left: "-2.8%", top: "65.9%" }} />
+          <img src={ASSETS.clouds.small} alt="" aria-hidden loading="lazy" className="pointer-events-none select-none absolute" style={{ width: "69.6%", left: "53.5%", top: "11.4%" }} />
         </div>
       </Reveal>
 

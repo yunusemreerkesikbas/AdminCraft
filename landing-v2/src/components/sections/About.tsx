@@ -192,6 +192,8 @@ function HabitTile({ label, image, color, Icon }: Tile) {
           alt=""
           width={210}
           height={120}
+          loading="lazy"
+          sizes="210px"
           className="object-cover w-full h-full"
         />
       </div>

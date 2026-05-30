@@ -78,7 +78,6 @@ export function UseCase() {
                 src={TAB_IMAGES[active]}
                 alt=""
                 fill
-                priority
                 className="object-cover object-center transition-opacity duration-500"
                 sizes="(min-width: 1200px) 1080px, 100vw"
               />
