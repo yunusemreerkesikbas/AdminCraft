@@ -137,12 +137,12 @@
   to { transform: translateY(0); }
 }
 
-.marquee-x { animation: marquee-x 40s linear infinite; }
-.marquee-x-reverse { animation: marquee-x-reverse 40s linear infinite; }
-.marquee-y { animation: marquee-y 25s linear infinite; }
-.marquee-y-reverse { animation: marquee-y-reverse 25s linear infinite; }
-.marquee-y-slow { animation: marquee-y 38s linear infinite; }
-.marquee-y-reverse-slow { animation: marquee-y-reverse 42s linear infinite; }
+.marquee-x { animation: marquee-x 40s linear infinite; will-change: transform; }
+.marquee-x-reverse { animation: marquee-x-reverse 40s linear infinite; will-change: transform; }
+.marquee-y { animation: marquee-y 25s linear infinite; will-change: transform; }
+.marquee-y-reverse { animation: marquee-y-reverse 25s linear infinite; will-change: transform; }
+.marquee-y-slow { animation: marquee-y 38s linear infinite; will-change: transform; }
+.marquee-y-reverse-slow { animation: marquee-y-reverse 42s linear infinite; will-change: transform; }
 
 /* Reveal-on-scroll utility */
 .reveal {

@@ -69,9 +69,9 @@
     "subhead": "Craftive bir araçlar koleksiyonu değil; hız, güvenlik, analitik ve açık API birlikte tasarlanmış bir platform. Her yetenek diğerini tamamlar — hiçbirini ayrıca kurmanız gerekmez.",
     "speed": {
       "title": "Aylar sürmesin, haftalarla bitsin",
-      "description": "Kurumsal bir site için tipik süre 4–8 hafta. Sıfırdan başlamıyoruz; hazır temelimizin üzerine sizin içeriğinizi yerleştiriyoruz.",
-      "kpiTitle": "4–8 Hafta\nİçinde Canlı",
-      "kpiNote": "Sıfırdan başlayan klasik projelerin yarısından az süre",
+      "description": "Sıfırdan başlamıyoruz; hazır altyapımızın üzerine sizin içeriğinizi yerleştiriyoruz. Teknik kurulumu biz üstleniyoruz, siz işinize odaklanıyorsunuz.",
+      "kpiTitle": "Haftalar\nİçinde Canlı",
+      "kpiNote": "Hazır altyapı, daha az bekleme — daha erken büyüme",
       "pills": [
         "Tasarım keşfi",
         "İçerik mimarisi",
@@ -81,8 +81,8 @@
       ]
     },
     "managedDelivery": {
-      "title": "Hazır şablonlar ve süreç",
-      "description": "Her müşteri için tekerleği yeniden icat etmiyoruz. Daha önce kurduğumuz şablon ve modülleri sizin projenize uyarlıyoruz, böylece zaman ve bütçe netleşiyor.",
+      "title": "Operasyon Bizde. Büyüme Sizde.",
+      "description": "Siteniz yayına girdikten sonra teknik operasyon sizin yükünüz değil. İçerik yayını, yedekleme, güncellemeler — hepsi otomatik ya da tek tıkla. Siz sadece işinizi büyütürsünüz.",
       "header": "Günlük yayın akışı",
       "subheader": "Salı, 25 Kasım",
       "progressLabel": "Tamamlanma",
@@ -212,14 +212,14 @@
   },
   "counter": {
     "badge": "Global erişim & çok dilli destek",
-    "headline1": "Tek altyapıda,",
-    "headline2": "dünyaya açılan 40+ dil.",
+    "headline1": "Dünya küçüldü.",
+    "headline2": "Sesin büyüdü.",
     "bigNumberValue": "40",
     "bigNumberSuffix": "+",
-    "bigNumberLabel": "desteklenen dil & yerel ayar — tek altyapıda",
+    "bigNumberLabel": "farklı dil ve yerel ayar — tek altyapıdan dünyaya",
     "stats": [
       { "value": "12", "suffix": "+", "label": "Ülkeden aktif site trafiği" },
-      { "value": "<48", "suffix": "sa", "label": "Yeni dil ekleme süresi" },
+      { "value": "7/24", "suffix": "", "label": "çok dilli içerik desteği" },
       { "value": "100", "suffix": "%", "label": "Müşteri başına izole veri" }
     ],
     "statsNote": "Rakamlar platform kapasitesini ve ortalama proje verilerini yansıtır."

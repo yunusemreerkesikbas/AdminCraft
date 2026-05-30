@@ -50,7 +50,7 @@ export function About() {
       {/* Headline area */}
       <div className="relative max-w-5xl mx-auto px-6 text-center mb-14">
         <Reveal>
-          <h2 className="font-heading text-[34px] sm:text-[44px] md:text-[56px] leading-[1.15] font-medium tracking-[-0.025em] text-ink">
+          <h2 className="font-heading text-[40px] sm:text-[54px] md:text-[68px] leading-[1.08] font-medium tracking-[-0.035em] text-ink">
             <span>{t("headline1")} </span>
             <Image
               src={ASSETS.about.weatherEmoji}
@@ -81,8 +81,8 @@ export function About() {
       </div>
 
       {/* Marquee rows + centered phone */}
-      <div className="relative h-[420px]">
-        <div className="absolute top-[60px] inset-x-0 overflow-x-hidden mask-fade-x">
+      <div className="relative h-[280px] md:h-[420px]">
+        <div className="absolute top-[10px] md:top-[60px] inset-x-0 overflow-x-hidden mask-fade-x" style={{ contain: "layout style" }}>
           <div
             className="flex gap-4 marquee-x"
             style={{ width: "max-content" }}
@@ -93,7 +93,7 @@ export function About() {
           </div>
         </div>
 
-        <div className="absolute top-[196px] inset-x-0 overflow-x-hidden mask-fade-x">
+        <div className="absolute top-[146px] md:top-[196px] inset-x-0 overflow-x-hidden mask-fade-x" style={{ contain: "layout style" }}>
           <div
             className="flex gap-4 marquee-x-reverse"
             style={{ width: "max-content" }}
@@ -108,7 +108,7 @@ export function About() {
       {/* Rating + CTA */}
       <div className="relative z-20 max-w-4xl mx-auto px-6 text-center mt-16 pb-10">
         <Reveal delay={80}>
-          <p className="mt-7 max-w-[560px] mx-auto text-[16px] text-ink-muted leading-relaxed">
+          <p className="mt-7 max-w-[600px] mx-auto text-[18px] md:text-[20px] text-ink/70 leading-relaxed">
             {t("description")}
           </p>
         </Reveal>
@@ -133,8 +133,7 @@ export function About() {
 
       {/* Cloud transition zone — rises up behind CTA */}
       <div
-        className="relative overflow-hidden pointer-events-none -mt-[140px] md:-mt-[350px]"
-        style={{ height: "480px" }}
+        className="relative overflow-hidden pointer-events-none -mt-[260px] md:-mt-[350px] h-[380px] md:h-[480px]"
       >
         <div className="absolute inset-0 bg-[#f7f7f7]" />
         {/* Full-width top fade — blends clouds into white above */}
@@ -192,7 +191,6 @@ function HabitTile({ label, image, color, Icon }: Tile) {
           alt=""
           width={210}
           height={120}
-          loading="lazy"
           sizes="210px"
           className="object-cover w-full h-full"
         />

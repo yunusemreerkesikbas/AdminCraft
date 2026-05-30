@@ -6,7 +6,7 @@ import { Features } from "@/components/sections/Features";
 import { UseCase } from "@/components/sections/UseCase";
 import { Social } from "@/components/sections/Social";
 import { Counter } from "@/components/sections/Counter";
-import { AISuggestions } from "@/components/sections/AISuggestions";
+import { ManagedProcess } from "@/components/sections/AISuggestions";
 import { PlatformDemo } from "@/components/sections/PlatformDemo";
 import { Reviews } from "@/components/sections/Reviews";
 import { FAQs } from "@/components/sections/FAQs";
@@ -24,7 +24,7 @@ export default function Home() {
         <UseCase />
         <Social />
         <Counter />
-        <AISuggestions />
+        <ManagedProcess />
         <PlatformDemo />
         <Reviews />
         <FAQs />
