@@ -410,6 +410,7 @@ function PortabilityCard({ copy }: { copy: PortabilityCopy }) {
               alt=""
               width={94}
               height={80}
+              style={{ height: "auto" }}
               className="absolute -left-[26px] -top-[49px] w-[94px] drop-shadow-xl"
               style={{ height: "auto" }}
             />
