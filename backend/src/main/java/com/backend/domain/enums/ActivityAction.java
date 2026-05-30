@@ -10,6 +10,8 @@ public enum ActivityAction {
     DELETED,
     PUBLISHED,
     UNPUBLISHED,
+    DRAFT_SAVED,
+    DRAFT_DISCARDED,
     UPLOADED,
     ACTIVATED,
     DEACTIVATED

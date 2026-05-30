@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
@@ -30,6 +31,9 @@ class EmailTemplatesRenderTest {
                 .contains("Craftive")
                 .contains(templateCase.expectedText())
                 .doesNotContain("${");
+        if (templateCase.variables().containsKey("otpCode")) {
+            assertThat(html).contains(templateCase.variables().get("otpCode").toString());
+        }
     }
 
     static Stream<TemplateCase> templates() {
@@ -59,6 +63,14 @@ class EmailTemplatesRenderTest {
                         Map.of("otpCode", "123456", "expiryMinutes", 5),
                         "Doğrulama Kodu"),
                 new TemplateCase(
+                        "email/operation-otp-en",
+                        Map.of("otpCode", "123456", "expiryMinutes", 5),
+                        "Confirm Security Change"),
+                new TemplateCase(
+                        "email/operation-otp-tr",
+                        Map.of("otpCode", "123456", "expiryMinutes", 5),
+                        "Güvenlik Değişikliğini Onaylayın"),
+                new TemplateCase(
                         "email/newsletter-confirm-en",
                         Map.of("confirmLink", "https://example.test/newsletter/confirm?token=abc"),
                         "Confirm Subscription"),
@@ -84,7 +96,7 @@ class EmailTemplatesRenderTest {
         resolver.setCharacterEncoding("UTF-8");
         resolver.setCacheable(false);
 
-        TemplateEngine engine = new TemplateEngine();
+        TemplateEngine engine = new SpringTemplateEngine();
         engine.setTemplateResolver(resolver);
         return engine;
     }

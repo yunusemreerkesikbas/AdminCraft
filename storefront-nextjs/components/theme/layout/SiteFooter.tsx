@@ -4,11 +4,7 @@ import type { LayoutBlockDelivery, LayoutLinkDelivery } from "@/lib/types";
 import styles from "./shell.module.css";
 import NewsletterForm from "./NewsletterForm";
 
-function renderLink(
-  link: LayoutLinkDelivery,
-  className: string,
-  key: string,
-) {
+function renderLink(link: LayoutLinkDelivery, className: string, key: string) {
   if (link.isExternal || link.target === "_blank") {
     return (
       <a
@@ -53,8 +49,12 @@ function renderParagraphBlock(
           />
         )}
       </Link>
-      {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
-      {block.description ? <p className={styles.footerBrandText}>{block.description}</p> : null}
+      {block.title ? (
+        <h4 className={styles.footerWidgetTitle}>{block.title}</h4>
+      ) : null}
+      {block.description ? (
+        <p className={styles.footerBrandText}>{block.description}</p>
+      ) : null}
     </div>
   );
 }
@@ -66,8 +66,12 @@ function renderTextBlock(block: LayoutBlockDelivery) {
       className={styles.footerColumnOffice}
       {...smartEditBlockAttributes(block)}
     >
-      {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
-      {block.description ? <p className={styles.footerBrandText}>{block.description}</p> : null}
+      {block.title ? (
+        <h4 className={styles.footerWidgetTitle}>{block.title}</h4>
+      ) : null}
+      {block.description ? (
+        <p className={styles.footerBrandText}>{block.description}</p>
+      ) : null}
     </div>
   );
 }
@@ -79,11 +83,17 @@ function renderNavigationBlock(block: LayoutBlockDelivery) {
       className={styles.footerColumnSitemap}
       {...smartEditBlockAttributes(block)}
     >
-      {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
+      {block.title ? (
+        <h4 className={styles.footerWidgetTitle}>{block.title}</h4>
+      ) : null}
       <ul className={styles.footerMenu}>
         {block.links.map((link) => (
           <li key={link.uid} className={styles.footerMenuItem}>
-            {renderLink(link, styles.footerMenuLink, `${block.uid}-${link.uid}`)}
+            {renderLink(
+              link,
+              styles.footerMenuLink,
+              `${block.uid}-${link.uid}`,
+            )}
           </li>
         ))}
       </ul>
@@ -102,7 +112,9 @@ function renderNewsletterBlock(block: LayoutBlockDelivery) {
       className={styles.footerColumnNewsletter}
       {...smartEditBlockAttributes(block)}
     >
-      {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
+      {block.title ? (
+        <h4 className={styles.footerWidgetTitle}>{block.title}</h4>
+      ) : null}
       <NewsletterForm
         placeholder={block.newsletterPlaceholder}
         buttonLabel={block.newsletterButtonLabel}
@@ -118,11 +130,21 @@ function renderLinkListBlock(block: LayoutBlockDelivery) {
       className={styles.footerColumnOffice}
       {...smartEditBlockAttributes(block)}
     >
-      {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
+      {block.title ? (
+        <h4 className={styles.footerWidgetTitle}>{block.title}</h4>
+      ) : null}
       <div className={styles.footerContactList}>
-        {block.links.map((link) => renderLink(link, styles.footerContactLink, `${block.uid}-${link.uid}`))}
+        {block.links.map((link) =>
+          renderLink(
+            link,
+            styles.footerContactLink,
+            `${block.uid}-${link.uid}`,
+          ),
+        )}
       </div>
-      {block.description ? <p className={styles.footerBrandText}>{block.description}</p> : null}
+      {block.description ? (
+        <p className={styles.footerBrandText}>{block.description}</p>
+      ) : null}
     </div>
   );
 }
@@ -160,7 +182,9 @@ function renderBottomBlock(block: LayoutBlockDelivery) {
         className={styles.footerSocial}
         {...smartEditBlockAttributes(block)}
       >
-        {block.links.map((link) => renderLink(link, styles.footerSocialLink, `${block.uid}-${link.uid}`))}
+        {block.links.map((link) =>
+          renderLink(link, styles.footerSocialLink, `${block.uid}-${link.uid}`),
+        )}
       </div>
     );
   }
@@ -203,24 +227,22 @@ export default async function SiteFooter({
   lifted?: boolean;
   logoUrl?: string;
 }) {
-  const year = new Date().getFullYear();
-
   return (
-    <footer className={`${styles.footerShell} ${lifted ? styles.footerLifted : ""}`}>
+    <footer
+      className={`${styles.footerShell} ${lifted ? styles.footerLifted : ""}`}
+    >
       <div className={styles.footerPrimary}>
         <div className={styles.footerContainer}>
           <div className={styles.footerGrid}>
-            {primaryBlocks.map((block) => renderPrimaryBlock(block, lang, brand, logoUrl))}
+            {primaryBlocks.map((block) =>
+              renderPrimaryBlock(block, lang, brand, logoUrl),
+            )}
           </div>
         </div>
       </div>
 
       <div className={styles.footerCopyright}>
         <div className={styles.footerCopyrightInner}>
-          <p className={styles.footerCopyrightText}>
-            {`All rights reserved - ${year} © ${brand}`}
-          </p>
-
           {bottomBlocks.map((block) => renderBottomBlock(block))}
         </div>
       </div>

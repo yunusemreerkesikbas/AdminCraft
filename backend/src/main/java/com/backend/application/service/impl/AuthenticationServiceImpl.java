@@ -8,11 +8,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HexFormat;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -23,6 +20,10 @@ import com.backend.application.dto.AuthResult;
 import com.backend.application.dto.TokenValidationResult;
 import com.backend.application.service.AuthenticationService;
 import com.backend.application.service.EmailService;
+import com.backend.application.service.OtpBypassVerifier;
+import com.backend.application.service.OtpRateLimitScopes;
+import com.backend.application.service.OtpRateLimitService;
+import com.backend.application.service.OtpResendCooldownService;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.TrustedDeviceService;
 import com.backend.domain.entity.PlatformRefreshToken;
@@ -64,11 +65,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private static final int OTP_RATE_LIMIT_WINDOW_SECONDS = 300; // 5 minutes
-    private static final int OTP_MAX_REQUESTS_PER_WINDOW = 3;
-
-    private final ConcurrentHashMap<String, OtpRateLimitEntry> otpRateLimiters = new ConcurrentHashMap<>();
-
     private final UserRepository userRepository;
     private final JwtProviderPort jwtProviderPort;
     private final PasswordEncoder passwordEncoder;
@@ -82,6 +78,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final TrustedDeviceService trustedDeviceService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final OtpConfig otpConfig;
+    private final OtpBypassVerifier otpBypassVerifier;
+    private final OtpRateLimitService otpRateLimitService;
+    private final OtpResendCooldownService otpResendCooldownService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PlatformRefreshTokenRepository platformRefreshTokenRepository;
 
@@ -248,13 +247,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (!deviceTrusted) {
                 log.info("2FA required for user: {}, generating OTP", maskEmail(user.getEmail()));
 
-                checkOtpRateLimit(user.getEmail());
+                LoginOtpIssue otpIssue = issueTenantLoginOtp(user, tenant, ipAddress, userAgent);
 
-                OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
-                Language userLanguage = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
-                emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), userLanguage);
-
-                return AuthResult.requiring2FA(user.getEmail(), otpResult.sessionToken(), subdomain, tenantId);
+                return AuthResult.requiring2FA(
+                        user.getEmail(),
+                        otpIssue.sessionToken(),
+                        subdomain,
+                        tenantId,
+                        otpIssue.cooldownSeconds());
             } else {
                 log.info("Device trusted for user: {}, skipping 2FA", user.getId());
                 trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
@@ -317,11 +317,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         if (isPlatformTwoFactorRequired()) {
-            checkOtpRateLimit(admin.getEmail());
-            PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
-            Language language = resolvePlatformLanguage();
-            emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), language);
-            return AuthResult.requiring2FA(admin.getEmail(), otpResult.sessionToken(), null, null);
+            PlatformLoginOtpResult otpResult = issuePlatformLoginOtp(admin, ipAddress, userAgent);
+            return AuthResult.requiring2FA(
+                    admin.getEmail(),
+                    otpResult.sessionToken(),
+                    null,
+                    null,
+                    otpResult.cooldownSeconds());
         }
 
         // Record successful login
@@ -376,14 +378,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             PlatformAdminUser admin = platformAdminUserRepository
                     .findByEmailAndIsActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException(email));
-
-            if (isPlatformTwoFactorRequired()) {
-                checkOtpRateLimit(admin.getEmail());
-                PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
-                Language language = resolvePlatformLanguage();
-                emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), language);
-                return AuthResult.requiring2FA(admin.getEmail(), otpResult.sessionToken(), null, null);
-            }
 
             String newAccessToken = jwtProviderPort.createAccessToken(
                     admin.getEmail(),
@@ -458,20 +452,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                 "User cannot refresh token - userId: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
                                 user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
                         throw new UserAccountDisabledException();
-                    }
-
-                    if (tenant.getTwoFactorPolicy() == TwoFactorPolicy.REQUIRED) {
-                        boolean deviceTrusted = deviceFingerprint != null && !deviceFingerprint.isBlank() &&
-                                trustedDeviceService.isDeviceTrusted(user.getId(), deviceFingerprint);
-                        if (!deviceTrusted) {
-                            log.info("2FA required on refresh for userId: {}", user.getId());
-                            checkOtpRateLimit(user.getEmail());
-                            OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
-                            Language userLanguage = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
-                            emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), userLanguage);
-                            return AuthResult.requiring2FA(user.getEmail(), otpResult.sessionToken(), tenant.getSubdomain(), tenantId);
-                        }
-                        trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
                     }
 
                     boolean wasRememberMe = jwtProviderPort.isRememberMeToken(refreshToken);
@@ -616,8 +596,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     throw new InvalidTokenException("OTP session has expired or is no longer valid");
                 }
 
-                boolean isBypassCode = otpConfig.getBypassCode() != null &&
-                        otpConfig.getBypassCode().equals(otpCode);
+                boolean isBypassCode = isOtpBypassCode(otpCode);
                 String otpHash = otpService.hashToken(otpCode);
                 boolean isValid = isBypassCode || token.getTargetValue().equals(otpHash);
 
@@ -699,8 +678,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidTokenException("OTP session has expired or is no longer valid");
         }
 
-        boolean isBypassCode = otpConfig.getBypassCode() != null &&
-                otpConfig.getBypassCode().equals(otpCode);
+        boolean isBypassCode = isOtpBypassCode(otpCode);
         String otpHash = otpService.hashToken(otpCode);
         boolean isValid = isBypassCode || otpHash.equals(token.getTargetValue());
 
@@ -970,7 +948,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         platformVerificationTokenRepository.save(token);
-        return new PlatformLoginOtpResult(otp, sessionToken);
+        return new PlatformLoginOtpResult(otp, sessionToken, 0);
     }
 
     /**
@@ -1008,6 +986,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         return "admin".equalsIgnoreCase(subdomain.trim());
+    }
+
+    private boolean isOtpBypassCode(String otpCode) {
+        return otpBypassVerifier.isBypassCode(otpCode);
     }
 
     private Tenant resolveTenant(Long tenantId, String subdomain) {
@@ -1065,68 +1047,41 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return email.charAt(0) + "***" + email.substring(atIndex - 1);
     }
 
-    private void checkOtpRateLimit(String email) {
-        // Include tenant context in rate limit key to prevent cross-tenant throttling
-        String tenantKey = tenantContext.getTenantId();
-        if (tenantKey == null) {
-            tenantKey = "platform";
-        }
-        String key = tenantKey + ":" + email.toLowerCase();
-        long currentTime = System.currentTimeMillis();
+    private LoginOtpIssue issueTenantLoginOtp(
+            User user,
+            Tenant tenant,
+            String ipAddress,
+            String userAgent) {
+        String scopeKey = OtpRateLimitScopes.tenantLogin(tenant.getId());
+        int cooldownSeconds = otpResendCooldownService.resolveTenantCooldownSeconds(tenant);
+        otpRateLimitService.enforceResendCooldown(user.getEmail(), scopeKey, cooldownSeconds);
 
-        otpRateLimiters.compute(key, (k, entry) -> {
-            if (entry == null || currentTime - entry.windowStart > OTP_RATE_LIMIT_WINDOW_SECONDS * 1000L) {
-                return new OtpRateLimitEntry(currentTime, 1);
-            }
-            entry.requestCount++;
-            return entry;
-        });
-
-        OtpRateLimitEntry entry = otpRateLimiters.get(key);
-        if (entry != null && entry.requestCount > OTP_MAX_REQUESTS_PER_WINDOW) {
-            long remainingSeconds = OTP_RATE_LIMIT_WINDOW_SECONDS -
-                    (currentTime - entry.windowStart) / 1000;
-            log.warn("OTP rate limit exceeded for email: {}", email);
-            throw new OtpRateLimitExceededException(
-                    "Too many OTP requests. Please try again later.",
-                    (int) Math.max(remainingSeconds, 60));
-        }
+        OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
+        Language userLanguage = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
+        emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), userLanguage);
+        otpRateLimitService.recordOtpSend(user.getEmail(), scopeKey);
+        return new LoginOtpIssue(otpResult.sessionToken(), cooldownSeconds);
     }
 
-    /**
-     * Scheduled cleanup of expired rate limit entries to prevent memory leaks.
-     * Runs every 5 minutes.
-     */
-    @Scheduled(fixedRate = 300000) // 5 minutes
-    public void cleanupExpiredRateLimiters() {
-        long cutoff = System.currentTimeMillis() - OTP_RATE_LIMIT_WINDOW_SECONDS * 1000L;
-        int removedCount = 0;
+    private PlatformLoginOtpResult issuePlatformLoginOtp(
+            PlatformAdminUser admin,
+            String ipAddress,
+            String userAgent) {
+        String scopeKey = OtpRateLimitScopes.PLATFORM_LOGIN;
+        int cooldownSeconds = otpResendCooldownService.resolvePlatformCooldownSeconds();
+        otpRateLimitService.enforceResendCooldown(admin.getEmail(), scopeKey, cooldownSeconds);
 
-        var iterator = otpRateLimiters.entrySet().iterator();
-        while (iterator.hasNext()) {
-            var entry = iterator.next();
-            if (entry.getValue().windowStart < cutoff) {
-                iterator.remove();
-                removedCount++;
-            }
-        }
-
-        if (removedCount > 0) {
-            log.debug("Cleaned up {} expired OTP rate limit entries", removedCount);
-        }
+        PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
+        Language language = resolvePlatformLanguage();
+        emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), language);
+        otpRateLimitService.recordOtpSend(admin.getEmail(), scopeKey);
+        return new PlatformLoginOtpResult(otpResult.otpCode(), otpResult.sessionToken(), cooldownSeconds);
     }
 
-    private static class OtpRateLimitEntry {
-        long windowStart;
-        int requestCount;
-
-        OtpRateLimitEntry(long windowStart, int requestCount) {
-            this.windowStart = windowStart;
-            this.requestCount = requestCount;
-        }
+    private record LoginOtpIssue(String sessionToken, int cooldownSeconds) {
     }
 
-    private record PlatformLoginOtpResult(String otpCode, String sessionToken) {
+    private record PlatformLoginOtpResult(String otpCode, String sessionToken, int cooldownSeconds) {
     }
 
     private String hashRefreshToken(String token) {

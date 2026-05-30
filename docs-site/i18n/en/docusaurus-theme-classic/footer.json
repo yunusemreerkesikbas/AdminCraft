@@ -1,0 +1,46 @@
+{
+  "link.title.Dokumanlar": {
+    "message": "Docs",
+    "description": "The title of the footer links column with title=Dokumanlar in the footer"
+  },
+  "link.title.Dokümanlar": {
+    "message": "Docs",
+    "description": "The title of the footer links column with title=Dokümanlar in the footer"
+  },
+  "link.title.Craftive": {
+    "message": "Craftive",
+    "description": "The title of the footer links column with title=Craftive in the footer"
+  },
+  "link.item.label.Gelistiriciler": {
+    "message": "Developers",
+    "description": "The label of footer link with label=Gelistiriciler linking to /developers/module-flows"
+  },
+  "link.item.label.Geliştiriciler": {
+    "message": "Developers",
+    "description": "The label of footer link with label=Geliştiriciler linking to /developers/module-flows"
+  },
+  "link.item.label.Editorler": {
+    "message": "Editors",
+    "description": "The label of footer link with label=Editorler linking to /editors/pagebuilder-usage"
+  },
+  "link.item.label.Editörler": {
+    "message": "Editors",
+    "description": "The label of footer link with label=Editörler linking to /editors/pagebuilder-usage"
+  },
+  "link.item.label.Kavramlar": {
+    "message": "Concepts",
+    "description": "The label of footer link with label=Kavramlar linking to /concepts/platform-overview"
+  },
+  "link.item.label.Web sitesi": {
+    "message": "Website",
+    "description": "The label of footer link with label=Web sitesi linking to https://craftive.io"
+  },
+  "link.item.label.Demo talep et": {
+    "message": "Request a demo",
+    "description": "The label of footer link with label=Demo talep et linking to https://craftive.io?utm_source=docs&utm_medium=referral&utm_campaign=docs_trust_signal#contact"
+  },
+  "copyright": {
+    "message": "Copyright © 2026 Craftive.",
+    "description": "The footer copyright"
+  }
+}

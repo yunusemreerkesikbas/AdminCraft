@@ -1,0 +1,425 @@
+{
+  "metadata": {
+    "title": "Craftive — Tek platform, her kuruluma uygun",
+    "description": "Fikrinizi anlatın, dijital dönüşümünüze eşlik edelim. Craftive; markalar ve ajanslar için kurulum, içerik ve yayın süreçlerini sizin yerinize yürüten yönetilen bir dijital platformdur."
+  },
+  "consent": {
+    "title": "Çerez tercihiniz",
+    "description": "Deneyiminizi iyileştirmek ve site trafiğini anlamak için analitik çerezler kullanıyoruz. Kabul ederek bunların kullanımına izin verirsiniz.",
+    "privacyLabel": "Gizlilik politikası",
+    "accept": "Kabul Et",
+    "reject": "Reddet"
+  },
+  "nav": {
+    "neler": "Neler Sunuyoruz",
+    "portfolyo": "Portfolyo",
+    "surec": "Süreç",
+    "docs": "Docs",
+    "sss": "Sıkça Sorulanlar",
+    "demoCta": "Demo Talep Et",
+    "menuOpen": "Menüyü Aç",
+    "menuClose": "Menüyü Kapat",
+    "langLabel": "Dil"
+  },
+  "hero": {
+    "badgeNew": "Yeni",
+    "badgeText": "tek platform, sınırsız yapılandırma.",
+    "headline": "Fikrinizi anlatın, dijital dönüşümünüze eşlik edelim",
+    "subhead": "Web sitenizi, içerik altyapınızı ve büyüme yolunuzu sizin yerinize biz kuruyoruz. Siz işinize odaklanın; teknik tarafı bize bırakın.",
+    "primaryCta": "Demo Talep Et",
+    "secondaryCta": "Nasıl Çalışıyoruz",
+    "card1Alt": "Hız kartı",
+    "card2Alt": "Craftive platform önizlemesi",
+    "card3Alt": "Modül kartı",
+    "speedCard": {
+      "value": "4 hafta",
+      "label": "Tipik canlıya çıkış süresi"
+    },
+    "modulesCard": {
+      "title": "Aktif modüller",
+      "items": [
+        { "label": "CMS", "value": "100%" },
+        { "label": "Medya", "value": "87%" },
+        { "label": "API", "value": "94%" }
+      ]
+    }
+  },
+  "about": {
+    "headline1": "Sıfırdan altyapı kurmadan,",
+    "headline2": "hazır temel üzerine markanızı inşa edin.",
+    "tagsIntro": "Birlikte çalıştığımız takımlar:",
+    "tags": ["#Ajanslar", "#Kurumsal Markalar", "#SaaS Ekipler", "#E-ticaret"],
+    "tile1": "Çok dilli içerik",
+    "tile2": "Hazır şablonlar",
+    "tile3": "Modül büyüme",
+    "tile4": "İzole veri",
+    "tile5": "Temiz yönetim paneli",
+    "tile6": "Açık API",
+    "tile7": "Düzenli yayın",
+    "tile8": "Üretim hazır",
+    "ratingNote": "Birkaç markayı şu an birlikte yürütüyoruz",
+    "ratingPlaceholder": "İlk müşteri sonuçları yakında",
+    "description": "Web siteniz aylar süren bir projeye dönüşmesin. Hazır altyapımızın üzerine markanızın içerik mimarisini birlikte tasarlıyoruz; siz canlıya çıktığınızda gerisini de biz yürütüyoruz.",
+    "primaryCta": "Demo Talep Et",
+    "secondaryCta": "İletişime Geç"
+  },
+  "features": {
+    "badge": "Platform yetenekleri",
+    "headline": "Modüler. Güvenli. Her kanalda hazır.",
+    "subhead": "Craftive bir araçlar koleksiyonu değil; hız, güvenlik, analitik ve açık API birlikte tasarlanmış bir platform. Her yetenek diğerini tamamlar — hiçbirini ayrıca kurmanız gerekmez.",
+    "speed": {
+      "title": "Aylar sürmesin, haftalarla bitsin",
+      "description": "Kurumsal bir site için tipik süre 4–8 hafta. Sıfırdan başlamıyoruz; hazır temelimizin üzerine sizin içeriğinizi yerleştiriyoruz.",
+      "kpiTitle": "4–8 Hafta\nİçinde Canlı",
+      "kpiNote": "Sıfırdan başlayan klasik projelerin yarısından az süre",
+      "pills": [
+        "Tasarım keşfi",
+        "İçerik mimarisi",
+        "Şablon kurulumu",
+        "Frontend geliştirme",
+        "Yayın ve sonrası destek"
+      ]
+    },
+    "managedDelivery": {
+      "title": "Hazır şablonlar ve süreç",
+      "description": "Her müşteri için tekerleği yeniden icat etmiyoruz. Daha önce kurduğumuz şablon ve modülleri sizin projenize uyarlıyoruz, böylece zaman ve bütçe netleşiyor.",
+      "header": "Günlük yayın akışı",
+      "subheader": "Salı, 25 Kasım",
+      "progressLabel": "Tamamlanma",
+      "progressValue": "85%",
+      "items": [
+        { "time": "09:00", "title": "Yeni içerik yayını", "meta": "Otomatik" },
+        { "time": "10:00", "title": "Şablon güncellemesi", "meta": "Tek tıkla" },
+        { "time": "11:30", "title": "Görsel optimizasyonu", "meta": "Arka planda" },
+        { "time": "14:00", "title": "Yeni dil eklendi", "meta": "Yayında" },
+        { "time": "17:00", "title": "Performans raporu", "meta": "Otomatik gönderim" },
+        { "time": "20:00", "title": "Yedekleme", "meta": "Tamamlandı" }
+      ]
+    },
+    "security": {
+      "title": "Güvenlik, her katmanda",
+      "description": "Veriden girişe, API'den içeriğe — platformun tüm noktalarında koruma vardır. Karmaşık teknik detaylar değil, sonuç: verileriniz güvende.",
+      "features": [
+        {
+          "icon": "database",
+          "title": "Ayrı veri kasası",
+          "body": "Her müşterinin verisi tamamen ayrı bir veritabanında tutulur. Başka bir hesabın verisiyle hiçbir zaman temas etmez."
+        },
+        {
+          "icon": "lock",
+          "title": "İki adımlı giriş (2FA)",
+          "body": "Yönetici girişinde şifrenin yanı sıra ikinci bir doğrulama adımı istenir. Şifreniz çalınsa bile hesabınıza erişilemez."
+        },
+        {
+          "icon": "bot",
+          "title": "Bot ve spam koruması",
+          "body": "Formlar ve API uç noktaları reCAPTCHA ile korunur. Otomatik saldırılar ve toplu spam talepleri engellenir."
+        },
+        {
+          "icon": "rate",
+          "title": "Aşırı istek engelleme",
+          "body": "Kısa sürede çok fazla istek gelirse sistem otomatik olarak yavaşlatır. Şifre deneme saldırılarına karşı ilk savunma hattı."
+        },
+        {
+          "icon": "gdpr",
+          "title": "KVKK & GDPR uyumu",
+          "body": "Kişisel veriler yasal gerekliliklere göre işlenir ve saklanır. İstek üzerine veriler tamamen silinebilir."
+        },
+        {
+          "icon": "https",
+          "title": "Şifreli bağlantı",
+          "body": "Platformdaki tüm veri akışı HTTPS üzerinden şifrelenir. Hassas bilgiler açık ağda hiçbir zaman görünmez."
+        }
+      ]
+    },
+    "seoAnalytics": {
+      "title": "SEO, analitik ve performans — tek panelde",
+      "description": "Google Search Console, GA4 ve Chrome UX raporu tek bir gösterge panosunda. Organik tıklama, sayfa hızı ve etkileşim oranını ayrı araçlara geçmeden izleyin.",
+      "summary": "Canlı site metrikleri",
+      "stats": [
+        { "label": "Organik tıklama (28 gün)", "value": "2.4K", "delta": "+41% önceki döneme göre" },
+        { "label": "CrUX sağlık skoru", "value": "94", "delta": "Masaüstü · 100 üzerinden" }
+      ],
+      "rings": [
+        { "label": "Performans", "value": 96 },
+        { "label": "SEO görünürlük", "value": 93 },
+        { "label": "Etkileşim", "value": 91 }
+      ]
+    },
+    "portability": {
+      "title": "İçeriğiniz web'de, mobilde, her yerde",
+      "description": "Craftive'in headless REST API'si aynı içeriği web sitesi, mobil uygulama veya üçüncü taraf entegrasyonlara aynı anda iletir. Frontend'i siz seçin — veriler her zaman sizin.",
+      "notification": {
+        "label": "Yayın · craftive.io",
+        "title": "Sayfa tüm kanallara iletildi",
+        "body": "Web, mobil ve entegrasyonlarınız aynı anda güncellendi.",
+        "primary": "Dökümantasyon",
+        "secondary": "Kapat"
+      },
+      "bgItems": [
+        { "method": "GET", "path": "/cms/pages/anasayfa", "label": "200 OK" },
+        { "method": "GET", "path": "/cms/site/config", "label": "200 OK" },
+        { "method": "POST", "path": "/cms/drafts/publish", "label": "201 Created" },
+        { "method": "GET", "path": "/cms/components/hero", "label": "200 OK" },
+        { "method": "GET", "path": "/cms/products/featured", "label": "200 OK" },
+        { "method": "PUT", "path": "/cms/entries/blog-001", "label": "200 OK" },
+        { "method": "GET", "path": "/cms/media/images", "label": "200 OK" },
+        { "method": "GET", "path": "/cms/components/footer", "label": "200 OK" },
+        { "method": "POST", "path": "/cms/pages/new", "label": "201 Created" },
+        { "method": "GET", "path": "/cms/languages/active", "label": "200 OK" }
+      ]
+    }
+  },
+  "useCase": {
+    "badge": "Kimler kullanıyor?",
+    "headline1": "Sektörünüz ne olursa olsun,",
+    "headline2": "hız farkı bu kadar.",
+    "tabs": [
+      {
+        "label": "Ajanslar",
+        "description": "Her proje için sıfırdan altyapı kurmayı bırakın. Brief geliyor, temel zaten hazır — teslimat haftaya iniyor, geliştirici maliyeti düşüyor, kâr marjı yükseliyor.",
+        "stat": "3× hızlı",
+        "statLabel": "Tipik projelere kıyasla teslimat"
+      },
+      {
+        "label": "SaaS Ekipler",
+        "description": "Blog, landing page, doküman sitesi için mühendis harcamayı bırakın. İçerik ekibiniz bunları kendi başına yönetir; mühendisler ürünü büyütür.",
+        "stat": "%70 daha az",
+        "statLabel": "İçerik operasyon maliyeti"
+      },
+      {
+        "label": "Kurumsal Markalar",
+        "description": "Onlarca bayi sitesi, birden fazla dil, tek panel. Marka kimliği merkezi bozulmadan her site bağımsız yayın yapar — tam görünürlük, tam kontrol.",
+        "stat": "50+",
+        "statLabel": "Site, tek merkezden"
+      },
+      {
+        "label": "E-ticaret",
+        "description": "Ürün sayfası, kampanya, blog ve mağaza — hepsi aynı panelde. Sezon kampanyanızı geliştirici beklemeden yayına alın; stok ve içeriği aynı yerden yönetin.",
+        "stat": "Birkaç saat",
+        "statLabel": "Yeni kampanya lansmanı"
+      }
+    ],
+    "footerText": "Ve çok daha fazlası için",
+    "rhythmTags": [
+      "#startup'lar",
+      "#kreatif ajanslar",
+      "#kurumsal markalar",
+      "#serbest çalışanlar",
+      "#yeni girişimler",
+      "#çok dilli markalar"
+    ]
+  },
+  "counter": {
+    "badge": "Global erişim & çok dilli destek",
+    "headline1": "Tek altyapıda,",
+    "headline2": "dünyaya açılan 40+ dil.",
+    "bigNumberValue": "40",
+    "bigNumberSuffix": "+",
+    "bigNumberLabel": "desteklenen dil & yerel ayar — tek altyapıda",
+    "stats": [
+      { "value": "12", "suffix": "+", "label": "Ülkeden aktif site trafiği" },
+      { "value": "<48", "suffix": "sa", "label": "Yeni dil ekleme süresi" },
+      { "value": "100", "suffix": "%", "label": "Müşteri başına izole veri" }
+    ],
+    "statsNote": "Rakamlar platform kapasitesini ve ortalama proje verilerini yansıtır."
+  },
+  "managedProcess": {
+    "badge": "Tek tek değil, baştan sona",
+    "headline": "Sizin yerinize yürüttüğümüz süreç",
+    "subhead": "Birçok platform sadece bir kontrol paneli verir, sonrası size kalır. Craftive farklıdır: kurulumdan canlıya çıkıştan sonraki desteğe kadar tüm aşamaları biz yürütürüz.",
+    "cta": "Süreci incele",
+    "chips": [
+      { "title": "İçerik mimarisi keşfi", "action": "1. Adım", "solid": true },
+      { "title": "Hazır şablonların eşleştirilmesi", "action": "2. Adım", "solid": false },
+      { "title": "Yayın ve sonrası destek", "action": "3. Adım", "solid": false }
+    ],
+    "tiles": [
+      {
+        "title": "Keşif görüşmesi",
+        "body": "İhtiyacınızı dinleriz, doğru modülleri ve süreyi birlikte belirleriz."
+      },
+      {
+        "title": "İçerik mimarisi",
+        "body": "Sayfaların, içerik tiplerinin ve dillerinizin haritasını çıkarırız."
+      },
+      {
+        "title": "Kurulum ve geliştirme",
+        "body": "Hazır temelin üzerine markanızın görselini ve içeriğini yerleştiririz."
+      },
+      {
+        "title": "Yayın ve büyütme",
+        "body": "Canlıya çıkış sonrasında da yanınızdayız; yeni modülleri istediğinizde ekleriz."
+      }
+    ]
+  },
+  "social": {
+    "badge": "Portföyümüz",
+    "headline": "Geliştirdiğimiz projelerden",
+    "subhead": "Her projeyi sıfırdan değil, hazır altyapı üzerine inşa ediyoruz — hızlı, sürdürülebilir ve size özel.",
+    "statusText": "3 proje aktif ve canlıda"
+  },
+  "platformDemo": {
+    "badge": "Platform özellikleri",
+    "headline": "Günlük işleri kolaylaştıran araçlar",
+    "subhead": "İçerik ekibiniz sayfa düzenler, medya yükler, yayınlar — geliştirici beklemeden.",
+    "tabs": [
+      {
+        "id": "smartedit",
+        "label": "SmartEdit",
+        "heading": "Geliştirici beklemeden içeriği düzenleyin",
+        "description": "SmartEdit ile sayfa üzerinde doğrudan bileşen ekleyin, metni güncelleyin, düzeni değiştirin. Geliştirici müdahalesi olmadan anında önizleyin ve yayınlayın.",
+        "features": ["Canlı önizleme ile anlık düzenleme", "Bileşen bazlı sayfa yapısı", "Bir tıkla taslak → yayın"],
+        "cta": "Demo talep et"
+      },
+      {
+        "id": "media",
+        "label": "Medya Kütüphanesi",
+        "heading": "Tüm medya tek merkezde, tüm kanallara hazır",
+        "description": "Fotoğraf, video ve dosyaları yükleyin; otomatik boyutlandırma ve format dönüşümü sizin yerinize yapılır. Arama, etiket ve klasör yapısıyla her şey el altında.",
+        "features": ["Otomatik görsel optimizasyonu", "Hızlı arama ve etiketleme", "Web, mobil ve API için tek kaynak"],
+        "cta": "Demo talep et"
+      },
+      {
+        "id": "pagebuilder",
+        "label": "Sayfa Oluşturucu",
+        "heading": "Şablondan sayfa, dakikalar içinde yayında",
+        "description": "Hazır sayfa şablonları ve yeniden kullanılabilir bileşenlerle yeni sayfaları içerik ekibiniz üretir. İçerik mimarisi baştan kurulu olduğu için her sayfa tutarlı görünür.",
+        "features": ["Yeniden kullanılabilir bileşen kütüphanesi", "Şablondan hızlı sayfa üretimi", "İçerik ekibi kodu olmadan yayınlar"],
+        "cta": "Demo talep et"
+      }
+    ]
+  },
+  "reviews": {
+    "techStackLabel": "Platformu güçlendiren teknolojiler",
+    "badge": "Yakından bakın",
+    "headline": "Müşterilerimiz nasıl anlatıyor",
+    "testimonials": [
+      { "quote": "Bizim yerimize hem kurulumu hem içerik tarafını yürütmeleri en büyük rahatlık oldu. Bütçemiz dağılmadı.", "name": "Ahmet Yılmaz", "role": "Kurumsal Marka" },
+      { "quote": "Aylar bekleyeceğimiz bir projeyi haftalarla canlıya aldık. İçerik mimarisi en başından doğru kurulduğu için sonradan değiştirme derdimiz olmadı.", "name": "Zeynep Kaya", "role": "Ajans" },
+      { "quote": "Verilerimizin ayrı bir veritabanında olduğunu bilmek, KVKK tarafında bizi çok rahatlattı.", "name": "Murat Demir", "role": "SaaS Ekip" },
+      { "quote": "Sadece bir panel verseler ve gerisini bana bıraksalardı işime yaramazdı. Süreci üstlenmeleri bu işi mümkün kıldı.", "name": "Selin Çelik", "role": "Yeni Girişim" },
+      { "quote": "İhtiyacımız değiştikçe sistem üzerine modül ekleyebiliyoruz. Yeniden başlamak zorunda kalmıyoruz.", "name": "Emre Özkan", "role": "Kurumsal Marka" },
+      { "quote": "Çok dilli site kurmak normalde bizi çok zorlardı; tek arayüzden tüm dilleri yönetiyoruz.", "name": "Fatma Arslan", "role": "Marka" }
+    ],
+    "viewAll": "Tüm yorumları görüntüle"
+  },
+  "faq": {
+    "badge": "Sık sorulanlar",
+    "headline": "Aklınıza takılanlar",
+    "contactTitle": "Cevabını bulamadınız mı?",
+    "contactCta": "Bize ulaşın",
+    "items": [
+      {
+        "q": "Webflow veya WordPress'ten farkınız ne?",
+        "a": "Webflow ve benzeri araçlar tasarım paneli verir; içerik mimarisini, API'yi ve büyüme yolunu kurmak size kalır. Craftive'de ise kontrol panelinin yanı sıra kurulum, içerik mimarisi, frontend geliştirme ve deploy sürecinin tamamı bizim sorumluluğumuzda. Bir araç değil, uçtan uca bir teslimat ortağısınız."
+      },
+      {
+        "q": "Bir geliştirici tutsak daha mı iyi olur?",
+        "a": "Tek bir geliştirici, Craftive'in sunduğu altyapıyı sıfırdan kurmak için aylar harcar. Hazır temelimiz sayesinde geliştirici kapasitesini sizin ürününüze özgü kısma ayırırsınız — aynı sürede çok daha fazlasını teslim edersiniz."
+      },
+      {
+        "q": "Verilerimiz gerçekten güvende mi?",
+        "a": "Her müşteri için fiziksel olarak ayrılmış, izole bir veritabanı kullanıyoruz. Verileriniz başka bir projenin verisiyle hiçbir zaman aynı tabloda yer almaz. Mimari KVKK ve GDPR uyumlu çalışır; yedekleme ve veri silme işlemleri müşteri bazında yapılır."
+      },
+      {
+        "q": "Canlıya çıktıktan sonra içeriği kendimiz yönetebilir miyiz?",
+        "a": "Evet. Site yayına alındıktan sonra tüm içerik yönetimi sizin elinizde. Sayfa ekleyip güncelleyebilir, medya yükleyebilir, yeni dil açabilirsiniz — her adım için geliştirici beklemenize gerek kalmaz."
+      },
+      {
+        "q": "Ne kadar sürede yayına çıkarız?",
+        "a": "Süre tamamen kapsama göre değişir. Sade bir proje ile çok dilli, çok modüllü bir yapı aynı zaman almaz. İlk keşif görüşmesinde ihtiyacınızı dinleyip kapsamınıza özel net bir takvim paylaşıyoruz."
+      },
+      {
+        "q": "İleride başka bir platforma taşınmak istersek ne olur?",
+        "a": "İçeriğiniz açık REST API üzerinden her zaman size aittir. Verileriniz taşınabilir, frontend katmanı platform bağımsız geliştirilebilir. Çalıştığınız süre boyunca edindiğiniz her şey size ait kalır."
+      }
+    ]
+  },
+  "ctaFooter": {
+    "headline1": "Fikrinizi anlatın,",
+    "headline2": "birlikte tasarlayalım",
+    "subhead": "İlk görüşme ücretsiz. İhtiyacınızı dinleyelim, doğru kapsamı birlikte belirleyelim.",
+    "primaryCta": "Demo Talep Et",
+    "secondaryCta": "İletişime Geç",
+    "rightTitle": "Hızlı bir bakış istiyorsanız",
+    "rightText": "10 dakikalık tanıtım görüşmesi için takvimimizden bir zaman seçin. Sorularınızı yanıtlayalım, platformu canlı gösterelim.",
+    "rightCta": "Takvimden zaman seç",
+    "handPhoneAlt": "Craftive platform önizlemesi"
+  },
+  "footer": {
+    "tagline": "Markanızı dijitalde sağlam bir temele oturtuyoruz.",
+    "emailPlaceholder": "E-posta adresiniz",
+    "subscribe": "Haberdar Et",
+    "subscribing": "Kaydediliyor...",
+    "subscribeSuccess": "Kaydoldunuz! Gelişmelerden haberdar edeceğiz.",
+    "subscribeErrApiConfig": "API yapılandırması eksik.",
+    "subscribeErrRecaptcha": "reCAPTCHA doğrulaması başarısız.",
+    "subscribeErrNetwork": "Bağlantı hatası. Lütfen tekrar deneyin.",
+    "subscribeErrHttp": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "columns": [
+      {
+        "title": "Sayfalar",
+        "links": [
+          { "label": "Anasayfa", "href": "#hero" },
+          { "label": "Çözümler", "href": "#features" },
+          { "label": "Süreç", "href": "#smart-assist" },
+          { "label": "Hakkımızda", "href": "#use-case" },
+          { "label": "İletişim", "href": "#cta-footer" }
+        ]
+      },
+      {
+        "title": "Kaynaklar",
+        "links": [
+          { "label": "Docs", "href": "https://docs.craftive.io", "external": true },
+          { "label": "Yardım Merkezi", "href": "mailto:hello@craftive.io" },
+          { "label": "KVKK Aydınlatma", "href": "mailto:hello@craftive.io" },
+          { "label": "Gizlilik Politikası", "href": "mailto:hello@craftive.io" },
+          { "label": "Kullanım Şartları", "href": "mailto:hello@craftive.io" }
+        ]
+      },
+      {
+        "title": "Sosyal",
+        "links": [
+          { "label": "LinkedIn", "href": "https://www.linkedin.com/company/craftive-io", "external": true },
+          { "label": "X (Twitter)", "href": "https://x.com/craftive_io", "external": true },
+          { "label": "Instagram", "href": "https://www.instagram.com/craftive.io", "external": true },
+          { "label": "YouTube", "href": "https://www.youtube.com/@craftive-io", "external": true }
+        ]
+      }
+    ],
+    "hosting": "İstanbul'dan, sevgiyle",
+    "copyright": "© Craftive {year} — Tüm hakları saklıdır."
+  },
+  "demoModal": {
+    "panelBadge": "Platform",
+    "panelTitle": "Dijital projenizi hayata geçirelim",
+    "panelSub": "Sizin için en uygun çözümü birlikte belirleyelim.",
+    "trust1": "4–8 haftada canlı",
+    "trust2": "Bire bir danışmanlık",
+    "trust3": "7/24 yönetilen destek",
+    "panelFooter": "reCAPTCHA koruması etkin",
+    "formEyebrow": "Demo Talep",
+    "formTitle": "Birlikte başlayalım",
+    "formSub": "Projeniz hakkında birkaç bilgi paylaşın, en kısa sürede size ulaşalım.",
+    "name": "Ad Soyad",
+    "namePlaceholder": "Adınız ve soyadınız",
+    "email": "E-posta",
+    "emailPlaceholder": "ornek@email.com",
+    "phone": "Telefon",
+    "phonePlaceholder": "+90 5xx xxx xx xx",
+    "message": "Mesaj",
+    "messagePlaceholder": "Projeniz veya ihtiyaçlarınız hakkında kısa bir bilgi...",
+    "submitHint": "Bilgileriniz yalnızca iletişim için kullanılır.",
+    "submit": "Talep Gönder",
+    "submitting": "Gönderiliyor...",
+    "successBadge": "Talep Alındı",
+    "successTitle": "Teşekkürler!",
+    "close": "Kapat",
+    "errConfig": "Yapılandırma yüklenemedi. Sayfayı yenileyin veya bize ulaşın.",
+    "errApiConfig": "API yapılandırması eksik.",
+    "errRecaptcha": "reCAPTCHA doğrulaması başarısız.",
+    "errNetwork": "Bağlantı hatası. Lütfen tekrar deneyin.",
+    "errHttp": "Bir hata oluştu. Lütfen tekrar deneyin."
+  }
+}

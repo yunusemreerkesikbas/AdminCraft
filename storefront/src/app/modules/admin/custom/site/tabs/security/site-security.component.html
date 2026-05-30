@@ -16,7 +16,9 @@
                         ></mat-icon>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                        <h3
+                            class="text-lg font-bold tracking-[-0.03em] text-slate-950"
+                        >
                             {{
                                 'admin.site.dashboard.security.twoFactor.title'
                                     | transloco
@@ -31,10 +33,23 @@
                     </div>
                 </div>
 
+                @if (saveCooldownSig() > 0) {
+                    <p class="text-sm text-slate-600">
+                        {{
+                            'auth.signIn.2fa.resendIn'
+                                | transloco: { seconds: saveCooldownSig() }
+                        }}
+                    </p>
+                }
                 <button
                     mat-stroked-button
                     class="spa-site-dashboard__save-button"
-                    [disabled]="savingSig() || form.invalid || form.pristine"
+                    [disabled]="
+                        savingSig() ||
+                        saveCooldownSig() > 0 ||
+                        form.invalid ||
+                        !form.dirty
+                    "
                     (click)="save()"
                 >
                     @if (savingSig()) {
@@ -56,20 +71,28 @@
                         <div
                             class="flex cursor-pointer items-start gap-4 rounded-[14px] border p-5 transition-colors duration-200"
                             [ngClass]="{
-                                'border-primary/30 bg-primary/10 shadow-[0_24px_54px_-44px_rgba(79,70,229,0.9)]': form.get('twoFactorPolicy')?.value === option.value,
-                                'border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white': form.get('twoFactorPolicy')?.value !== option.value
+                                'border-primary/30 bg-primary/10 shadow-[0_24px_54px_-44px_rgba(79,70,229,0.9)]':
+                                    form.get('twoFactorPolicy')?.value ===
+                                    option.value,
+                                'border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white':
+                                    form.get('twoFactorPolicy')?.value !==
+                                    option.value,
                             }"
-                            (click)="form.get('twoFactorPolicy')?.setValue(option.value)"
+                            (click)="selectPolicy(option.value)"
                         >
                             <mat-radio-button
                                 [value]="option.value"
                                 color="primary"
                             ></mat-radio-button>
                             <div class="min-w-0 flex-1">
-                                <div class="text-base font-semibold text-slate-900">
+                                <div
+                                    class="text-base font-semibold text-slate-900"
+                                >
                                     {{ option.label | transloco }}
                                 </div>
-                                <div class="mt-2 text-sm leading-6 text-slate-500">
+                                <div
+                                    class="mt-2 text-sm leading-6 text-slate-500"
+                                >
                                     {{ option.description | transloco }}
                                 </div>
                             </div>

@@ -1,14 +1,13 @@
-import { notFound } from "next/navigation";
-import trHome from "@/content/home.tr.json";
-import enHome from "@/content/home.en.json";
-import { Hero } from "@/components/sections/Hero";
-import { TechStack } from "@/components/sections/TechStack";
-import { Features } from "@/components/sections/Features";
-import { Segments } from "@/components/sections/Segments";
-import { HowItWorks } from "@/components/sections/HowItWorks";
-import { FAQ } from "@/components/sections/FAQ";
 import { CTABanner } from "@/components/sections/CTABanner";
+import { FAQ } from "@/components/sections/FAQ";
+import { Features } from "@/components/sections/Features";
+import { Hero } from "@/components/sections/Hero";
+import { HowItWorks } from "@/components/sections/HowItWorks";
 import { NewsletterSection } from "@/components/sections/NewsletterSection";
+import { TechStack } from "@/components/sections/TechStack";
+import enHome from "@/content/home.en.json";
+import trHome from "@/content/home.tr.json";
+import { notFound } from "next/navigation";
 
 const SUPPORTED_LOCALES = ["tr", "en"] as const;
 type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -35,7 +34,7 @@ export default async function LocaleHomePage({ params }: PageProps) {
       <Hero content={c.hero} locale={locale} />
       <TechStack label={c.techStack.label} />
       <Features content={c.features} />
-      <Segments content={c.segments} />
+      {/* <Segments content={c.segments} /> */}
       <HowItWorks content={c.howItWorks} />
       <FAQ content={c.faq} />
       <NewsletterSection content={c.newsletter} locale={locale} />
@@ -43,4 +42,3 @@ export default async function LocaleHomePage({ params }: PageProps) {
     </div>
   );
 }
-

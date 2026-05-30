@@ -8,13 +8,14 @@ The storefront iframe renders SmartEdit preview content while a valid preview ti
 
 Preview mode resolves content as **draft override first, then PUBLISHED fallback**. This lets editors open an already published page in SmartEdit without demoting the live page to `DRAFT`.
 
-Phase 1 scope:
+Current Phase 2A scope:
 
 | In scope | Out of scope |
 | --- | --- |
-| Component content edit via draft overrides (i18n strings, media, links) | Full slot draft override model |
+| Component and existing entry content edit via draft overrides (i18n strings, media, links, dynamic fields) | Full slot draft override model |
 | Open published pages in SmartEdit using published fallback | Add/remove/reorder components in a slot |
-| Per-language Publish | Scheduled publish, personalization, multi-variant |
+| Draft panel, backend-computed draft groups, field-level publish review, group/page-language discard | Entry add/remove/reorder, shared header/footer publish |
+| Per-language immediate Publish | Scheduled publish + SmartEdit draft merge, personalization, multi-variant |
 | Component UID fallback lookup | Page metadata draft override, workflow / approval / version history |
 
 ## Database
@@ -33,6 +34,8 @@ Current override targets:
 
 - `COMPONENT`
 - `COMPONENT_I18N`
+- `COMPONENT_ENTRY`
+- `COMPONENT_ENTRY_I18N`
 
 The HMAC preview secret is stored in configuration (`app.cms.preview.secret`), not in the database.
 
@@ -73,6 +76,28 @@ Mints a short-lived HMAC-SHA256 signed ticket the admin SmartEdit shell embeds i
 - **TTL**: `app.cms.preview.ttl-seconds` (default 900 — 15 minutes).
 - **Storefront base URL**: resolved from the tenant's `global.canonicalBaseUrl` site setting (Site Dashboard → SEO → Canonical Base URL). If not set, ticket issuance fails with an error. There is no platform env override — each tenant must configure its own storefront URL in SEO settings.
 
+### Phase 2A draft management endpoints
+
+All endpoints below are tenant-scoped and require `TENANT_ADMIN`.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/cms/preview/pages/{pageId}/drafts?language=TR` | Lists publishable SmartEdit drafts for the page-specific, visible component graph. |
+| `GET` | `/api/cms/preview/pages/{pageId}/publish-review?language=TR` | Returns field-level before/after changes for the publish confirmation modal. |
+| `DELETE` | `/api/cms/preview/drafts/{draftId}` | Compatibility endpoint for discarding one raw `cms_draft_overrides` row; the SmartEdit inspector uses group discard. |
+| `DELETE` | `/api/cms/preview/pages/{pageId}/draft-groups/{groupKey}?language=TR` | Discards one backend-computed draft group in a single transaction. |
+| `DELETE` | `/api/cms/preview/pages/{pageId}/drafts?language=TR` | Discards current-language drafts for page-specific visible components and their entries. |
+
+Draft list/review responses are computed by the backend; Angular does not traverse the slot/component tree to infer draft scope. Each response keeps raw `drafts` for compatibility and also returns backend-computed `groups` with `groupCount`. Each group includes `key`, `draftIds`, `title`, `subtitle`, `fields`, and `updatedAt`. Field changes include raw `before` / `after` values plus backend-normalized display values (`beforeText`, `afterText`, media previews, and `isMedia`).
+
+Component entry draft editing uses:
+
+```text
+PUT /api/components/entries/{id}/composite/draft
+```
+
+It stores `COMPONENT_ENTRY` and `COMPONENT_ENTRY_I18N` overrides only. Live `component_entries` / `component_entry_i18n` rows are not changed until immediate page-language publish.
+
 ### Ticket format
 
 Wire format: `<base64url(payload)>.<base64url(signature)>` where the payload is a pipe-delimited UTF-8 string `tenantId|userId|pageId|issuedAtEpoch|expiresAtEpoch`. A `pageId` of `0` means "no page binding". Tokens are intentionally opaque to clients (no JWT dependency). Implementation: [`CmsPreviewTicketService`](../../backend/src/main/java/com/backend/application/cms/preview/CmsPreviewTicketService.java).
@@ -103,7 +128,7 @@ When preview mode is active:
 | `Component.status` | `PUBLISHED` | `DRAFT` or `PUBLISHED` fallback |
 | `ComponentEntry.status` | `PUBLISHED` | `DRAFT` or `PUBLISHED` fallback |
 
-Component-level draft overrides are applied only in preview mode. Normal CMS delivery ignores `cms_draft_overrides`.
+Component and component-entry draft overrides are applied only in preview mode. Normal CMS delivery ignores `cms_draft_overrides`.
 
 If a published page has no draft override, SmartEdit still opens using published fallback. If a draft override exists, the preview render overlays the draft values on top of the published component shell. This is the current Craftive equivalent of the Hybris staged/online separation.
 
@@ -128,7 +153,7 @@ Preview responses must not be cached by storefront ISR or browser. The Next.js c
   - Cross-window message types: `smartedit.types.ts`
 - Route: `/:lang/smartedit/:pageId` — registered in `storefront/src/app/app.routes.ts` behind `tenantAdminGuard` + `moduleGuard:core`.
 - Entry point: "Open in SmartEdit" row action in `storefront/src/app/modules/admin/custom/pages/list/page-list.component.ts`.
-- API endpoint constant: `cmsPreviewTickets` in `storefront/src/app/modules/admin/api-endpoints.ts`.
+- API endpoint constants: `cmsPreviewTickets`, `cmsPreviewPageDrafts`, `cmsPreviewPublishReview`, `cmsPreviewDraftGroup`, and `componentEntryCompositeDraftById` in `storefront/src/app/modules/admin/api-endpoints.ts`.
 - i18n keys: `admin.smartedit.*` in `storefront/src/app/modules/admin/i18n/langTR.ts` and `langEN.ts`.
 
 ### Storefront (`storefront-nextjs/`)
@@ -213,10 +238,10 @@ Clicking **Renew session** re-issues the ticket (`POST /api/cms/preview/tickets`
 ### Known limitations (Phase 2 candidates)
 
 - Component lookup by UID is now available via `GET /api/components/by-uid/{uid}`, so SmartEdit no longer depends solely on the page slot cache for selected component resolution.
-- Draft overrides currently cover component shell fields and component i18n fields. Component entry content, slot component order/visibility, and shared slot overrides still need the same working-copy treatment before they are safe to edit without touching live rows.
-- **`publishPageI18n` draft application is page-scoped:** component draft overrides are applied and cleared only for components on **that page’s page-specific (non-shared) slots** that are visible in the slot graph. Drafts on shared chrome slots are not flushed by this publish path yet.
-- **Scheduled publish:** immediate publish applies and clears component draft overrides for the page; scheduled publish does not run that merge today — schedule + SmartEdit drafts should be treated as an unsupported combination until explicitly designed.
-- **Optional hardening backlog:** separate audit/activity action for “draft saved” vs live update, batch `DELETE` for many override rows, and stricter preview scoping on non-page CMS endpoints beyond what `GET /api/cms/pages` already enforces for page-bound tickets (see [`cms-delivery.md`](cms-delivery.md) preview notes).
+- Draft overrides cover component shell fields, component i18n fields, existing component entry shell fields, and existing component entry i18n/dynamic fields. Entry create/delete/reorder and slot add/remove/reorder are still outside SmartEdit draft mode.
+- **`publishPageI18n` draft application is page-scoped:** component and entry draft overrides are applied and cleared only for components on **that page’s page-specific (non-shared) slots** that are visible in the slot graph. Drafts on shared chrome slots are not flushed by this publish path yet.
+- **Scheduled publish:** immediate publish applies and clears SmartEdit draft overrides for the page; scheduled publish does not run that merge today — schedule + SmartEdit drafts should be treated as an unsupported combination until explicitly designed.
+- Phase 2A publish review is a field-level textual review, not a visual diff. Approval workflow and AI assistance remain future phases.
 
 ## Implementation guide
 
@@ -243,13 +268,26 @@ Clicking **Renew session** re-issues the ticket (`POST /api/cms/preview/tickets`
 5. On dialog save, the component dialog calls `PUT /api/components/{id}/composite/draft`. The backend writes `cms_draft_overrides` instead of mutating the published component row.
 6. The shell calls `SmartEditGatewayService.requestReload()` which posts `smartedit:reload` to the iframe; `smartedit-injector.js` calls `location.reload()`. Because the URL still has `?preview=`, the new render overlays the draft override.
 
+When editing the dialog's entries tab in `draftMode`, existing entry edits call `PUT /api/components/entries/{id}/composite/draft`. Entry create/delete/reorder controls are disabled in this mode.
+
 ### Flow 3: Publish current language
 
 1. Sidebar **Publish** button is enabled when the current language has a translation (`canPublishSig`).
-2. The shell calls `PageBuilderService.publishPageI18n(pageId, lang)` — same endpoint used elsewhere in the admin. Request body is optional (`PagePublishRequest` with optional `scheduledAt` only); tenant scope comes from `TenantContext`.
-3. On success the shell shows a localized notification (success message taken from the API response when present), reloads the iframe via `smartedit:reload`, and refreshes its in-memory page/slots state.
-4. The publish operation applies current component draft overrides to the published component/component_i18n records and clears those overrides.
-5. The newly published page/component content is now visible to live storefront traffic. Preview mode continues to use draft override first, published fallback second.
+2. The shell calls `GET /api/cms/preview/pages/{pageId}/publish-review?language={lang}` and opens a field-level review modal.
+3. After confirmation, the shell calls `PageBuilderService.publishPageI18n(pageId, lang)` — same endpoint used elsewhere in the admin. Request body is optional (`PagePublishRequest` with optional `scheduledAt` only); tenant scope comes from `TenantContext`.
+4. On success the shell shows a localized notification (success message taken from the API response when present), reloads the iframe via `smartedit:reload`, and refreshes page data plus the draft panel.
+5. The publish operation applies current component and component-entry draft overrides to the published records and clears those overrides.
+6. The newly published page/component/entry content is now visible to live storefront traffic. Preview mode continues to use draft override first, published fallback second.
+
+### Flow 4: Discard drafts
+
+The SmartEdit inspector loads `GET /api/cms/preview/pages/{pageId}/drafts?language={lang}` and renders the backend-computed `groups` list with `groupCount`.
+
+- Group discard calls `DELETE /api/cms/preview/pages/{pageId}/draft-groups/{groupKey}?language={lang}`. The backend recomputes the page/language draft scope and removes only matching group rows in one transaction.
+- Current-language discard calls `DELETE /api/cms/preview/pages/{pageId}/drafts?language={lang}`. It removes page-specific visible `COMPONENT` no-language drafts, current-language `COMPONENT_I18N` drafts, related `COMPONENT_ENTRY` no-language drafts, and current-language `COMPONENT_ENTRY_I18N` drafts.
+- Shared slot/header/footer drafts are deliberately excluded.
+
+Draft save and discard emit `DRAFT_SAVED` / `DRAFT_DISCARDED` site activity actions. Publish continues to emit the existing `PUBLISHED` activity.
 
 ## Verification
 

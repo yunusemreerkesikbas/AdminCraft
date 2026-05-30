@@ -35,37 +35,51 @@
                             [label]="'admin.components.fields.type' | transloco"
                             [options]="componentTypeOptions"
                             [placeholder]="
-                                'admin.common.placeholders.selectType' | transloco
+                                'admin.common.placeholders.selectType'
+                                    | transloco
                             "
                             [required]="true"
                         >
                         </spa-select>
                     }
-
                 </div>
 
                 @if (isNavigationAwareSig()) {
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <spa-select
                             formControlName="navigationNodeId"
-                            [label]="'admin.components.fields.navigationNode' | transloco"
+                            [label]="
+                                'admin.components.fields.navigationNode'
+                                    | transloco
+                            "
                             [options]="navigationNodeOptions"
-                            [placeholder]="'admin.components.placeholders.selectNavigationNode' | transloco"
+                            [placeholder]="
+                                'admin.components.placeholders.selectNavigationNode'
+                                    | transloco
+                            "
                         >
                         </spa-select>
 
                         <spa-select
                             formControlName="navigationType"
-                            [label]="'admin.components.fields.navigationType' | transloco"
+                            [label]="
+                                'admin.components.fields.navigationType'
+                                    | transloco
+                            "
                             [options]="navigationTypeOptions"
-                            [placeholder]="'admin.components.placeholders.selectNavigationType' | transloco"
+                            [placeholder]="
+                                'admin.components.placeholders.selectNavigationType'
+                                    | transloco
+                            "
                         >
                         </spa-select>
 
                         <spa-checkbox
                             class="sm:col-span-2"
                             formControlName="searchBox"
-                            [label]="'admin.components.fields.searchBox' | transloco"
+                            [label]="
+                                'admin.components.fields.searchBox' | transloco
+                            "
                             styleClasses="boxed"
                         >
                         </spa-checkbox>
@@ -172,6 +186,8 @@
                     [componentId]="data.component.id"
                     [componentTypeId]="data.component.componentTypeId"
                     [languages]="languages"
+                    [draftMode]="!!data.draftMode"
+                    (draftSaved)="onEntryDraftSaved()"
                 >
                 </spa-component-entry-list>
             </ng-template>

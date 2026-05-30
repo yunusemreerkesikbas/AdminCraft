@@ -270,6 +270,14 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         }
     }
 
+    protected onEntryDraftSaved(): void {
+        if (this.data.component) {
+            this.close(
+                this.data.component as unknown as ComponentCompositeResponse
+            );
+        }
+    }
+
     #createComponentComposite(
         translations: Record<Language, ComponentI18nRequest>
     ): void {
@@ -318,13 +326,15 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         const generalData = this.generalForm.value;
         const uid = (generalData.uid as string)?.trim();
 
-        this.#resolveResponsiveMediaIdForComposite(componentId, !!this.data.draftMode)
+        this.#resolveResponsiveMediaIdForComposite(
+            componentId,
+            !!this.data.draftMode
+        )
             .pipe(
                 take(1),
                 switchMap(({ responsiveMediaId, clearAfter }) => {
                     const request: UpdateComponentCompositeRequest = {
                         uid: uid,
-                        name: uid,
                         displayOrder: generalData.displayOrder,
                         isVisible: generalData.isVisible,
                         styleClasses: generalData.styleClasses,
@@ -333,21 +343,23 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
                         ...this.#buildNavigationPayload(generalData),
                     };
                     const update$ = this.data.draftMode
-                        ? this.#componentService.updateDraftCompositeWithResponse(componentId, request)
-                        : this.#componentService.updateCompositeWithResponse(componentId, request);
-                    return update$
-                        .pipe(
-                            switchMap((response) =>
-                                clearAfter && !this.data.draftMode
-                                    ? this.#componentService
-                                          .assignResponsiveMedia(
-                                              componentId,
-                                              null
-                                          )
-                                          .pipe(map(() => response))
-                                    : of(response)
-                            )
-                        );
+                        ? this.#componentService.updateDraftCompositeWithResponse(
+                              componentId,
+                              request
+                          )
+                        : this.#componentService.updateCompositeWithResponse(
+                              componentId,
+                              request
+                          );
+                    return update$.pipe(
+                        switchMap((response) =>
+                            clearAfter && !this.data.draftMode
+                                ? this.#componentService
+                                      .assignResponsiveMedia(componentId, null)
+                                      .pipe(map(() => response))
+                                : of(response)
+                        )
+                    );
                 }),
                 take(1)
             )
@@ -367,7 +379,6 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
     #buildTranslations(): Record<Language, ComponentI18nRequest> {
         const translations = {} as Record<Language, ComponentI18nRequest>;
         const isEditMode = this.data.mode === 'edit';
-        let hasAnyTranslationContent = false;
 
         this.languages.forEach((lang) => {
             const form = this.i18nForms[lang];
@@ -386,10 +397,6 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
                 titleValue.length > 0 ||
                 subtitleValue.length > 0 ||
                 descriptionValue.length > 0;
-
-            if (hasCurrentTranslationContent) {
-                hasAnyTranslationContent = true;
-            }
 
             const existingTranslation = this.#getExistingTranslation(lang);
             const shouldIncludeLocale = isEditMode
@@ -431,6 +438,13 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             this.generalForm.get('responsiveMedia')?.value;
         const currentSetId = this.data.component?.responsiveMedia?.id;
 
+        if (draftMode) {
+            return of({
+                responsiveMediaId: currentSetId,
+                clearAfter: false,
+            });
+        }
+
         const desktopMediaId = this.#extractMediaId(
             responsiveValue?.desktopMedia
         );
@@ -458,7 +472,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             mobileMediaId: mobileId ?? desktopId,
         };
 
-        if (currentSetId && !draftMode) {
+        if (currentSetId) {
             return this.#mediaService
                 .updateResponsiveMedia(currentSetId, responsiveMediaRequest)
                 .pipe(
@@ -528,7 +542,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
     #mapNavigationNodeOptions(nodes: NavigationNode[]): SelectOption[] {
         return nodes.map((node) => ({
             value: node.id,
-            label: `${node.title || node.uid} (${node.uid})`,
+            label: node.uid,
         }));
     }
 

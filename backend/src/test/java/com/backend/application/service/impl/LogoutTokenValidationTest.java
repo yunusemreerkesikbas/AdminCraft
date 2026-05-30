@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.backend.application.service.EmailService;
+import com.backend.application.service.OtpBypassVerifier;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.TrustedDeviceService;
 import com.backend.domain.port.JwtProviderPort;
@@ -50,6 +51,9 @@ class LogoutTokenValidationTest {
     @Mock private TrustedDeviceService trustedDeviceService;
     @Mock private VerificationTokenRepository verificationTokenRepository;
     @Mock private OtpConfig otpConfig;
+    @Mock private OtpBypassVerifier otpBypassVerifier;
+    @Mock private com.backend.application.service.OtpRateLimitService otpRateLimitService;
+    @Mock private com.backend.application.service.OtpResendCooldownService otpResendCooldownService;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private PlatformRefreshTokenRepository platformRefreshTokenRepository;
     @Mock private PlatformTransactionManager tenantTransactionManager;
@@ -64,7 +68,8 @@ class LogoutTokenValidationTest {
                 tenantRepository, platformAdminUserRepository, platformSettingsPort,
                 platformVerificationTokenRepository, tenantContext,
                 otpService, emailService, trustedDeviceService, verificationTokenRepository,
-                otpConfig, refreshTokenRepository, platformRefreshTokenRepository,
+                otpConfig, otpBypassVerifier, otpRateLimitService, otpResendCooldownService,
+                refreshTokenRepository, platformRefreshTokenRepository,
                 tenantTransactionManager, platformTransactionManager);
     }
 

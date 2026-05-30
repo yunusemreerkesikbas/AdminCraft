@@ -68,6 +68,7 @@ export interface ComponentDetailDto {
     id: number;
     uuid: string;
     uid: string;
+    name?: string;
     componentTypeId: number;
     componentTypeName?: string;
     displayOrder?: number;

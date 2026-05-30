@@ -48,6 +48,7 @@ interface ComponentEntryFormData {
     entry?: ComponentEntry;
     translations?: Record<string, EntryI18nDto>;
     sortOrder?: number;
+    draftMode?: boolean;
 }
 
 @Component({
@@ -95,7 +96,9 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
 
     protected canSaveSig = computed(
         () =>
-            this.generalForm?.valid && !this.isSubmitting() && !this.isLoadingSig()
+            this.generalForm?.valid &&
+            !this.isSubmitting() &&
+            !this.isLoadingSig()
     );
 
     protected readonly tabsSig = computed<TabDefinition[]>(() => [
@@ -128,7 +131,10 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         });
     }
 
-    #buildResponsiveMediaValue(): { desktopMedia: any; mobileMedia: any } | null {
+    #buildResponsiveMediaValue(): {
+        desktopMedia: any;
+        mobileMedia: any;
+    } | null {
         const responsive = this.data.entry?.responsiveMedia;
         if (responsive) {
             return {
@@ -158,6 +164,10 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         const mediaValue = this.generalForm.value.responsiveMedia;
         const currentSetId = this.data.entry?.responsiveMedia?.id;
 
+        if (this.data.draftMode) {
+            return of(currentSetId);
+        }
+
         const desktopMediaId = this.#extractMediaId(mediaValue?.desktopMedia);
         const mobileMediaId = this.#extractMediaId(mediaValue?.mobileMedia);
 
@@ -174,11 +184,10 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             return this.#mediaService
                 .updateResponsiveMedia(currentSetId, request)
                 .pipe(map(() => currentSetId));
-        } else {
-            return this.#mediaService
-                .createResponsiveMedia(request)
-                .pipe(map((set) => set.id));
         }
+        return this.#mediaService
+            .createResponsiveMedia(request)
+            .pipe(map((set) => set.id));
     }
 
     #extractMediaId(media: unknown): number | undefined {
@@ -294,10 +303,15 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
                             responsiveMediaId,
                             translations,
                         };
-                        return this.#entryService.updateCompositeWithResponse(
-                            this.data.entry!.id,
-                            payload
-                        );
+                        return this.data.draftMode
+                            ? this.#entryService.updateCompositeDraftWithResponse(
+                                  this.data.entry!.id,
+                                  payload
+                              )
+                            : this.#entryService.updateCompositeWithResponse(
+                                  this.data.entry!.id,
+                                  payload
+                              );
                     }
                 }),
                 take(1)
@@ -408,7 +422,8 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
 
         Object.keys(formData).forEach((key) => {
             const value = formData[key];
-            const shouldSkipMediaUid = shouldClearLegacyMediaUid && key === 'mediaUid';
+            const shouldSkipMediaUid =
+                shouldClearLegacyMediaUid && key === 'mediaUid';
 
             if (
                 baseFields.includes(key) ||

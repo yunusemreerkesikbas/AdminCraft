@@ -72,13 +72,16 @@ export const langTR = {
         },
         recaptcha: {
             keys: {
-                required: 'reCAPTCHA etkinleştirildiğinde site key ve secret key gereklidir',
+                required:
+                    'reCAPTCHA etkinleştirildiğinde site key ve secret key gereklidir',
             },
             siteKey: {
-                invalid: 'Geçersiz reCAPTCHA site key formatı (40 karakter alfanumerik, tire ve alt çizgi)',
+                invalid:
+                    'Geçersiz reCAPTCHA site key formatı (40 karakter alfanumerik, tire ve alt çizgi)',
             },
             secretKey: {
-                invalid: 'Geçersiz reCAPTCHA secret key formatı (40 karakter alfanumerik, tire ve alt çizgi)',
+                invalid:
+                    'Geçersiz reCAPTCHA secret key formatı (40 karakter alfanumerik, tire ve alt çizgi)',
             },
             threshold: {
                 min: 'reCAPTCHA threshold minimum 0.0 olmalıdır',
@@ -115,6 +118,8 @@ export const langTR = {
             noRecords: 'Kayıt bulunamadı',
 
             none: 'Yok',
+            yes: 'Evet',
+            no: 'Hayır',
             clearAll: 'Hepsini Temizle',
             cancel: 'İptal',
             close: 'Kapat',
@@ -525,11 +530,14 @@ export const langTR = {
         smartedit: {
             title: 'SmartEdit',
             actions: {
-                openInSmartEdit: 'SmartEdit\'te aç',
+                openInSmartEdit: "SmartEdit'te aç",
                 backToList: 'Sayfa listesine dön',
                 editPageMetadata: 'Sayfa bilgilerini düzenle',
                 editComponent: 'Bileşeni düzenle',
                 publishCurrentLang: 'Geçerli dili yayınla',
+                confirmPublish: 'Yayınla',
+                discardDraft: 'Taslağı sil',
+                discardCurrentLanguageDrafts: 'Bu dildeki taslakları sil',
                 renewTicket: 'Oturumu yenile',
             },
             viewport: {
@@ -552,13 +560,27 @@ export const langTR = {
             messages: {
                 publishSuccess: 'Geçerli dil için içerik yayınlandı',
             },
+            drafts: {
+                title: 'Taslaklar',
+                empty: 'Bu sayfa ve dil için yayınlanabilir taslak yok.',
+                reviewTitle: 'Yayın öncesi kontrol',
+                reviewEmpty: 'Yayınlanacak alan değişikliği yok.',
+                changeCount: 'değişiklik',
+                before: 'Önce',
+                after: 'Sonra',
+                emptyValue: 'Boş',
+            },
             warnings: {
-                ticketExpiringSoon: 'Önizleme oturumunun süresi 2 dakikadan az kaldı.',
-                ticketExpired: 'Önizleme oturumunun süresi doldu. Düzenlemeye devam etmek için yenileyin.',
+                ticketExpiringSoon:
+                    'Önizleme oturumunun süresi 2 dakikadan az kaldı.',
+                ticketExpired:
+                    'Önizleme oturumunun süresi doldu. Düzenlemeye devam etmek için yenileyin.',
             },
             help: {
-                clickToSelect: 'Düzenlemek için iframe içindeki bir bileşene tıklayın.',
-                slotEditing: 'Slot yapısı şablon ekranından yönetilir; burada sadece içeriği değiştirebilirsiniz.',
+                clickToSelect:
+                    'Düzenlemek için iframe içindeki bir bileşene tıklayın.',
+                slotEditing:
+                    'Slot yapısı şablon ekranından yönetilir; burada sadece içeriği değiştirebilirsiniz.',
             },
             loading: {
                 iframe: 'Önizleme yükleniyor…',
@@ -673,7 +695,8 @@ export const langTR = {
             addComponentSuccess: 'Bileşen slota eklendi',
             addComponentError: 'Bileşen eklenemedi',
             removeComponentTitle: 'Bileşeni Kaldır',
-            removeComponentMessage: 'Bu bileşeni slottan kaldırmak istediğinizden emin misiniz?',
+            removeComponentMessage:
+                'Bu bileşeni slottan kaldırmak istediğinizden emin misiniz?',
             removeComponentSuccess: 'Bileşen slottan kaldırıldı',
             removeComponentError: 'Bileşen kaldırılamadı',
             reorderError: 'Bileşen sıralaması değiştirilemedi',
@@ -721,7 +744,8 @@ export const langTR = {
                 deleteFailed: 'Sayfa şablonu silinemedi',
                 bulkDeleteSuccess: 'Seçili sayfa şablonları silindi',
                 loadFailed: 'Sayfa şablonları yüklenemedi',
-                systemTemplateCannotModify: 'Sistem şablonu değiştirilemez: {{templateUid}}',
+                systemTemplateCannotModify:
+                    'Sistem şablonu değiştirilemez: {{templateUid}}',
             },
             confirmDelete:
                 '"{{name}}" şablonunu silmek istediğinize emin misiniz?',
@@ -842,7 +866,8 @@ export const langTR = {
                 },
                 bind: {
                     title: 'Medyayı Bağla',
-                    subtitle: 'Bu medyayı bir bileşene veya bileşen girdisine bağlayın.',
+                    subtitle:
+                        'Bu medyayı bir bileşene veya bileşen girdisine bağlayın.',
                     open: 'Medyayı Bağla',
                     submit: 'Bağlantıyı Kaydet',
                     targetType: 'Hedef Tipi',
@@ -1114,7 +1139,7 @@ export const langTR = {
                 countryPlaceholder: 'Ülke seçiniz',
                 mapEmbedUrl: 'Harita Embed URL',
                 mapEmbedUrlPlaceholder: 'Google Maps embed URL',
-                mapEmbedUrlHint: 'Google Maps\'ten alınan iframe embed URL\'si',
+                mapEmbedUrlHint: "Google Maps'ten alınan iframe embed URL'si",
             },
             social: {
                 title: 'Sosyal Medya Bağlantıları',
@@ -1181,17 +1206,31 @@ export const langTR = {
                 },
                 security: {
                     title: 'Güvenlik Ayarları',
-                    subtitle: 'Müşteriniz için güvenlik seçeneklerini yapılandırın',
+                    subtitle:
+                        'Müşteriniz için güvenlik seçeneklerini yapılandırın',
                     twoFactor: {
                         title: 'İki Faktörlü Kimlik Doğrulama',
-                        description: 'Kullanıcıların sitenize nasıl giriş yapacağını kontrol edin. İki faktörlü kimlik doğrulama, kullanıcının e-postasına gönderilen bir doğrulama kodu gerektirerek ekstra güvenlik katmanı ekler.',
-                        info: '2FA zorunlu olduğunda, kullanıcıların giriş yaparken e-postalarına gönderilen doğrulama kodunu girmeleri gerekir. Güvenilir cihazlar 30 gün boyunca bu adımı atlayabilir.',
+                        description:
+                            'Kullanıcıların sitenize nasıl giriş yapacağını kontrol edin. İki faktörlü kimlik doğrulama, kullanıcının e-postasına gönderilen bir doğrulama kodu gerektirerek ekstra güvenlik katmanı ekler.',
+                        info: '2FA zorunlu olduğunda, kullanıcıların giriş yaparken e-postalarına gönderilen doğrulama kodunu girmeleri gerekir. Güvenilir cihazlar 30 gün boyunca bu adımı atlayabilir. Politika değişiklikleri kayıtlı yönetici e-postanıza gönderilen kod ile onaylanır.',
+                        otpTitle: 'Politika değişikliğini onaylayın',
+                        otpDescription:
+                            'Bu güvenlik politika değişikliğini uygulamak için e-postanıza gönderilen doğrulama kodunu girin.',
+                        otpLabel: 'Doğrulama kodu',
+                        otpSent: 'Doğrulama kodu e-posta adresinize gönderildi',
+                        otpRequestFailed: 'Doğrulama kodu gönderilemedi',
+                        confirm: 'Değişikliği onayla',
+                        expiresIn: 'Kod geçerlilik süresi',
+                        expired:
+                            'Bu kodun süresi doldu. Yeni kod için tekrar kaydedin.',
                     },
                     policy: {
                         disabled: 'Devre Dışı',
-                        disabledDesc: 'İki faktörlü kimlik doğrulama kullanıcılar için mevcut değil',
+                        disabledDesc:
+                            'İki faktörlü kimlik doğrulama kullanıcılar için mevcut değil',
                         required: 'Zorunlu',
-                        requiredDesc: 'Tüm kullanıcılar iki faktörlü kimlik doğrulama kullanmalıdır',
+                        requiredDesc:
+                            'Tüm kullanıcılar iki faktörlü kimlik doğrulama kullanmalıdır',
                     },
                     messages: {
                         saveSuccess: 'Güvenlik ayarları başarıyla kaydedildi',
@@ -1254,8 +1293,7 @@ export const langTR = {
                                     title: 'Aktif kullanıcılar hakkında',
                                     summary:
                                         'Seçilen 7 günlük aralıkta sitenizle anlamlı etkileşim kuran benzersiz kullanıcı sayısını gösterir.',
-                                    source:
-                                        'Veri, tenant için tanımlanan GA4 property üzerinden Google Analytics Data API ile alınır ve önceki 7 günle karşılaştırılır.',
+                                    source: 'Veri, tenant için tanımlanan GA4 property üzerinden Google Analytics Data API ile alınır ve önceki 7 günle karşılaştırılır.',
                                     interpretation:
                                         'Yeni kullanıcı ve etkileşim oranı ile birlikte izleyin. Trafik artarken bu metrik sınırlı kalıyorsa edinim veya geri dönüş kalitesi zayıflıyor olabilir.',
                                 },
@@ -1267,8 +1305,7 @@ export const langTR = {
                                     title: 'Görüntülenmeler hakkında',
                                     summary:
                                         'Toplam sayfa ve ekran görüntüleme sayısını gösterir. Aynı kullanıcı birden fazla görüntüleme üretebilir.',
-                                    source:
-                                        'Bu kart, tenant GA4 propertysindeki page_view ve screen_view sinyallerinin son 7 günlük toplamını kullanır.',
+                                    source: 'Bu kart, tenant GA4 propertysindeki page_view ve screen_view sinyallerinin son 7 günlük toplamını kullanır.',
                                     interpretation:
                                         'Aktif kullanıcılarla birlikte artması içerik tüketiminin derinleştiğini gösterir. Tek başına ani artış, tekrar yükleme veya gezinme sorunlarını da işaret edebilir.',
                                 },
@@ -1280,8 +1317,7 @@ export const langTR = {
                                     title: 'Yeni kullanıcılar hakkında',
                                     summary:
                                         'Bu dönemde sitenize ilk kez gelen kullanıcıları gösterir.',
-                                    source:
-                                        'Metrik, tenant GA4 property üzerinden raporlanır ve overview kartında önceki 7 günle birlikte sunulur.',
+                                    source: 'Metrik, tenant GA4 property üzerinden raporlanır ve overview kartında önceki 7 günle birlikte sunulur.',
                                     interpretation:
                                         'Aktif kullanıcılarla beraber okuyun. Oran çok yüksekse geri dönüş zayıf olabilir, çok düşükse yeni edinim kanalları sınırlı kalıyor olabilir.',
                                 },
@@ -1293,8 +1329,7 @@ export const langTR = {
                                     title: 'Etkileşim oranı hakkında',
                                     summary:
                                         'Anlamlı etkileşim üreten oturumların toplam oturumlara oranını yüzde olarak gösterir.',
-                                    source:
-                                        'Metrik, GA4 engaged session mantığına dayanır ve tenant property için son 7 günlük rapordan üretilir.',
+                                    source: 'Metrik, GA4 engaged session mantığına dayanır ve tenant property için son 7 günlük rapordan üretilir.',
                                     interpretation:
                                         'Trafik artarken bu oran düşüyorsa landing deneyimi, içerik uygunluğu veya trafik kalitesi beklentiyi karşılamıyor olabilir.',
                                 },
@@ -1348,8 +1383,7 @@ export const langTR = {
                                         title: 'Tıklamalar hakkında',
                                         summary:
                                             'Son 28 günde kullanıcıların Google arama sonuçlarından sitenize kaç kez tıkladığını gösterir.',
-                                        source:
-                                            'Veri, tenant için tanımlanan Search Console propertysinden backend üzerinden alınır ve önceki dönemle karşılaştırılır.',
+                                        source: 'Veri, tenant için tanımlanan Search Console propertysinden backend üzerinden alınır ve önceki dönemle karşılaştırılır.',
                                         interpretation:
                                             'Gösterim ve CTR ile birlikte izleyin. Gösterim artarken tıklama sınırlı kalıyorsa snippet kalitesi veya pozisyon iyileştirmesi gerekebilir.',
                                     },
@@ -1361,8 +1395,7 @@ export const langTR = {
                                         title: 'Gösterimler hakkında',
                                         summary:
                                             'Sitenizin Google arama sonuçlarında kaç kez göründüğünü gösterir.',
-                                        source:
-                                            'Search Console performans raporunun son 28 günlük tenant property verisi kullanılır.',
+                                        source: 'Search Console performans raporunun son 28 günlük tenant property verisi kullanılır.',
                                         interpretation:
                                             'Bu metrik öncü bir sinyaldir. Gösterimler tıklamalardan önce büyüyebilir; bu genelde daha fazla sorguda görünmeye başladığınız anlamına gelir.',
                                     },
@@ -1374,8 +1407,7 @@ export const langTR = {
                                         title: 'CTR hakkında',
                                         summary:
                                             'Gösterimlerin yüzde kaçının tıklamaya dönüştüğünü gösterir.',
-                                        source:
-                                            'CTR, aynı 28 günlük Search Console dönemindeki tıklama ve gösterim verilerinden türetilir.',
+                                        source: 'CTR, aynı 28 günlük Search Console dönemindeki tıklama ve gösterim verilerinden türetilir.',
                                         interpretation:
                                             'Pozisyon güçlüyken CTR zayıfsa title veya meta description geliştirmesi gerekir. Pozisyon da zayıfsa önce sıralama kazanımına odaklanmak gerekir.',
                                     },
@@ -1387,8 +1419,7 @@ export const langTR = {
                                         title: 'Ortalama pozisyon hakkında',
                                         summary:
                                             'Sitenizin göründüğü sorgulardaki ortalama sıralama konumunu gösterir.',
-                                        source:
-                                            'Metrik, tenant Search Console propertysinden gelen average position değerine dayanır.',
+                                        source: 'Metrik, tenant Search Console propertysinden gelen average position değerine dayanır.',
                                         interpretation:
                                             'Bu metrikte düşük sayı daha iyidir. Değerleri gösterimlerle birlikte okuyun; sorgu karması değiştikçe ortalama pozisyon da kayabilir.',
                                     },
@@ -1520,7 +1551,8 @@ export const langTR = {
                         publishedCount: '{{count}} yayınlandı',
                         activeCount: '{{count}} aktif',
                         liveCount: '{{total}} içinden {{published}} yayınlandı',
-                        liveActiveCount: '{{total}} içinden {{published}} aktif',
+                        liveActiveCount:
+                            '{{total}} içinden {{published}} aktif',
                         storedMb: '{{value}} MB depolandı',
                         updatedOn: '{{date}} tarihinde güncellendi',
                         notConfigured: 'Yapılandırılmadı',
@@ -1556,8 +1588,7 @@ export const langTR = {
                         performActionsForActivity:
                             'Aktiviteyi görmek için sayfa, bileşen veya medya üzerinde işlem yapın',
                         eventsCount: '{{count}} etkinlik',
-                        previousTrendPeriod:
-                            'Önceki 7 günlük dönemi göster',
+                        previousTrendPeriod: 'Önceki 7 günlük dönemi göster',
                         nextTrendPeriod: 'Sonraki 7 günlük dönemi göster',
                         unknown: 'Bilinmiyor',
                     },
@@ -1579,38 +1610,31 @@ export const langTR = {
                             label: 'Öncelikli aksiyonlar',
                             reviewMaintenance: {
                                 title: 'Bakım modunu gözden geçir',
-                                detail:
-                                    'Bakım modu aktif. Yayın kontrolleri tamamlandığında siteyi yeniden açın.',
+                                detail: 'Bakım modu aktif. Yayın kontrolleri tamamlandığında siteyi yeniden açın.',
                             },
                             enableIndexing: {
                                 title: 'Arama indekslemesini aç',
-                                detail:
-                                    'Arama motorları şu an engelleniyor. Keşfedilebilirliği geri kazanmak için indekslemeyi açın.',
+                                detail: 'Arama motorları şu an engelleniyor. Keşfedilebilirliği geri kazanmak için indekslemeyi açın.',
                             },
                             enableSitemap: {
                                 title: 'Sitemap üretimini aç',
-                                detail:
-                                    'Yeni içeriklerin daha hızlı keşfedilmesi için sitemap üretimini yeniden etkinleştirin.',
+                                detail: 'Yeni içeriklerin daha hızlı keşfedilmesi için sitemap üretimini yeniden etkinleştirin.',
                             },
                             publishPages: {
                                 title: 'Kalan sayfaları yayınla',
-                                detail:
-                                    '{{count}} sayfa hâlâ taslak durumda ve yayına hazırlık seviyesini düşürüyor.',
+                                detail: '{{count}} sayfa hâlâ taslak durumda ve yayına hazırlık seviyesini düşürüyor.',
                             },
                             requireTwoFactor: {
                                 title: 'Tenant kullanıcıları için 2FA zorunlu olsun',
-                                detail:
-                                    'Yayına çıkmadan önce zorunlu iki faktörlü doğrulamayı etkinleştirerek yönetici erişimini güçlendirin.',
+                                detail: 'Yayına çıkmadan önce zorunlu iki faktörlü doğrulamayı etkinleştirerek yönetici erişimini güçlendirin.',
                             },
                             connectDomain: {
                                 title: 'Alan adı kurulumunu tamamla',
-                                detail:
-                                    'Marka sitesi hazır olduğunda tercih edilen public alan adını bağlayıp doğrulayın.',
+                                detail: 'Marka sitesi hazır olduğunda tercih edilen public alan adını bağlayıp doğrulayın.',
                             },
                             healthy: {
                                 title: 'Operasyon sinyalleri güçlü görünüyor',
-                                detail:
-                                    'Ana yayın sinyalleri sağlıklı durumda. Son değişiklikleri izlemeye devam edin.',
+                                detail: 'Ana yayın sinyalleri sağlıklı durumda. Son değişiklikleri izlemeye devam edin.',
                             },
                         },
                     },
@@ -1655,7 +1679,7 @@ export const langTR = {
                 social: {
                     title: 'Sosyal Medya',
                     description:
-                        "Sadece aktif yönettiğiniz sosyal profilleri ekleyin; böylece marka görünümü daha güvenilir kalır.",
+                        'Sadece aktif yönettiğiniz sosyal profilleri ekleyin; böylece marka görünümü daha güvenilir kalır.',
                     facebook: 'Facebook',
                     facebookPlaceholder: 'https://facebook.com/sirketiniz',
                     instagram: 'Instagram',
@@ -1691,11 +1715,13 @@ export const langTR = {
                     keywordsPlaceholder:
                         'marka kelimesi, ana konu, hizmet bölgesi',
                     ogTitle: 'Open Graph Başlık',
-                    ogTitleHint: 'Sosyal medyada paylaşıldığında görünecek başlık',
+                    ogTitleHint:
+                        'Sosyal medyada paylaşıldığında görünecek başlık',
                     ogDescription: 'Open Graph Açıklama',
-                    ogDescriptionHint: 'Sosyal medyada paylaşıldığında görünecek açıklama',
+                    ogDescriptionHint:
+                        'Sosyal medyada paylaşıldığında görünecek açıklama',
                     twitterCard: 'Twitter Card Tipi',
-                    twitterCardHint: 'Twitter\'da nasıl görüneceğini belirler',
+                    twitterCardHint: "Twitter'da nasıl görüneceğini belirler",
                 },
                 technical: {
                     title: 'Teknik Ayarlar',
@@ -1713,8 +1739,10 @@ export const langTR = {
                     sitemapEnabled: 'Sitemap Aktif',
                     sitemapEnabledDesc: 'Otomatik sitemap.xml oluştur',
                     robotsTxt: 'robots.txt',
-                    robotsTxtHint: 'Arama motoru botları için kurallar belirleyin',
-                    robotsTxtPlaceholder: 'User-agent: *\nAllow: /\n\nSitemap: /sitemap.xml',
+                    robotsTxtHint:
+                        'Arama motoru botları için kurallar belirleyin',
+                    robotsTxtPlaceholder:
+                        'User-agent: *\nAllow: /\n\nSitemap: /sitemap.xml',
                     verification: 'Doğrulama Kodları',
                     verificationDesc:
                         'Arama motoru webmaster araçları doğrulama kodları',
@@ -1726,7 +1754,8 @@ export const langTR = {
                     cookieConsentEnabledDesc:
                         'Kullanıcılara çerez onay bandı göster',
                     cookieConsentText: 'Çerez Onay Metni',
-                    cookieConsentTextPlaceholder: 'Bu site, deneyiminizi geliştirmek için çerezler kullanmaktadır.',
+                    cookieConsentTextPlaceholder:
+                        'Bu site, deneyiminizi geliştirmek için çerezler kullanmaktadır.',
                 },
                 placeholders: {
                     mediaUid: 'örn. abc-123-def',
@@ -1832,8 +1861,9 @@ export const langTR = {
                 create: 'Yeni Component Type',
                 edit: 'Component Type Düzenle',
                 noTypes: 'Henüz component type yok',
-                noSearchResults: 'Arama kriterlerine uyan component type bulunamadı',
-                createFirst: 'İlk Component Type\'ı Oluştur',
+                noSearchResults:
+                    'Arama kriterlerine uyan component type bulunamadı',
+                createFirst: "İlk Component Type'ı Oluştur",
                 manageFields: 'Entry Fields Yönetimi',
                 confirmDeleteTitle: 'Component Type Sil',
                 confirmDelete:
@@ -1844,12 +1874,14 @@ export const langTR = {
                 },
                 fields: {
                     navigationAware: 'Navigation Component',
-                    navigationAwareHint: 'Etkinleştirildiğinde bu component type, navigation node binding desteği sunar',
+                    navigationAwareHint:
+                        'Etkinleştirildiğinde bu component type, navigation node binding desteği sunar',
                 },
                 capabilities: {
                     supportsNavigationNode: 'Navigasyon düğümünü destekler',
                     requiresNavigationNode: 'Navigasyon düğümü zorunlu',
-                    supportsNavigationLinkNode: 'Navigasyon link düğümünü destekler',
+                    supportsNavigationLinkNode:
+                        'Navigasyon link düğümünü destekler',
                     supportsNavigationType: 'Navigasyon tipini destekler',
                     supportsSearchBox: 'Arama kutusunu destekler',
                 },
@@ -1861,11 +1893,11 @@ export const langTR = {
             entryFields: {
                 title: 'Entry Fields',
                 basicInfo: 'Temel Bilgiler',
-                subtitle: 'Bu field\'lar component oluşturulurken doldurulur',
+                subtitle: "Bu field'lar component oluşturulurken doldurulur",
                 noFieldsDesc:
                     'Bu component type için henüz entry field tanımlanmamış. "Field Ekle" butonuyla yeni field ekleyebilirsiniz.',
                 addField: 'Field Ekle',
-                addFirst: 'İlk Field\'ı Ekle',
+                addFirst: "İlk Field'ı Ekle",
                 noFields: 'Henüz entry field tanımlanmadı',
                 fieldKey: 'Field Key',
                 fieldType: 'Field Type',
@@ -1876,7 +1908,7 @@ export const langTR = {
                 maxValue: 'Max. Değer',
                 import: 'İçe Aktar',
                 export: 'Dışa Aktar',
-                importFields: 'Field\'ları İçe Aktar',
+                importFields: "Field'ları İçe Aktar",
                 jsonInput: 'JSON İçeriği',
                 parseJson: "JSON'u Ayrıştır",
                 previewFields: 'Field Önizlemesi',
@@ -1885,9 +1917,9 @@ export const langTR = {
                 successCount: 'Başarılı',
                 failedCount: 'Başarısız',
                 invalidFieldKey: 'Field key camelCase formatında olmalıdır',
-                readOnlyNote: 'Field\'lar oluşturulduktan sonra değiştirilemez',
+                readOnlyNote: "Field'lar oluşturulduktan sonra değiştirilemez",
                 translationInfo:
-                    'Field label\'ları için dinamik translation key kullanılır',
+                    "Field label'ları için dinamik translation key kullanılır",
                 types: {
                     text: 'Metin',
                     textarea: 'Uzun Metin',
@@ -1940,7 +1972,7 @@ export const langTR = {
                 noItems: 'Henüz entry yok',
                 addEntry: 'Entry Ekle',
                 addItem: 'Entry Ekle',
-                addFirst: 'İlk Entry\'yi Ekle',
+                addFirst: "İlk Entry'yi Ekle",
                 sortOrder: 'Sıra',
                 visible: 'Görünür',
                 customFields: 'Custom Fields',
@@ -2282,9 +2314,11 @@ export const langTR = {
             },
             confirm: {
                 deleteTitle: 'Tenant Sil',
-                deleteMessage: 'Bu tenant\'ı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+                deleteMessage:
+                    "Bu tenant'ı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
                 syncTitle: 'Migrasyonları Senkronize Et',
-                syncMessage: 'Bu işlem tenant veritabanına bekleyen migrasyonları uygulayacaktır. Devam edilsin mi?',
+                syncMessage:
+                    'Bu işlem tenant veritabanına bekleyen migrasyonları uygulayacaktır. Devam edilsin mi?',
             },
             modal: {
                 adminCreated: 'Admin Kullanıcı Başarıyla Oluşturuldu',
@@ -2391,7 +2425,8 @@ export const langTR = {
                 },
                 messages: {
                     loadFailed: 'Panel verileri yüklenemedi',
-                    retryFailed: 'Yeniden deneme limiti aşıldı. Lütfen manuel olarak yenileyin.',
+                    retryFailed:
+                        'Yeniden deneme limiti aşıldı. Lütfen manuel olarak yenileyin.',
                     refreshSuccess: 'Panel verileri başarıyla yenilendi',
                 },
             },
@@ -2413,24 +2448,42 @@ export const langTR = {
                 security: {
                     twoFactor: {
                         title: 'İki Faktörlü Kimlik Doğrulama',
-                        description: 'Super admin girişleri için OTP politikasını yapılandırın.',
+                        description:
+                            'Super admin girişleri için OTP politikasını yapılandırın.',
+                        otpTitle: 'Politika değişikliğini onaylayın',
+                        otpDescription:
+                            'Bu güvenlik politika değişikliğini uygulamak için e-postanıza gönderilen doğrulama kodunu girin.',
+                        otpLabel: 'Doğrulama kodu',
+                        otpSent: 'Doğrulama kodu e-posta adresinize gönderildi',
+                        otpRequestFailed: 'Doğrulama kodu gönderilemedi',
+                        confirm: 'Değişikliği onayla',
+                        expiresIn: 'Kod geçerlilik süresi',
+                        expired:
+                            'Bu kodun süresi doldu. Yeni kod için tekrar kaydedin.',
                         policy: {
                             disabled: 'Kapalı',
-                            disabledDesc: 'Super admin kullanıcıları yalnızca e-posta ve şifre ile giriş yapar.',
+                            disabledDesc:
+                                'Super admin kullanıcıları yalnızca e-posta ve şifre ile giriş yapar.',
                             required: 'Zorunlu',
-                            requiredDesc: 'Tüm super admin kullanıcıları her girişte OTP doğrulaması yapmalıdır.',
+                            requiredDesc:
+                                'Tüm super admin kullanıcıları her girişte OTP doğrulaması yapmalıdır.',
                         },
                     },
                     recaptcha: {
                         title: 'reCAPTCHA Koruması',
-                        description: 'Super admin girişi için Google reCAPTCHA v3 yapılandırması.',
+                        description:
+                            'Super admin girişi için Google reCAPTCHA v3 yapılandırması.',
                         enabled: 'reCAPTCHA Etkinleştir',
-                        enabledHint: 'Platform girişinde bot doğrulaması zorunlu olsun.',
+                        enabledHint:
+                            'Platform girişinde bot doğrulaması zorunlu olsun.',
                         siteKey: 'Site Key',
-                        siteKeyHint: 'Frontend tarafından kullanılan public anahtar.',
+                        siteKeyHint:
+                            'Frontend tarafından kullanılan public anahtar.',
                         secretKey: 'Secret Key',
-                        secretKeyHint: 'Backend doğrulaması için private anahtar.',
-                        secretKeyPlaceholder: 'Mevcut anahtarı korumak için boş bırakın',
+                        secretKeyHint:
+                            'Backend doğrulaması için private anahtar.',
+                        secretKeyPlaceholder:
+                            'Mevcut anahtarı korumak için boş bırakın',
                         threshold: 'Skor Eşiği',
                         thresholdHint: '0.0 = esnek, 1.0 = sıkı. Önerilen: 0.5',
                     },
@@ -2442,12 +2495,14 @@ export const langTR = {
                 },
                 confirm: {
                     resetTitle: 'Ayarları Sıfırla',
-                    resetMessage: 'Varsayılan değerlere sıfırlamak istediğinizden emin misiniz?',
+                    resetMessage:
+                        'Varsayılan değerlere sıfırlamak istediğinizden emin misiniz?',
                 },
             },
             demoRequests: {
                 title: 'Landing demo talepleri',
-                subtitle: 'Pazarlama landing sitesinden gelen iletişim talepleri',
+                subtitle:
+                    'Pazarlama landing sitesinden gelen iletişim talepleri',
                 searchPlaceholder: 'Ad, e-posta, telefon veya mesaja göre ara',
                 detail: {
                     title: 'Demo talep detayı',
@@ -2517,20 +2572,23 @@ export const langTR = {
 
         impex: {
             title: 'Veri İçe Aktarma (ImpEx)',
-            subtitle: "Mevcut tenant veritabanında SQL içe aktarma script'i çalıştırın",
+            subtitle:
+                "Mevcut tenant veritabanında SQL içe aktarma script'i çalıştırın",
             editor: {
                 title: 'SQL Editörü',
                 hint: "SQL script'inizi buraya yapıştırın. Yalnızca INSERT ve UPDATE ifadelerine izin verilmektedir.",
                 label: "SQL Script'i",
-                placeholder: "-- #CRAFTIVE_IMPEX\n-- SQL'inizi buraya yapıştırın...\n\nINSERT INTO ...",
-                markerInfo: "Script şu işaretleyiciyle başlamalıdır:",
+                placeholder:
+                    "-- #CRAFTIVE_IMPEX\n-- SQL'inizi buraya yapıştırın...\n\nINSERT INTO ...",
+                markerInfo: 'Script şu işaretleyiciyle başlamalıdır:',
                 run: 'Çalıştır',
                 running: 'Çalışıyor...',
                 clear: 'Temizle',
             },
             confirm: {
                 title: 'SQL Script Çalıştır',
-                message: "Bu işlem, SQL ifadelerini tenant veritabanında çalıştıracaktır. Yalnızca INSERT ve UPDATE işlemlerine izin verilmektedir. Devam edilsin mi?",
+                message:
+                    'Bu işlem, SQL ifadelerini tenant veritabanında çalıştıracaktır. Yalnızca INSERT ve UPDATE işlemlerine izin verilmektedir. Devam edilsin mi?',
                 run: 'Çalıştır',
             },
             result: {
@@ -2546,15 +2604,19 @@ export const langTR = {
         mailMarketing: {
             tenant: {
                 title: 'Mail Marketing',
-                subtitle: 'Tenant şablonlarını, provider ayarlarını ve kampanya gönderimini yönetin',
+                subtitle:
+                    'Tenant şablonlarını, provider ayarlarını ve kampanya gönderimini yönetin',
                 detailTitle: 'Mail Şablon Detayı',
-                detailSubtitle: 'Tenant şablon içeriğini düzenleyin ve dil bazlı kampanya gönderin',
+                detailSubtitle:
+                    'Tenant şablon içeriğini düzenleyin ve dil bazlı kampanya gönderin',
             },
             platform: {
                 title: 'Platform Mail',
-                subtitle: 'Platform şablonlarını ve newsletter kampanya gönderimini yönetin',
+                subtitle:
+                    'Platform şablonlarını ve newsletter kampanya gönderimini yönetin',
                 detailTitle: 'Platform Şablon Detayı',
-                detailSubtitle: 'Platform şablon içeriğini düzenleyin ve dil bazlı kampanya gönderin',
+                detailSubtitle:
+                    'Platform şablon içeriğini düzenleyin ve dil bazlı kampanya gönderin',
             },
             sections: {
                 templates: 'Şablonlar',
@@ -2635,7 +2697,8 @@ export const langTR = {
                 },
                 messages: {
                     noData: 'Abone bulunamadı',
-                    noDataHint: 'Kampanya kitlesi için yeni bir abone oluşturun',
+                    noDataHint:
+                        'Kampanya kitlesi için yeni bir abone oluşturun',
                     duplicateTemplate:
                         'Aynı template türü birden fazla kez seçilemez',
                     loadDetailFailed: 'Abone detayı yüklenemedi',
@@ -2701,13 +2764,16 @@ export const langTR = {
                 templatesLoadFailed: 'Template türleri yüklenemedi',
                 exportFailed: 'CSV dışa aktarma başarısız oldu',
                 noTemplates: 'Henüz template type bulunmuyor',
-                noTemplatesHint: 'Başlatma sonrası template type listesi burada görünür',
+                noTemplatesHint:
+                    'Başlatma sonrası template type listesi burada görünür',
                 backend: {
                     templatesFetched: 'Mail şablonları başarıyla getirildi',
                     subscribersFetched: 'Mail aboneleri başarıyla getirildi',
                     templateUpdated: 'Mail şablonu başarıyla güncellendi',
-                    providerFetched: 'Mail sağlayıcı yapılandırması başarıyla getirildi',
-                    providerSaved: 'Mail sağlayıcı yapılandırması başarıyla kaydedildi',
+                    providerFetched:
+                        'Mail sağlayıcı yapılandırması başarıyla getirildi',
+                    providerSaved:
+                        'Mail sağlayıcı yapılandırması başarıyla kaydedildi',
                     campaignSent: 'Mail kampanya gönderim süreci tamamlandı',
                     campaignFetched: 'Mail kampanyası başarıyla getirildi',
                     subscribeSent: 'Abonelik onay e-postası gönderildi',
@@ -2720,9 +2786,11 @@ export const langTR = {
                     providerNotActive: 'Mail sağlayıcı aktif değil',
                     providerTokenMissing: 'Mail sağlayıcı token bilgisi eksik',
                     confirmTokenInvalid: 'Geçersiz newsletter onay tokenı',
-                    unsubscribeTokenInvalid: 'Geçersiz newsletter abonelikten çıkış tokenı',
+                    unsubscribeTokenInvalid:
+                        'Geçersiz newsletter abonelikten çıkış tokenı',
                     tenantContextRequired: 'Tenant context zorunludur',
-                    moduleNotEnabled: 'Mail marketing modülü tenant için etkin değil',
+                    moduleNotEnabled:
+                        'Mail marketing modülü tenant için etkin değil',
                 },
             },
         },
@@ -2753,7 +2821,8 @@ export const langTR = {
             },
             templates: {
                 title: 'E-posta Şablonları',
-                subtitle: 'Outreach e-posta şablonlarını ve değişkenlerini yönetin',
+                subtitle:
+                    'Outreach e-posta şablonlarını ve değişkenlerini yönetin',
                 dialog: {
                     createTitle: 'Şablon Oluştur',
                     editTitle: 'Şablon Düzenle',
@@ -2768,8 +2837,10 @@ export const langTR = {
                 },
                 placeholders: {
                     name: 'örn. B2B Tanıtım - TR',
-                    subject: 'örn. {{contactName}}, {{companyName}} için bir teklifimiz var',
-                    content: 'HTML e-posta şablonunuzu buraya yapıştırın. {{contactName}}, {{companyName}}, {{city}}, {{email}}, {{fromName}} değişkenlerini kullanabilirsiniz.',
+                    subject:
+                        'örn. {{contactName}}, {{companyName}} için bir teklifimiz var',
+                    content:
+                        'HTML e-posta şablonunuzu buraya yapıştırın. {{contactName}}, {{companyName}}, {{city}}, {{email}}, {{fromName}} değişkenlerini kullanabilirsiniz.',
                 },
                 availableVariables: 'Kullanılabilir değişkenler',
                 messages: {
@@ -2893,13 +2964,13 @@ export const langTR = {
             alerts: {
                 success:
                     'Bu e-posta kayıtlıysa kısa süre içinde sıfırlama talimatları alırsınız.',
-                error:
-                    'İstek tamamlanamadı. E-posta adresini kontrol edin veya yöneticinize danışın.',
+                error: 'İstek tamamlanamadı. E-posta adresini kontrol edin veya yöneticinize danışın.',
             },
         },
         resetPassword: {
             title: 'Şifreni sıfırla',
-            subtitle: 'Hesabınızı güvence altına almak için yeni bir şifre seçin',
+            subtitle:
+                'Hesabınızı güvence altına almak için yeni bir şifre seçin',
             verifying: 'Sıfırlama anahtarı doğrulanıyor...',
             confirmLabel: 'Şifreyi doğrula',
             submit: 'Şifreni sıfırla',
@@ -2913,8 +2984,7 @@ export const langTR = {
                     'Sıfırlama anahtarı geçersiz veya süresi dolmuş. Lütfen yeni bir sıfırlama iste.',
                 tokenVerifyFailed:
                     'Sıfırlama anahtarı doğrulanamadı. Lütfen tekrar deneyin.',
-                resetFailed:
-                    'Şifre sıfırlanamadı. Lütfen tekrar deneyin.',
+                resetFailed: 'Şifre sıfırlanamadı. Lütfen tekrar deneyin.',
             },
         },
         setPassword: {
@@ -3015,6 +3085,12 @@ export const langTR = {
         auth: {
             title: 'Config Control Panel',
             subtitle: 'Yapılandırma paneline giriş',
+            workspace: 'Çalışma Alanı',
+            workspacePlaceholder: 'sirketiniz',
+            workspaceHint:
+                'Global platform ayarları için boş bırakın; site yapılandırması için kiracı alt alan adını girin.',
+            workspaceInvalid:
+                'Geçerli bir çalışma alanı girin (yalnızca küçük harf, rakam ve tire).',
             emailLabel: 'E-posta adresi',
             passwordLabel: 'Şifre',
             submit: 'Devam Et',

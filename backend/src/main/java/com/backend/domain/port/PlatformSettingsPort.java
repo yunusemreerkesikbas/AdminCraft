@@ -1,6 +1,7 @@
 package com.backend.domain.port;
 
 import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
+import com.backend.domain.enums.TwoFactorPolicy;
 
 /**
  * Domain port for platform settings access.
@@ -12,4 +13,14 @@ public interface PlatformSettingsPort {
      * @return PlatformSettings entity
      */
     PlatformSettings getSingleton();
+
+    default TwoFactorPolicy getTwoFactorPolicy() {
+        return getSingleton().getTwoFactorPolicy();
+    }
+
+    default String getDefaultLanguage() {
+        return getSingleton().getDefaultLanguage();
+    }
+
+    PlatformSettings updateTwoFactorPolicy(TwoFactorPolicy policy);
 }

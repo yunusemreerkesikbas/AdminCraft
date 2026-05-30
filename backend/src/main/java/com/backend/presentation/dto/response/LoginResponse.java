@@ -14,7 +14,8 @@ public record LoginResponse(
         String subdomain,
         Long tenantId,
         Boolean requires2FA,
-        String pendingToken) {
+        String pendingToken,
+        Integer resendCooldownSeconds) {
 
     public LoginResponse(
             String accessToken,
@@ -26,7 +27,7 @@ public record LoginResponse(
             String role,
             String subdomain,
             Long tenantId) {
-        this(accessToken, refreshToken, tokenType, expiresIn, userId, email, null, role, subdomain, tenantId, false, null);
+        this(accessToken, refreshToken, tokenType, expiresIn, userId, email, null, role, subdomain, tenantId, false, null, null);
     }
 
     public LoginResponse {
@@ -45,10 +46,19 @@ public record LoginResponse(
     }
 
     public static LoginResponse requiring2FA(String email, String pendingToken, String subdomain, Long tenantId) {
+        return requiring2FA(email, pendingToken, subdomain, tenantId, null);
+    }
+
+    public static LoginResponse requiring2FA(
+            String email,
+            String pendingToken,
+            String subdomain,
+            Long tenantId,
+            Integer resendCooldownSeconds) {
         return new LoginResponse(
                 null, null, null, null, null,
                 email, null, null, subdomain, tenantId,
-                true, pendingToken
+                true, pendingToken, resendCooldownSeconds
         );
     }
 }

@@ -1,10 +1,13 @@
 package com.backend.presentation.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,6 +23,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.backend.application.dto.response.PlatformSettingsData;
+import com.backend.application.dto.TwoFactorPolicyChangeRequestResult;
+import com.backend.application.service.PlatformSecuritySettingsService;
 import com.backend.application.service.PlatformSettingsService;
 import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.presentation.config.TestSecurityConfig;
@@ -36,10 +41,25 @@ class PlatformSettingsControllerIntegrationTest {
     private PlatformSettingsService platformSettingsService;
 
     @MockBean
+    private PlatformSecuritySettingsService platformSecuritySettingsService;
+
+    @MockBean
+    private org.springframework.context.MessageSource messageSource;
+
+    @MockBean
     private com.backend.infrastructure.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockBean
     private com.backend.infrastructure.tenant.TenantFilter tenantFilter;
+
+    @MockBean
+    private com.backend.application.cms.preview.CmsPreviewTicketService cmsPreviewTicketService;
+
+    @MockBean
+    private com.backend.application.cms.preview.CmsRequestContext cmsRequestContext;
+
+    @MockBean
+    private com.backend.domain.port.TenantContextPort tenantContextPort;
 
     @Test
     @DisplayName("GET /platform/settings should return settings for SUPER_ADMIN")
@@ -111,6 +131,61 @@ class PlatformSettingsControllerIntegrationTest {
                         """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.result").value("ERROR"));
+    }
+
+    @Test
+    @DisplayName("PATCH /platform/settings should return 409 when twoFactorPolicy is sent directly")
+    @WithMockUser(roles = "SUPER_ADMIN")
+    void patchSettings_ShouldRejectDirectTwoFactorPolicyChange() throws Exception {
+        when(platformSettingsService.patchSettings(any())).thenThrow(
+                new com.backend.domain.exception.TwoFactorPolicyVerificationRequiredException());
+        when(messageSource.getMessage(
+                eq("platform.settings.security.verification.required"),
+                any(),
+                any()))
+                .thenReturn("Verification required");
+
+        mockMvc.perform(patch("/platform/settings")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "twoFactorPolicy": "REQUIRED"
+                        }
+                        """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.result").value("ERROR"));
+    }
+
+    @Test
+    @DisplayName("POST /platform/settings/two-factor/request-change should return pending session")
+    @WithMockUser(roles = "SUPER_ADMIN")
+    void requestTwoFactorPolicyChange_ShouldReturnPendingSession() throws Exception {
+        when(platformSecuritySettingsService.requestTwoFactorPolicyChange(
+                eq(TwoFactorPolicy.REQUIRED),
+                any(),
+                any()))
+                .thenReturn(new TwoFactorPolicyChangeRequestResult(
+                        "pending-1",
+                        "a****@craftive.io",
+                        TwoFactorPolicy.REQUIRED,
+                        300,
+                        180,
+                        true));
+        when(messageSource.getMessage(eq("platform.settings.security.twoFactor.otp.sent"), any(), any()))
+                .thenReturn("OTP sent");
+
+        mockMvc.perform(post("/platform/settings/two-factor/request-change")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "twoFactorPolicy": "REQUIRED"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.pendingChangeId").value("pending-1"))
+                .andExpect(jsonPath("$.data.targetPolicy").value("REQUIRED"))
+                .andExpect(jsonPath("$.data.resendCooldownSeconds").value(180))
+                .andExpect(jsonPath("$.data.emailSent").value(true));
     }
 
     @Test

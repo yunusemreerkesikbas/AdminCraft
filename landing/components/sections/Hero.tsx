@@ -67,9 +67,9 @@ export function Hero({ content, locale }: HeroProps) {
         aria-hidden
       />
 
-      <div className="relative mx-auto flex w-full max-w-[1440px] flex-col items-center gap-12 px-4 pb-10 pt-[112px] sm:px-10 sm:pb-16 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-20 lg:pb-20 lg:pt-[138px]">
+      <div className="relative mx-auto flex w-full max-w-[min(100%,1580px)] flex-col items-center gap-12 px-4 pb-10 pt-[112px] sm:px-10 sm:pb-16 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:px-10 lg:pb-20 lg:pt-[138px] xl:gap-8 xl:px-14 2xl:px-16">
         {/* Text content */}
-        <div className="relative z-10 flex w-full max-w-[620px] min-w-0 flex-col items-center gap-6 text-center lg:items-start lg:text-left">
+        <div className="relative z-10 flex w-full max-w-[620px] min-w-0 shrink-0 flex-col items-center gap-6 text-center lg:items-start lg:text-left">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -141,8 +141,7 @@ export function Hero({ content, locale }: HeroProps) {
           </motion.div>
         </div>
 
-        {/* Hero visual mockup */}
-        <div className="relative z-10 hidden lg:block">
+        <div className="relative z-10 hidden w-full min-w-0 flex-1 justify-end lg:flex">
           <HeroVisual alt={content.mockupAlt} />
         </div>
       </div>

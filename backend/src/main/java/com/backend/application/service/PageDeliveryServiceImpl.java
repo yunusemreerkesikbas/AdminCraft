@@ -319,12 +319,24 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                                 .findByComponentIdInAndStatusInOrderBySortOrder(publishedComponentIds,
                                                                 visibleComponentStatuses)
                                                 .stream()
-                                                .collect(Collectors.groupingBy(ComponentEntry::getComponentId));
+                                                .map(this::cloneComponentEntry)
+                                                .collect(Collectors.collectingAndThen(Collectors.toList(), this::groupEntriesByComponentId));
 
                 List<Long> entryIds = entriesByComponentId.values().stream()
                                 .flatMap(List::stream)
                                 .map(ComponentEntry::getId)
                                 .toList();
+
+                if (cmsRequestContext.isPreview() && !entryIds.isEmpty()) {
+                        Map<Long, com.backend.application.cms.preview.ComponentEntryDraftPayload> entryDrafts =
+                                        cmsDraftOverrideService.findComponentEntryDrafts(entryIds);
+                        entriesByComponentId.values().stream()
+                                        .flatMap(List::stream)
+                                        .forEach(entry -> cmsDraftOverrideService.apply(entry, entryDrafts.get(entry.getId())));
+                        entriesByComponentId = groupEntriesByComponentId(entriesByComponentId.values().stream()
+                                        .flatMap(List::stream)
+                                        .toList());
+                }
 
                 // Batch fetch responsive media sets with eagerly loaded media and translations
                 List<Long> responsiveMediaIds = componentMap.values().stream()
@@ -338,10 +350,30 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 : responsiveMediaSetRepository.findByIdInWithMedia(responsiveMediaIds).stream()
                                                 .collect(Collectors.toMap(ResponsiveMediaSet::getId, r -> r));
                 Map<Long, ComponentEntryI18n> entryI18nMap = entryIds.isEmpty()
-                                ? Map.of()
-                                : componentEntryI18nRepository.findByEntryIdInAndLanguage(entryIds, lang)
+                                ? new LinkedHashMap<>()
+                                : new LinkedHashMap<>(componentEntryI18nRepository.findByEntryIdInAndLanguage(entryIds, lang)
                                                 .stream()
-                                                .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
+                                                .map(this::cloneComponentEntryI18n)
+                                                .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i)));
+
+                if (cmsRequestContext.isPreview() && !entryIds.isEmpty()) {
+                        Map<String, com.backend.application.cms.preview.ComponentEntryI18nDraftPayload> entryI18nDrafts =
+                                        cmsDraftOverrideService.findComponentEntryI18nDrafts(entryIds, lang);
+                        for (Long entryId : entryIds) {
+                                var draft = entryI18nDrafts.get(cmsDraftOverrideService.i18nKey(entryId, lang));
+                                if (draft == null) {
+                                        continue;
+                                }
+                                ComponentEntryI18n i18n = entryI18nMap.get(entryId);
+                                if (i18n == null) {
+                                        i18n = new ComponentEntryI18n();
+                                        i18n.setEntryId(entryId);
+                                        i18n.setLanguage(lang);
+                                        entryI18nMap.put(entryId, i18n);
+                                }
+                                cmsDraftOverrideService.apply(i18n, draft);
+                        }
+                }
 
                 // Batch-fetch all navigation nodes to avoid N+1 per component
                 Set<Long> navIds = componentMap.values().stream()
@@ -401,6 +433,14 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         result.put(slot.getSlotName(), compResponses);
                 }
                 return result;
+        }
+
+        private Map<Long, List<ComponentEntry>> groupEntriesByComponentId(List<ComponentEntry> entries) {
+                return entries.stream()
+                                .sorted(Comparator
+                                                .comparingInt((ComponentEntry entry) -> entry.getSortOrder() != null ? entry.getSortOrder() : 0)
+                                                .thenComparingLong(entry -> entry.getId() != null ? entry.getId() : Long.MIN_VALUE))
+                                .collect(Collectors.groupingBy(ComponentEntry::getComponentId, LinkedHashMap::new, Collectors.toList()));
         }
 
         private Map<String, List<ComponentDeliveryResponse>> buildSlotsMap(
@@ -679,6 +719,34 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 copy.setTitle(source.getTitle());
                 copy.setSubtitle(source.getSubtitle());
                 copy.setDescription(source.getDescription());
+                copy.setStatus(source.getStatus());
+                return copy;
+        }
+
+        private ComponentEntry cloneComponentEntry(ComponentEntry source) {
+                ComponentEntry copy = new ComponentEntry();
+                copy.setId(source.getId());
+                copy.setUuid(source.getUuid());
+                copy.setUid(source.getUid());
+                copy.setComponentId(source.getComponentId());
+                copy.setSortOrder(source.getSortOrder());
+                copy.setIsVisible(source.getIsVisible());
+                copy.setStyleClasses(source.getStyleClasses());
+                copy.setStatus(source.getStatus());
+                copy.setResponsiveMedia(source.getResponsiveMedia());
+                return copy;
+        }
+
+        private ComponentEntryI18n cloneComponentEntryI18n(ComponentEntryI18n source) {
+                ComponentEntryI18n copy = new ComponentEntryI18n();
+                copy.setId(source.getId());
+                copy.setUuid(source.getUuid());
+                copy.setUid(source.getUid());
+                copy.setEntryId(source.getEntryId());
+                copy.setLanguage(source.getLanguage());
+                copy.setTitle(source.getTitle());
+                copy.setDescription(source.getDescription());
+                copy.setCustomData(source.getCustomData());
                 copy.setStatus(source.getStatus());
                 return copy;
         }

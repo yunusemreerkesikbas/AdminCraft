@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
+  <!-- Dark background box with rounded corners (light icon variant) -->
+  <rect width="220" height="220" fill="#0d1527" rx="36"/>
+  <!--
+    Original icon: 221.42 × 189.58
+    Target canvas: 220 × 220 with 20px padding on each side (usable: 180 × 180)
+    Scale: 0.8129  |  Offset: translate(20, 32.94)
+  -->
+  <g transform="translate(20, 32.94) scale(0.8129)">
+    <path fill="#ffffff" d="M114.91,23.17h0s72.48,72.48,72.48,72.48l-72.66,72.66h0c3.83,3.83,10.04,3.83,13.87,0l72.48-72.48L128.42,23.17c-3.73-3.73-9.78-3.73-13.51,0Z"/>
+    <path fill="#ffffff" d="M88.59,22.96h0s72.48,72.48,72.48,72.48l-72.66,72.66h0c3.83,3.83,10.04,3.83,13.87,0l72.48-72.48L102.09,22.96c-3.73-3.73-9.78-3.73-13.51,0Z"/>
+    <path fill="#ffffff" d="M75.45,23.55l-48.42,48.42c-13.14,13.14-13.14,34.44,0,47.58l48.42,48.42,72.22-72.22L75.45,23.55Z"/>
+  </g>
+</svg>

@@ -227,6 +227,26 @@ public class ComponentEntryController {
                 }
         }
 
+        @PutMapping("/entries/{id}/composite/draft")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        public ResponseEntity<ApiResponse<com.backend.application.dto.response.ComponentEntryCompositeResponse>> updateEntryCompositeDraft(
+                        @PathVariable @NotNull @Min(1) Long id,
+                        @Valid @RequestBody com.backend.application.dto.request.UpdateComponentEntryCompositeRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+                try {
+                        var updated = entryService.updateDraftComposite(id, request, SecurityUtil.getCurrentUserIdOrThrow());
+                        String successMessage = messageSource.getMessage("component.entry.update.success",
+                                        null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.ok(ApiResponse.success(successMessage, updated));
+                } catch (Exception ex) {
+                        log.error("Error updating component entry composite draft id={}", id, ex);
+                        String msg = messageSource.getMessage("component.entry.update.error",
+                                        null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(msg));
+                }
+        }
+
         @PutMapping("/entries/{id}/i18n/{language}")
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         public ResponseEntity<ApiResponse<ComponentEntryI18nResponse>> upsertEntryI18n(

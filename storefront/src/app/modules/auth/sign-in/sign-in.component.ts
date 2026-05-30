@@ -82,7 +82,9 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
 
     readonly requires2FASig = this.#authService.requires2FASig;
     readonly twoFactorPendingSig = this.#authService.twoFactorPendingSig;
+    readonly otpResendCooldownSig = this.#authService.otpResendCooldownSig;
     readonly showOtpFormSig = computed(() => this.requires2FASig());
+    readonly canResendOtpSig = computed(() => this.otpResendCooldownSig() <= 0);
 
     ngOnInit(): void {
         const routeSubdomain = this.#tenantContext.normalizeSubdomain(
@@ -110,10 +112,11 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             rememberMe: [false],
         });
 
-        this.signInForm.get('workspace')!.valueChanges
-            .pipe(takeUntil(this.#destroySubject))
+        this.signInForm
+            .get('workspace')!
+            .valueChanges.pipe(takeUntil(this.#destroySubject))
             .subscribe((val: string) => {
-                this.isPlatformHostSig.set(!(val?.trim()));
+                this.isPlatformHostSig.set(!val?.trim());
             });
 
         this.otpForm = this.#formBuilder.group({
@@ -151,22 +154,21 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
         }
         this.signInForm.disable();
 
+        const formValue = this.signInForm.getRawValue();
         const workspace =
-            this.#tenantContext.normalizeSubdomain(
-                this.signInForm.get('workspace')?.value
-            ) ?? '';
+            this.#tenantContext.normalizeSubdomain(formValue.workspace) ?? '';
         if (workspace) {
             this.#tenantContext.setSubdomain(workspace);
         }
 
         try {
             const credentials = {
-                ...this.signInForm.value,
+                ...formValue,
                 workspace,
                 deviceFingerprint:
                     await this.#deviceFingerprintService.getDeviceFingerprint(),
                 recaptchaToken: await this.#getRecaptchaToken(),
-                rememberMe: this.signInForm.get('rememberMe')?.value ?? false,
+                rememberMe: formValue.rememberMe ?? false,
             };
 
             this.#authService
@@ -177,18 +179,22 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
                         if (result === 'requires2FA') {
                             this.formSubmittedSig.set(false);
                         } else if (result === true) {
+                            this.#clearOtpLocalState();
                             this.#navigateAfterLogin();
                         } else {
+                            this.#clearOtpLocalState();
                             this.signInForm.enable();
                             this.formSubmittedSig.set(false);
                         }
                     },
                     error: () => {
+                        this.#clearOtpLocalState();
                         this.signInForm.enable();
                         this.formSubmittedSig.set(false);
                     },
                 });
         } catch (error) {
+            this.#clearOtpLocalState();
             this.signInForm.enable();
             this.formSubmittedSig.set(false);
         }
@@ -232,6 +238,7 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (success) => {
                     if (success) {
+                        this.#clearOtpLocalState();
                         this.#navigateAfterLogin();
                     } else {
                         this.otpForm.enable();
@@ -245,12 +252,57 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             });
     }
 
+    async resendOtp(): Promise<void> {
+        if (!this.canResendOtpSig() || !this.twoFactorPendingSig()) {
+            return;
+        }
+        this.otpForm.disable();
+        try {
+            const formValue = this.signInForm.getRawValue();
+            const workspace =
+                this.#tenantContext.normalizeSubdomain(formValue.workspace) ??
+                '';
+            const credentials = {
+                email: formValue.email,
+                password: formValue.password,
+                workspace,
+                rememberMe: formValue.rememberMe ?? false,
+                recaptchaToken: await this.#getRecaptchaToken(),
+                deviceFingerprint:
+                    await this.#deviceFingerprintService.getDeviceFingerprint(),
+            };
+            this.#authService
+                .signIn(credentials)
+                .pipe(takeUntil(this.#destroySubject))
+                .subscribe({
+                    next: (result) => {
+                        this.otpForm.enable();
+                        if (result === 'requires2FA') {
+                            this.otpForm.reset();
+                            this.otpSubmittedSig.set(false);
+                        }
+                    },
+                    error: () => {
+                        this.otpForm.enable();
+                    },
+                });
+        } catch {
+            this.otpForm.enable();
+        }
+    }
+
     cancelOtp(): void {
         this.#authService.cancel2FA();
+        this.#clearOtpLocalState();
         this.signInForm.enable();
         this.signInForm.reset();
         this.otpForm.reset();
         this.formSubmittedSig.set(false);
+        this.otpSubmittedSig.set(false);
+    }
+
+    #clearOtpLocalState(): void {
+        this.otpForm.reset();
         this.otpSubmittedSig.set(false);
     }
 
@@ -287,6 +339,7 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        this.#clearOtpLocalState();
         this.#destroySubject.next();
         this.#destroySubject.complete();
     }

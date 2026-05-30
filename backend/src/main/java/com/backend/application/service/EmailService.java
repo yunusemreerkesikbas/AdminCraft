@@ -10,6 +10,8 @@ public interface EmailService {
 
     EmailResult sendOtpEmail(String toEmail, String otpCode, Language language);
 
+    EmailResult sendOperationOtpEmail(String toEmail, String otpCode, Language language);
+
     EmailResult sendPasswordResetEmail(String toEmail, String resetToken, String subdomain, Language language);
 
     EmailResult sendEmailVerificationEmail(String toEmail, String verificationToken, String subdomain, Language language);

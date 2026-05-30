@@ -4,6 +4,7 @@
             mat-icon-button
             [routerLink]="['/', langParamSig(), 'pages']"
             [matTooltip]="t('admin.smartedit.actions.backToList')"
+            [attr.aria-label]="t('admin.smartedit.actions.backToList')"
         >
             <mat-icon>arrow_back</mat-icon>
         </a>
@@ -15,7 +16,11 @@
             <span
                 class="se-toolbar__connection"
                 [class.is-online]="connectedSig()"
-                [matTooltip]="connectedSig() ? t('admin.smartedit.tooltip.connected') : t('admin.smartedit.tooltip.connecting')"
+                [matTooltip]="
+                    connectedSig()
+                        ? t('admin.smartedit.tooltip.connected')
+                        : t('admin.smartedit.tooltip.connecting')
+                "
             >
                 <mat-icon>{{ connectedSig() ? 'wifi' : 'wifi_off' }}</mat-icon>
             </span>
@@ -26,6 +31,7 @@
                 mat-icon-button
                 [matTooltip]="t('admin.smartedit.viewport.desktop')"
                 [class.is-active]="viewportSig() === 'desktop'"
+                [attr.aria-label]="t('admin.smartedit.viewport.desktop')"
                 (click)="onViewportChange('desktop')"
             >
                 <mat-icon>desktop_windows</mat-icon>
@@ -34,6 +40,7 @@
                 mat-icon-button
                 [matTooltip]="t('admin.smartedit.viewport.tablet')"
                 [class.is-active]="viewportSig() === 'tablet'"
+                [attr.aria-label]="t('admin.smartedit.viewport.tablet')"
                 (click)="onViewportChange('tablet')"
             >
                 <mat-icon>tablet_mac</mat-icon>
@@ -42,6 +49,7 @@
                 mat-icon-button
                 [matTooltip]="t('admin.smartedit.viewport.mobile')"
                 [class.is-active]="viewportSig() === 'mobile'"
+                [attr.aria-label]="t('admin.smartedit.viewport.mobile')"
                 (click)="onViewportChange('mobile')"
             >
                 <mat-icon>smartphone</mat-icon>
@@ -67,7 +75,11 @@
         <div class="se-ticket-banner se-ticket-banner--expired">
             <mat-icon>timer_off</mat-icon>
             <span>{{ t('admin.smartedit.warnings.ticketExpired') }}</span>
-            <button mat-stroked-button (click)="renewTicket()" [disabled]="busySig()">
+            <button
+                mat-stroked-button
+                (click)="renewTicket()"
+                [disabled]="busySig()"
+            >
                 {{ t('admin.smartedit.actions.renewTicket') }}
             </button>
         </div>
@@ -75,7 +87,11 @@
         <div class="se-ticket-banner se-ticket-banner--expiring">
             <mat-icon>timer</mat-icon>
             <span>{{ t('admin.smartedit.warnings.ticketExpiringSoon') }}</span>
-            <button mat-stroked-button (click)="renewTicket()" [disabled]="busySig()">
+            <button
+                mat-stroked-button
+                (click)="renewTicket()"
+                [disabled]="busySig()"
+            >
                 {{ t('admin.smartedit.actions.renewTicket') }}
             </button>
         </div>
@@ -90,7 +106,10 @@
                 </div>
             } @else {
                 @if (iframeUrlSig(); as src) {
-                    <div class="se-canvas__viewport" [style.max-width]="viewportWidthSig()">
+                    <div
+                        class="se-canvas__viewport"
+                        [style.max-width]="viewportWidthSig()"
+                    >
                         <iframe
                             #iframe
                             class="se-iframe"
@@ -112,7 +131,11 @@
         <aside class="se-inspector">
             <section class="se-inspector__section">
                 <h3>{{ t('admin.smartedit.inspector.page') }}</h3>
-                <button mat-stroked-button (click)="editPageMetadata()" [disabled]="!pageSig() || busySig()">
+                <button
+                    mat-stroked-button
+                    (click)="editPageMetadata()"
+                    [disabled]="!pageSig() || busySig()"
+                >
                     <mat-icon>edit_document</mat-icon>
                     {{ t('admin.smartedit.actions.editPageMetadata') }}
                 </button>
@@ -123,27 +146,139 @@
                     [disabled]="!canPublishSig() || busySig()"
                 >
                     <mat-icon>publish</mat-icon>
-                    {{ t('admin.smartedit.actions.publishCurrentLang') }} ({{ currentLangSig() }})
+                    {{ t('admin.smartedit.actions.publishCurrentLang') }} ({{
+                        currentLangSig()
+                    }})
                 </button>
+            </section>
+
+            <section class="se-inspector__section">
+                <div class="se-section-title">
+                    <h3>{{ t('admin.smartedit.drafts.title') }}</h3>
+                    <span class="se-draft-badge">{{ draftGroupCountSig() }}</span>
+                    <button
+                        mat-icon-button
+                        (click)="refreshDrafts()"
+                        [disabled]="busySig()"
+                        [matTooltip]="t('admin.common.actions.refresh')"
+                        [attr.aria-label]="t('admin.common.actions.refresh')"
+                    >
+                        <mat-icon>refresh</mat-icon>
+                    </button>
+                </div>
+
+                @if (draftGroupsSig().length === 0) {
+                    <p class="se-help-text">
+                        {{ t('admin.smartedit.drafts.empty') }}
+                    </p>
+                } @else {
+                    <div class="se-draft-list">
+                        @for (
+                            draftGroup of draftGroupsSig();
+                            track draftGroup.key
+                        ) {
+                            <article class="se-draft-row">
+                                <button
+                                    class="se-draft-row__main"
+                                    type="button"
+                                    (click)="openDraftReview(draftGroup)"
+                                    [attr.aria-label]="
+                                        t('admin.smartedit.drafts.reviewTitle') +
+                                        ': ' +
+                                        draftGroup.title
+                                    "
+                                >
+                                    <strong>{{ draftGroup.title }}</strong>
+                                    <span>
+                                        {{ draftGroup.subtitle }}
+                                        <b>
+                                            {{ draftGroup.fields.length }}
+                                            {{
+                                                t(
+                                                    'admin.smartedit.drafts.changeCount'
+                                                )
+                                            }}
+                                        </b>
+                                    </span>
+                                    @if (draftGroup.fields[0]; as firstChange) {
+                                        <div class="se-draft-summary-diff">
+                                            <span class="se-draft-summary-diff__label">
+                                                {{ firstChange.label }}
+                                            </span>
+                                            <span>{{ firstChange.beforeText }}</span>
+                                            <mat-icon>arrow_forward</mat-icon>
+                                            <span>{{ firstChange.afterText }}</span>
+                                        </div>
+                                    }
+                                </button>
+                                <div class="se-draft-row__action">
+                                    <button
+                                        mat-icon-button
+                                        (click)="discardDraftGroup(draftGroup.key)"
+                                        [disabled]="busySig()"
+                                        [matTooltip]="
+                                            t(
+                                                'admin.smartedit.actions.discardDraft'
+                                            )
+                                        "
+                                        [attr.aria-label]="
+                                            t(
+                                                'admin.smartedit.actions.discardDraft'
+                                            )
+                                        "
+                                    >
+                                        <mat-icon>delete_outline</mat-icon>
+                                    </button>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                    <button
+                        mat-stroked-button
+                        color="warn"
+                        (click)="discardCurrentLanguageDrafts()"
+                        [disabled]="busySig()"
+                    >
+                        <mat-icon>delete_sweep</mat-icon>
+                        {{
+                            t(
+                                'admin.smartedit.actions.discardCurrentLanguageDrafts'
+                            )
+                        }}
+                    </button>
+                }
             </section>
 
             <section class="se-inspector__section">
                 <h3>{{ t('admin.smartedit.inspector.selection') }}</h3>
                 @if (selectionSig(); as selection) {
-                    <div class="se-selection-card" [attr.data-kind]="selection.kind">
+                    <div
+                        class="se-selection-card"
+                        [attr.data-kind]="selection.kind"
+                    >
                         <div class="se-selection-card__row">
-                            <span class="se-label">{{ t('admin.smartedit.inspector.kind') }}</span>
+                            <span class="se-label">{{
+                                t('admin.smartedit.inspector.kind')
+                            }}</span>
                             <span class="se-value">{{ selection.kind }}</span>
                         </div>
                         <div class="se-selection-card__row">
-                            <span class="se-label">{{ t('admin.smartedit.inspector.id') }}</span>
+                            <span class="se-label">{{
+                                t('admin.smartedit.inspector.id')
+                            }}</span>
                             <span class="se-value">{{ selection.id }}</span>
                         </div>
                         @switch (selection.kind) {
                             @case ('component') {
                                 <div class="se-selection-card__row">
-                                    <span class="se-label">{{ t('admin.smartedit.inspector.componentType') }}</span>
-                                    <span class="se-value">{{ selection.componentType ?? '—' }}</span>
+                                    <span class="se-label">{{
+                                        t(
+                                            'admin.smartedit.inspector.componentType'
+                                        )
+                                    }}</span>
+                                    <span class="se-value">{{
+                                        selection.componentType ?? '—'
+                                    }}</span>
                                 </div>
                                 <button
                                     mat-flat-button
@@ -152,24 +287,40 @@
                                     [disabled]="busySig()"
                                 >
                                     <mat-icon>tune</mat-icon>
-                                    {{ t('admin.smartedit.actions.editComponent') }}
+                                    {{
+                                        t(
+                                            'admin.smartedit.actions.editComponent'
+                                        )
+                                    }}
                                 </button>
                             }
                             @case ('slot') {
                                 <div class="se-selection-card__row">
-                                    <span class="se-label">{{ t('admin.smartedit.inspector.slotName') }}</span>
-                                    <span class="se-value">{{ selection.slotName ?? '—' }}</span>
+                                    <span class="se-label">{{
+                                        t('admin.smartedit.inspector.slotName')
+                                    }}</span>
+                                    <span class="se-value">{{
+                                        selection.slotName ?? '—'
+                                    }}</span>
                                 </div>
                                 <div class="se-selection-card__row">
-                                    <span class="se-label">{{ t('admin.smartedit.inspector.position') }}</span>
-                                    <span class="se-value">{{ selection.position ?? '—' }}</span>
+                                    <span class="se-label">{{
+                                        t('admin.smartedit.inspector.position')
+                                    }}</span>
+                                    <span class="se-value">{{
+                                        selection.position ?? '—'
+                                    }}</span>
                                 </div>
-                                <p class="se-help-text">{{ t('admin.smartedit.help.slotEditing') }}</p>
+                                <p class="se-help-text">
+                                    {{ t('admin.smartedit.help.slotEditing') }}
+                                </p>
                             }
                         }
                     </div>
                 } @else {
-                    <p class="se-help-text">{{ t('admin.smartedit.help.clickToSelect') }}</p>
+                    <p class="se-help-text">
+                        {{ t('admin.smartedit.help.clickToSelect') }}
+                    </p>
                 }
             </section>
         </aside>

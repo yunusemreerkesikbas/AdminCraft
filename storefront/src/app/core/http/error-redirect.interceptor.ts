@@ -7,10 +7,10 @@ import {
 import { inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { TenantContextService } from 'app/core/tenant/tenant-context.service';
+import { environment } from '@environments/environment';
 import { AuthService } from 'app/core/auth/auth.service';
 import { LanguageService } from 'app/core/language/language.service';
-import { environment } from '@environments/environment';
+import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { Observable, catchError, switchMap, throwError } from 'rxjs';
 
 export const errorRedirectInterceptor = (
@@ -30,7 +30,8 @@ export const errorRedirectInterceptor = (
             }
 
             const status = error.status;
-            const lang = languageService.currentLanguage || environment.defaultLanguage;
+            const lang =
+                languageService.currentLanguage || environment.defaultLanguage;
 
             const authPaths = [
                 '/auth/login',
@@ -46,9 +47,18 @@ export const errorRedirectInterceptor = (
             const isAuthEndpoint = authPaths.some((path) =>
                 req.url.includes(path)
             );
+            const twoFactorPolicyPaths = [
+                '/security/two-factor/confirm-change',
+                '/security/two-factor/request-change',
+                '/platform/settings/two-factor/confirm-change',
+                '/platform/settings/two-factor/request-change',
+            ];
+            const isTwoFactorPolicyEndpoint = twoFactorPolicyPaths.some(
+                (path) => req.url.includes(path)
+            );
             const isConfigAdminEndpoint = req.url.includes('/config/admin');
 
-            if (isAuthEndpoint) {
+            if (isAuthEndpoint || isTwoFactorPolicyEndpoint) {
                 return throwError(() => error);
             }
 
@@ -61,7 +71,10 @@ export const errorRedirectInterceptor = (
                     authService.signOut().subscribe();
                     const subdomain = tenantContext.subdomain();
                     router.navigate(['/sign-in'], {
-                        queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                        queryParams:
+                            subdomain && subdomain !== 'admin'
+                                ? { subdomain }
+                                : {},
                     });
                     return throwError(() => error);
                 }
@@ -71,7 +84,10 @@ export const errorRedirectInterceptor = (
                         if (refreshed) {
                             const retried = req.clone({
                                 headers: req.headers
-                                    .set('Authorization', `Bearer ${authService.getAccessToken()}`)
+                                    .set(
+                                        'Authorization',
+                                        `Bearer ${authService.getAccessToken()}`
+                                    )
                                     .set('X-Retry', '1'),
                             });
                             return next(retried);
@@ -79,7 +95,10 @@ export const errorRedirectInterceptor = (
                         authService.signOut().subscribe();
                         const subdomain = tenantContext.subdomain();
                         router.navigate(['/sign-in'], {
-                            queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                            queryParams:
+                                subdomain && subdomain !== 'admin'
+                                    ? { subdomain }
+                                    : {},
                         });
                         return throwError(() => error);
                     }),
@@ -87,7 +106,10 @@ export const errorRedirectInterceptor = (
                         authService.signOut().subscribe();
                         const subdomain = tenantContext.subdomain();
                         router.navigate(['/sign-in'], {
-                            queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                            queryParams:
+                                subdomain && subdomain !== 'admin'
+                                    ? { subdomain }
+                                    : {},
                         });
                         return throwError(() => error);
                     })

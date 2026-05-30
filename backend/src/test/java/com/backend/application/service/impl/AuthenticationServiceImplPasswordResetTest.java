@@ -18,6 +18,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import com.backend.application.service.EmailService;
+import com.backend.application.service.OtpBypassVerifier;
 import com.backend.application.service.OtpService;
 import com.backend.application.service.TrustedDeviceService;
 import com.backend.domain.entity.Tenant;
@@ -79,6 +80,15 @@ class AuthenticationServiceImplPasswordResetTest {
     private OtpConfig otpConfig;
 
     @Mock
+    private OtpBypassVerifier otpBypassVerifier;
+
+    @Mock
+    private com.backend.application.service.OtpRateLimitService otpRateLimitService;
+
+    @Mock
+    private com.backend.application.service.OtpResendCooldownService otpResendCooldownService;
+
+    @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
@@ -108,6 +118,9 @@ class AuthenticationServiceImplPasswordResetTest {
                 trustedDeviceService,
                 verificationTokenRepository,
                 otpConfig,
+                otpBypassVerifier,
+                otpRateLimitService,
+                otpResendCooldownService,
                 refreshTokenRepository,
                 platformRefreshTokenRepository,
                 tenantTransactionManager,

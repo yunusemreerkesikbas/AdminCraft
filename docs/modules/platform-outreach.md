@@ -97,7 +97,7 @@ Auth: `ROLE_SUPER_ADMIN` (all endpoints)
 | `PUT` | `/contacts/admin/{id}` | Update contact |
 | `DELETE` | `/contacts/admin/{id}` | Delete contact |
 
-`GET /contacts/admin` supports `search` (fullName, email, companyName), `sort` (field), and pagination.
+`GET /contacts/admin` supports `search` (fullName, email, companyName), `sort` (field), and pagination (default size 20, max 500). The campaign creation dialog uses `size=500` to load all contacts for selection.
 
 ### Templates
 
@@ -115,7 +115,7 @@ Auth: `ROLE_SUPER_ADMIN` (all endpoints)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/campaigns` | Paginated campaign list (`page`, `size`, `sort`) |
+| `GET` | `/campaigns` | Paginated campaign list (`page`, `size`, `sort`; default size 20, max 100) |
 | `POST` | `/campaigns` | Create campaign (name, templateId, contactIds, subjectOverride?) |
 | `GET` | `/campaigns/{id}` | Get campaign with template summary |
 | `POST` | `/campaigns/{id}/send` | Trigger send (DRAFT → SENDING → SENT/FAILED) |

@@ -2,15 +2,26 @@ import { TemplateRef } from '@angular/core';
 
 export type ModalType = 'success' | 'error' | 'warning' | 'info';
 
-export type ModalVariant = 'default' | 'credentials' | 'confirmation';
+export type ModalVariant = 'default' | 'credentials' | 'confirmation' | 'otp-verification';
 
-export type AlertType = 'warning' | 'info';
+export type AlertType = 'warning' | 'info' | 'error';
 
 export type SectionType = 'info-box' | 'copyable-fields' | 'alert-box' | 'custom';
 
 export type FieldType = 'text' | 'password' | 'link';
 
-export interface ModalConfig<T = any> {
+export interface OtpVerificationModalData {
+    maskedEmail: string;
+    description?: string;
+    expiresAt?: number;
+    expiresInLabel?: string;
+    expiredLabel?: string;
+    onConfirm?: (otpCode: string) => void;
+    cancelLabel?: string;
+    confirmLabel?: string;
+}
+
+export interface ModalConfig<T = unknown> {
     type: ModalType;
     variant?: ModalVariant;
     title: string;
@@ -26,7 +37,7 @@ export interface ModalConfig<T = any> {
 export interface ModalSection {
     type: SectionType;
     title?: string;
-    content?: string | TemplateRef<any>;
+    content?: string | TemplateRef<unknown>;
     fields?: CopyableField[];
     alertType?: AlertType;
 }
@@ -42,7 +53,7 @@ export interface ModalAction {
     label: string;
     color?: 'primary' | 'accent' | 'warn';
     handler?: () => void;
-    value?: any;
+    value?: unknown;
 }
 
 export const SPA_GENERIC_MODAL_DIALOG_OPTIONS = {

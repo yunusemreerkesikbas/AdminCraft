@@ -1,0 +1,217 @@
+.se-draft-modal {
+    display: block;
+    box-sizing: border-box;
+    width: min(720px, calc(100vw - 32px));
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.se-draft-modal__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: start;
+    padding: 22px 24px 10px;
+    border-bottom: 1px solid #eef2f7;
+
+    > div {
+        min-width: 0;
+    }
+
+    h2 {
+        margin: 4px 0 0;
+        padding: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        color: #0f172a;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    p {
+        min-width: 0;
+        margin: 6px 0 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #64748b;
+        font-size: 12px;
+
+        b {
+            margin-left: 8px;
+            color: #4338ca;
+            font-weight: 700;
+        }
+    }
+
+    button {
+        margin-top: -6px;
+    }
+}
+
+.se-draft-modal__eyebrow {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+mat-dialog-content {
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: hidden;
+    max-height: min(64vh, 620px);
+    padding: 8px 24px 0;
+}
+
+.se-draft-modal__list {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+}
+
+.se-draft-change {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+    border-bottom: 1px solid #eef2f7;
+    padding: 16px 0;
+
+    h3 {
+        margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 700;
+    }
+}
+
+.se-text-compare {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    min-width: 0;
+
+    code {
+        display: block;
+        box-sizing: border-box;
+        width: 100%;
+        height: 36px;
+        min-width: 0;
+        max-width: 100%;
+        overflow: auto;
+        white-space: pre;
+        word-break: normal;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: #f8fafc;
+        padding: 8px;
+        color: #475569;
+        font: 12px/1.45 'SFMono-Regular', Menlo, Consolas, monospace;
+
+        &:last-child {
+            border-color: #c7d2fe;
+            background: #eef2ff;
+            color: #312e81;
+        }
+    }
+}
+
+.se-text-compare mat-icon,
+.se-media-compare__arrow {
+    color: #94a3b8;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    margin-top: 18px;
+}
+
+.se-media-compare {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    min-width: 0;
+}
+
+.se-media-compare__arrow {
+    margin-top: 42px;
+}
+
+.se-media-box {
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+
+    > span {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    figure {
+        min-width: 0;
+        margin: 0;
+        display: grid;
+        gap: 5px;
+    }
+
+    img,
+    figure > mat-icon {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        border: 1px solid #e5e7eb;
+        border-radius: 7px;
+        background: #f8fafc;
+        object-fit: cover;
+    }
+
+    figure > mat-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 32px;
+        height: auto;
+    }
+
+    figcaption {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #475569;
+        font-size: 11px;
+    }
+}
+
+mat-dialog-actions {
+    box-sizing: border-box;
+    padding: 12px 24px 20px;
+    border-top: 1px solid #eef2f7;
+}
+
+@media (max-width: 640px) {
+    .se-draft-modal {
+        width: min(100%, calc(100vw - 24px));
+    }
+
+    .se-text-compare,
+    .se-media-compare {
+        grid-template-columns: 1fr;
+    }
+
+    .se-text-compare mat-icon,
+    .se-media-compare__arrow {
+        justify-self: center;
+        margin-top: 0;
+        transform: rotate(90deg);
+    }
+}

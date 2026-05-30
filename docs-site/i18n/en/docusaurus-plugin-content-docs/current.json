@@ -1,0 +1,38 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.mainSidebar.category.Kavramlar": {
+    "message": "Concepts",
+    "description": "The label for category 'Kavramlar' in sidebar 'mainSidebar'"
+  },
+  "sidebar.mainSidebar.category.Gelistiriciler": {
+    "message": "Developers",
+    "description": "The label for category 'Gelistiriciler' in sidebar 'mainSidebar'"
+  },
+  "sidebar.mainSidebar.category.Geliştiriciler": {
+    "message": "Developers",
+    "description": "The label for category 'Geliştiriciler' in sidebar 'mainSidebar'"
+  },
+  "sidebar.mainSidebar.category.Editorler": {
+    "message": "Editors",
+    "description": "The label for category 'Editorler' in sidebar 'mainSidebar'"
+  },
+  "sidebar.mainSidebar.category.Editörler": {
+    "message": "Editors",
+    "description": "The label for category 'Editörler' in sidebar 'mainSidebar'"
+  },
+  "sidebar.mainSidebar.category.Entegrasyon": {
+    "message": "Integration",
+    "description": "The label for category 'Entegrasyon' in sidebar 'mainSidebar'"
+  },
+  "sidebar.mainSidebar.category.Kavramlar.link.generated-index.description": {
+    "message": "Core concepts and shared vocabulary for Craftive.",
+    "description": "The generated-index page description for category 'Kavramlar' in sidebar 'mainSidebar'"
+  },
+  "sidebar.mainSidebar.category.Editörler.link.generated-index.description": {
+    "message": "Practical editor workflows and publishing checks.",
+    "description": "The generated-index page description for category 'Editörler' in sidebar 'mainSidebar'"
+  }
+}

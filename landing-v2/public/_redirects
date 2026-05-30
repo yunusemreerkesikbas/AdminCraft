@@ -1,0 +1,4 @@
+# Cloudflare Pages redirects (copied to out/_redirects at build).
+# No page is emitted at "/" (all routes live under /[locale]); send the bare
+# root to the default locale. next-intl owns locale routing beyond this.
+/  /tr/  302

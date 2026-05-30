@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.cms.preview.CmsDraftOverrideService;
 import com.backend.application.dto.response.ComponentEntryCompositeResponse;
 import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.domain.entity.ComponentEntry;
@@ -39,6 +40,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
     private final MediaService mediaService;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
+    private final CmsDraftOverrideService cmsDraftOverrideService;
 
     @Override
     @Transactional
@@ -206,6 +208,49 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
     }
 
     @Override
+    @Transactional
+    public ComponentEntryCompositeResponse updateDraftComposite(
+            Long id, com.backend.application.dto.request.UpdateComponentEntryCompositeRequest request, Long userId) {
+        ComponentEntry entry = entryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Entry not found: " + id));
+
+        cmsDraftOverrideService.saveComponentEntryDraft(id, request, userId);
+
+        ComponentEntry previewEntry = cloneEntry(entry);
+        var entryDrafts = cmsDraftOverrideService.findComponentEntryDrafts(List.of(id));
+        cmsDraftOverrideService.apply(previewEntry, entryDrafts.get(id));
+
+        List<ComponentEntryI18n> i18nList = entryI18nRepository.findByEntryId(id).stream()
+                .map(this::cloneEntryI18n)
+                .collect(Collectors.toCollection(java.util.ArrayList::new));
+
+        if (request.translations() != null) {
+            for (var translation : request.translations().entrySet()) {
+                i18nList.stream()
+                        .filter(existing -> existing.getLanguage() == translation.getKey())
+                        .findFirst()
+                        .orElseGet(() -> {
+                            ComponentEntryI18n created = new ComponentEntryI18n();
+                            created.setEntryId(id);
+                            created.setLanguage(translation.getKey());
+                            created.setStatus(ComponentStatus.DRAFT);
+                            i18nList.add(created);
+                            return created;
+                        });
+            }
+        }
+
+        Map<String, com.backend.application.cms.preview.ComponentEntryI18nDraftPayload> i18nDrafts =
+                cmsDraftOverrideService.findComponentEntryI18nDrafts(List.of(id));
+        for (ComponentEntryI18n i18n : i18nList) {
+            var draft = i18nDrafts.get(cmsDraftOverrideService.i18nKey(id, i18n.getLanguage()));
+            cmsDraftOverrideService.apply(i18n, draft);
+        }
+
+        return toCompositeResponse(previewEntry, i18nList);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public com.backend.application.dto.response.ComponentEntryCompositeResponse getEntryWithTranslations(Long id) {
         ComponentEntry entry = entryRepository.findById(id)
@@ -221,6 +266,38 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
             List<ComponentEntryI18n> i18nList) {
         return ComponentEntryCompositeResponse.from(entry, i18nList,
                 buildCustomFieldsByLanguage(i18nList));
+    }
+
+    private ComponentEntry cloneEntry(ComponentEntry source) {
+        ComponentEntry copy = new ComponentEntry();
+        copy.setId(source.getId());
+        copy.setUuid(source.getUuid());
+        copy.setUid(source.getUid());
+        copy.setComponentId(source.getComponentId());
+        copy.setSortOrder(source.getSortOrder());
+        copy.setIsVisible(source.getIsVisible());
+        copy.setStyleClasses(source.getStyleClasses());
+        copy.setStatus(source.getStatus());
+        copy.setResponsiveMedia(source.getResponsiveMedia());
+        copy.setCreatedAt(source.getCreatedAt());
+        copy.setUpdatedAt(source.getUpdatedAt());
+        return copy;
+    }
+
+    private ComponentEntryI18n cloneEntryI18n(ComponentEntryI18n source) {
+        ComponentEntryI18n copy = new ComponentEntryI18n();
+        copy.setId(source.getId());
+        copy.setUuid(source.getUuid());
+        copy.setUid(source.getUid());
+        copy.setEntryId(source.getEntryId());
+        copy.setLanguage(source.getLanguage());
+        copy.setTitle(source.getTitle());
+        copy.setDescription(source.getDescription());
+        copy.setCustomData(source.getCustomData());
+        copy.setStatus(source.getStatus());
+        copy.setCreatedAt(source.getCreatedAt());
+        copy.setUpdatedAt(source.getUpdatedAt());
+        return copy;
     }
 
     private Map<Language, Map<String, Object>> buildCustomFieldsByLanguage(List<ComponentEntryI18n> i18nList) {

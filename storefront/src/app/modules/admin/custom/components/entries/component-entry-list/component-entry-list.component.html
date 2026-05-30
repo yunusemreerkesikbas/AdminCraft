@@ -3,10 +3,12 @@
         <h3 class="m-0 text-lg font-semibold">
             {{ 'admin.components.entries.title' | transloco }}
         </h3>
-        <button mat-flat-button color="primary" (click)="createEntry()">
-            <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-            {{ 'admin.components.entries.addEntry' | transloco }}
-        </button>
+        @if (!draftMode()) {
+            <button mat-flat-button color="primary" (click)="createEntry()">
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                {{ 'admin.components.entries.addEntry' | transloco }}
+            </button>
+        }
     </div>
 
     <spa-admin-grid
@@ -19,15 +21,17 @@
         [emptyDescription]="'admin.components.entries.noEntriesDesc'"
         (actionClick)="onGridAction($event)"
     >
-        <button
-            emptyAction
-            mat-stroked-button
-            color="primary"
-            (click)="createEntry()"
-        >
-            <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-            {{ 'admin.components.entries.addEntry' | transloco }}
-        </button>
+        @if (!draftMode()) {
+            <button
+                emptyAction
+                mat-stroked-button
+                color="primary"
+                (click)="createEntry()"
+            >
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                {{ 'admin.components.entries.addEntry' | transloco }}
+            </button>
+        }
     </spa-admin-grid>
 </div>
 

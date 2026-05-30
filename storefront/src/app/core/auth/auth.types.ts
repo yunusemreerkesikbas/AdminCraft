@@ -13,6 +13,7 @@ export interface LoginResponseData {
     tenantId: number;
     requires2FA: boolean;
     pendingToken: string;
+    resendCooldownSeconds?: number;
 }
 
 export type LoginResponse = ApiResponse<LoginResponseData>;

@@ -1,0 +1,424 @@
+{
+  "metadata": {
+    "title": "Craftive — One platform, every configuration",
+    "description": "Tell us your idea, and we'll guide your digital transformation. Craftive is a managed digital platform that handles setup, content, and publishing for brands and agencies."
+  },
+  "consent": {
+    "title": "Your cookie preferences",
+    "description": "We use analytics cookies to improve your experience and understand site traffic. By accepting, you allow their use.",
+    "privacyLabel": "Privacy policy",
+    "accept": "Accept",
+    "reject": "Reject"
+  },
+  "nav": {
+    "neler": "What We Offer",
+    "portfolyo": "Portfolio",
+    "surec": "Process",
+    "docs": "Docs",
+    "sss": "FAQ",
+    "demoCta": "Request a Demo",
+    "menuOpen": "Open Menu",
+    "menuClose": "Close Menu",
+    "langLabel": "Language"
+  },
+  "hero": {
+    "badgeNew": "New",
+    "badgeText": "Managed digital platform",
+    "headline": "Tell us your idea, and we'll guide your digital transformation",
+    "subhead": "We build your website, content infrastructure, and growth path for you. You focus on your business — we handle the technical side.",
+    "primaryCta": "Request a Demo",
+    "secondaryCta": "How We Work",
+    "card1Alt": "Speed card",
+    "card2Alt": "Craftive platform preview",
+    "card3Alt": "Module card",
+    "speedCard": {
+      "value": "4 weeks",
+      "label": "Typical time to launch"
+    },
+    "modulesCard": {
+      "title": "Active modules",
+      "items": [
+        { "label": "CMS", "value": "100%" },
+        { "label": "Media", "value": "87%" },
+        { "label": "API", "value": "94%" }
+      ]
+    }
+  },
+  "about": {
+    "headline1": "Build your brand on a ready foundation,",
+    "headline2": "without starting from scratch.",
+    "tagsIntro": "Teams we work with:",
+    "tags": ["#Agencies", "#Corporate Brands", "#SaaS Teams", "#E-commerce"],
+    "tile1": "Multi-language content",
+    "tile2": "Ready-made templates",
+    "tile3": "Modular growth",
+    "tile4": "Isolated data",
+    "tile5": "Clean admin panel",
+    "tile6": "Open API",
+    "tile7": "Regular publishing",
+    "tile8": "Production ready",
+    "ratingNote": "Running several brands simultaneously",
+    "ratingPlaceholder": "First client results coming soon",
+    "description": "Your website shouldn't turn into a months-long project. We design your brand's content architecture together on our ready infrastructure — and once you go live, we keep running it.",
+    "primaryCta": "Request a Demo",
+    "secondaryCta": "Get in Touch"
+  },
+  "features": {
+    "badge": "Platform capabilities",
+    "headline": "Modular. Secure. Ready on every channel.",
+    "subhead": "Craftive isn't a collection of tools — it's a platform designed together for speed, security, analytics, and open API. Every capability complements the others; you don't need to set up any of them separately.",
+    "speed": {
+      "title": "Not months — weeks",
+      "description": "A typical corporate site takes 4–8 weeks. We don't start from scratch; we place your content on our ready foundation.",
+      "kpiTitle": "Live in\n4–8 Weeks",
+      "kpiNote": "Less than half the time of typical projects starting from zero",
+      "pills": [
+        "Design discovery",
+        "Content architecture",
+        "Template setup",
+        "Frontend development",
+        "Launch and post-launch support"
+      ]
+    },
+    "managedDelivery": {
+      "title": "Ready templates and process",
+      "description": "We don't reinvent the wheel for every client. We adapt our previously built templates and modules to your project, so time and budget are clear.",
+      "header": "Daily publishing flow",
+      "subheader": "Tuesday, November 25",
+      "progressLabel": "Completion",
+      "progressValue": "85%",
+      "items": [
+        { "time": "09:00", "title": "New content published", "meta": "Automatic" },
+        { "time": "10:00", "title": "Template update", "meta": "One click" },
+        { "time": "11:30", "title": "Image optimization", "meta": "Background" },
+        { "time": "14:00", "title": "New language added", "meta": "Live" },
+        { "time": "17:00", "title": "Performance report", "meta": "Auto-sent" },
+        { "time": "20:00", "title": "Backup", "meta": "Completed" }
+      ]
+    },
+    "security": {
+      "title": "Security at every layer",
+      "description": "From data to login, from API to content — protection exists at every point of the platform. Not complex technical details — just results: your data is safe.",
+      "features": [
+        {
+          "icon": "database",
+          "title": "Separate data vault",
+          "body": "Each client's data is kept in a completely separate database. It never comes into contact with another account's data."
+        },
+        {
+          "icon": "lock",
+          "title": "Two-factor login (2FA)",
+          "body": "Admin login requires a second verification step in addition to your password. Even if your password is stolen, your account cannot be accessed."
+        },
+        {
+          "icon": "bot",
+          "title": "Bot and spam protection",
+          "body": "Forms and API endpoints are protected by reCAPTCHA. Automated attacks and bulk spam requests are blocked."
+        },
+        {
+          "icon": "rate",
+          "title": "Rate limiting",
+          "body": "If too many requests come in a short time, the system automatically throttles. The first line of defense against brute force attacks."
+        },
+        {
+          "icon": "gdpr",
+          "title": "GDPR & CCPA compliance",
+          "body": "Personal data is processed and stored in accordance with legal requirements. Data can be completely deleted upon request."
+        },
+        {
+          "icon": "https",
+          "title": "Encrypted connection",
+          "body": "All data flows on the platform are encrypted via HTTPS. Sensitive information is never visible on open networks."
+        }
+      ]
+    },
+    "seoAnalytics": {
+      "title": "SEO, analytics and performance — in one panel",
+      "description": "Google Search Console, GA4, and Chrome UX report in one dashboard. Monitor organic clicks, page speed, and engagement rate without switching between separate tools.",
+      "summary": "Live site metrics",
+      "stats": [
+        { "label": "Organic clicks (28 days)", "value": "2.4K", "delta": "+41% vs previous period" },
+        { "label": "CrUX health score", "value": "94", "delta": "Desktop · out of 100" }
+      ],
+      "rings": [
+        { "label": "Performance", "value": 96 },
+        { "label": "SEO visibility", "value": 93 },
+        { "label": "Engagement", "value": 91 }
+      ]
+    },
+    "portability": {
+      "title": "Your content on web, mobile, everywhere",
+      "description": "Craftive's headless REST API delivers the same content to website, mobile app, or third-party integrations simultaneously. You choose the frontend — your data is always yours.",
+      "notification": {
+        "label": "Publishing · craftive.io",
+        "title": "Page delivered to all channels",
+        "body": "Your web, mobile, and integrations were updated simultaneously.",
+        "primary": "Documentation",
+        "secondary": "Dismiss"
+      },
+      "bgItems": [
+        { "method": "GET", "path": "/cms/pages/homepage", "label": "200 OK" },
+        { "method": "GET", "path": "/cms/site/config", "label": "200 OK" },
+        { "method": "POST", "path": "/cms/drafts/publish", "label": "201 Created" },
+        { "method": "GET", "path": "/cms/components/hero", "label": "200 OK" },
+        { "method": "GET", "path": "/cms/products/featured", "label": "200 OK" },
+        { "method": "PUT", "path": "/cms/entries/blog-001", "label": "200 OK" },
+        { "method": "GET", "path": "/cms/media/images", "label": "200 OK" },
+        { "method": "GET", "path": "/cms/components/footer", "label": "200 OK" },
+        { "method": "POST", "path": "/cms/pages/new", "label": "201 Created" },
+        { "method": "GET", "path": "/cms/languages/active", "label": "200 OK" }
+      ]
+    }
+  },
+  "useCase": {
+    "badge": "Who uses Craftive?",
+    "headline1": "Whatever your industry,",
+    "headline2": "this is the speed difference.",
+    "tabs": [
+      {
+        "label": "Agencies",
+        "description": "Stop rebuilding infrastructure from scratch for every client. The brief comes in, the foundation is already there — delivery drops to weeks, developer cost drops with it, margin climbs.",
+        "stat": "3× faster",
+        "statLabel": "Delivery vs. typical projects"
+      },
+      {
+        "label": "SaaS Teams",
+        "description": "Stop spending engineers on blog posts, landing pages, and doc sites. Your content team runs them independently — engineers stay focused on the product.",
+        "stat": "70% lower",
+        "statLabel": "Content operation cost"
+      },
+      {
+        "label": "Corporate Brands",
+        "description": "Dozens of dealer sites, multiple languages, one hub. Brand identity stays intact at the centre while every site publishes independently — full visibility, full control.",
+        "stat": "50+",
+        "statLabel": "Sites managed from one hub"
+      },
+      {
+        "label": "E-commerce",
+        "description": "Product pages, campaigns, blog, and store — all in one panel. Launch the season campaign without waiting for a developer; manage stock and content from the same place.",
+        "stat": "A few hours",
+        "statLabel": "New campaign launch"
+      }
+    ],
+    "footerText": "And much more",
+    "rhythmTags": [
+      "#startups",
+      "#creative agencies",
+      "#corporate brands",
+      "#freelancers",
+      "#new ventures",
+      "#multilingual brands"
+    ]
+  },
+  "counter": {
+    "badge": "Global reach & multilingual support",
+    "headline1": "One infrastructure,",
+    "headline2": "40+ languages reaching the world.",
+    "bigNumberValue": "40",
+    "bigNumberSuffix": "+",
+    "bigNumberLabel": "supported languages & locales — on a single infrastructure",
+    "stats": [
+      { "value": "12", "suffix": "+", "label": "Countries with active site traffic" },
+      { "value": "<48", "suffix": "h", "label": "Time to add a new language" },
+      { "value": "100", "suffix": "%", "label": "Isolated data per client" }
+    ],
+    "statsNote": "Numbers reflect platform capacity and average project data."
+  },
+  "managedProcess": {
+    "badge": "Not piecemeal — end to end",
+    "headline": "The process we run on your behalf",
+    "subhead": "Most platforms just give you a control panel — the rest is on you. Craftive is different: we manage every stage from setup to post-launch support.",
+    "cta": "See the process",
+    "chips": [
+      { "title": "Content architecture discovery", "action": "Step 1", "solid": true },
+      { "title": "Matching ready templates", "action": "Step 2", "solid": false },
+      { "title": "Launch and post-launch support", "action": "Step 3", "solid": false }
+    ],
+    "tiles": [
+      {
+        "title": "Discovery call",
+        "body": "We listen to your needs and together determine the right modules and timeline."
+      },
+      {
+        "title": "Content architecture",
+        "body": "We map out your pages, content types, and languages."
+      },
+      {
+        "title": "Setup and development",
+        "body": "We place your brand's visuals and content on top of the ready foundation."
+      },
+      {
+        "title": "Launch and growth",
+        "body": "We stay by your side after going live; add new modules whenever you're ready."
+      }
+    ]
+  },
+  "social": {
+    "badge": "Our Portfolio",
+    "headline": "From the projects we've built",
+    "subhead": "We build every project on a ready infrastructure, not from scratch — fast, sustainable, and tailored to you.",
+    "statusText": "3 projects active and live"
+  },
+  "platformDemo": {
+    "badge": "Platform features",
+    "headline": "Tools that simplify daily work",
+    "subhead": "Your content team edits pages, uploads media, publishes — without waiting for a developer.",
+    "tabs": [
+      {
+        "id": "smartedit",
+        "label": "SmartEdit",
+        "heading": "Edit content without waiting for a developer",
+        "description": "With SmartEdit, add components directly on the page, update text, change layouts. Preview and publish instantly without developer involvement.",
+        "features": ["Live preview with instant editing", "Component-based page structure", "One click draft → publish"],
+        "cta": "Request a demo"
+      },
+      {
+        "id": "media",
+        "label": "Media Library",
+        "heading": "All media in one hub, ready for every channel",
+        "description": "Upload photos, videos, and files; automatic resizing and format conversion is done for you. Everything at hand with search, tags, and folder structure.",
+        "features": ["Automatic image optimization", "Fast search and tagging", "Single source for web, mobile, and API"],
+        "cta": "Request a demo"
+      },
+      {
+        "id": "pagebuilder",
+        "label": "Page Builder",
+        "heading": "From template to page, live in minutes",
+        "description": "Your content team produces new pages with ready templates and reusable components. Since the content architecture is built from the start, every page looks consistent.",
+        "features": ["Reusable component library", "Quick page generation from template", "Content team publishes without code"],
+        "cta": "Request a demo"
+      }
+    ]
+  },
+  "reviews": {
+    "techStackLabel": "Technologies powering the platform",
+    "badge": "Take a closer look",
+    "headline": "What our clients say",
+    "testimonials": [
+      { "quote": "Having them manage both the setup and content side was the biggest relief. Our budget didn't spiral.", "name": "Ahmet Yılmaz", "role": "Corporate Brand" },
+      { "quote": "We went live in weeks with a project we expected to take months. Since the content architecture was set up correctly from the start, we had no rework headaches.", "name": "Zeynep Kaya", "role": "Agency" },
+      { "quote": "Knowing our data is in a separate database was a huge comfort on the GDPR side.", "name": "Murat Demir", "role": "SaaS Team" },
+      { "quote": "If they'd just given us a panel and left the rest to us, it wouldn't have worked. Taking over the process is what made this possible.", "name": "Selin Çelik", "role": "New Venture" },
+      { "quote": "As our needs change, we can add modules on top of the system. We don't have to start over.", "name": "Emre Özkan", "role": "Corporate Brand" },
+      { "quote": "Setting up a multilingual site would have been a nightmare otherwise; we manage all languages from one interface.", "name": "Fatma Arslan", "role": "Brand" }
+    ],
+    "viewAll": "View all reviews"
+  },
+  "faq": {
+    "badge": "Frequently asked",
+    "headline": "Your questions answered",
+    "contactTitle": "Couldn't find the answer?",
+    "contactCta": "Contact us",
+    "items": [
+      {
+        "q": "How are you different from Webflow or WordPress?",
+        "a": "Tools like Webflow just give you the design panel; the content architecture, multilingual support, and growth side are left to you. We do the whole thing: from design, to content structure, to launch and ongoing support."
+      },
+      {
+        "q": "Wouldn't hiring a developer be better?",
+        "a": "A single developer has to build the entire infrastructure from scratch — which takes months. We work on top of our ready foundation, focusing directly on your actual product; the right outcome emerges in the same time."
+      },
+      {
+        "q": "Is our data safe?",
+        "a": "We maintain a separate database for each client. Your data doesn't sit in the same place as another brand's data. It works in compliance with GDPR and CCPA."
+      },
+      {
+        "q": "If we want to switch later, will we be locked in?",
+        "a": "Your content always belongs to you via an open API. Your data is portable and you can develop the frontend independently. We don't lock you in a closed box."
+      },
+      {
+        "q": "How quickly can we go live?",
+        "a": "A typical corporate site goes live within 4–8 weeks. Smaller scope is shorter; e-commerce or multilingual projects can take a bit longer — we give a firm timeline in the first call."
+      },
+      {
+        "q": "Can we grow it later?",
+        "a": "Yes. After going live, modules like multiple languages, e-commerce, and internal portals can be added on top. You grow without having to rewrite anything."
+      }
+    ]
+  },
+  "ctaFooter": {
+    "headline1": "Tell us your idea,",
+    "headline2": "let's design it together",
+    "subhead": "First call is free. Let us hear your needs and define the right scope together.",
+    "primaryCta": "Request a Demo",
+    "secondaryCta": "Get in Touch",
+    "rightTitle": "Want a quick look?",
+    "rightText": "Pick a time from our calendar for a 10-minute intro call. We'll answer your questions and show the platform live.",
+    "rightCta": "Pick a time",
+    "handPhoneAlt": "Craftive platform preview"
+  },
+  "footer": {
+    "tagline": "We put your brand on a solid digital foundation.",
+    "emailPlaceholder": "Your email address",
+    "subscribe": "Notify Me",
+    "subscribing": "Subscribing...",
+    "subscribeSuccess": "You're in! We'll keep you posted.",
+    "subscribeErrApiConfig": "API configuration is missing.",
+    "subscribeErrRecaptcha": "reCAPTCHA verification failed.",
+    "subscribeErrNetwork": "Connection error. Please try again.",
+    "subscribeErrHttp": "An error occurred. Please try again.",
+    "columns": [
+      {
+        "title": "Pages",
+        "links": [
+          { "label": "Home", "href": "#hero" },
+          { "label": "Solutions", "href": "#features" },
+          { "label": "Process", "href": "#smart-assist" },
+          { "label": "About", "href": "#use-case" },
+          { "label": "Contact", "href": "#cta-footer" }
+        ]
+      },
+      {
+        "title": "Resources",
+        "links": [
+          { "label": "Docs", "href": "https://docs.craftive.io", "external": true },
+          { "label": "Help Center", "href": "mailto:hello@craftive.io" },
+          { "label": "Privacy Policy", "href": "mailto:hello@craftive.io" },
+          { "label": "Terms of Service", "href": "mailto:hello@craftive.io" }
+        ]
+      },
+      {
+        "title": "Social",
+        "links": [
+          { "label": "LinkedIn", "href": "https://www.linkedin.com/company/craftive-io", "external": true },
+          { "label": "X (Twitter)", "href": "https://x.com/craftive_io", "external": true },
+          { "label": "Instagram", "href": "https://www.instagram.com/craftive.io", "external": true },
+          { "label": "YouTube", "href": "https://www.youtube.com/@craftive-io", "external": true }
+        ]
+      }
+    ],
+    "hosting": "From Istanbul, with love",
+    "copyright": "© Craftive {year} — All rights reserved."
+  },
+  "demoModal": {
+    "panelBadge": "Platform",
+    "panelTitle": "Let's bring your digital project to life",
+    "panelSub": "Let's determine the best solution for you together.",
+    "trust1": "Live in 4–8 weeks",
+    "trust2": "One-on-one consulting",
+    "trust3": "24/7 managed support",
+    "panelFooter": "reCAPTCHA protection active",
+    "formEyebrow": "Demo Request",
+    "formTitle": "Let's get started",
+    "formSub": "Share a few details about your project and we'll get back to you as soon as possible.",
+    "name": "Full Name",
+    "namePlaceholder": "Your full name",
+    "email": "Email",
+    "emailPlaceholder": "example@email.com",
+    "phone": "Phone",
+    "phonePlaceholder": "+1 (xxx) xxx-xxxx",
+    "message": "Message",
+    "messagePlaceholder": "Brief info about your project or needs...",
+    "submitHint": "Your information is only used to contact you.",
+    "submit": "Send Request",
+    "submitting": "Sending...",
+    "successBadge": "Request Received",
+    "successTitle": "Thank you!",
+    "close": "Close",
+    "errConfig": "Configuration could not be loaded. Please reload the page or contact us.",
+    "errApiConfig": "API configuration is missing.",
+    "errRecaptcha": "reCAPTCHA verification failed.",
+    "errNetwork": "Connection error. Please try again.",
+    "errHttp": "An error occurred. Please try again."
+  }
+}
