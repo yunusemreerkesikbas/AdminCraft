@@ -112,6 +112,26 @@ jobs:
             cp /opt/craftive/prod/.last-deployed-tag \
                /opt/craftive/prod/.last-deployed-tag.prev 2>/dev/null || true
 
+      - name: Free Docker disk before deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_DROPLET_IP }}
+          username: deploy
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            echo "=== Disk before cleanup ==="
+            df -h / /var/lib/docker /var/lib/containerd 2>/dev/null || df -h
+            docker system df || true
+
+            docker container prune -f || true
+            docker image prune -af || true
+            docker builder prune -af || true
+
+            echo "=== Disk after cleanup ==="
+            df -h / /var/lib/docker /var/lib/containerd 2>/dev/null || df -h
+            docker system df || true
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -201,6 +221,8 @@ jobs:
             echo "Rolling back to: $PREV_TAG"
             export APP_VERSION="$PREV_TAG"
             export GHCR_ORG=${{ github.repository_owner }}
+            export CMS_PREVIEW_SECRET="${{ secrets.CMS_PREVIEW_SECRET_PROD }}"
+            export APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64="${{ secrets.APP_ANALYTICS_GA4_JSON_BASE64_PROD }}"
             docker compose -f docker-compose.yml -f docker-compose.prod.yml \
               --env-file .env.prod up -d --remove-orphans
             echo "Rollback complete: $PREV_TAG"
