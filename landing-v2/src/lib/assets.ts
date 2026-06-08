@@ -18,7 +18,9 @@ export const ASSETS = {
     play: "/images/icons/tS0ZuZlJiNpvPvkALsbfBb1Eig.svg",
   },
   hero: {
-    bg: "/images/photos/hero-v2.jpg",
+    bg: "/images/photos/hero-v2.webp",
+    bgMobile: "/images/photos/hero-v2-mobile.webp",
+    bgFallback: "/images/photos/hero-v2.jpg",
   },
   clouds: {
     big: "/images/clouds/c5yKOUxAULPtn3CoxX5b92vgJ8U.png",
@@ -28,19 +30,18 @@ export const ASSETS = {
   },
   about: {
     weatherEmoji: "/images/icons/38EivRTUD86UdDi4ptLVvUiyP8.svg",
-    centerPhone: "/images/icons/craftive-app.png",
-    tile01: "/images/about/platform.jpg",
-    tile02: "/images/about/multi-lang.jpg",
-    tile03: "/images/about/database.jpg",
-    tile04: "/images/about/commerce.jpg",
-    tile05: "/images/about/saas.jpg",
+    centerPhone: "/images/icons/craftive-app.webp",
+    tile01: "/images/about/platform.webp",
+    tile02: "/images/about/multi-lang.webp",
+    tile03: "/images/about/database.webp",
+    tile04: "/images/about/commerce.webp",
+    tile05: "/images/about/saas.webp",
   },
   useCase: {
-    portrait: "/images/photos/GrOi64i02AZCaZvYDyn1wZuzEo.jpg",
-    agency: "/images/photos/agency.jpg",
-    saas: "/images/photos/saas.jpg",
-    corporate: "/images/photos/corporate.jpg",
-    ecommerce: "/images/photos/ecommerce.jpg",
+    agency: "/images/photos/agency.webp",
+    saas: "/images/photos/saas.webp",
+    corporate: "/images/photos/corporate.webp",
+    ecommerce: "/images/photos/ecommerce.webp",
   },
   counter: {
     // The earth/globe is actually an autoplaying video, not a static image.
@@ -48,20 +49,16 @@ export const ASSETS = {
   },
   features: {
     bell: "/images/photos/LuRk2mi9PkL9qpq8u7aAhmN27dM.png",
-    plannerTexture: "/images/photos/planner-texture.jpg",
-    routineNotif: "/images/photos/routine-hand.png", // floating "Morning Start 85%" checklist card
+    plannerTexture: "/images/photos/planner-texture.webp",
+    routineNotif: "/images/photos/routine-hand.png",
     routineBg: "/images/photos/routine-bg.jpg",
     routinePhone: "/images/icons/routine-phone.svg",
   },
   aiSuggest: {
     phone: "/images/photos/otkB8TZsvM2ULa0N3ALnKskG5ag.png",
   },
-  reviewsHero: {
-    bg: "/images/photos/GrOi64i02AZCaZvYDyn1wZuzEo.jpg",
-  },
   cta: {
-    handPhone: "/images/photos/kmAong4xy6gvqhgzcssHKUFJnmA.jpg",
-    handPhoneUp: "/images/photos/Yxyz4xAO2Afi4x2mrtShsiVlWA.png",
+    handPhoneUp: "/images/photos/Yxyz4xAO2Afi4x2mrtShsiVlWA.webp",
   },
   videos: {
     earth: "/videos/yjuD7GFXupvQlqYR8xjXBuh5oc.mp4",

@@ -1,16 +1,24 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en" style="color-scheme: light;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <meta name="x-apple-disable-message-reformatting" />
     <title>Login Verification Code</title>
+    <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
     <style>
-      body, table, td, a {
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+      body,
+      table,
+      td,
+      a {
         -webkit-text-size-adjust: 100%;
         -ms-text-size-adjust: 100%;
       }
-      table, td {
+      table,
+      td {
         mso-table-lspace: 0pt;
         mso-table-rspace: 0pt;
       }
@@ -21,9 +29,18 @@
         margin: 0;
         padding: 0;
         width: 100% !important;
-        background-color: #eef2f7;
+        background-color: #eef2ff;
         color: #0f172a;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+      }
+      a {
+        color: #2563eb;
       }
       .preheader {
         display: none;
@@ -35,50 +52,120 @@
       }
       .email-shell {
         width: 100%;
-        background-color: #eef2f7;
+        background-color: #eef2ff;
       }
       .email-container {
         width: 600px;
         max-width: 600px;
       }
+      .header-block {
+        background-color: #0d1527;
+        border-radius: 12px 12px 0 0;
+      }
+      .header-top {
+        padding: 24px 44px 0;
+      }
+      .header-body {
+        padding: 22px 44px 30px;
+      }
+      .header-tag {
+        margin: 0;
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-align: right;
+        text-transform: uppercase;
+      }
+      .header-h1 {
+        margin: 8px 0 0;
+        color: #ffffff;
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        line-height: 40px;
+      }
+      .header-h1 span {
+        color: #93c5fd;
+      }
+      .separator {
+        background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 40%, #818cf8 100%);
+        height: 2px;
+        font-size: 0;
+        line-height: 0;
+      }
       .card {
         background-color: #ffffff;
-        border: 1px solid #d8e0ea;
-        border-radius: 8px;
+        border: 1px solid #c7d2fe;
+        border-radius: 0 0 12px 12px;
+        border-top: none;
       }
       .content-padding {
-        padding: 40px 44px;
-      }
-      .brand {
-        color: #0f172a;
-        display: block;
-        font-size: 22px;
-        font-weight: 800;
-        line-height: 28px;
-        text-align: center;
-        word-break: break-word;
-      }
-      h1 {
-        margin: 14px 0 10px;
-        color: #0f172a;
-        font-size: 30px;
-        font-weight: 800;
-        line-height: 38px;
-        text-align: center;
+        padding: 38px 44px 40px;
       }
       p {
         margin: 0;
       }
-      .lead {
-        color: #475569;
-        font-size: 16px;
-        line-height: 25px;
-        text-align: center;
-      }
       .body-copy {
-        color: #334155;
+        color: #1e293b;
         font-size: 16px;
-        line-height: 26px;
+        line-height: 28px;
+      }
+      .highlight {
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-left: 3px solid #2563eb;
+        border-radius: 6px;
+      }
+      .highlight-text {
+        color: #1e3a8a;
+        font-size: 15px;
+        line-height: 25px;
+      }
+      .warning {
+        background-color: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-left: 3px solid #f59e0b;
+        border-radius: 6px;
+      }
+      .warning-copy {
+        color: #92400e;
+        font-size: 14px;
+        line-height: 23px;
+      }
+      .button {
+        display: inline-block;
+        padding: 15px 34px;
+        background-color: #2563eb;
+        border-radius: 8px;
+        color: #ffffff !important;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        line-height: 22px;
+        text-decoration: none;
+      }
+      .copy-link-card {
+        background-color: #f8fafc;
+        border: 1px solid #dbe4ee;
+        border-radius: 8px;
+      }
+      .copy-link-label {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 19px;
+      }
+      .copy-link {
+        color: #1d4ed8 !important;
+        font-size: 13px;
+        line-height: 21px;
+        word-break: break-all;
+      }
+      .meta-note {
+        color: #475569;
+        font-size: 14px;
+        line-height: 22px;
       }
       .otp-panel {
         background-color: #eff6ff;
@@ -97,56 +184,81 @@
         color: #0f172a;
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
         font-size: 38px;
+        font-variant-numeric: tabular-nums;
         font-weight: 800;
         letter-spacing: 0.18em;
         line-height: 48px;
         text-indent: 0.18em;
-        font-variant-numeric: tabular-nums;
       }
-      .warning {
-        background-color: #fffbeb;
-        border: 1px solid #fcd34d;
-        border-radius: 8px;
-      }
-      .warning-copy {
-        color: #92400e;
-        font-size: 14px;
-        line-height: 22px;
-      }
-      .meta-note {
-        color: #334155;
-        font-size: 14px;
-        line-height: 22px;
+      .section-label {
+        color: #6366f1;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
       }
       .footer {
-        color: #64748b;
-        font-size: 13px;
-        line-height: 21px;
+        color: #94a3b8;
+        font-size: 12px;
+        line-height: 20px;
       }
       .footer-link {
-        color: #475569 !important;
-        font-size: 13px;
-        font-weight: 700;
+        color: #64748b !important;
+        font-size: 12px;
+        font-weight: 600;
         text-decoration: none;
+      }
+      :root {
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        body,
+        .email-shell { background-color: #eef2ff !important; }
+        .header-block { background-color: #0d1527 !important; }
+        .header-h1,
+        .header-tag { color: #ffffff !important; }
+        .header-h1 span { color: #93c5fd !important; }
+        .card { background-color: #ffffff !important; border-color: #c7d2fe !important; }
+        .body-copy { color: #1e293b !important; }
+        .highlight { background-color: #eff6ff !important; border-color: #bfdbfe !important; }
+        .highlight-text { color: #1e3a8a !important; }
+        .warning { background-color: #fffbeb !important; border-color: #fcd34d !important; }
+        .warning-copy { color: #92400e !important; }
+        .copy-link-card { background-color: #f8fafc !important; border-color: #dbe4ee !important; }
+        .copy-link-label,
+        .meta-note { color: #64748b !important; }
+        .section-label { color: #6366f1 !important; }
+        .footer { color: #94a3b8 !important; }
+        .footer-link { color: #64748b !important; }
       }
       @media screen and (max-width: 620px) {
         .email-container {
           width: 100% !important;
         }
-        .outer-padding {
-          padding: 18px 12px 32px !important;
+        .outer-pad {
+          padding: 16px 10px 36px !important;
+        }
+        .header-top {
+          padding: 22px 22px 0 !important;
+        }
+        .header-body {
+          padding: 24px 22px 30px !important;
         }
         .content-padding {
-          padding: 30px 22px !important;
+          padding: 28px 22px 32px !important;
         }
-        h1 {
-          font-size: 26px !important;
+        .header-h1 {
+          font-size: 24px !important;
           line-height: 33px !important;
+        }
+        .button {
+          display: block !important;
+          text-align: center !important;
         }
         .code {
           font-size: 31px !important;
-          line-height: 40px !important;
           letter-spacing: 0.12em !important;
+          line-height: 40px !important;
           text-indent: 0.12em !important;
         }
       }
@@ -154,68 +266,90 @@
   </head>
   <body>
     <div class="preheader">Use your one-time verification code to complete sign-in.</div>
-    <table role="presentation" class="email-shell" width="100%" cellpadding="0" cellspacing="0" bgcolor="#eef2f7">
+
+    <table role="presentation" class="email-shell" width="100%" cellpadding="0" cellspacing="0" bgcolor="#eef2ff">
       <tr>
-        <td class="outer-padding" align="center" style="padding: 34px 16px 48px;">
+        <td class="outer-pad" align="center" style="padding: 40px 16px 52px" bgcolor="#eef2ff">
           <table role="presentation" class="email-container" width="600" cellpadding="0" cellspacing="0">
             <tr>
-              <td align="center" style="padding: 0 0 18px;">
-                <span class="brand" translate="no" th:text="${fromName}">Craftive</span>
+              <td class="header-block" bgcolor="#0d1527">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td class="header-top" style="width: 50%">
+                      <!--[if !mso]><!-->
+                      <img
+                        src="https://craftive-media-prod.fra1.cdn.digitaloceanspaces.com/craftive-light.png"
+                        alt="Craftive"
+                        width="116"
+                        height="22"
+                        style="display: block; border: 0"
+                      />
+                      <!--<![endif]-->
+                      <!--[if mso]><span style="font-family: Arial; font-size: 20px; font-weight: 800; color: #ffffff">Craftive</span><![endif]-->
+                    </td>
+                    <td class="header-top" style="width: 50%; vertical-align: middle" align="right">
+                      <p class="header-tag">Sign-in code</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="header-body" colspan="2">
+                      <h1 class="header-h1">Your verification <span>code is ready.</span></h1>
+                    </td>
+                  </tr>
+                </table>
               </td>
+            </tr>
+            <tr>
+              <td class="separator" height="2">&nbsp;</td>
             </tr>
             <tr>
               <td class="card" bgcolor="#ffffff">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td class="content-padding">
-                      <h1>Your Verification Code</h1>
-                      <p class="lead">Use this one-time code to securely complete your sign-in.</p>
-
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="padding-top: 30px;">
+                          <td style="padding-top: 0px">
                             <p class="body-copy"><strong style="color: #0f172a;">Hello,</strong></p>
                           </td>
                         </tr>
                         <tr>
-                          <td style="padding-top: 14px;">
-                            <p class="body-copy">Enter the verification code below to continue to your account.</p>
+                          <td style="padding-top: 10px">
+                            <p class="body-copy">Enter the verification code below to securely continue to your Craftive account.</p>
                           </td>
                         </tr>
                       </table>
 
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="otp-panel" style="margin-top: 30px;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="otp-panel" style="margin-top: 24px">
                         <tr>
-                          <td align="center" style="padding: 24px 18px 26px;">
+                          <td align="center" style="padding: 24px 18px 26px">
                             <p class="otp-label">Verification Code</p>
                             <p class="code" translate="no" th:text="${otpCode}">123456</p>
                           </td>
                         </tr>
                       </table>
 
-                      <p class="meta-note" style="margin-top: 20px;">
-                        This code expires in <strong th:text="${expiryMinutes}">5</strong> minutes.
-                      </p>
+<p class="meta-note" style="margin-top: 20px">This code expires in <strong th:text="${expiryMinutes}">5</strong> minutes.</p>
 
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="warning" style="margin-top: 24px;">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="warning" style="margin-top: 18px">
                         <tr>
-                          <td style="padding: 16px 18px;">
-                            <p class="warning-copy">
-                              <strong>Security notice:</strong> Never share this code with anyone. Craftive staff will
-                              never ask for your verification code.
-                            </p>
+                          <td style="padding: 16px 20px">
+                            <p class="warning-copy"><strong>Security notice:</strong> Never share this code with anyone. Craftive staff will never ask for your verification code.</p>
                           </td>
                         </tr>
                       </table>
 
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="padding-top: 28px;">
+                          <td style="padding-top: 24px">
                             <p class="body-copy">If you did not request this code, you can safely ignore this email.</p>
                           </td>
                         </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                          <td style="padding-top: 30px; border-top: 1px solid #e2e8f0;">
+                          <td style="padding-top: 28px; border-top: 1px solid #e8eeff">
                             <p class="footer">This email was sent automatically. Please do not reply.</p>
                           </td>
                         </tr>
@@ -226,13 +360,13 @@
               </td>
             </tr>
             <tr>
-              <td align="center" style="padding: 22px 18px 0;">
+              <td align="center" style="padding: 22px 18px 0">
                 <p class="footer">© <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2026</span> Craftive. All rights reserved.</p>
-                <p class="footer" style="margin-top: 8px;">
-                  <a href="https://craftive.io" class="footer-link">Website</a>
-                  <span style="color: #94a3b8;">&nbsp;•&nbsp;</span>
+                <p class="footer" style="margin-top: 6px">
+                  <a href="https://craftive.io" class="footer-link">craftive.io</a>
+                  <span style="color: #c7d2fe">&nbsp;·&nbsp;</span>
                   <a href="https://www.linkedin.com/company/craftive" class="footer-link">LinkedIn</a>
-                  <span style="color: #94a3b8;">&nbsp;•&nbsp;</span>
+                  <span style="color: #c7d2fe">&nbsp;·&nbsp;</span>
                   <a href="https://www.instagram.com/craftive.io" class="footer-link">Instagram</a>
                 </p>
               </td>

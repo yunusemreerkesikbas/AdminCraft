@@ -69,7 +69,7 @@ export function Nav() {
   }, [NAV_LINKS]);
 
   useEffect(() => {
-    const onResize = () => { if (window.innerWidth >= 768) setMenuOpen(false); };
+    const onResize = () => { if (window.innerWidth >= 1024) setMenuOpen(false); };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -79,17 +79,17 @@ export function Nav() {
     <DemoRequestModal open={modalOpen} onClose={() => setModalOpen(false)} locale={locale} />
     <nav className="fixed top-5 md:top-[30px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-stretch px-0">
       {/* Pills row */}
-      <div className="flex items-center gap-1.5 w-[calc(100vw-40px)] md:w-auto justify-between md:justify-start">
+      <div className="flex items-center gap-1.5 w-[calc(100vw-40px)] lg:w-auto justify-between lg:justify-start">
         {/* Brand */}
         <a
           href="#hero"
-          className="flex items-center justify-center h-[52px] md:h-[64px] px-4 md:px-[26px] rounded-full bg-white shadow-pill flex-shrink-0"
+          className="flex items-center justify-center h-[52px] md:h-[58px] lg:h-[64px] px-4 md:px-5 lg:px-[26px] rounded-full bg-white shadow-pill flex-shrink-0"
         >
-          <Image src={ASSETS.brand.logo} alt="Craftive" width={150} height={32} className="w-[96px] md:w-[150px] h-auto" priority />
+          <Image src={ASSETS.brand.logo} alt="Craftive" width={150} height={32} className="w-[96px] md:w-[120px] lg:w-[150px] h-auto" priority />
         </a>
 
-        {/* Center links — desktop only */}
-        <div className="hidden md:flex items-center h-[64px] px-3 rounded-full bg-white shadow-pill gap-1">
+        {/* Center links — desktop only (lg+) */}
+        <div className="hidden lg:flex items-center h-[64px] px-3 rounded-full bg-white shadow-pill gap-1">
           {NAV_LINKS.map((link) => {
             const isActive = active === link.id;
             return (
@@ -109,10 +109,10 @@ export function Nav() {
         </div>
 
         {/* Demo CTA + lang selector + hamburger */}
-        <div className="flex items-center h-[52px] md:h-[64px] px-2 md:px-2.5 rounded-full bg-white shadow-pill gap-1 md:gap-1.5">
-          {/* TR/EN toggle — desktop: sliding ink pill */}
+        <div className="flex items-center h-[52px] md:h-[58px] lg:h-[64px] px-2 md:px-2.5 rounded-full bg-white shadow-pill gap-1 md:gap-1.5">
+          {/* TR/EN toggle — desktop only (lg+): sliding ink pill */}
           <div
-            className="hidden md:flex relative items-center h-8 rounded-full p-0.5 flex-shrink-0"
+            className="hidden lg:flex relative items-center h-8 rounded-full p-0.5 flex-shrink-0"
             style={{ background: "#ede9e3" }}
           >
             {/* Sliding background pill */}
@@ -144,27 +144,27 @@ export function Nav() {
             })}
           </div>
 
-          {/* Demo CTA — desktop */}
+          {/* Demo CTA — desktop (lg+) */}
           <button
             onClick={openDemo}
-            className="hidden md:inline-flex h-[48px] px-5 rounded-full bg-ink text-white items-center gap-2 text-[14px] font-medium whitespace-nowrap hover:bg-ink/90 transition-colors flex-shrink-0"
+            className="hidden lg:inline-flex h-[48px] px-5 rounded-full bg-ink text-white items-center gap-2 text-[14px] font-medium whitespace-nowrap hover:bg-ink/90 transition-colors flex-shrink-0"
           >
             {t("demoCta")}
             <ArrowRightIcon size={14} />
           </button>
 
-          {/* Demo CTA — mobile */}
+          {/* Demo CTA — mobile + tablet */}
           <button
             onClick={openDemo}
-            className="md:hidden h-[40px] px-4 rounded-full bg-ink text-white inline-flex items-center text-[13px] font-medium whitespace-nowrap hover:bg-ink/90 transition-colors flex-shrink-0"
+            className="lg:hidden h-[40px] md:h-[44px] px-4 md:px-5 rounded-full bg-ink text-white inline-flex items-center text-[13px] md:text-[14px] font-medium whitespace-nowrap hover:bg-ink/90 transition-colors flex-shrink-0"
           >
             {t("demoCta")}
           </button>
 
-          {/* Hamburger — mobile only */}
+          {/* Hamburger — mobile + tablet */}
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="md:hidden size-[40px] rounded-2xl bg-surface text-ink flex items-center justify-center hover:bg-black/8 transition-colors flex-shrink-0"
+            className="lg:hidden size-[40px] md:size-[44px] rounded-2xl bg-surface text-ink flex items-center justify-center hover:bg-black/8 transition-colors flex-shrink-0"
             aria-label={menuOpen ? t("menuClose") : t("menuOpen")}
           >
             {menuOpen ? <XIcon size={15} /> : <MenuIcon size={16} />}
@@ -172,9 +172,9 @@ export function Nav() {
         </div>
       </div>
 
-      {/* Mobile dropdown — slides down when open */}
+      {/* Mobile + tablet dropdown — slides down when open */}
       <div
-        className="md:hidden grid transition-[grid-template-rows] duration-300 ease-out mt-1.5"
+        className="lg:hidden grid transition-[grid-template-rows] duration-300 ease-out mt-1.5"
         style={{ gridTemplateRows: menuOpen ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
