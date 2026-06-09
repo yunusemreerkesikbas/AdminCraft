@@ -95,6 +95,7 @@ gha-creds-*.json
 ### Agents/Skills (personal) ###
 .agents/
 .agent/
+skills-lock.json
 
 ### MCP (may contain secrets) ###
 .mcp.json
