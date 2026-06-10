@@ -24,6 +24,7 @@ public class TenantMigrationService {
    * - component_library creates components/entries and adds FK to responsive_media_set
    * - pagebuilder creates pages/slots and references components
    * - product creates product catalog
+   * - commerce creates commerce capabilities and depends on product catalog
    * See docs/global/migrations.md for full documentation.
    */
   private static final List<String> MODULE_ORDER = List.of(
@@ -32,7 +33,8 @@ public class TenantMigrationService {
       "media", // Media assets, responsive_media_set
       "component_library", // Components, entries (references media)
       "pagebuilder", // Pages, slots (references components)
-      "product" // Product catalog
+      "product", // Product catalog
+      "commerce" // Commerce capabilities (depends on product)
   );
 
   @Value("${spring.datasource.tenant.host}")

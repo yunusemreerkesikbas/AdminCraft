@@ -54,7 +54,7 @@ Tenant-scoped access for tenant admins (guarded by tenant header matching):
 Module visibility semantics:
 
 - `GET /api/tenants/{tenantId}/modules` and `GET /api/tenants/current/modules` return only user-facing enabled modules.
-- Current user-facing module set is `core`, `product`, `mail_marketing`.
+- Current user-facing module set is `core`, `product`, `commerce`, `mail_marketing`.
 - Core execution dependencies (`media`, `component_library`, `pagebuilder`) are runtime migration modules, not tenant-facing module flags.
 - Legacy internal `tenant_modules` rows for `media`, `component_library`, and `pagebuilder` are cleaned by platform repair migration `V1.0.1__repair_internal_tenant_modules.sql`.
 
@@ -71,7 +71,7 @@ Base path: `/api/provisioning`
 
 Module catalog behavior:
 
-- `GET /api/provisioning/modules/catalog` returns provisioning-selectable modules: `core`, `product`, `mail_marketing`.
+- `GET /api/provisioning/modules/catalog` returns provisioning-selectable modules: `core`, `product`, `commerce`, `mail_marketing`.
 - `modules_catalog` still stores execution modules (`media`, `component_library`, `pagebuilder`) for migration ordering and tenant module history joins.
 
 Authorization note:
@@ -128,8 +128,10 @@ Request/response shape (high level):
 - Provision request body:
   - `{ "modules": ["core"] }`
   - `{ "modules": ["core", "product"] }`
+  - `{ "modules": ["core", "product", "commerce"] }`
   - `{ "modules": ["core", "mail_marketing"] }`
   - `{ "modules": ["core", "product", "mail_marketing"] }`
+  - `{ "modules": ["core", "product", "commerce", "mail_marketing"] }`
 - Job status response contains:
   - `jobId`, `tenantId`, `type`, `status`, `progress`, `error`, `createdAt`, `startedAt`, `completedAt`
 
@@ -137,8 +139,9 @@ Provisioning module canonicalization:
 
 - `core` is required for full provision.
 - When request includes `core`, backend uses `ModuleCode.resolveExecutionCodes(List<String>)` to expand the execution set to: `core`, `media`, `component_library`, `pagebuilder`
-- `product` and `mail_marketing` remain optional and are appended only when requested.
-- Only provisioning-selectable module codes are accepted in full provision requests: `core`, `product`, `mail_marketing`
+- `product`, `commerce`, and `mail_marketing` remain optional and are appended only when requested.
+- `commerce` requires `product`; `["core", "commerce"]` is rejected.
+- Only provisioning-selectable module codes are accepted in full provision requests: `core`, `product`, `commerce`, `mail_marketing`
 - Core execution modules cannot be sent directly in `POST /api/provisioning/tenants/{tenantId}/provision`; they are derived by backend normalization.
 - `ModuleCode.resolveExecutionCodes()` is the single source of truth for core expansion — used by both `ProvisioningServiceImpl` (full provision) and `TenantStartupMigrator` (sync/startup migration) to guarantee identical behavior.
 
@@ -176,7 +179,7 @@ Update these files in order. See also [Module Execution Order](../global/migrati
    }
    ```
 
-3. **Migration order** — If the module participates in tenant migrations, add it to `MODULE_ORDER` in [TenantMigrationService](../../backend/src/main/java/com/backend/application/service/TenantMigrationService.java) and document the order in [docs/global/migrations.md](../global/migrations.md).
+3. **Migration order** — If the module participates in tenant migrations, add it to `MODULE_ORDER` in [TenantMigrationService](../../backend/src/main/java/com/backend/application/service/TenantMigrationService.java) and document the order in [global migrations](../global/migrations.md).
 
 4. **Tenant migration** — `backend/src/main/resources/db/tenant/new_module/V1__baseline.sql`
 
@@ -190,7 +193,7 @@ Update these files in order. See also [Module Execution Order](../global/migrati
 #### Frontend
 
 1. **Navigation constant** — `storefront/src/app/core/navigation/navigation-modules.constants.ts`  
-   Only add **provisioning-selectable** modules here (catalog exposes `core`, `product`, `mail_marketing`; core-expanded modules like `media`, `component_library`, `pagebuilder` are covered by `CORE` and do not need an entry):
+   Only add **provisioning-selectable** modules here (catalog exposes `core`, `product`, `commerce`, `mail_marketing`; core-expanded modules like `media`, `component_library`, `pagebuilder` are covered by `CORE` and do not need an entry):
 
    ```typescript
    export const NAVIGATION_MODULES = {
@@ -224,13 +227,13 @@ Update these files in order. See also [Module Execution Order](../global/migrati
 - [ ] Backend compiles: `mvn clean compile`
 - [ ] Module in catalog: `curl http://localhost:8080/api/provisioning/modules/catalog`
 - [ ] Provision dialog shows new module
-- [ ] Navigation appears when module is enabled
+- [ ] Navigation appears when module is enabled, if the module has a navigation item
 - [ ] Migration runs successfully
 
 #### Notes
 
-- Module types: core-expanded modules (`core`, `media`, `component_library`, `pagebuilder`) use `type: 'core'`; optional catalog modules (e.g. `product`, `mail_marketing`) use `type: 'b2c'`
-- Core module deps: `NULL`; others: `'["core"]'`
+- Module types: core-expanded modules (`core`, `media`, `component_library`, `pagebuilder`) use `type: 'core'`; optional catalog modules (e.g. `product`, `commerce`, `mail_marketing`) use `type: 'b2c'`
+- Core module deps: `NULL`; most optional modules use `'["core"]'`; commerce uses `'["core","product"]'`
 - Module codes: lowercase with underscores
 
 ### Apply new migrations to existing tenants
@@ -244,4 +247,5 @@ Sync behavior note:
 
 - `sync-migrations` applies the same module normalization logic as full provisioning.
 - If tenant has `core`, requests for core-covered modules (`media`, `component_library`, `pagebuilder`) are treated as covered.
+- `commerce` requires `product`. Startup auto-sync skips `commerce` and logs a warning when platform state has `commerce` enabled without `product`.
 - Startup auto-sync uses the same runtime expansion. An active tenant with only the user-facing `core` flag still runs `core`, `media`, `component_library`, and `pagebuilder` tenant migrations on boot.

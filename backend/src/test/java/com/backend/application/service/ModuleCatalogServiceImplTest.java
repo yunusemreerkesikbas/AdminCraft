@@ -30,7 +30,7 @@ class ModuleCatalogServiceImplTest {
   }
 
   @Test
-  void shouldReturnOnlyCoreAndProductInStableOrder() {
+  void shouldReturnProvisioningSelectableModulesInStableOrder() {
     ModuleCatalog product = ModuleCatalog.builder()
         .code("product")
         .name("Product Catalog")
@@ -39,6 +39,26 @@ class ModuleCatalogServiceImplTest {
         .deps("[\"core\"]")
         .enabledByDefault(false)
         .description("Optional product module")
+        .build();
+
+    ModuleCatalog commerce = ModuleCatalog.builder()
+        .code("commerce")
+        .name("Commerce")
+        .type("b2c")
+        .version("1.0.0")
+        .deps("[\"core\",\"product\"]")
+        .enabledByDefault(false)
+        .description("Optional commerce module")
+        .build();
+
+    ModuleCatalog mailMarketing = ModuleCatalog.builder()
+        .code("mail_marketing")
+        .name("Mail Marketing")
+        .type("b2c")
+        .version("1.0.0")
+        .deps("[\"core\"]")
+        .enabledByDefault(false)
+        .description("Optional mail marketing module")
         .build();
 
     ModuleCatalog pageBuilder = ModuleCatalog.builder()
@@ -61,11 +81,12 @@ class ModuleCatalogServiceImplTest {
         .description("Required module")
         .build();
 
-    when(moduleCatalogRepository.findAll()).thenReturn(List.of(product, pageBuilder, core));
+    when(moduleCatalogRepository.findAll()).thenReturn(List.of(product, pageBuilder, commerce, mailMarketing, core));
 
     List<ModuleCatalogResponse> result = moduleCatalogService.getAllModules();
 
     assertThat(result).extracting(ModuleCatalogResponse::getCode)
-        .containsExactly("core", "product");
+        .containsExactly("core", "product", "commerce", "mail_marketing");
+    assertThat(result.get(2).getDeps()).containsExactly("core", "product");
   }
 }

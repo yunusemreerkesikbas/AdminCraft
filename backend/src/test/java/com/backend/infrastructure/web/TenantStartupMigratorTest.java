@@ -56,4 +56,43 @@ class TenantStartupMigratorTest {
     verify(tenantMigrationService).migrateTenant("ac_store_7",
         List.of("core", "media", "component_library", "pagebuilder", "product"));
   }
+
+  @Test
+  void shouldRunCommerceAfterProductDuringStartupMigration() throws Exception {
+    Tenant tenant = Tenant.builder()
+        .id(8L)
+        .databaseName("ac_store_8")
+        .status("active")
+        .build();
+
+    when(tenantRepository.findAll()).thenReturn(List.of(tenant));
+    when(tenantModuleRepository.findByTenantIdAndStatus(8L, "enabled")).thenReturn(List.of(
+        TenantModule.builder().tenantId(8L).moduleCode("core").status("enabled").build(),
+        TenantModule.builder().tenantId(8L).moduleCode("product").status("enabled").build(),
+        TenantModule.builder().tenantId(8L).moduleCode("commerce").status("enabled").build()));
+
+    tenantStartupMigrator.run();
+
+    verify(tenantMigrationService).migrateTenant("ac_store_8",
+        List.of("core", "media", "component_library", "pagebuilder", "product", "commerce"));
+  }
+
+  @Test
+  void shouldSkipCommerceDuringStartupMigrationWhenProductIsMissing() throws Exception {
+    Tenant tenant = Tenant.builder()
+        .id(9L)
+        .databaseName("ac_store_9")
+        .status("active")
+        .build();
+
+    when(tenantRepository.findAll()).thenReturn(List.of(tenant));
+    when(tenantModuleRepository.findByTenantIdAndStatus(9L, "enabled")).thenReturn(List.of(
+        TenantModule.builder().tenantId(9L).moduleCode("core").status("enabled").build(),
+        TenantModule.builder().tenantId(9L).moduleCode("commerce").status("enabled").build()));
+
+    tenantStartupMigrator.run();
+
+    verify(tenantMigrationService).migrateTenant("ac_store_9",
+        List.of("core", "media", "component_library", "pagebuilder"));
+  }
 }

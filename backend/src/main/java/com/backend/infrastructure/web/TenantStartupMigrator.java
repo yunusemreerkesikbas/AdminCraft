@@ -69,10 +69,26 @@ public class TenantStartupMigrator implements CommandLineRunner {
         })
         .toList();
 
-    List<String> runtimeModuleCodes = ModuleCode.resolveExecutionCodes(installedModuleCodes);
+    List<String> validInstalledModuleCodes = enforceStartupModuleDependencies(tenant, installedModuleCodes);
+    List<String> runtimeModuleCodes = ModuleCode.resolveExecutionCodes(validInstalledModuleCodes);
 
     log.info("Migrating tenant {} (DB: {}) with installedModules={} runtimeModules={}",
-        tenant.getId(), tenant.getDatabaseName(), installedModuleCodes, runtimeModuleCodes);
+        tenant.getId(), tenant.getDatabaseName(), validInstalledModuleCodes, runtimeModuleCodes);
     tenantMigrationService.migrateTenant(tenant.getDatabaseName(), runtimeModuleCodes);
+  }
+
+  private List<String> enforceStartupModuleDependencies(Tenant tenant, List<String> installedModuleCodes) {
+    boolean hasCommerce = installedModuleCodes.contains(ModuleCode.COMMERCE.getCode());
+    boolean hasProduct = installedModuleCodes.contains(ModuleCode.PRODUCT_CATALOG.getCode());
+
+    if (!hasCommerce || hasProduct) {
+      return installedModuleCodes;
+    }
+
+    log.warn("Skipping commerce startup migration for tenant {} because Product Catalog is not enabled",
+        tenant.getId());
+    return installedModuleCodes.stream()
+        .filter(code -> !ModuleCode.COMMERCE.getCode().equals(code))
+        .toList();
   }
 }

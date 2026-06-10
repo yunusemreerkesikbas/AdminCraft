@@ -1,0 +1,2 @@
+-- Commerce module baseline.
+-- Intentionally no-op for the foundation step; business tables are introduced by later commerce slices.

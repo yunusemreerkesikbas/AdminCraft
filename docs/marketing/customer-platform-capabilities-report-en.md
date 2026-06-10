@@ -188,7 +188,7 @@ Platform **2FA policy** and **SUPER_ADMIN OTP** behavior are documented in the a
 
 ## 5. Modules and provisioning
 
-**Provisioning-selectable modules** (catalog API): `core`, `product`, `mail_marketing` ([docs/modules/platform-provisioning.md](../modules/platform-provisioning.md), `ModuleCode`).
+**Provisioning-selectable modules** (catalog API): `core`, `product`, `commerce`, `mail_marketing` ([docs/modules/platform-provisioning.md](../modules/platform-provisioning.md), `ModuleCode`). Commerce depends on Product Catalog.
 
 **Core execution modules** (migrations / runtime dependencies, not exposed as separate tenant “feature toggles” in the user-facing module list): `media`, `component_library`, `pagebuilder` — expanded when `core` is selected ([docs/README.md](../README.md), [docs/modules/platform-provisioning.md](../modules/platform-provisioning.md)).
 

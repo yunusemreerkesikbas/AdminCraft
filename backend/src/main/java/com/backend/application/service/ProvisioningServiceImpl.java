@@ -29,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ProvisioningServiceImpl implements ProvisioningService {
 
   private static final String CORE_MODULE = ModuleCode.CORE.getCode();
+  private static final String PRODUCT_MODULE = ModuleCode.PRODUCT_CATALOG.getCode();
+  private static final String COMMERCE_MODULE = ModuleCode.COMMERCE.getCode();
 
   private final TenantRepository tenantRepository;
   private final TenantModuleRepository tenantModuleRepository;
@@ -139,6 +141,7 @@ public class ProvisioningServiceImpl implements ProvisioningService {
         throw new IllegalArgumentException("Module not installed: " + module);
           }
     }
+    validateCommerceDependencyForSync(modulesToSync, installedNormalized);
 
     List<String> resolvedModules = resolveSyncModules(modulesToSync);
 
@@ -203,6 +206,7 @@ public class ProvisioningServiceImpl implements ProvisioningService {
     if (!registeredModules.contains(CORE_MODULE)) {
           throw new IllegalArgumentException("Core module is required");
     }
+    validateCommerceDependencyForProvisioning(registeredModules);
     List<String> runtimeModules = resolveSyncModules(registeredModules);
     return new ProvisioningModules(registeredModules, runtimeModules);
   }
@@ -246,6 +250,23 @@ public class ProvisioningServiceImpl implements ProvisioningService {
   private boolean isCoreCoveredModule(String code) {
     return ModuleCode.isCoreCoveredCode(code);
   }
+
+  private void validateCommerceDependencyForProvisioning(List<String> registeredModules) {
+    if (registeredModules.contains(COMMERCE_MODULE) && !registeredModules.contains(PRODUCT_MODULE)) {
+      throw new IllegalArgumentException("Commerce module requires Product Catalog module");
+    }
+  }
+
+  private void validateCommerceDependencyForSync(List<String> modulesToSync, Set<String> installedModules) {
+    Set<String> requestedModules = normalizeInstalledModuleCodes(modulesToSync);
+    boolean commerceRequested = requestedModules.contains(COMMERCE_MODULE);
+    boolean productAvailable = requestedModules.contains(PRODUCT_MODULE) || installedModules.contains(PRODUCT_MODULE);
+
+    if (commerceRequested && !productAvailable) {
+      throw new IllegalArgumentException("Commerce module requires Product Catalog module");
+    }
+  }
+
   private String normalizeAndValidateModuleCode(String rawCode) {
     String normalized = ModuleCode.normalize(rawCode);
     if (normalized.isBlank()) {
