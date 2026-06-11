@@ -28,6 +28,7 @@ public record ProductCompositeResponse(
                 List<ProductCategoryResponse> categories,
                 List<ProductMediaResponse> galleryImages,
                 Map<String, Object> customFields,
+                List<ProductVariantResponse> variants,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt) {
         public static ProductCompositeResponse from(Product entity, Currency currency) {
@@ -78,6 +79,14 @@ public record ProductCompositeResponse(
                                                                 .toList()
                                                 : null);
 
+                List<ProductVariantResponse> variants = ResponseValueFilter.filterEmptyList(
+                                entity.getVariants() != null
+                                                ? entity.getVariants().stream()
+                                                                .map(variant -> ProductVariantResponse.from(variant,
+                                                                                currency))
+                                                                .toList()
+                                                : null);
+
                 ResponsiveMediaResponse images = entity.getResponsiveMediaSet() != null
                                 ? ResponsiveMediaResponse.from(entity.getResponsiveMediaSet())
                                 : null;
@@ -100,6 +109,7 @@ public record ProductCompositeResponse(
                                 categories,
                                 galleryImages,
                                 customFields,
+                                variants,
                                 entity.getCreatedAt(),
                                 entity.getUpdatedAt());
         }

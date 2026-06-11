@@ -76,11 +76,12 @@ public class SecurityConfig {
                                                 .requestMatchers("/platform/public/demo-requests").permitAll() // Landing demo requests
                                                 .requestMatchers("/health/**").permitAll() // Health check endpoints
                                                 .requestMatchers("/actuator/health").permitAll() // Liveness probe (no details)
-                                                .requestMatchers("/actuator/**").hasRole("SUPER_ADMIN") // SEC-005: gate all
-                                                                                                        // other actuator
-                                                                                                        // endpoints
-                                                .requestMatchers("/public/**").permitAll() // Public API endpoints
-                                                .requestMatchers("/cms/preview/**").authenticated() // SmartEdit preview ticket issue (TENANT_ADMIN via @PreAuthorize)
+												.requestMatchers("/actuator/**").hasRole("SUPER_ADMIN") // SEC-005: gate all
+																										// other actuator
+																										// endpoints
+												.requestMatchers("/public/**").permitAll() // Public API endpoints
+												.requestMatchers("/commerce/cart/**").permitAll() // Public Commerce cart API
+												.requestMatchers("/cms/preview/**").authenticated() // SmartEdit preview ticket issue (TENANT_ADMIN via @PreAuthorize)
                                                 .requestMatchers("/cms/**").permitAll() // CMS Delivery API (public)
                                                 .requestMatchers("/media/files/**").permitAll() // Media file downloads
                                                                                                 // (images)
@@ -120,19 +121,21 @@ public class SecurityConfig {
                                 "Cache-Control",
                                 "X-Tenant-ID",
                                 "X-Tenant-Subdomain",
-                                "X-User-ID",
-                                "X-Client-Version",
-                                "X-Cms-Preview-Ticket"));
+								"X-User-ID",
+								"X-Client-Version",
+								"X-Cart-Token",
+								"X-Cms-Preview-Ticket"));
 
                 // Allow credentials (cookies, authorization headers)
                 configuration.setAllowCredentials(true);
 
                 // Expose authorization header to frontend
                 configuration.setExposedHeaders(Arrays.asList(
-                                "Authorization",
-                                "X-Total-Count",
-                                "X-Page-Number",
-                                "X-Page-Size"));
+								"Authorization",
+								"X-Total-Count",
+								"X-Page-Number",
+								"X-Page-Size",
+								"X-Cart-Token"));
 
                 // Cache preflight response for 1 hour
                 configuration.setMaxAge(3600L);

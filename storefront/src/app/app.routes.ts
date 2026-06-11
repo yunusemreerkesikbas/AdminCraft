@@ -390,6 +390,15 @@ export const appRoutes: Route[] = [
                     import('app/modules/admin/custom/products/products.routes'),
             },
             {
+                path: 'commerce',
+                canActivate: [tenantUserGuard, moduleGuard],
+                data: { requiredModule: 'commerce' },
+                loadComponent: () =>
+                    import(
+                        'app/modules/admin/custom/commerce/commerce-layout.component'
+					).then((m) => m.SpaCommerceLayoutComponent),
+            },
+            {
                 path: 'page-templates',
                 canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },

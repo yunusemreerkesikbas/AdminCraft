@@ -3,9 +3,16 @@ package com.backend.application.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.request.ProductI18nDto;
+import com.backend.application.dto.request.ProductVariantDto;
 import com.backend.domain.entity.Category;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.Product;
@@ -23,6 +31,8 @@ import com.backend.domain.entity.ProductFieldValue;
 import com.backend.domain.entity.ProductI18n;
 import com.backend.domain.entity.ProductMedia;
 import com.backend.domain.entity.ProductType;
+import com.backend.domain.entity.ProductVariant;
+import com.backend.domain.entity.ProductVariantOptionValue;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
@@ -37,6 +47,8 @@ import com.backend.domain.repository.ProductMediaRepository;
 import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.ProductTypeRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
+import com.backend.domain.repository.ProductVariantOptionValueRepository;
+import com.backend.domain.repository.ProductVariantRepository;
 import com.backend.domain.enums.ActivityAction;
 import com.backend.infrastructure.tenant.TenantContext;
 import com.backend.presentation.dto.request.ResponsiveMediaRequest;
@@ -64,8 +76,15 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductFieldService productFieldService;
     private final ProductFieldValueRepository productFieldValueRepository;
+    private final ProductVariantRepository productVariantRepository;
+    private final ProductVariantOptionValueRepository productVariantOptionValueRepository;
     private final SiteActivityPublisher activityPublisher;
     private final SecurityHelper securityHelper;
+
+    private static final BigDecimal DEFAULT_VARIANT_PRICE = BigDecimal.ZERO;
+    private static final BigDecimal DEFAULT_VARIANT_VAT_RATE = BigDecimal.valueOf(20);
+    private static final int DEFAULT_VARIANT_STOCK = 0;
+    private static final int MAX_VARIANT_OPTIONS_PER_PRODUCT = 2;
 
     @Override
     @Transactional
@@ -76,6 +95,7 @@ public class ProductServiceImpl implements ProductService {
             List<Long> categoryIds, Long primaryCategoryId,
             List<ResponsiveMediaRequest> gallery,
             Map<String, Object> customFields,
+            List<ProductVariantDto> variants,
             Long createdBy) {
         TenantContext.validateActive();
         log.debug("Creating product with SKU: {}", sku);
@@ -97,7 +117,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = new Product();
         product.setProductType(productType);
         product.setSku(sku);
-        product.setBasePrice(basePrice);
+        product.setBasePrice(basePrice != null ? basePrice : DEFAULT_VARIANT_PRICE);
         product.setStatus(status != null ? status : ProductStatus.DRAFT);
         product.setIsVisible(isVisible != null ? isVisible : true);
         product.setResponsiveMediaSet(responsiveMediaSet);
@@ -121,6 +141,12 @@ public class ProductServiceImpl implements ProductService {
             productFieldService.saveFieldValues(saved, customFields);
         }
 
+        saveVariants(saved, sku, basePrice, variants, true, createdBy);
+        validatePublishableIfNeeded(saved);
+        if (syncBasePriceFromActiveVariants(saved)) {
+            saved = productRepository.save(saved);
+        }
+
         log.info("Created product id: {}, sku: {}", saved.getId(), saved.getSku());
         String productName = translations.values().stream()
                 .map(dto -> dto.name()).filter(n -> n != null && !n.isBlank())
@@ -139,6 +165,7 @@ public class ProductServiceImpl implements ProductService {
             List<Long> categoryIds, Long primaryCategoryId,
             List<ResponsiveMediaRequest> gallery,
             Map<String, Object> customFields,
+            List<ProductVariantDto> variants,
             Long updatedBy) {
         TenantContext.validateActive();
         log.debug("Updating product id: {}", id);
@@ -185,6 +212,15 @@ public class ProductServiceImpl implements ProductService {
             productFieldService.saveFieldValues(saved, customFields);
         }
 
+        if (variants != null) {
+            saveVariants(saved, saved.getSku(), saved.getBasePrice(), variants, false, updatedBy);
+            if (syncBasePriceFromActiveVariants(saved)) {
+                saved = productRepository.save(saved);
+            }
+        }
+
+        validatePublishableIfNeeded(saved);
+
         log.info("Updated product id: {}, sku: {}", saved.getId(), saved.getSku());
         String productName = translations != null ? translations.values().stream()
                 .map(dto -> dto.name()).filter(n -> n != null && !n.isBlank())
@@ -193,8 +229,9 @@ public class ProductServiceImpl implements ProductService {
                 updatedBy, null, null);
 
         // Reload product with productType eagerly fetched
-        Product result = productRepository.findByIdComposite(saved.getId())
-                .orElseThrow(() -> new IllegalStateException("Product not found after save: " + saved.getId()));
+        Long savedProductId = saved.getId();
+        Product result = productRepository.findByIdComposite(savedProductId)
+                .orElseThrow(() -> new IllegalStateException("Product not found after save: " + savedProductId));
 
         // Refresh collections with eager fetched data
         List<ProductI18n> i18nContent = productI18nRepository.findByProductId(result.getId());
@@ -219,6 +256,10 @@ public class ProductServiceImpl implements ProductService {
                 .findByProductIdWithDefinition(result.getId());
         result.getFieldValues().clear();
         result.getFieldValues().addAll(refreshedFieldValues);
+
+        List<ProductVariant> refreshedVariants = productVariantRepository.findByProductIdOrderByIdAsc(result.getId());
+        result.getVariants().clear();
+        result.getVariants().addAll(refreshedVariants);
 
         return result;
     }
@@ -282,6 +323,11 @@ public class ProductServiceImpl implements ProductService {
             if (!fieldValues.isEmpty()) {
                 product.getFieldValues().addAll(fieldValues);
             }
+            List<ProductVariant> variants = productVariantRepository.findByProductIdOrderByIdAsc(product.getId());
+            product.getVariants().clear();
+            if (!variants.isEmpty()) {
+                product.getVariants().addAll(variants);
+            }
         }
         return productOpt;
     }
@@ -336,6 +382,7 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
 
         product.setStatus(status);
+        validatePublishableIfNeeded(product);
         product.setUpdatedBy(updatedBy);
         Product saved = productRepository.save(product);
         ActivityAction action = (status == ProductStatus.PUBLISHED) ? ActivityAction.PUBLISHED
@@ -558,6 +605,201 @@ public class ProductServiceImpl implements ProductService {
     private void updateGalleryMedia(Product product, List<ResponsiveMediaRequest> gallery) {
         productMediaRepository.deleteByProductId(product.getId());
         saveGalleryMedia(product, gallery);
+    }
+
+    private void saveVariants(Product product, String fallbackSku, BigDecimal fallbackPrice,
+            List<ProductVariantDto> requestedVariants, boolean create, Long userId) {
+        List<ProductVariantDto> effectiveVariants = requestedVariants == null || requestedVariants.isEmpty()
+                ? List.of(defaultVariant(fallbackSku, fallbackPrice))
+                : requestedVariants;
+
+        validateVariantSkuUniqueness(product, effectiveVariants, create);
+        Map<Long, ProductVariantOptionValue> optionValuesById = loadOptionValues(effectiveVariants);
+        validateProductOptionLimit(optionValuesById.values());
+
+        if (!create) {
+            productVariantRepository.deleteByProductId(product.getId());
+        }
+
+        List<ProductVariant> variants = new ArrayList<>();
+        for (ProductVariantDto request : effectiveVariants) {
+            ProductVariant variant = toVariant(product, request, optionValuesById, userId);
+            productVariantRepository.save(variant);
+            variants.add(variant);
+        }
+        product.getVariants().clear();
+        product.getVariants().addAll(variants);
+    }
+
+    private ProductVariantDto defaultVariant(String sku, BigDecimal basePrice) {
+        return new ProductVariantDto(
+                sku,
+                basePrice != null ? basePrice : DEFAULT_VARIANT_PRICE,
+                null,
+                DEFAULT_VARIANT_VAT_RATE,
+                DEFAULT_VARIANT_STOCK,
+                true,
+                null,
+                List.of());
+    }
+
+    private ProductVariant toVariant(Product product, ProductVariantDto request,
+            Map<Long, ProductVariantOptionValue> optionValuesById, Long userId) {
+        validateVariantRequest(request);
+        ProductVariant variant = new ProductVariant();
+        variant.setProduct(product);
+        variant.setSku(request.sku());
+        variant.setPrice(request.price());
+        variant.setFirstPrice(request.firstPrice());
+        variant.setVatRate(request.vatRate() != null ? request.vatRate() : DEFAULT_VARIANT_VAT_RATE);
+        variant.setStockQuantity(request.stockQuantity() != null ? request.stockQuantity() : DEFAULT_VARIANT_STOCK);
+        variant.setActive(request.active() != null ? request.active() : true);
+        variant.setCreatedBy(userId);
+        variant.setUpdatedBy(userId);
+        if (request.responsiveMediaId() != null) {
+            ResponsiveMediaSet responsiveMediaSet = responsiveMediaSetRepository.findById(request.responsiveMediaId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Responsive media set not found: " + request.responsiveMediaId()));
+            variant.setResponsiveMediaSet(responsiveMediaSet);
+        }
+        if (request.optionValueIds() != null && !request.optionValueIds().isEmpty()) {
+            Set<ProductVariantOptionValue> selectedValues = request.optionValueIds().stream()
+                    .map(optionValuesById::get)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            validateVariantOptionSelection(selectedValues);
+            variant.setOptionValues(selectedValues);
+        }
+        return variant;
+    }
+
+    private void validateVariantRequest(ProductVariantDto request) {
+        if (request.sku() == null || request.sku().isBlank()) {
+            throw new IllegalArgumentException("Variant SKU is required");
+        }
+        if (request.price() == null || request.price().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Variant price must be zero or greater");
+        }
+        if (request.firstPrice() != null) {
+            if (request.firstPrice().compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Variant first price must be zero or greater");
+            }
+            if (request.firstPrice().compareTo(request.price()) < 0) {
+                throw new IllegalArgumentException("Variant first price cannot be less than price");
+            }
+        }
+        if (request.vatRate() != null && request.vatRate().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Variant VAT rate must be zero or greater");
+        }
+        if (request.stockQuantity() != null && request.stockQuantity() < 0) {
+            throw new IllegalArgumentException("Variant stock quantity must be zero or greater");
+        }
+    }
+
+    private void validateVariantSkuUniqueness(Product product, List<ProductVariantDto> variants, boolean create) {
+        Set<String> requestSkus = new HashSet<>();
+        for (ProductVariantDto variant : variants) {
+            String sku = variant.sku();
+            if (sku == null || sku.isBlank()) {
+                continue;
+            }
+            String normalizedSku = sku.toUpperCase();
+            if (!requestSkus.add(normalizedSku)) {
+                throw new IllegalArgumentException("Duplicate variant SKU: " + sku);
+            }
+            boolean duplicate = create
+                    ? productVariantRepository.existsBySku(sku)
+                    : productVariantRepository.existsBySkuAndProductIdNot(sku, product.getId());
+            if (duplicate) {
+                throw new IllegalArgumentException("Variant SKU already exists: " + sku);
+            }
+        }
+    }
+
+    private Map<Long, ProductVariantOptionValue> loadOptionValues(List<ProductVariantDto> variants) {
+        List<Long> valueIds = variants.stream()
+                .filter(variant -> variant.optionValueIds() != null)
+                .flatMap(variant -> variant.optionValueIds().stream())
+                .distinct()
+                .toList();
+        if (valueIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, ProductVariantOptionValue> valuesById = productVariantOptionValueRepository.findByIdIn(valueIds)
+                .stream()
+                .collect(Collectors.toMap(ProductVariantOptionValue::getId, Function.identity()));
+        if (valuesById.size() != valueIds.size()) {
+            throw new IllegalArgumentException("One or more variant option values were not found");
+        }
+        return valuesById;
+    }
+
+    private void validateProductOptionLimit(Iterable<ProductVariantOptionValue> values) {
+        Set<Long> optionIds = new HashSet<>();
+        for (ProductVariantOptionValue value : values) {
+            if (value.getOption() != null) {
+                optionIds.add(value.getOption().getId());
+            }
+        }
+        if (optionIds.size() > MAX_VARIANT_OPTIONS_PER_PRODUCT) {
+            throw new IllegalArgumentException("A product can use at most 2 variant options");
+        }
+    }
+
+    private void validateVariantOptionSelection(Set<ProductVariantOptionValue> values) {
+        Set<Long> optionIds = new HashSet<>();
+        for (ProductVariantOptionValue value : values) {
+            if (value == null || value.getOption() == null) {
+                throw new IllegalArgumentException("Variant option value is invalid");
+            }
+            if (!optionIds.add(value.getOption().getId())) {
+                throw new IllegalArgumentException("Variant cannot select multiple values from the same option");
+            }
+        }
+        if (optionIds.size() > MAX_VARIANT_OPTIONS_PER_PRODUCT) {
+            throw new IllegalArgumentException("Variant can use at most 2 option values");
+        }
+    }
+
+    private boolean syncBasePriceFromActiveVariants(Product product) {
+        List<ProductVariant> variants = product.getVariants() == null || product.getVariants().isEmpty()
+                ? productVariantRepository.findByProductIdOrderByIdAsc(product.getId())
+                : product.getVariants();
+        Optional<BigDecimal> minPrice = variants.stream()
+                .filter(variant -> Boolean.TRUE.equals(variant.getActive()))
+                .map(ProductVariant::getPrice)
+                .filter(price -> price != null)
+                .min(Comparator.naturalOrder());
+        if (minPrice.isEmpty()) {
+            return false;
+        }
+        BigDecimal currentPrice = product.getBasePrice();
+        if (currentPrice != null && currentPrice.compareTo(minPrice.get()) == 0) {
+            return false;
+        }
+        product.setBasePrice(minPrice.get());
+        return true;
+    }
+
+    private void validatePublishableIfNeeded(Product product) {
+        if (product.getStatus() != ProductStatus.PUBLISHED) {
+            return;
+        }
+        List<ProductVariant> variants = product.getVariants() == null || product.getVariants().isEmpty()
+                ? productVariantRepository.findByProductIdOrderByIdAsc(product.getId())
+                : product.getVariants();
+        boolean hasActiveValidVariant = variants.stream()
+                .filter(variant -> Boolean.TRUE.equals(variant.getActive()))
+                .anyMatch(this::isPublishableVariant);
+        if (!hasActiveValidVariant) {
+            throw new IllegalArgumentException("Published product requires at least one active valid variant");
+        }
+    }
+
+    private boolean isPublishableVariant(ProductVariant variant) {
+        return variant.getSku() != null && !variant.getSku().isBlank()
+                && variant.getPrice() != null && variant.getPrice().compareTo(BigDecimal.ZERO) >= 0
+                && variant.getVatRate() != null && variant.getVatRate().compareTo(BigDecimal.ZERO) >= 0
+                && variant.getStockQuantity() != null && variant.getStockQuantity() >= 0;
     }
 
 }

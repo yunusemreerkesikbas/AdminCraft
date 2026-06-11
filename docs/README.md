@@ -40,11 +40,12 @@ Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/M
 - Site Settings: [`modules/site-settings.md`](modules/site-settings.md) _(integrated into Site Dashboard; not a provisioning module)_
 - Media Library (DAM): [`modules/media.md`](modules/media.md) _(core-managed capability in provisioning)_
 - Product Catalog: [`modules/product-catalog.md`](modules/product-catalog.md)
+- Commerce: [`modules/commerce.md`](modules/commerce.md) _(optional provisioning module; depends on Product Catalog)_
 - Mail Marketing: [`modules/mail-marketing.md`](modules/mail-marketing.md) _(optional provisioning module)_
 - Component Library: [`modules/component-library.md`](modules/component-library.md) _(core-managed capability in provisioning)_
 
 Provisioning catalog note:
-`core`, `product`, and `mail_marketing` are selectable modules in `/api/provisioning/modules/catalog`. `core` expands to core-managed capabilities at execution time. See [`modules/platform-provisioning.md`](modules/platform-provisioning.md).
+`core`, `product`, `commerce`, and `mail_marketing` are selectable modules in `/api/provisioning/modules/catalog`. `commerce` requires `product`. `core` expands to core-managed capabilities at execution time. See [`modules/platform-provisioning.md`](modules/platform-provisioning.md).
 
 Tenant module API note:
 `/api/tenants/{id}/modules` and `/api/tenants/current/modules` expose only user-facing enabled modules. Runtime core dependencies (`media`, `component_library`, `pagebuilder`) are not returned as tenant feature flags.

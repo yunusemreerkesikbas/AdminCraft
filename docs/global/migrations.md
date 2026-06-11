@@ -13,7 +13,7 @@ Legacy tenants may experience schema drift. The migration system includes govern
 | Concern | File |
 |---------|------|
 | Migration Files | `backend/src/main/resources/db/` |
-| Module Execution Order | `backend/src/main/java/com/backend/application/service/provisioning/TenantMigrationService.java` |
+| Module Execution Order | `backend/src/main/java/com/backend/application/service/TenantMigrationService.java` |
 | CI Governance Script | `scripts/migrations/check-versioned-immutability.sh` |
 | CI Lint Script | `scripts/migrations/lint-migrations.sh` |
 | GitHub Workflow | `.github/workflows/migration-guardrails.yml` |
@@ -25,7 +25,7 @@ Legacy tenants may experience schema drift. The migration system includes govern
 1. **Forward-only**: Existing versioned migrations (`V*.sql`) are immutable after merge. Modifying or deleting previously released `V*.sql` files is prohibited.
 2. **Repair via new versions**: Legacy drift fixes must be implemented as new `V*__repair_*.sql` migrations.
 3. **Repeatable safety**: `R__*.sql` must use explicit column lists for every `INSERT`. Do not rely on implicit column order.
-4. **Module order**: The execution order `core -> mail_marketing -> media -> component_library -> pagebuilder -> product` is mandatory. Do not create cross-module FK changes that violate this order.
+4. **Module order**: The execution order `core -> mail_marketing -> media -> component_library -> pagebuilder -> product -> commerce` is mandatory. Do not create cross-module FK changes that violate this order.
 5. **Idempotent Repairs**: Repair migrations must use `INFORMATION_SCHEMA` checks to guard DDL operations (`AddColumnIfNotExists`, `AddIndexIfNotExists`, `CreateTableIfNotExists`).
 
 > **Pre-launch note:** All pre-launch migrations were squashed into `V1.0.0__baseline.sql` per module. The forward-only policy applies strictly to any changes merged after this baseline.
@@ -51,7 +51,8 @@ backend/src/main/resources/db/
     ├── media/          # Media assets, responsive sets
     ├── component_library/
     ├── pagebuilder/
-    └── product/
+    ├── product/
+    └── commerce/
 ```
 
 | Type       | Pattern                   | Example                       |
@@ -73,6 +74,7 @@ Modules are executed in this fixed order to ensure dependencies are satisfied:
 4. component_library → Components, entries (references media)
 5. pagebuilder       → Pages, slots (references components)
 6. product           → Product catalog
+7. commerce          → Commerce foundation and later commerce tables (depends on product)
 ```
 
 ### Migration Runbook (Rollout Strategy)

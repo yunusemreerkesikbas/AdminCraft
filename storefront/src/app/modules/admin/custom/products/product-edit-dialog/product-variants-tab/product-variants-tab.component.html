@@ -1,0 +1,148 @@
+<div class="mt-4 flex flex-col gap-5">
+    <spa-select
+        [ngModel]="selectedVariantOptionIds"
+        (ngModelChange)="onVariantOptionsSelected($event)"
+        [ngModelOptions]="{ standalone: true }"
+        label="Variant options"
+        [options]="variantOptions"
+        optionLabel="name"
+        optionValue="id"
+        [multiple]="true"
+        labelTooltip="variantOptions"
+        placeholder="Select up to 2 options"
+    ></spa-select>
+
+    @for (optionId of selectedVariantOptionIds; track optionId) {
+        @if (variantOptionById(optionId); as option) {
+            <spa-select
+                [ngModel]="selectedValueIds(option.id)"
+                (ngModelChange)="onVariantValuesSelected(option.id, $event)"
+                [ngModelOptions]="{ standalone: true }"
+                [label]="option.name"
+                [options]="option.values"
+                optionLabel="label"
+                optionValue="id"
+                [multiple]="true"
+                [labelTooltip]="option.code"
+                placeholder="Select values"
+            ></spa-select>
+        }
+    }
+
+    <div class="flex justify-end">
+        <button
+            mat-stroked-button
+            type="button"
+            (click)="generateVariantMatrix()"
+        >
+            <mat-icon>grid_on</mat-icon>
+            Generate matrix
+        </button>
+    </div>
+
+    <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="min-w-[860px] w-full text-left text-sm">
+            <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                <tr>
+                    <th class="px-3 py-2">Variant</th>
+                    <th class="px-3 py-2">SKU</th>
+                    <th class="px-3 py-2">Price</th>
+                    <th class="px-3 py-2">First price</th>
+                    <th class="px-3 py-2">VAT</th>
+                    <th class="px-3 py-2">Stock</th>
+                    <th class="px-3 py-2">Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (row of variantRows; track row.key) {
+                    <tr class="border-t">
+                        <td class="px-3 py-2 font-medium">
+                            {{ row.label }}
+                        </td>
+                        <td class="px-3 py-2">
+                            <input
+                                class="w-40 rounded border px-2 py-1"
+                                [ngModel]="row.sku"
+                                (ngModelChange)="
+                                    updateVariantRow(row.key, { sku: $event })
+                                "
+                                [ngModelOptions]="{ standalone: true }"
+                            />
+                        </td>
+                        <td class="px-3 py-2">
+                            <input
+                                class="w-24 rounded border px-2 py-1"
+                                type="number"
+                                min="0"
+                                [ngModel]="row.price"
+                                (ngModelChange)="
+                                    updateVariantRow(row.key, { price: $event })
+                                "
+                                [ngModelOptions]="{ standalone: true }"
+                            />
+                        </td>
+                        <td class="px-3 py-2">
+                            <input
+                                class="w-24 rounded border px-2 py-1"
+                                type="number"
+                                min="0"
+                                [ngModel]="row.firstPrice"
+                                (ngModelChange)="
+                                    updateVariantRow(row.key, {
+                                        firstPrice: $event,
+                                    })
+                                "
+                                [ngModelOptions]="{ standalone: true }"
+                            />
+                        </td>
+                        <td class="px-3 py-2">
+                            <input
+                                class="w-20 rounded border px-2 py-1"
+                                type="number"
+                                min="0"
+                                [ngModel]="row.vatRate"
+                                (ngModelChange)="
+                                    updateVariantRow(row.key, { vatRate: $event })
+                                "
+                                [ngModelOptions]="{ standalone: true }"
+                            />
+                        </td>
+                        <td class="px-3 py-2">
+                            <input
+                                class="w-20 rounded border px-2 py-1"
+                                type="number"
+                                min="0"
+                                [ngModel]="row.stockQuantity"
+                                (ngModelChange)="
+                                    updateVariantRow(row.key, {
+                                        stockQuantity: $event,
+                                    })
+                                "
+                                [ngModelOptions]="{ standalone: true }"
+                            />
+                        </td>
+                        <td class="px-3 py-2">
+                            <input
+                                type="checkbox"
+                                [ngModel]="row.active"
+                                (ngModelChange)="
+                                    updateVariantRow(row.key, { active: $event })
+                                "
+                                [ngModelOptions]="{ standalone: true }"
+                            />
+                        </td>
+                    </tr>
+                } @empty {
+                    <tr>
+                        <td
+                            colspan="7"
+                            class="px-3 py-8 text-center text-sm text-gray-500"
+                        >
+                            Select option values to generate variants.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

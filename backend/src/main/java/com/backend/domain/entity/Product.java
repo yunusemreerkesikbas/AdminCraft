@@ -42,7 +42,7 @@ import lombok.ToString;
 })
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = { "productType", "responsiveMediaSet", "i18nContent", "attributes",
-        "categoryLinks", "gallery", "fieldValues" })
+		"categoryLinks", "gallery", "fieldValues", "variants" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product extends BaseEntity {
@@ -114,6 +114,11 @@ public class Product extends BaseEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ProductFieldValue> fieldValues = new ArrayList<>();
 
+    @ToString.Exclude
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("id ASC")
+    private List<ProductVariant> variants = new ArrayList<>();
+
     public void addFieldValue(ProductFieldValue fieldValue) {
         if (fieldValue.getFieldDefinition() != null) {
             removeFieldValue(fieldValue.getFieldDefinition().getCode());
@@ -124,5 +129,10 @@ public class Product extends BaseEntity {
 
     public void removeFieldValue(String code) {
         fieldValues.removeIf(fv -> fv.getFieldDefinition() != null && fv.getFieldDefinition().getCode().equals(code));
+    }
+
+    public void addVariant(ProductVariant variant) {
+        variants.add(variant);
+        variant.setProduct(this);
     }
 }

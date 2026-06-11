@@ -10,6 +10,8 @@ ON DUPLICATE KEY UPDATE
     name = new_vals.name,
     type = new_vals.type,
     version = new_vals.version,
+    deps = new_vals.deps,
+    enabled_by_default = new_vals.enabled_by_default,
     description = new_vals.description;
 
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
@@ -20,6 +22,8 @@ ON DUPLICATE KEY UPDATE
     name = new_vals.name,
     type = new_vals.type,
     version = new_vals.version,
+    deps = new_vals.deps,
+    enabled_by_default = new_vals.enabled_by_default,
     description = new_vals.description;
 
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
@@ -30,6 +34,8 @@ ON DUPLICATE KEY UPDATE
     name = new_vals.name,
     type = new_vals.type,
     version = new_vals.version,
+    deps = new_vals.deps,
+    enabled_by_default = new_vals.enabled_by_default,
     description = new_vals.description;
 
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
@@ -45,6 +51,16 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
 VALUES ('product', 'Product Catalog', 'b2c', '1.0.0', '["core"]', FALSE,
         'Optional product catalog management module.')
+AS new_vals
+ON DUPLICATE KEY UPDATE
+    name = new_vals.name,
+    type = new_vals.type,
+    version = new_vals.version,
+    description = new_vals.description;
+
+INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
+VALUES ('commerce', 'Commerce', 'b2c', '1.0.0', '["core","product"]', FALSE,
+        'Optional commerce foundation for cart, checkout, payment, and order capabilities.')
 AS new_vals
 ON DUPLICATE KEY UPDATE
     name = new_vals.name,

@@ -10,11 +10,13 @@ public enum ModuleCode {
 	MEDIA("media", "Media Library"),
 	COMPONENT_LIBRARY("component_library", "Component Library"),
 	PRODUCT_CATALOG("product", "Product Catalog"),
+	COMMERCE("commerce", "Commerce"),
 	MAIL_MARKETING("mail_marketing", "Mail Marketing");
 
 	private static final List<ModuleCode> PROVISIONING_SELECTABLE_MODULES = List.of(
 			CORE,
 			PRODUCT_CATALOG,
+			COMMERCE,
 			MAIL_MARKETING);
 
 	private static final List<ModuleCode> CORE_EXECUTION_MODULES = List.of(

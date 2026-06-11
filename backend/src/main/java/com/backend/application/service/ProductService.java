@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.backend.application.dto.request.ProductI18nDto;
+import com.backend.application.dto.request.ProductVariantDto;
 import com.backend.domain.entity.Product;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
@@ -23,7 +24,20 @@ public interface ProductService {
             List<Long> categoryIds, Long primaryCategoryId,
             List<ResponsiveMediaRequest> gallery,
             Map<String, Object> customFields,
+            List<ProductVariantDto> variants,
             Long createdBy);
+
+    default Product createComposite(Long productTypeId, String sku, BigDecimal basePrice,
+            ProductStatus status, Boolean isVisible, Long responsiveMediaId,
+            Map<Language, ProductI18nDto> translations,
+            Map<String, Object> attributes,
+            List<Long> categoryIds, Long primaryCategoryId,
+            List<ResponsiveMediaRequest> gallery,
+            Map<String, Object> customFields,
+            Long createdBy) {
+        return createComposite(productTypeId, sku, basePrice, status, isVisible, responsiveMediaId, translations,
+                attributes, categoryIds, primaryCategoryId, gallery, customFields, null, createdBy);
+    }
 
     Product updateComposite(Long id, BigDecimal basePrice,
             ProductStatus status, Boolean isVisible, Long responsiveMediaId,
@@ -32,7 +46,20 @@ public interface ProductService {
             List<Long> categoryIds, Long primaryCategoryId,
             List<ResponsiveMediaRequest> gallery,
             Map<String, Object> customFields,
+            List<ProductVariantDto> variants,
             Long updatedBy);
+
+    default Product updateComposite(Long id, BigDecimal basePrice,
+            ProductStatus status, Boolean isVisible, Long responsiveMediaId,
+            Map<Language, ProductI18nDto> translations,
+            Map<String, Object> attributes,
+            List<Long> categoryIds, Long primaryCategoryId,
+            List<ResponsiveMediaRequest> gallery,
+            Map<String, Object> customFields,
+            Long updatedBy) {
+        return updateComposite(id, basePrice, status, isVisible, responsiveMediaId, translations, attributes,
+                categoryIds, primaryCategoryId, gallery, customFields, null, updatedBy);
+    }
 
     void delete(Long id);
 

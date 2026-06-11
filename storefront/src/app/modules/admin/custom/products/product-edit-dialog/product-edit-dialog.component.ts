@@ -7,7 +7,11 @@ import {
     OnInit,
     signal,
 } from '@angular/core';
-import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+    FormGroup,
+    ReactiveFormsModule,
+    Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -54,14 +58,19 @@ import { ProductFieldDialogComponent } from '../fields/product-field-dialog/prod
 import { Category } from '../models/category.types';
 import { ProductFieldDefinition } from '../models/product-field.types';
 import { AttributeDefinition, ProductType } from '../models/product-type.types';
+import { ProductVariantOption } from '../models/product-variant-option.types';
 import {
     ProductCompositeRequest,
     ProductI18nRequest,
+    ProductVariantRequest,
+    ProductVariantResponse,
 } from '../models/product.types';
 import { CategoryService } from '../services/category.service';
 import { ProductFieldService } from '../services/product-field.service';
 import { ProductTypeService } from '../services/product-type.service';
 import { ProductService } from '../services/product.service';
+import { ProductVariantOptionService } from '../services/product-variant-option.service';
+import { ProductVariantsTabComponent } from './product-variants-tab/product-variants-tab.component';
 
 export interface ProductEditDialogData {
     mode: 'create' | 'edit';
@@ -92,6 +101,7 @@ export interface ProductEditDialogData {
         SpaTabContentDirective,
         SpaDynamicFormComponent,
         SpaMediaPickerComponent,
+        ProductVariantsTabComponent,
     ],
 })
 export class ProductEditDialogComponent
@@ -103,6 +113,7 @@ export class ProductEditDialogComponent
     #productService = inject(ProductService);
     #productFieldService = inject(ProductFieldService);
     #productTypeService = inject(ProductTypeService);
+    #variantOptionService = inject(ProductVariantOptionService);
     #categoryService = inject(CategoryService);
     #dynamicFormService = inject(SpaDynamicFormService);
     #notificationService = inject(NotificationService);
@@ -120,6 +131,9 @@ export class ProductEditDialogComponent
     attributesForm: FormGroup;
     customFieldsForm: FormGroup;
     fieldDefinitions = signal<ProductFieldDefinition[]>([]);
+    variantOptions = signal<ProductVariantOption[]>([]);
+    initialVariantResponses = signal<ProductVariantResponse[]>([]);
+    #variantRequests = signal<ProductVariantRequest[] | null>(null);
     customFieldsConfig = computed(() =>
         this.#mapFieldsToDynamicConfig(this.fieldDefinitions())
     );
@@ -155,6 +169,11 @@ export class ProductEditDialogComponent
                 id: 'custom-fields',
                 label: 'admin.products.customFields.title',
                 icon: 'extension',
+            },
+            {
+                id: 'variants',
+                label: 'Variants',
+                icon: 'tune',
             },
             {
                 id: 'categories',
@@ -255,6 +274,7 @@ export class ProductEditDialogComponent
             types: types$,
             categories: categories$,
             fieldDefinitions: this.#productFieldService.getAllDefinitions(),
+            variantOptions: this.#variantOptionService.getAll(),
         };
 
         if (this.data.mode === 'edit' && this.data.productId) {
@@ -270,6 +290,7 @@ export class ProductEditDialogComponent
                     this.productTypes.set(res.types ?? []);
                     this.categories.set(res.categories ?? []);
                     this.fieldDefinitions.set(res.fieldDefinitions ?? []);
+                    this.variantOptions.set(res.variantOptions ?? []);
                     this.#dynamicFormService.addControlsToFormGroup(
                         this.customFieldsForm,
                         this.customFieldsConfig(),
@@ -278,6 +299,9 @@ export class ProductEditDialogComponent
 
                     if (res.product) {
                         this.patchProductData(res.product);
+                    } else {
+                        this.initialVariantResponses.set([]);
+                        this.#variantRequests.set(null);
                     }
 
                     this.isLoadingSig.set(false);
@@ -359,6 +383,10 @@ export class ProductEditDialogComponent
         if (product.customFields) {
             this.customFieldsForm.patchValue(product.customFields);
         }
+        this.initialVariantResponses.set(product.variants ?? []);
+        this.#variantRequests.set(
+            this.#mapVariantResponsesToRequests(product.variants ?? [])
+        );
     }
 
     loadAttributes(typeId: number, existingAttributes?: Record<string, unknown>): void {
@@ -472,6 +500,12 @@ export class ProductEditDialogComponent
                                 mobileMediaId: m.mobile?.id,
                             })) ?? [],
                         customFields: this.customFieldsForm.value,
+                        variants:
+                            this.#variantRequests() ??
+                            this.#defaultVariantRequest(
+                                formValue.sku,
+                                formValue.basePrice
+                            ),
                     };
 
                     if (this.data.mode === 'create') {
@@ -642,5 +676,45 @@ export class ProductEditDialogComponent
 
         // Try to preserve existing values where possible
         // Ideally we should merge, but since definitions changed, some values might be invalid
+    }
+
+    protected onVariantsChanged(variants: ProductVariantRequest[]): void {
+        this.#variantRequests.set(variants);
+    }
+
+    #mapVariantResponsesToRequests(
+        variants: ProductVariantResponse[]
+    ): ProductVariantRequest[] | null {
+        if (!variants.length) {
+            return null;
+        }
+        return variants.map((variant) => ({
+            sku: variant.sku,
+            price: variant.price?.value ?? 0,
+            firstPrice: variant.firstPrice?.value ?? null,
+            vatRate: Number(variant.vatRate ?? 20),
+            stockQuantity: variant.stockQuantity ?? 0,
+            active: variant.active ?? true,
+            optionValueIds: (variant.optionValues ?? []).map(
+                (value) => value.valueId
+            ),
+        }));
+    }
+
+    #defaultVariantRequest(
+        fallbackSku: string,
+        fallbackPrice: number | null | undefined
+    ): ProductVariantRequest[] {
+        return [
+            {
+                sku: fallbackSku || 'SKU',
+                price: Number(fallbackPrice ?? 0),
+                firstPrice: null,
+                vatRate: 20,
+                stockQuantity: 0,
+                active: true,
+                optionValueIds: [],
+            },
+        ];
     }
 }

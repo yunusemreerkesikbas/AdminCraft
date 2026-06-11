@@ -16,6 +16,7 @@ class ModuleCodeTest {
 		assertThat(ModuleCode.MEDIA.getCode()).isEqualTo("media");
 		assertThat(ModuleCode.COMPONENT_LIBRARY.getCode()).isEqualTo("component_library");
 		assertThat(ModuleCode.PRODUCT_CATALOG.getCode()).isEqualTo("product");
+		assertThat(ModuleCode.COMMERCE.getCode()).isEqualTo("commerce");
 		assertThat(ModuleCode.MAIL_MARKETING.getCode()).isEqualTo("mail_marketing");
 	}
 
@@ -26,6 +27,7 @@ class ModuleCodeTest {
 		assertThat(ModuleCode.MEDIA.getName()).isEqualTo("Media Library");
 		assertThat(ModuleCode.COMPONENT_LIBRARY.getName()).isEqualTo("Component Library");
 		assertThat(ModuleCode.PRODUCT_CATALOG.getName()).isEqualTo("Product Catalog");
+		assertThat(ModuleCode.COMMERCE.getName()).isEqualTo("Commerce");
 		assertThat(ModuleCode.MAIL_MARKETING.getName()).isEqualTo("Mail Marketing");
 	}
 
@@ -36,6 +38,7 @@ class ModuleCodeTest {
 		assertThat(ModuleCode.fromCode("media")).isEqualTo(ModuleCode.MEDIA);
 		assertThat(ModuleCode.fromCode("component_library")).isEqualTo(ModuleCode.COMPONENT_LIBRARY);
 		assertThat(ModuleCode.fromCode("product")).isEqualTo(ModuleCode.PRODUCT_CATALOG);
+		assertThat(ModuleCode.fromCode("commerce")).isEqualTo(ModuleCode.COMMERCE);
 		assertThat(ModuleCode.fromCode("mail_marketing")).isEqualTo(ModuleCode.MAIL_MARKETING);
 	}
 
@@ -46,6 +49,7 @@ class ModuleCodeTest {
 		assertThat(ModuleCode.fromCode("MEDIA")).isEqualTo(ModuleCode.MEDIA);
 		assertThat(ModuleCode.fromCode("Component_Library")).isEqualTo(ModuleCode.COMPONENT_LIBRARY);
 		assertThat(ModuleCode.fromCode("PRODUCT")).isEqualTo(ModuleCode.PRODUCT_CATALOG);
+		assertThat(ModuleCode.fromCode("COMMERCE")).isEqualTo(ModuleCode.COMMERCE);
 		assertThat(ModuleCode.fromCode("MAIL_MARKETING")).isEqualTo(ModuleCode.MAIL_MARKETING);
 	}
 
@@ -70,6 +74,7 @@ class ModuleCodeTest {
 		assertThat(ModuleCode.isValidCode("media")).isTrue();
 		assertThat(ModuleCode.isValidCode("component_library")).isTrue();
 		assertThat(ModuleCode.isValidCode("product")).isTrue();
+		assertThat(ModuleCode.isValidCode("commerce")).isTrue();
 		assertThat(ModuleCode.isValidCode("mail_marketing")).isTrue();
 	}
 
@@ -80,6 +85,7 @@ class ModuleCodeTest {
 		assertThat(ModuleCode.isValidCode("MEDIA")).isTrue();
 		assertThat(ModuleCode.isValidCode("Component_Library")).isTrue();
 		assertThat(ModuleCode.isValidCode("PRODUCT")).isTrue();
+		assertThat(ModuleCode.isValidCode("COMMERCE")).isTrue();
 		assertThat(ModuleCode.isValidCode("MAIL_MARKETING")).isTrue();
 	}
 
@@ -93,21 +99,23 @@ class ModuleCodeTest {
 	@Test
 	void shouldReturnAllModuleCodes() {
 		ModuleCode[] allModules = ModuleCode.values();
-		assertThat(allModules).hasSize(6);
+		assertThat(allModules).hasSize(7);
 		assertThat(allModules).contains(
 				ModuleCode.CORE,
 				ModuleCode.PAGEBUILDER,
 				ModuleCode.MEDIA,
 				ModuleCode.COMPONENT_LIBRARY,
 				ModuleCode.PRODUCT_CATALOG,
+				ModuleCode.COMMERCE,
 				ModuleCode.MAIL_MARKETING);
 	}
 
 	@Test
 	void shouldExposeProvisioningSelectableModules() {
 		assertThat(ModuleCode.provisioningSelectableCodes())
-				.containsExactly("core", "product", "mail_marketing");
+				.containsExactly("core", "product", "commerce", "mail_marketing");
 		assertThat(ModuleCode.isProvisioningSelectableCode("core")).isTrue();
+		assertThat(ModuleCode.isProvisioningSelectableCode("commerce")).isTrue();
 		assertThat(ModuleCode.isProvisioningSelectableCode("pagebuilder")).isFalse();
 	}
 
@@ -117,15 +125,17 @@ class ModuleCodeTest {
 				.containsExactly("media", "component_library", "pagebuilder");
 		assertThat(ModuleCode.isCoreExecutionCode("media")).isTrue();
 		assertThat(ModuleCode.isCoreExecutionCode("product")).isFalse();
+		assertThat(ModuleCode.isCoreExecutionCode("commerce")).isFalse();
 		assertThat(ModuleCode.isCoreCoveredCode("core")).isTrue();
 		assertThat(ModuleCode.isCoreCoveredCode("pagebuilder")).isTrue();
 		assertThat(ModuleCode.isCoreCoveredCode("product")).isFalse();
+		assertThat(ModuleCode.isCoreCoveredCode("commerce")).isFalse();
 	}
 
 	@Test
 	void shouldResolveCoreToRuntimeExecutionModules() {
-		assertThat(ModuleCode.resolveExecutionCodes(List.of("core", "product")))
-				.containsExactly("core", "media", "component_library", "pagebuilder", "product");
+		assertThat(ModuleCode.resolveExecutionCodes(List.of("core", "product", "commerce")))
+				.containsExactly("core", "media", "component_library", "pagebuilder", "product", "commerce");
 	}
 
 	@Test

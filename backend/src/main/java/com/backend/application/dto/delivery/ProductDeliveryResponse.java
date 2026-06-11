@@ -1,6 +1,7 @@
 package com.backend.application.dto.delivery;
 
 import java.util.List;
+import java.util.Comparator;
 
 import com.backend.domain.entity.Category;
 import com.backend.domain.entity.CategoryI18n;
@@ -9,6 +10,8 @@ import com.backend.domain.entity.Product;
 import com.backend.domain.entity.ProductAttribute;
 import com.backend.domain.entity.ProductCategoryLink;
 import com.backend.domain.entity.ProductI18n;
+import com.backend.domain.entity.ProductVariant;
+import com.backend.domain.entity.ProductVariantOptionValue;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
@@ -33,6 +36,7 @@ public class ProductDeliveryResponse {
     private List<AttributeDelivery> attributes;
     private List<CategoryDelivery> categories;
     private List<ResponsiveMediaDelivery> gallery;
+    private List<VariantDelivery> variants;
 
     public static ProductDeliveryResponse from(Product product, Language language, Currency currency) {
         if (product == null)
@@ -80,6 +84,12 @@ public class ProductDeliveryResponse {
         }
 
         PriceResponse price = PriceResponse.from(product.getBasePrice(), currency);
+        List<VariantDelivery> variants = product.getVariants() != null
+                ? product.getVariants().stream()
+                        .filter(v -> v.getActive() != null && v.getActive())
+                        .map(v -> VariantDelivery.from(v, currency))
+                        .toList()
+                : List.of();
 
         return ProductDeliveryResponse.builder()
                 .uid(product.getUid())
@@ -95,7 +105,66 @@ public class ProductDeliveryResponse {
                 .attributes(attrs)
                 .categories(cats)
                 .gallery(gallery)
+                .variants(variants)
                 .build();
+    }
+
+    @Data
+    @Builder
+    public static class VariantDelivery {
+        private String uid;
+        private String sku;
+        private PriceResponse price;
+        private PriceResponse firstPrice;
+        private String vatRate;
+        private Integer stockQuantity;
+        private List<VariantOptionValueDelivery> optionValues;
+
+        public static VariantDelivery from(ProductVariant variant, Currency currency) {
+            List<VariantOptionValueDelivery> values = variant.getOptionValues() != null
+                    ? variant.getOptionValues().stream()
+                            .filter(value -> value.getOption() != null)
+							.sorted(Comparator
+									.<ProductVariantOptionValue, Integer>comparing(
+											value -> value.getOption().getSortOrder(),
+											Comparator.nullsLast(Comparator.naturalOrder()))
+									.thenComparing(value -> value.getOption().getId(), Comparator.nullsLast(Comparator.naturalOrder()))
+									.thenComparing(ProductVariantOptionValue::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                            .map(VariantOptionValueDelivery::from)
+                            .toList()
+                    : List.of();
+            return VariantDelivery.builder()
+                    .uid(variant.getUid())
+                    .sku(variant.getSku())
+                    .price(PriceResponse.from(variant.getPrice(), currency))
+                    .firstPrice(variant.getFirstPrice() == null ? null : PriceResponse.from(variant.getFirstPrice(), currency))
+                    .vatRate(variant.getVatRate() == null ? null : variant.getVatRate().toPlainString())
+                    .stockQuantity(variant.getStockQuantity())
+                    .optionValues(values)
+                    .build();
+        }
+    }
+
+    @Data
+    @Builder
+    public static class VariantOptionValueDelivery {
+        private String optionCode;
+        private String optionName;
+        private String displayType;
+        private String valueCode;
+        private String valueLabel;
+        private String swatchValue;
+
+        public static VariantOptionValueDelivery from(ProductVariantOptionValue value) {
+            return VariantOptionValueDelivery.builder()
+                    .optionCode(value.getOption().getCode())
+                    .optionName(value.getOption().getName())
+                    .displayType(value.getOption().getDisplayType().name())
+                    .valueCode(value.getCode())
+                    .valueLabel(value.getLabel())
+                    .swatchValue(value.getSwatchValue())
+                    .build();
+        }
     }
 
     @Data

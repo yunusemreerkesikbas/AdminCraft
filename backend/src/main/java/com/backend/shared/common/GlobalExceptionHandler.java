@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 
+import com.backend.application.commerce.CommerceCartRateLimitExceededException;
 import com.backend.application.service.PublicContactRateLimitExceededException;
 import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.ContentCannotBePublishedException;
@@ -161,7 +162,7 @@ public class GlobalExceptionHandler {
     // Business Logic Exceptions
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleEntityNotFound(EntityNotFoundException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Entity not found: {}", correlationId, ex.getMessage());
         String message = resolveExceptionMessage(ex.getMessage(), "error.not.found");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -170,7 +171,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateEntityException.class)
     public ResponseEntity<ApiResponse<?>> handleDuplicateEntity(DuplicateEntityException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Duplicate entity: {}", correlationId, ex.getMessage());
         String message = resolveExceptionMessage(ex.getMessage(), "error.data.duplicate");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -179,7 +180,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessRuleViolationException.class)
     public ResponseEntity<ApiResponse<?>> handleBusinessRuleViolation(BusinessRuleViolationException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Business rule violation: {}", correlationId, ex.getMessage());
         String message = resolveExceptionMessage(ex.getMessage(), "error.invalid.data");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -239,7 +240,7 @@ public class GlobalExceptionHandler {
     // Media Exceptions
     @ExceptionHandler(MediaNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleMediaNotFound(MediaNotFoundException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Media not found: {}", correlationId, ex.getMessage());
         ApiResponse<?> response = new ApiResponse<>("ERROR",
                 resolveExceptionMessage(ex.getMessage(), "error.not.found"),
@@ -249,7 +250,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidFileException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidFile(InvalidFileException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Invalid file: {}", correlationId, ex.getMessage());
         String message = getMessage("media.file.invalid");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -258,7 +259,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MediaProcessingException.class)
     public ResponseEntity<ApiResponse<?>> handleMediaProcessing(MediaProcessingException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.error("[{}] Media processing error: ", correlationId, ex);
         String message = getMessage("media.processing.error");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -267,7 +268,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnsupportedFormatException.class)
     public ResponseEntity<ApiResponse<?>> handleUnsupportedFormat(UnsupportedFormatException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Unsupported format: {}", correlationId, ex.getMessage());
         String message = getMessage("media.format.unsupported");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -276,7 +277,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ContainerNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleContainerNotFound(ContainerNotFoundException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Container not found: {}", correlationId, ex.getMessage());
         ApiResponse<?> response = new ApiResponse<>("ERROR",
                 resolveExceptionMessage(ex.getMessage(), "error.not.found"),
@@ -307,7 +308,7 @@ public class GlobalExceptionHandler {
     // Database Constraint Exceptions
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<?>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.error("[{}] Data integrity violation: ", correlationId, ex); // Log full stack trace
 
         String userMessage;
@@ -339,23 +340,33 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RequestNotPermitted.class)
     public ResponseEntity<ApiResponse<?>> handleRequestNotPermitted(RequestNotPermitted ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Rate limiter rejected request: {}", correlationId, ex.getMessage());
-        String message = getMessage("rate.limit.exceeded");
-        return new ResponseEntity<>(ApiResponse.error(message), HttpStatus.TOO_MANY_REQUESTS);
+    String message = getMessage("rate.limit.exceeded");
+    return new ResponseEntity<>(ApiResponse.error(message), HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(PublicContactRateLimitExceededException.class)
     public ResponseEntity<ApiResponse<?>> handlePublicContactRateLimit(PublicContactRateLimitExceededException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Public contact rate limit exceeded", correlationId);
-        String message = getMessage("rate.limit.exceeded");
-        return new ResponseEntity<>(ApiResponse.error(message), HttpStatus.TOO_MANY_REQUESTS);
+    String message = getMessage("rate.limit.exceeded");
+    return new ResponseEntity<>(ApiResponse.error(message), HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(CommerceCartRateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<?>> handleCommerceCartRateLimit(CommerceCartRateLimitExceededException ex) {
+    String correlationId = MDC.get("correlationId");
+    log.warn("[{}] Commerce cart rate limit exceeded", correlationId);
+    String message = getMessage("rate.limit.exceeded");
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+			.header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+			.body(ApiResponse.error(message));
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.error("[{}] Runtime exception: ", correlationId, ex);
         String message = getMessage("error.runtime");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -364,7 +375,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(com.backend.domain.exception.MaxFieldLimitException.class)
     public ResponseEntity<ApiResponse<?>> handleMaxFieldLimit(com.backend.domain.exception.MaxFieldLimitException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.warn("[{}] Max field limit exceeded: {}", correlationId, ex.getMessage());
         String message = getMessage("product.field.max.limit");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -373,7 +384,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SQLException.class)
     public ResponseEntity<ApiResponse<?>> handleSQLException(SQLException ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.error("[{}] Database error: ", correlationId, ex);
         String message = getMessage("error.database");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
@@ -382,7 +393,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGenericException(Exception ex) {
-        String correlationId = MDC.get("correlationId");
+    String correlationId = MDC.get("correlationId");
         log.error("[{}] Unexpected exception: ", correlationId, ex);
         String message = getMessage("error.general");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);

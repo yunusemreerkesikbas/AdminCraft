@@ -18,8 +18,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.backend.application.dto.provisioning.ProvisionRequest;
+import com.backend.application.dto.provisioning.SyncMigrationsRequest;
 import com.backend.domain.entity.ProvisioningJob;
 import com.backend.domain.entity.Tenant;
+import com.backend.domain.entity.TenantModule;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.ProvisioningJobRepository;
 import com.backend.domain.repository.TenantModuleRepository;
@@ -112,6 +114,47 @@ class ProvisioningServiceImplTest {
   }
 
   @Test
+  void shouldIncludeCommerceAfterProductWhenRequested() throws Exception {
+    stubProvisioningFlow();
+    ProvisionRequest request = ProvisionRequest.builder()
+        .modules(List.of("core", "product", "commerce"))
+        .build();
+
+    provisioningService.provisionTenant(1L, request);
+
+    List<String> expected = List.of("core", "media", "component_library", "pagebuilder", "product", "commerce");
+    verify(migrationService).getOrderedModules(eq(expected));
+    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)),
+	eq(expected), eq(List.of("core", "product", "commerce")), anyString());
+  }
+
+  @Test
+  void shouldRejectCommerceProvisioningWithoutProduct() {
+    ProvisionRequest request = ProvisionRequest.builder()
+        .modules(List.of("core", "commerce"))
+        .build();
+
+    assertThatThrownBy(() -> provisioningService.provisionTenant(1L, request))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Commerce module requires Product Catalog module");
+  }
+
+  @Test
+  void shouldNormalizeAndDeDuplicateCommerceProvisioningRequest() throws Exception {
+    stubProvisioningFlow();
+    ProvisionRequest request = ProvisionRequest.builder()
+        .modules(List.of("CORE", "Product", "COMMERCE", "commerce"))
+        .build();
+
+    provisioningService.provisionTenant(1L, request);
+
+    List<String> expected = List.of("core", "media", "component_library", "pagebuilder", "product", "commerce");
+    verify(migrationService).getOrderedModules(eq(expected));
+    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)),
+	eq(expected), eq(List.of("core", "product", "commerce")), anyString());
+  }
+
+  @Test
   void shouldRejectProvisioningWithoutCore() {
     ProvisionRequest request = ProvisionRequest.builder()
         .modules(List.of("product"))
@@ -131,5 +174,35 @@ class ProvisioningServiceImplTest {
     assertThatThrownBy(() -> provisioningService.provisionTenant(1L, request))
 	.isInstanceOf(IllegalArgumentException.class)
 	.hasMessageContaining("Invalid provisioning module code");
+  }
+
+  @Test
+  void shouldSyncCommerceWhenProductIsInstalled() throws Exception {
+    stubProvisioningFlow();
+    when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled")).thenReturn(List.of(
+        TenantModule.builder().tenantId(1L).moduleCode("core").status("enabled").build(),
+        TenantModule.builder().tenantId(1L).moduleCode("product").status("enabled").build(),
+        TenantModule.builder().tenantId(1L).moduleCode("commerce").status("enabled").build()));
+    SyncMigrationsRequest request = new SyncMigrationsRequest();
+    request.setModules(List.of("commerce"));
+
+    provisioningService.syncTenantMigrations(1L, request);
+
+    verify(migrationService).getOrderedModules(eq(List.of("commerce")));
+    verify(asyncExecutor).executeSyncMigrations(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)),
+	eq(List.of("commerce")), anyString());
+  }
+
+  @Test
+  void shouldRejectCommerceSyncWithoutProduct() {
+    when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled")).thenReturn(List.of(
+        TenantModule.builder().tenantId(1L).moduleCode("core").status("enabled").build(),
+        TenantModule.builder().tenantId(1L).moduleCode("commerce").status("enabled").build()));
+    SyncMigrationsRequest request = new SyncMigrationsRequest();
+    request.setModules(List.of("commerce"));
+
+    assertThatThrownBy(() -> provisioningService.syncTenantMigrations(1L, request))
+	.isInstanceOf(IllegalArgumentException.class)
+	.hasMessageContaining("Commerce module requires Product Catalog module");
   }
 }

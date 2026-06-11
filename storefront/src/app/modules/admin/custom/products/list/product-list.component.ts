@@ -31,6 +31,7 @@ import { ProductFieldDialogComponent } from '../fields/product-field-dialog/prod
 import { ProductEditDialogComponent } from '../product-edit-dialog/product-edit-dialog.component';
 import { ProductFieldService } from '../services/product-field.service';
 import { ProductService } from '../services/product.service';
+import { ProductVariantOptionsDialogComponent } from '../variant-options/product-variant-options-dialog.component';
 
 @Component({
     selector: 'spa-product-list',
@@ -202,6 +203,13 @@ export class ProductListComponent extends BasePaginatedListComponent<
                         },
                     });
             }
+            });
+    }
+
+    openVariantOptionsDialog(): void {
+        this.#matDialog.open(ProductVariantOptionsDialogComponent, {
+            width: '980px',
+            maxWidth: '95vw',
         });
     }
 }

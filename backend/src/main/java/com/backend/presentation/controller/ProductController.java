@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.request.ProductI18nDto;
+import com.backend.application.dto.request.ProductVariantDto;
 import com.backend.application.service.ProductService;
 import com.backend.domain.entity.Category;
 import com.backend.domain.entity.CategoryI18n;
@@ -38,6 +39,7 @@ import com.backend.domain.port.TenantContextPort;
 import com.backend.presentation.dto.request.ProductCompositeRequest;
 import com.backend.presentation.dto.request.ProductI18nRequest;
 import com.backend.presentation.dto.request.ProductUpdateRequest;
+import com.backend.presentation.dto.request.ProductVariantRequest;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.ProductCompositeResponse;
 import com.backend.presentation.dto.response.ProductListItemResponse;
@@ -182,6 +184,7 @@ public class ProductController {
                                         request.primaryCategoryId(),
                                         request.gallery(),
                                         request.customFields(),
+                                        mapProductVariants(request.variants()),
                                         userId);
 
                         String msg = messageSource.getMessage("product.create.success", null,
@@ -223,6 +226,7 @@ public class ProductController {
                                         request.primaryCategoryId(),
                                         request.gallery(),
                                         request.customFields(),
+                                        mapProductVariants(request.variants()),
                                         userId);
 
                         String msg = messageSource.getMessage("product.update.success", null,
@@ -339,5 +343,22 @@ public class ProductController {
                                                                 e.getValue().description(),
                                                                 e.getValue().seoTitle(),
                                                                 e.getValue().seoDescription())));
+        }
+
+        private List<ProductVariantDto> mapProductVariants(List<ProductVariantRequest> variants) {
+                if (variants == null) {
+                        return null;
+                }
+                return variants.stream()
+                                .map(variant -> new ProductVariantDto(
+                                                variant.sku(),
+                                                variant.price(),
+                                                variant.firstPrice(),
+                                                variant.vatRate(),
+                                                variant.stockQuantity(),
+                                                variant.active(),
+                                                variant.responsiveMediaId(),
+                                                variant.optionValueIds()))
+                                .toList();
         }
 }

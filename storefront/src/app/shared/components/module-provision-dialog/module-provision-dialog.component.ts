@@ -126,7 +126,7 @@ export class ModuleProvisionDialogComponent implements OnInit {
 		const selected = new Set(this.selectedModulesSig());
 
 		if (selected.has(code)) {
-			if (code === this.#coreModuleCode) {
+			if (code === this.#coreModuleCode || this.#isRequiredBySelectedModule(code, selected)) {
 				return;
 			}
 			selected.delete(code);
@@ -141,7 +141,9 @@ export class ModuleProvisionDialogComponent implements OnInit {
 	}
 
 	protected isModuleDisabled(code: string): boolean {
-		return code === this.#coreModuleCode || this.installedModulesSig().has(code);
+		return code === this.#coreModuleCode
+			|| this.installedModulesSig().has(code)
+			|| this.#isRequiredBySelectedModule(code, this.selectedModulesSig());
 	}
 
 	protected startProvisioning(): void {
@@ -206,6 +208,12 @@ export class ModuleProvisionDialogComponent implements OnInit {
 
 	#getModule(code: string): ModuleCatalog | undefined {
 		return this.modulesSig().find(module => module.code === code);
+	}
+
+	#isRequiredBySelectedModule(code: string, selected: Set<string>): boolean {
+		return this.modulesSig().some(module =>
+			selected.has(module.code) && module.code !== code && module.deps?.includes(code)
+		);
 	}
 
 	#getProvisionRequestModules(): string[] {

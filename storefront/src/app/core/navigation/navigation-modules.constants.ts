@@ -1,6 +1,7 @@
 export const NAVIGATION_MODULES = {
     CORE: 'core',
     PRODUCT_CATALOG: 'product',
+    COMMERCE: 'commerce',
     MAIL_MARKETING: 'mail_marketing'
 } as const;
 

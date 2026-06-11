@@ -415,6 +415,16 @@
                 </div>
             </ng-template>
 
+            <ng-template spaTabContent="variants">
+                <spa-product-variants-tab
+                    [variantOptions]="variantOptions()"
+                    [initialVariants]="initialVariantResponses()"
+                    [baseSku]="generalForm.get('sku')?.value || 'SKU'"
+                    [basePrice]="generalForm.get('basePrice')?.value ?? 0"
+                    (variantsChange)="onVariantsChanged($event)"
+                ></spa-product-variants-tab>
+            </ng-template>
+
             <ng-template spaTabContent="categories">
                 <form
                     [formGroup]="generalForm"

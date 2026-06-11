@@ -22,8 +22,9 @@ import jakarta.persistence.EntityManagerFactory;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackages = {
-                "com.backend.infrastructure.persistence.repository",
-                "com.backend.infrastructure.persistence.tenant.repository",
+				"com.backend.infrastructure.persistence.repository",
+				"com.backend.infrastructure.persistence.commerce",
+				"com.backend.infrastructure.persistence.tenant.repository",
                 "com.backend.domain.repository"
 }, entityManagerFactoryRef = "tenantEntityManagerFactory", transactionManagerRef = "tenantTransactionManager")
 public class DatabaseConfig {
@@ -44,8 +45,9 @@ public class DatabaseConfig {
         public LocalContainerEntityManagerFactoryBean tenantEntityManagerFactory() {
                 LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
                 em.setPackagesToScan(
-                                "com.backend.domain.entity",
-                                "com.backend.infrastructure.persistence.entity",
+								"com.backend.domain.entity",
+								"com.backend.domain.commerce",
+								"com.backend.infrastructure.persistence.entity",
                                 "com.backend.infrastructure.persistence.repository.entity");
                 em.setPersistenceUnitName("tenant");
 
