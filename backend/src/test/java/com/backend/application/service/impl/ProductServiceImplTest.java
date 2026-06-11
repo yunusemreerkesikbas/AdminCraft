@@ -3,6 +3,7 @@ package com.backend.application.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -32,13 +33,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import com.backend.application.dto.request.ProductI18nDto;
+import com.backend.application.dto.request.ProductVariantDto;
 import com.backend.application.service.ProductServiceImpl;
 import com.backend.domain.entity.Category;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.Product;
+import com.backend.domain.entity.ProductVariant;
+import com.backend.domain.entity.ProductVariantOption;
+import com.backend.domain.entity.ProductVariantOptionValue;
 import com.backend.domain.entity.ProductType;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
+import com.backend.domain.enums.ProductVariantOptionDisplayType;
 import com.backend.domain.repository.CategoryRepository;
 import com.backend.domain.repository.MediaRepository;
 import com.backend.domain.repository.ProductAttributeDefinitionRepository;
@@ -48,6 +54,8 @@ import com.backend.domain.repository.ProductI18nRepository;
 import com.backend.domain.repository.ProductMediaRepository;
 import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.ProductTypeRepository;
+import com.backend.infrastructure.persistence.repository.ProductVariantOptionValueRepository;
+import com.backend.infrastructure.persistence.repository.ProductVariantRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
 import com.backend.presentation.dto.request.ResponsiveMediaRequest;
 import com.backend.testutil.BaseServiceTest;
@@ -95,6 +103,21 @@ class ProductServiceImplTest extends BaseServiceTest {
     @Mock
     private com.backend.domain.repository.ProductFieldValueRepository productFieldValueRepository;
 
+    @Mock
+    private com.backend.application.service.ProductFieldService productFieldService;
+
+    @Mock
+    private ProductVariantRepository productVariantRepository;
+
+    @Mock
+    private ProductVariantOptionValueRepository productVariantOptionValueRepository;
+
+    @Mock
+    private com.backend.application.service.SiteActivityPublisher activityPublisher;
+
+    @Mock
+    private com.backend.shared.common.SecurityHelper securityHelper;
+
     @InjectMocks
     private ProductServiceImpl productService;
 
@@ -119,11 +142,25 @@ class ProductServiceImplTest extends BaseServiceTest {
                 .withProductType(testProductType)
                 .withSku("SKU-001")
                 .build();
+        ProductVariant publishableVariant = new ProductVariant();
+        publishableVariant.setId(1L);
+        publishableVariant.setProduct(testProduct);
+        publishableVariant.setSku("SKU-001");
+        publishableVariant.setPrice(BigDecimal.valueOf(100));
+        publishableVariant.setVatRate(BigDecimal.valueOf(20));
+        publishableVariant.setStockQuantity(0);
+        publishableVariant.setActive(true);
+        testProduct.getVariants().add(publishableVariant);
 
         testCategory = CategoryTestDataBuilder.aCategory()
                 .withId(1L)
                 .withCode("electronics")
                 .build();
+
+        when(productVariantRepository.existsBySku(anyString())).thenReturn(false);
+        when(productVariantRepository.existsBySkuAndProductIdNot(anyString(), anyLong())).thenReturn(false);
+        when(productVariantRepository.save(any(ProductVariant.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productVariantRepository.findByProductIdOrderByIdAsc(anyLong())).thenReturn(List.of(publishableVariant));
     }
 
     // ==================== createComposite() Tests ====================
@@ -536,6 +573,209 @@ class ProductServiceImplTest extends BaseServiceTest {
     }
 
     // ==================== delete() Tests ====================
+
+    @Nested
+    @DisplayName("Variant Tests")
+    class VariantTests {
+
+        @Test
+        @DisplayName("Should save provided variants and sync base price from active minimum")
+        void createComposite_WithVariants_SavesVariantsAndSyncsBasePrice() {
+            Map<Language, ProductI18nDto> translations = Map.of(Language.TR, new ProductI18nDto("Variant Product"));
+            List<ProductVariantDto> variants = List.of(
+                    new ProductVariantDto("SKU-RED", BigDecimal.valueOf(200), null, BigDecimal.valueOf(20), 5, true,
+                            null, List.of()),
+                    new ProductVariantDto("SKU-BLUE", BigDecimal.valueOf(150), null, BigDecimal.valueOf(20), 0, true,
+                            null, List.of()));
+
+            when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
+            when(productRepository.existsBySku("SKU-PARENT")).thenReturn(false);
+            when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
+                Product p = inv.getArgument(0);
+                p.setId(10L);
+                return p;
+            });
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
+            when(productRepository.findByIdComposite(10L)).thenReturn(Optional.of(testProduct));
+
+            Product result = productService.createComposite(
+                    1L, "SKU-PARENT", BigDecimal.valueOf(300),
+                    ProductStatus.DRAFT, true, null,
+                    translations, null, null, null, null, null, variants, TEST_USER_ID);
+
+            assertThat(result).isNotNull();
+            verify(productVariantRepository, org.mockito.Mockito.times(2)).save(any(ProductVariant.class));
+            verify(productRepository, org.mockito.Mockito.atLeastOnce())
+                    .save(argThat(product -> product.getBasePrice().compareTo(BigDecimal.valueOf(150)) == 0));
+        }
+
+        @Test
+        @DisplayName("Should create default variant when variants omitted")
+        void createComposite_WithNoVariants_CreatesDefaultVariant() {
+            Map<Language, ProductI18nDto> translations = Map.of(Language.TR, new ProductI18nDto("Default Variant Product"));
+
+            when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
+            when(productRepository.existsBySku("SKU-DEFAULT")).thenReturn(false);
+            when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
+                Product p = inv.getArgument(0);
+                p.setId(10L);
+                return p;
+            });
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
+            when(productRepository.findByIdComposite(10L)).thenReturn(Optional.of(testProduct));
+
+            productService.createComposite(
+                    1L, "SKU-DEFAULT", BigDecimal.valueOf(75),
+                    ProductStatus.DRAFT, true, null,
+                    translations, null, null, null, null, null, null, TEST_USER_ID);
+
+            verify(productVariantRepository).save(argThat(variant ->
+                    "SKU-DEFAULT".equals(variant.getSku())
+                            && variant.getPrice().compareTo(BigDecimal.valueOf(75)) == 0
+                            && variant.getVatRate().compareTo(BigDecimal.valueOf(20)) == 0
+                            && variant.getStockQuantity() == 0
+                            && Boolean.TRUE.equals(variant.getActive())));
+        }
+
+        @Test
+        @DisplayName("Should reject duplicate variant SKU in request")
+        void createComposite_ThrowsException_WhenVariantSkuDuplicatedInRequest() {
+            Map<Language, ProductI18nDto> translations = Map.of(Language.TR, new ProductI18nDto("Variant Product"));
+            List<ProductVariantDto> variants = List.of(
+                    new ProductVariantDto("SKU-DUP", BigDecimal.TEN, null, BigDecimal.valueOf(20), 0, true, null,
+                            List.of()),
+                    new ProductVariantDto("sku-dup", BigDecimal.TEN, null, BigDecimal.valueOf(20), 0, true, null,
+                            List.of()));
+
+            when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
+            when(productRepository.existsBySku("SKU-PARENT")).thenReturn(false);
+            when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
+                Product p = inv.getArgument(0);
+                p.setId(10L);
+                return p;
+            });
+
+            assertThatThrownBy(() -> productService.createComposite(
+                    1L, "SKU-PARENT", BigDecimal.TEN,
+                    ProductStatus.DRAFT, true, null,
+                    translations, null, null, null, null, null, variants, TEST_USER_ID))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Duplicate variant SKU");
+        }
+
+        @Test
+        @DisplayName("Should reject firstPrice lower than price")
+        void createComposite_ThrowsException_WhenFirstPriceLowerThanPrice() {
+            Map<Language, ProductI18nDto> translations = Map.of(Language.TR, new ProductI18nDto("Variant Product"));
+            List<ProductVariantDto> variants = List.of(
+                    new ProductVariantDto("SKU-SALE", BigDecimal.valueOf(100), BigDecimal.valueOf(90),
+                            BigDecimal.valueOf(20), 0, true, null, List.of()));
+
+            when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
+            when(productRepository.existsBySku("SKU-PARENT")).thenReturn(false);
+            when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
+                Product p = inv.getArgument(0);
+                p.setId(10L);
+                return p;
+            });
+
+            assertThatThrownBy(() -> productService.createComposite(
+                    1L, "SKU-PARENT", BigDecimal.TEN,
+                    ProductStatus.DRAFT, true, null,
+                    translations, null, null, null, null, null, variants, TEST_USER_ID))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("first price cannot be less than price");
+        }
+
+        @Test
+        @DisplayName("Should reject negative stock quantity")
+        void createComposite_ThrowsException_WhenVariantStockIsNegative() {
+            Map<Language, ProductI18nDto> translations = Map.of(Language.TR, new ProductI18nDto("Variant Product"));
+            List<ProductVariantDto> variants = List.of(
+                    new ProductVariantDto("SKU-STOCK", BigDecimal.valueOf(100), null,
+                            BigDecimal.valueOf(20), -1, true, null, List.of()));
+
+            when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
+            when(productRepository.existsBySku("SKU-PARENT")).thenReturn(false);
+            when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
+                Product p = inv.getArgument(0);
+                p.setId(10L);
+                return p;
+            });
+
+            assertThatThrownBy(() -> productService.createComposite(
+                    1L, "SKU-PARENT", BigDecimal.TEN,
+                    ProductStatus.DRAFT, true, null,
+                    translations, null, null, null, null, null, variants, TEST_USER_ID))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("stock quantity must be zero or greater");
+        }
+
+        @Test
+        @DisplayName("Should reject publish without active valid variant")
+        void updateStatus_ThrowsException_WhenPublishedWithoutActiveVariant() {
+            testProduct.getVariants().clear();
+            when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
+            when(productVariantRepository.findByProductIdOrderByIdAsc(1L)).thenReturn(List.of());
+
+            assertThatThrownBy(() -> productService.updateStatus(1L, ProductStatus.PUBLISHED, TEST_USER_ID))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("requires at least one active valid variant");
+        }
+
+        @Test
+        @DisplayName("Should reject more than two variant options per product")
+        void createComposite_ThrowsException_WhenMoreThanTwoOptionsUsed() {
+            Map<Language, ProductI18nDto> translations = Map.of(Language.TR, new ProductI18nDto("Variant Product"));
+            ProductVariantOption option1 = option(1L, "color");
+            ProductVariantOption option2 = option(2L, "size");
+            ProductVariantOption option3 = option(3L, "material");
+            List<ProductVariantOptionValue> values = List.of(
+                    value(11L, option1, "red"),
+                    value(12L, option2, "large"),
+                    value(13L, option3, "cotton"));
+            List<ProductVariantDto> variants = List.of(
+                    new ProductVariantDto("SKU-3OPT", BigDecimal.TEN, null, BigDecimal.valueOf(20), 0, true, null,
+                            List.of(11L, 12L, 13L)));
+
+            when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
+            when(productRepository.existsBySku("SKU-PARENT")).thenReturn(false);
+            when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
+                Product p = inv.getArgument(0);
+                p.setId(10L);
+                return p;
+            });
+            when(productVariantOptionValueRepository.findByIdIn(anyCollection())).thenReturn(values);
+
+            assertThatThrownBy(() -> productService.createComposite(
+                    1L, "SKU-PARENT", BigDecimal.TEN,
+                    ProductStatus.DRAFT, true, null,
+                    translations, null, null, null, null, null, variants, TEST_USER_ID))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("at most 2 variant options");
+        }
+
+        private ProductVariantOption option(Long id, String code) {
+            ProductVariantOption option = new ProductVariantOption();
+            option.setId(id);
+            option.setCode(code);
+            option.setName(code);
+            option.setDisplayType(ProductVariantOptionDisplayType.TEXT);
+            option.setSortOrder(0);
+            option.setActive(true);
+            return option;
+        }
+
+        private ProductVariantOptionValue value(Long id, ProductVariantOption option, String code) {
+            ProductVariantOptionValue value = new ProductVariantOptionValue();
+            value.setId(id);
+            value.setOption(option);
+            value.setCode(code);
+            value.setLabel(code);
+            value.setActive(true);
+            return value;
+        }
+    }
 
     @Nested
     @DisplayName("delete() Tests")

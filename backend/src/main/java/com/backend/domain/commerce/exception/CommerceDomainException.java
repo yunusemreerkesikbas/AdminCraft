@@ -1,6 +1,8 @@
 package com.backend.domain.commerce.exception;
 
-public class CommerceDomainException extends RuntimeException {
+import com.backend.domain.exception.BusinessRuleViolationException;
+
+public class CommerceDomainException extends BusinessRuleViolationException {
 
     public CommerceDomainException(String message) {
         super(message);

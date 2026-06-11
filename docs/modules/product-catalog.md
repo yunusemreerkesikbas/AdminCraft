@@ -9,16 +9,15 @@ The Product Catalog module provides tenant-scoped management and public delivery
 - Hierarchical categories with i18n content
 - Products with composite create/update (translations + attributes + categories + custom fields + responsive gallery)
 - Responsive media support for both main product image and gallery items (Desktop + Mobile)
+- Commerce-ready product variants with reusable tenant-wide options, variant SKU, gross price, VAT rate, stock, and active state
 
 ## Database
 
 Tenant migrations:
 
 - `backend/src/main/resources/db/tenant/product/`
-  - `V27__product_baseline.sql`
-  - `V30__add_product_fields.sql`
-  - `V32__remove_product_field_unused_columns.sql` (removed: isRequired, isVisibleInList, sortOrder, defaultValue, validationConfig)
-  - `V33__remove_product_attribute_unused_columns.sql` (removed: isRequired, isSearchable, sortOrder, validationConfig)
+  - `V1.0.0__baseline.sql`
+  - `V1.0.1__product_variants.sql`
   - `R__seed_product_types.sql`
 
 Platform registration (module catalog):
@@ -72,6 +71,20 @@ Base path: `/api/products/fields`
 - Removed fields (as of V32): `isRequired`, `isVisibleInList`, `sortOrder`, `defaultValue`, `validationConfig`
 - Code generation: Automatically generated from `name` using `SlugGenerator.generateUniqueCode()` to ensure uniqueness
 
+### Variant options and values
+
+Controller: [`backend/src/main/java/com/backend/presentation/controller/ProductVariantOptionController.java`](../../backend/src/main/java/com/backend/presentation/controller/ProductVariantOptionController.java)
+
+Base path: `/api/products/variant-options`
+
+- `GET /api/products/variant-options`
+- `GET /api/products/variant-options/{id}`
+- `POST /api/products/variant-options`
+- `PUT /api/products/variant-options/{id}`
+- `DELETE /api/products/variant-options/{id}`
+
+Variant options are tenant-wide reusable definitions such as color or size. Supported display types are `TEXT` and `COLOR`. Option and value codes are generated from names/labels using `SlugGenerator`.
+
 ### Categories (hierarchical, i18n, composite)
 
 Controller: [`backend/src/main/java/com/backend/presentation/controller/CategoryController.java`](../../backend/src/main/java/com/backend/presentation/controller/CategoryController.java)
@@ -98,6 +111,19 @@ Base path: `/api/products`
 - `DELETE /api/products/{id}`
 - `PATCH /api/products/{id}/status?status=DRAFT|PUBLISHED`
 - `PATCH /api/products/{id}/visibility?isVisible=true|false`
+
+Composite product requests and responses include optional `variants`.
+
+Variant fields:
+
+- `sku`
+- `price` (gross price, tenant currency)
+- `firstPrice` (optional original/list price)
+- `vatRate`
+- `stockQuantity`
+- `active`
+- `responsiveMediaId` (optional)
+- `optionValueIds`
 
 ### Custom Fields Structure
 
@@ -126,13 +152,15 @@ Global product fields are returned in a **nested structure** within product resp
 **Response DTOs:**
 
 - `ProductCompositeResponse.customFields`: `Map<String, Object>` (nested)
+- `ProductCompositeResponse.variants`: product variant rows with selected option values
 - `ProductListItemResponse`: Does not include customFields (list view optimization)
-- `ProductDeliveryResponse`: Does not include customFields (public delivery optimization)
+- `ProductDeliveryResponse`: includes active variants, but does not include customFields (public delivery optimization)
 
 **Request DTOs:**
 
 - `ProductCompositeRequest.customFields`: `Map<String, Object>` (nested)
 - `ProductUpdateRequest.customFields`: `Map<String, Object>` (nested)
+- `ProductCompositeRequest.variants` / `ProductUpdateRequest.variants`: optional variant rows. If omitted/empty on create, the backend creates one default variant from product SKU and base price.
 
 ## Public delivery APIs
 
@@ -171,16 +199,19 @@ Key parts:
   - `product.types.ts` (Product, ProductCompositeRequest, ProductListItemResponse, etc.)
   - `product-type.types.ts` (ProductType, AttributeDefinition, ProductFieldType, etc.)
   - `product-field.types.ts` (Custom field definitions: code, name, fieldType)
+  - `product-variant-option.types.ts` (tenant-wide option/value definitions)
   - `category.types.ts` (Category, CategoryTreeResponse, etc.)
 - Services:
   - `services/product.service.ts` (CRUD service extending `CrudHttpService`)
   - `services/product-type.service.ts` (CRUD service with attribute management)
   - `services/product-field.service.ts` (custom field definition management)
+  - `services/product-variant-option.service.ts` (variant option/value management)
   - `services/category.service.ts` (tree operations and composite CRUD)
 - Components:
   - `list/product-list.component.ts` (paginated list with search, extends `BaseCrudListComponent`; displays: name+SKU, productTypeName, status, actions)
-  - `product-edit-dialog/` (composite product create/edit with tabs: general, i18n, attributes, categories, media, custom fields - nested structure: `product.customFields.{code}`)
+  - `product-edit-dialog/` (composite product create/edit with tabs: general, i18n, attributes, custom fields, variants, categories, media)
   - `fields/product-field-dialog/` (simplified custom field definition create/edit: only `name` and `fieldType`; `code` auto-generated)
+  - `variant-options/product-variant-options-dialog.component.ts` (minimal option/value management dialog)
   - `types/product-type-list.component.ts` (paginated list)
   - `types/product-type-edit-dialog/` (type management with attributes tab)
   - `types/product-attribute-dialog/` (simplified attribute definition create/edit: only `name` and `fieldType`; `code` auto-generated)
@@ -254,13 +285,17 @@ Translation save operations use batch processing for improved performance:
 **Price validation**:
 
 - `basePrice` field on product creation/update must be ≥ 0
+- Variant `price`, `firstPrice`, and `vatRate` must be ≥ 0
+- `firstPrice` cannot be less than `price`
 - Enforced via `@DecimalMin("0.0")` on DTOs:
   - `ProductCompositeRequest`
   - `ProductUpdateRequest`
+  - `ProductVariantRequest`
 
 **String length validation**:
 
 - `sku`: max 100 characters (`@Size(max=100)`)
+- variant `sku`: max 100 characters and unique in `product_variants`
 - `name`: max 200 characters (in i18n DTOs)
 - `code`: max 100 characters with pattern validation (auto-generated from `name`)
 
@@ -272,9 +307,18 @@ Translation save operations use batch processing for improved performance:
 
 **Code auto-generation**:
 
-- Both `ProductFieldDefinition` and `ProductAttributeDefinition` automatically generate `code` from `name` using `SlugGenerator.generateUniqueCode()`
+- `ProductFieldDefinition`, `ProductAttributeDefinition`, and variant options automatically generate `code` from `name` using `SlugGenerator.generateUniqueCode()`
 - Code generation handles Turkish characters (ı, ğ, ü, ş, ö, ç) and ensures uniqueness by appending numeric suffixes if needed
 - Location: `backend/src/main/java/com/backend/shared/util/SlugGenerator.java`
+
+### Variant rules
+
+- A product can use at most 2 distinct variant options.
+- `PUBLISHED` products require at least one active valid variant.
+- Active variants require SKU, price, VAT rate, and non-negative stock.
+- Stock `0` does not block publish. Commerce cart add/update blocks requested quantities that exceed current stock, but does not reserve stock.
+- Product `basePrice` is kept for backward compatibility and syncs to the minimum active variant price.
+- Commerce cart stores variant gross price and VAT snapshots, then compares them with live variant values on cart read.
 
 **Note**: Attribute validation rules (`validationConfig`) and required field checks (`isRequired`) have been removed as of migrations V32 and V33. Products now only validate basic field types (TEXT, NUMBER, BOOLEAN, DATE, etc.) without custom validation rules.
 
@@ -343,6 +387,9 @@ backend/src/test/java/com/backend/
 | Category delete with products       | `IllegalStateException`          | 400              |
 | Product create without translations | `IllegalArgumentException`       | 400              |
 | Duplicate SKU prevention            | `IllegalArgumentException`       | 400              |
+| Duplicate variant SKU prevention    | `IllegalArgumentException`       | 400              |
+| More than two variant options       | `IllegalArgumentException`       | 400              |
+| Publish without active valid variant | `IllegalArgumentException`      | 400              |
 | Duplicate code prevention           | `IllegalArgumentException`       | 400              |
 | TenantContext not active            | `IllegalStateException`          | 500              |
 | Circular category parent            | `IllegalArgumentException`       | 400              |
@@ -394,9 +441,12 @@ Product product = ProductTestDataBuilder.aProduct()
    - `POST /api/products/categories/composite`
 3. Create a product (atomic composite):
    - `POST /api/products/composite`
-4. Publish the product:
+4. Optionally create reusable variant options:
+   - `POST /api/products/variant-options`
+5. Add variants on the product composite payload or let create generate the default variant.
+6. Publish the product:
    - `PATCH /api/products/{id}/status?status=PUBLISHED`
-5. Fetch the product publicly:
+7. Fetch the product publicly:
    - `GET /api/cms/products/{uid}?lang=TR`
 
 ### Add a new attribute type

@@ -104,7 +104,9 @@ interface ProductJpaRepository extends JpaRepository<Product, Long> {
         @EntityGraph(attributePaths = { "productType", "responsiveMediaSet", "responsiveMediaSet.desktopMedia",
                         "responsiveMediaSet.mobileMedia", "attributes",
                         "attributes.attributeDefinition", "gallery", "gallery.responsiveMediaSet",
-                        "gallery.responsiveMediaSet.desktopMedia", "gallery.responsiveMediaSet.mobileMedia" })
+                        "gallery.responsiveMediaSet.desktopMedia", "gallery.responsiveMediaSet.mobileMedia",
+                        "variants", "variants.optionValues", "variants.optionValues.option",
+                        "variants.responsiveMediaSet" })
         @Query("SELECT p FROM Product p WHERE p.id = :id")
         Optional<Product> findByIdComposite(@Param("id") Long id);
 

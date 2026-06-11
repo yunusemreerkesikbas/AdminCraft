@@ -34,5 +34,21 @@ public record ProductUpdateRequest(
 
     @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery,
 
-    Map<String, Object> customFields) {
+    Map<String, Object> customFields,
+
+    @Valid List<ProductVariantRequest> variants) {
+
+    public ProductUpdateRequest(BigDecimal basePrice,
+            ProductStatus status,
+            Boolean isVisible,
+            Long responsiveMediaId,
+            Map<Language, ProductI18nRequest> translations,
+            Map<String, Object> attributes,
+            List<Long> categoryIds,
+            Long primaryCategoryId,
+            List<ResponsiveMediaRequest> gallery,
+            Map<String, Object> customFields) {
+        this(basePrice, status, isVisible, responsiveMediaId, translations, attributes,
+                categoryIds, primaryCategoryId, gallery, customFields, null);
+    }
 }

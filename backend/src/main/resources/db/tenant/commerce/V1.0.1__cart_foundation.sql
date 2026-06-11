@@ -1,0 +1,45 @@
+CREATE TABLE commerce_carts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL,
+    uid VARCHAR(50) NOT NULL,
+    token_hash VARCHAR(64) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    created_by BIGINT NULL,
+    updated_by BIGINT NULL,
+    CONSTRAINT uk_commerce_cart_uuid UNIQUE (uuid),
+    CONSTRAINT uk_commerce_cart_uid UNIQUE (uid),
+    CONSTRAINT uk_commerce_cart_token_hash UNIQUE (token_hash),
+    CONSTRAINT chk_commerce_cart_status CHECK (status IN ('ACTIVE', 'CLEARED', 'EXPIRED')),
+    INDEX idx_commerce_cart_status_expires (status, expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE commerce_cart_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL,
+    uid VARCHAR(50) NOT NULL,
+    cart_id BIGINT NOT NULL,
+    product_uid VARCHAR(50) NOT NULL,
+    product_sku VARCHAR(100) NOT NULL,
+    variant_uid VARCHAR(50) NOT NULL,
+    variant_sku VARCHAR(100) NOT NULL,
+    quantity INT NOT NULL,
+    unit_gross_price DECIMAL(15,2) NOT NULL,
+    vat_rate DECIMAL(5,2) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    created_by BIGINT NULL,
+    updated_by BIGINT NULL,
+    CONSTRAINT uk_commerce_cart_item_uuid UNIQUE (uuid),
+    CONSTRAINT uk_commerce_cart_item_uid UNIQUE (uid),
+    CONSTRAINT uk_commerce_cart_item_cart_variant UNIQUE (cart_id, variant_uid),
+    CONSTRAINT fk_commerce_cart_item_cart FOREIGN KEY (cart_id)
+        REFERENCES commerce_carts(id) ON DELETE CASCADE,
+    CONSTRAINT chk_commerce_cart_item_quantity CHECK (quantity >= 1 AND quantity <= 99),
+    CONSTRAINT chk_commerce_cart_item_price CHECK (unit_gross_price >= 0),
+    CONSTRAINT chk_commerce_cart_item_vat CHECK (vat_rate >= 0),
+    INDEX idx_commerce_cart_item_cart (cart_id),
+    INDEX idx_commerce_cart_item_variant_uid (variant_uid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -4,9 +4,11 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation is a foundation shell only. It registers the module, protects its future admin route, creates module package boundaries, and prepares Flyway history. It does not implement cart, checkout, customer, payment, order, or storefront commerce behavior yet.
+The current implementation includes the module foundation and anonymous cart foundation. It does not implement customer account, checkout, payment, order, fulfillment, or storefront UI yet.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
+
+Product Catalog now owns the commerce-ready sellable product foundation: reusable variant options, product variants, variant SKU, gross price, VAT rate, stock, and active state. Commerce cart/order work should reference product variants instead of base products.
 
 ## Database
 
@@ -15,11 +17,35 @@ Migration paths:
 - Platform catalog seed: [`../../backend/src/main/resources/db/platform/R__seed_modules.sql`](../../backend/src/main/resources/db/platform/R__seed_modules.sql)
 - Tenant commerce migrations: [`../../backend/src/main/resources/db/tenant/commerce`](../../backend/src/main/resources/db/tenant/commerce)
 
-Current tenant migration:
+Current tenant migrations:
 
 - `V1.0.0__baseline.sql` is intentionally no-op. It creates Flyway history for the commerce module without adding business tables.
+- `V1.0.1__cart_foundation.sql` creates anonymous cart and cart item tables.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
+
+## Anonymous cart API
+
+Base path: `/api/commerce/cart`
+
+The cart API is public and tenant-scoped. It uses `X-Cart-Token` for anonymous cart identity. New cart tokens are returned in the response body and only a SHA-256 token hash is stored in the tenant database.
+
+- `POST /api/commerce/cart`: creates an empty anonymous cart.
+- `GET /api/commerce/cart`: returns the cart for `X-Cart-Token`.
+- `POST /api/commerce/cart/items`: adds a product variant; missing token creates a new cart.
+- `PATCH /api/commerce/cart/items/{itemUid}`: updates quantity.
+- `DELETE /api/commerce/cart/items/{itemUid}`: removes one item.
+- `DELETE /api/commerce/cart`: clears the cart.
+
+Cart rules:
+
+- Anonymous cart TTL is 30 days.
+- Quantity must be between `1` and `99`.
+- Same variant lines are merged by increasing quantity.
+- Cart does not reserve stock; add/update checks current stock.
+- Cart item stores gross price and VAT snapshots.
+- Cart read compares snapshot price with current variant price and returns `priceChanged`.
+- Invalid, cleared, or expired cart tokens behave as cart not found.
 
 ## Admin API
 
@@ -40,9 +66,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-None.
-
-Storefront commerce delivery APIs are backlog work.
+Anonymous cart is the first public commerce API. Storefront UI, checkout, payment, customer account, and order APIs remain backlog work.
 
 ## Frontend integration
 

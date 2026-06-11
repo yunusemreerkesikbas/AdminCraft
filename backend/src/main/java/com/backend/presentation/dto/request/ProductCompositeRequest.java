@@ -40,12 +40,26 @@ public record ProductCompositeRequest(
 
         @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery,
 
-        Map<String, Object> customFields) {
+        Map<String, Object> customFields,
+
+        @Valid List<ProductVariantRequest> variants) {
     public ProductCompositeRequest {
         sku = sku != null ? sku.trim() : null;
         if (status == null)
             status = ProductStatus.DRAFT;
         if (isVisible == null)
             isVisible = true;
+    }
+
+    public ProductCompositeRequest(Long productTypeId, String sku, BigDecimal basePrice,
+            ProductStatus status, Boolean isVisible, Long responsiveMediaId,
+            Map<Language, ProductI18nRequest> translations,
+            Map<String, Object> attributes,
+            List<Long> categoryIds,
+            Long primaryCategoryId,
+            List<ResponsiveMediaRequest> gallery,
+            Map<String, Object> customFields) {
+        this(productTypeId, sku, basePrice, status, isVisible, responsiveMediaId, translations, attributes,
+                categoryIds, primaryCategoryId, gallery, customFields, null);
     }
 }
