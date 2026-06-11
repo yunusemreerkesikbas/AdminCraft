@@ -396,7 +396,7 @@ export const appRoutes: Route[] = [
                 loadComponent: () =>
                     import(
                         'app/modules/admin/custom/commerce/commerce-layout.component'
-                    ).then((m) => m.CommerceLayoutComponent),
+					).then((m) => m.SpaCommerceLayoutComponent),
             },
             {
                 path: 'page-templates',

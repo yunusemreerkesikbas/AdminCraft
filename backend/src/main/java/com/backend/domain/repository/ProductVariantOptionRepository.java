@@ -1,4 +1,4 @@
-package com.backend.infrastructure.persistence.repository;
+package com.backend.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,3 +21,4 @@ public interface ProductVariantOptionRepository extends JpaRepository<ProductVar
 
     boolean existsByCode(String code);
 }
+

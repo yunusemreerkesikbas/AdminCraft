@@ -10,6 +10,8 @@ ON DUPLICATE KEY UPDATE
     name = new_vals.name,
     type = new_vals.type,
     version = new_vals.version,
+    deps = new_vals.deps,
+    enabled_by_default = new_vals.enabled_by_default,
     description = new_vals.description;
 
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
@@ -20,6 +22,8 @@ ON DUPLICATE KEY UPDATE
     name = new_vals.name,
     type = new_vals.type,
     version = new_vals.version,
+    deps = new_vals.deps,
+    enabled_by_default = new_vals.enabled_by_default,
     description = new_vals.description;
 
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
@@ -30,6 +34,8 @@ ON DUPLICATE KEY UPDATE
     name = new_vals.name,
     type = new_vals.type,
     version = new_vals.version,
+    deps = new_vals.deps,
+    enabled_by_default = new_vals.enabled_by_default,
     description = new_vals.description;
 
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)

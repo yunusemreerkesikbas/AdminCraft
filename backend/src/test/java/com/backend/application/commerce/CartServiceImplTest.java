@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import com.backend.application.commerce.CommerceProductVariantLookupPort.CommerceVariantSnapshot;
 import com.backend.domain.commerce.CommerceCart;
@@ -29,7 +29,6 @@ import com.backend.domain.commerce.repository.CommerceCartItemRepository;
 import com.backend.domain.commerce.repository.CommerceCartRepository;
 import com.backend.testutil.BaseServiceTest;
 
-@MockitoSettings(strictness = Strictness.LENIENT)
 class CartServiceImplTest extends BaseServiceTest {
 
     @Mock
@@ -52,15 +51,15 @@ class CartServiceImplTest extends BaseServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(cartTokenService.generateToken()).thenReturn("raw-cart-token");
-        when(cartTokenService.hashToken(any(String.class))).thenAnswer(inv -> {
+		lenient().when(cartTokenService.generateToken()).thenReturn("raw-cart-token");
+		lenient().when(cartTokenService.hashToken(any(String.class))).thenAnswer(inv -> {
             String token = inv.getArgument(0);
             if ("cart-token".equals(token)) {
                 return "hash-cart-token";
             }
             return "sha256-token-hash";
         });
-        when(cartRepository.save(any(CommerceCart.class))).thenAnswer(inv -> {
+		lenient().when(cartRepository.save(any(CommerceCart.class))).thenAnswer(inv -> {
             CommerceCart cart = inv.getArgument(0);
             if (cart.getId() == null) {
                 cart.setId(1L);
@@ -70,6 +69,8 @@ class CartServiceImplTest extends BaseServiceTest {
             }
             return cart;
         });
+		lenient().when(productVariantLookupPort.findByVariantUids(any()))
+				.thenReturn(Map.of("variant-uid", sellableVariant(BigDecimal.valueOf(100), 5)));
     }
 
     @Test
@@ -158,8 +159,8 @@ class CartServiceImplTest extends BaseServiceTest {
         cart.addItem(cartItem("item-uid", "variant-uid", 1, BigDecimal.valueOf(100)));
         when(cartRepository.findByTokenHashAndStatus("hash-cart-token", CommerceCartStatus.ACTIVE))
                 .thenReturn(Optional.of(cart));
-        when(productVariantLookupPort.findByVariantUid("variant-uid"))
-                .thenReturn(Optional.of(sellableVariant(BigDecimal.valueOf(120), 5)));
+		when(productVariantLookupPort.findByVariantUids(any()))
+				.thenReturn(Map.of("variant-uid", sellableVariant(BigDecimal.valueOf(120), 5)));
 
         var response = cartService.getCart("cart-token");
 

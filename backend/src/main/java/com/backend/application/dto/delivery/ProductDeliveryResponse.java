@@ -1,6 +1,7 @@
 package com.backend.application.dto.delivery;
 
 import java.util.List;
+import java.util.Comparator;
 
 import com.backend.domain.entity.Category;
 import com.backend.domain.entity.CategoryI18n;
@@ -123,6 +124,12 @@ public class ProductDeliveryResponse {
             List<VariantOptionValueDelivery> values = variant.getOptionValues() != null
                     ? variant.getOptionValues().stream()
                             .filter(value -> value.getOption() != null)
+							.sorted(Comparator
+									.<ProductVariantOptionValue, Integer>comparing(
+											value -> value.getOption().getSortOrder(),
+											Comparator.nullsLast(Comparator.naturalOrder()))
+									.thenComparing(value -> value.getOption().getId(), Comparator.nullsLast(Comparator.naturalOrder()))
+									.thenComparing(ProductVariantOptionValue::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                             .map(VariantOptionValueDelivery::from)
                             .toList()
                     : List.of();

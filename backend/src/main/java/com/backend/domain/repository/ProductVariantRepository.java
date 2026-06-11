@@ -1,4 +1,4 @@
-package com.backend.infrastructure.persistence.repository;
+package com.backend.domain.repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,3 +27,4 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     @Query("SELECT DISTINCT optionValue.id FROM ProductVariant v JOIN v.optionValues optionValue WHERE optionValue.id IN :valueIds")
     List<Long> findUsedOptionValueIds(@Param("valueIds") Collection<Long> valueIds);
 }
+

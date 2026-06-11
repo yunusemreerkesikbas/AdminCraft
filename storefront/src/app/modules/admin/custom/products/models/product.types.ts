@@ -28,6 +28,7 @@ export interface Product {
     categories?: ProductCategoryResponse[];
     galleryImages?: ProductMediaResponse[];
     customFields?: Record<string, any>;
+    variants?: ProductVariantResponse[];
 }
 
 export type ProductStatus = 'DRAFT' | 'PUBLISHED';
@@ -81,6 +82,7 @@ export interface ProductCompositeRequest {
     primaryCategoryId: number;
     gallery: ResponsiveMediaRequest[];
     customFields?: Record<string, any>;
+    variants?: ProductVariantRequest[];
 }
 
 export interface ProductI18nRequest {
@@ -105,4 +107,39 @@ export interface ProductListItemResponse {
     createdAt: string;
     updatedAt: string;
     customFields?: Record<string, any>;
+}
+
+export interface ProductVariantOptionValueSelectionResponse {
+    optionId: number;
+    optionCode: string;
+    optionName: string;
+    displayType: 'TEXT' | 'COLOR';
+    valueId: number;
+    valueCode: string;
+    valueLabel: string;
+    swatchValue?: string;
+}
+
+export interface ProductVariantResponse {
+    id: number;
+    uid: string;
+    sku: string;
+    price: PriceResponse;
+    firstPrice?: PriceResponse;
+    vatRate: string;
+    stockQuantity: number;
+    active: boolean;
+    images?: ResponsiveMediaResponse;
+    optionValues?: ProductVariantOptionValueSelectionResponse[];
+}
+
+export interface ProductVariantRequest {
+    sku: string;
+    price: number;
+    firstPrice?: number | null;
+    vatRate: number;
+    stockQuantity: number;
+    active: boolean;
+    responsiveMediaId?: number;
+    optionValueIds: number[];
 }

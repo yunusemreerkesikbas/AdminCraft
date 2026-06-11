@@ -1,6 +1,9 @@
 package com.backend.infrastructure.persistence.commerce;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -21,6 +24,16 @@ class CommerceProductVariantLookupAdapter implements CommerceProductVariantLooku
     public Optional<CommerceVariantSnapshot> findByVariantUid(String variantUid) {
         return repository.findByUid(variantUid)
                 .map(this::toSnapshot);
+    }
+
+    @Override
+    public Map<String, CommerceVariantSnapshot> findByVariantUids(Collection<String> variantUids) {
+		if (variantUids == null || variantUids.isEmpty()) {
+			return Map.of();
+		}
+		return repository.findByUidIn(variantUids).stream()
+				.map(this::toSnapshot)
+				.collect(Collectors.toMap(CommerceVariantSnapshot::variantUid, snapshot -> snapshot));
     }
 
     private CommerceVariantSnapshot toSnapshot(ProductVariant variant) {

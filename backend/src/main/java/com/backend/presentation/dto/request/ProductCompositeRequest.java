@@ -42,7 +42,7 @@ public record ProductCompositeRequest(
 
         Map<String, Object> customFields,
 
-        @Valid List<ProductVariantRequest> variants) {
+		@Valid List<@NotNull ProductVariantRequest> variants) {
     public ProductCompositeRequest {
         sku = sku != null ? sku.trim() : null;
         if (status == null)

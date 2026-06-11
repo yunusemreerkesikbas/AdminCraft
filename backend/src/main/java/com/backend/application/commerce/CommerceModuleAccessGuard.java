@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CommerceModuleAccessGuard {
 
-    public static final String TENANT_CONTEXT_REQUIRED_MESSAGE_KEY = "commerce.tenant.context.required";
-    public static final String MODULE_NOT_ENABLED_MESSAGE_KEY = "commerce.module.not.enabled";
+    static final String TENANT_CONTEXT_REQUIRED_MESSAGE_KEY = "commerce.tenant.context.required";
+    static final String MODULE_NOT_ENABLED_MESSAGE_KEY = "commerce.module.not.enabled";
 
     private final TenantModuleAccessService tenantModuleAccessService;
 

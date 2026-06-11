@@ -4,11 +4,17 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.backend.domain.commerce.CommerceCartLimits.MAX_QUANTITY;
+import static com.backend.domain.commerce.CommerceCartLimits.MIN_QUANTITY;
 
 import com.backend.application.commerce.CommerceProductVariantLookupPort.CommerceVariantSnapshot;
 import com.backend.application.commerce.dto.CartItemResponse;
@@ -30,8 +36,6 @@ import lombok.RequiredArgsConstructor;
 public class CartServiceImpl implements CartService {
 
     private static final int CART_TTL_DAYS = 30;
-    private static final int MIN_QUANTITY = 1;
-    private static final int MAX_QUANTITY = 99;
     private static final String CART_NOT_FOUND = "Cart";
 
     private final CommerceModuleAccessGuard commerceModuleAccessGuard;
@@ -149,7 +153,7 @@ public class CartServiceImpl implements CartService {
 
     private CommerceCart loadActiveCart(String cartToken) {
         if (cartToken == null || cartToken.isBlank()) {
-            throw new EntityNotFoundException(CART_NOT_FOUND, "missing token");
+			throw new IllegalArgumentException("commerce.cart.token.required");
         }
         String tokenHash = cartTokenService.hashToken(cartToken);
         CommerceCart cart = cartRepository.findByTokenHashAndStatus(tokenHash, CommerceCartStatus.ACTIVE)
@@ -197,8 +201,14 @@ public class CartServiceImpl implements CartService {
     }
 
     private CartResponse toResponse(CommerceCart cart, String rawToken) {
+		Map<String, CommerceVariantSnapshot> currentVariants = Optional.ofNullable(productVariantLookupPort.findByVariantUids(
+				cart.getItems().stream()
+						.map(CommerceCartItem::getVariantUid)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toSet())))
+				.orElse(Map.of());
         List<CartItemResponse> items = cart.getItems().stream()
-                .map(this::toItemResponse)
+				.map(item -> toItemResponse(item, Optional.ofNullable(currentVariants.get(item.getVariantUid()))))
                 .toList();
         BigDecimal total = items.stream()
                 .map(CartItemResponse::lineTotal)
@@ -209,12 +219,29 @@ public class CartServiceImpl implements CartService {
         int itemCount = items.stream()
                 .map(CartItemResponse::quantity)
                 .reduce(0, Integer::sum);
+		Map<String, CommerceCartItem> itemsByVariantUid = cart.getItems().stream()
+				.collect(Collectors.toMap(CommerceCartItem::getVariantUid, Function.identity(), (left, right) -> left));
+		BigDecimal currentTotal = currentVariants.values().stream()
+				.filter(variant -> itemsByVariantUid.containsKey(variant.variantUid()))
+				.map(variant -> calculateLineTotal(
+						variant.price(),
+						itemsByVariantUid.get(variant.variantUid()).getQuantity()))
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+		BigDecimal currentVatTotal = currentVariants.values().stream()
+				.filter(variant -> itemsByVariantUid.containsKey(variant.variantUid()))
+				.map(variant -> calculateVatAmount(
+						variant.price(),
+						variant.vatRate(),
+						itemsByVariantUid.get(variant.variantUid()).getQuantity()))
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
         CartTotalsResponse totals = new CartTotalsResponse(
                 Currency.getDefault().getIsoCode(),
                 itemCount,
                 total,
                 vatTotal,
-                total);
+				total,
+				currentVatTotal,
+				currentTotal);
         return new CartResponse(
                 rawToken,
                 cart.getUid(),
@@ -224,8 +251,7 @@ public class CartServiceImpl implements CartService {
                 totals);
     }
 
-    private CartItemResponse toItemResponse(CommerceCartItem item) {
-        Optional<CommerceVariantSnapshot> currentVariant = productVariantLookupPort.findByVariantUid(item.getVariantUid());
+    private CartItemResponse toItemResponse(CommerceCartItem item, Optional<CommerceVariantSnapshot> currentVariant) {
         BigDecimal currentPrice = currentVariant.map(CommerceVariantSnapshot::price).orElse(null);
         BigDecimal currentVatRate = currentVariant.map(CommerceVariantSnapshot::vatRate).orElse(item.getVatRate());
         Integer stockQuantity = currentVariant.map(CommerceVariantSnapshot::stockQuantity).orElse(null);
@@ -236,9 +262,7 @@ public class CartServiceImpl implements CartService {
                 .map(variant -> variant.sellable()
                         && (variant.stockQuantity() == null ? 0 : variant.stockQuantity()) >= item.getQuantity())
                 .orElse(false);
-        BigDecimal lineTotal = item.getUnitGrossPrice()
-                .multiply(BigDecimal.valueOf(item.getQuantity()))
-                .setScale(2, RoundingMode.HALF_UP);
+		BigDecimal lineTotal = calculateLineTotal(item.getUnitGrossPrice(), item.getQuantity());
         return new CartItemResponse(
                 item.getUid(),
                 item.getProductUid(),
@@ -256,13 +280,23 @@ public class CartServiceImpl implements CartService {
     }
 
     private BigDecimal calculateVatAmount(CommerceCartItem item) {
-        BigDecimal lineTotal = item.getUnitGrossPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-        BigDecimal denominator = BigDecimal.valueOf(100).add(item.getVatRate());
+		return calculateVatAmount(item.getUnitGrossPrice(), item.getVatRate(), item.getQuantity());
+    }
+
+    private BigDecimal calculateVatAmount(BigDecimal unitGrossPrice, BigDecimal vatRate, int quantity) {
+		BigDecimal lineTotal = unitGrossPrice.multiply(BigDecimal.valueOf(quantity));
+		BigDecimal denominator = BigDecimal.valueOf(100).add(vatRate);
         if (denominator.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
-        return lineTotal.multiply(item.getVatRate())
+		return lineTotal.multiply(vatRate)
                 .divide(denominator, 2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateLineTotal(BigDecimal unitGrossPrice, int quantity) {
+		return unitGrossPrice
+				.multiply(BigDecimal.valueOf(quantity))
+				.setScale(2, RoundingMode.HALF_UP);
     }
 
     private record CreatedCart(CommerceCart cart, String rawToken) {

@@ -1,4 +1,4 @@
-package com.backend.infrastructure.persistence.repository;
+package com.backend.domain.repository;
 
 import java.util.Collection;
 import java.util.List;
@@ -13,3 +13,4 @@ public interface ProductVariantOptionValueRepository extends JpaRepository<Produ
     @EntityGraph(attributePaths = { "option" })
     List<ProductVariantOptionValue> findByIdIn(Collection<Long> ids);
 }
+

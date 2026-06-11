@@ -13,6 +13,7 @@ import com.backend.domain.enums.ProductStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record ProductUpdateRequest(
@@ -36,7 +37,7 @@ public record ProductUpdateRequest(
 
     Map<String, Object> customFields,
 
-    @Valid List<ProductVariantRequest> variants) {
+    @Valid List<@NotNull ProductVariantRequest> variants) {
 
     public ProductUpdateRequest(BigDecimal basePrice,
             ProductStatus status,

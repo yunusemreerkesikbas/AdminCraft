@@ -311,6 +311,10 @@ export const SPA_ENDPOINTS_CONFIG = {
     productFieldsVisible: 'products/fields/visible',
     productFieldById: 'products/fields/${id}',
 
+    // ----- PRODUCT CATALOG: VARIANT OPTIONS -----
+    productVariantOptions: 'products/variant-options',
+    productVariantOptionById: 'products/variant-options/${id}',
+
     // ----- IMPEX -----
     impexExecute: 'impex/execute',
 } as const;

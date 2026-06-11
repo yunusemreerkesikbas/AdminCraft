@@ -7,5 +7,7 @@ public record CartTotalsResponse(
         Integer itemCount,
         BigDecimal subtotal,
         BigDecimal vatTotal,
-        BigDecimal total) {
+		BigDecimal total,
+		BigDecimal currentVatTotal,
+		BigDecimal currentTotal) {
 }

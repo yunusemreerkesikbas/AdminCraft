@@ -42,7 +42,7 @@ import lombok.ToString;
 })
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = { "productType", "responsiveMediaSet", "i18nContent", "attributes",
-        "categoryLinks", "gallery", "fieldValues" })
+		"categoryLinks", "gallery", "fieldValues", "variants" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product extends BaseEntity {

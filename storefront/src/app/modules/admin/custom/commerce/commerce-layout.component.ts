@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
 
 @Component({
@@ -15,8 +15,7 @@ import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-heade
             <div class="flex flex-auto overflow-hidden"></div>
         </div>
     `,
-    encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CommerceLayoutComponent {
+export class SpaCommerceLayoutComponent {
 }

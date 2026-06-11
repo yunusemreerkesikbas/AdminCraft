@@ -17,8 +17,8 @@ import com.backend.domain.entity.ProductVariantOption;
 import com.backend.domain.entity.ProductVariantOptionValue;
 import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.EntityNotFoundException;
-import com.backend.infrastructure.persistence.repository.ProductVariantOptionRepository;
-import com.backend.infrastructure.persistence.repository.ProductVariantRepository;
+import com.backend.domain.repository.ProductVariantOptionRepository;
+import com.backend.domain.repository.ProductVariantRepository;
 import com.backend.infrastructure.tenant.TenantContext;
 import com.backend.shared.util.SlugGenerator;
 
@@ -143,7 +143,9 @@ public class ProductVariantOptionServiceImpl implements ProductVariantOptionServ
             value.setLabel(request.label());
             value.setSwatchValue(request.swatchValue());
             value.setSortOrder(request.sortOrder() != null ? request.sortOrder() : fallbackSortOrder);
-            value.setActive(request.active() != null ? request.active() : true);
+			if (request.active() != null) {
+				value.setActive(request.active());
+			}
             fallbackSortOrder++;
         }
     }

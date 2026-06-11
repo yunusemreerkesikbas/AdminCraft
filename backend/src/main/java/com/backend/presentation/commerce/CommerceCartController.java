@@ -1,6 +1,10 @@
 package com.backend.presentation.commerce;
 
+import java.util.Locale;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,21 +37,22 @@ public class CommerceCartController {
 
     private final CartService cartService;
     private final CommerceCartRateLimitService rateLimitService;
+    private final MessageSource messageSource;
 
     @PostMapping
     @Operation(summary = "Create anonymous cart")
     public ResponseEntity<ApiResponse<CartResponse>> createCart(HttpServletRequest httpRequest) {
         rateLimitService.checkMutationOrThrow(RequestUtils.getClientIpAddress(httpRequest));
-        return ResponseEntity.ok(ApiResponse.success("Cart created successfully", cartService.createCart()));
+		return cartResponse("commerce.cart.created", cartService.createCart());
     }
 
     @GetMapping
     @Operation(summary = "Get anonymous cart")
     public ResponseEntity<ApiResponse<CartResponse>> getCart(
-            @RequestHeader(value = CART_TOKEN_HEADER, required = false) String cartToken,
+			@RequestHeader(value = CART_TOKEN_HEADER, required = true) String cartToken,
             HttpServletRequest httpRequest) {
         rateLimitService.checkReadOrThrow(RequestUtils.getClientIpAddress(httpRequest));
-        return ResponseEntity.ok(ApiResponse.success(cartService.getCart(cartToken)));
+		return cartResponse("commerce.cart.retrieved", cartService.getCart(cartToken));
     }
 
     @PostMapping("/items")
@@ -57,43 +62,50 @@ public class CommerceCartController {
             @Valid @RequestBody AddCartItemRequest request,
             HttpServletRequest httpRequest) {
         rateLimitService.checkMutationOrThrow(RequestUtils.getClientIpAddress(httpRequest));
-        return ResponseEntity.ok(ApiResponse.success(
-                "Cart item added successfully",
-                cartService.addItem(cartToken, request.variantUid(), request.quantity())));
+		return cartResponse("commerce.cart.item.added",
+				cartService.addItem(cartToken, request.variantUid(), request.quantity()));
     }
 
     @PatchMapping("/items/{itemUid}")
     @Operation(summary = "Update anonymous cart item quantity")
     public ResponseEntity<ApiResponse<CartResponse>> updateItem(
-            @RequestHeader(value = CART_TOKEN_HEADER, required = false) String cartToken,
+			@RequestHeader(value = CART_TOKEN_HEADER, required = true) String cartToken,
             @PathVariable String itemUid,
             @Valid @RequestBody UpdateCartItemRequest request,
             HttpServletRequest httpRequest) {
         rateLimitService.checkMutationOrThrow(RequestUtils.getClientIpAddress(httpRequest));
-        return ResponseEntity.ok(ApiResponse.success(
-                "Cart item updated successfully",
-                cartService.updateItem(cartToken, itemUid, request.quantity())));
+		return cartResponse("commerce.cart.item.updated",
+				cartService.updateItem(cartToken, itemUid, request.quantity()));
     }
 
     @DeleteMapping("/items/{itemUid}")
     @Operation(summary = "Delete anonymous cart item")
     public ResponseEntity<ApiResponse<CartResponse>> deleteItem(
-            @RequestHeader(value = CART_TOKEN_HEADER, required = false) String cartToken,
+			@RequestHeader(value = CART_TOKEN_HEADER, required = true) String cartToken,
             @PathVariable String itemUid,
             HttpServletRequest httpRequest) {
         rateLimitService.checkMutationOrThrow(RequestUtils.getClientIpAddress(httpRequest));
-        return ResponseEntity.ok(ApiResponse.success(
-                "Cart item deleted successfully",
-                cartService.deleteItem(cartToken, itemUid)));
+		return cartResponse("commerce.cart.item.deleted", cartService.deleteItem(cartToken, itemUid));
     }
 
     @DeleteMapping
     @Operation(summary = "Clear anonymous cart")
     public ResponseEntity<ApiResponse<Void>> clearCart(
-            @RequestHeader(value = CART_TOKEN_HEADER, required = false) String cartToken,
+			@RequestHeader(value = CART_TOKEN_HEADER, required = true) String cartToken,
             HttpServletRequest httpRequest) {
         rateLimitService.checkMutationOrThrow(RequestUtils.getClientIpAddress(httpRequest));
         cartService.clearCart(cartToken);
-        return ResponseEntity.ok(ApiResponse.success("Cart cleared successfully", null));
+		return ResponseEntity.ok(ApiResponse.success(message("commerce.cart.cleared"), null));
+    }
+
+    private ResponseEntity<ApiResponse<CartResponse>> cartResponse(String messageKey, CartResponse response) {
+		return ResponseEntity.ok()
+				.header(CART_TOKEN_HEADER, response.cartToken())
+				.body(ApiResponse.success(message(messageKey), response));
+    }
+
+    private String message(String key) {
+		Locale locale = LocaleContextHolder.getLocale();
+		return messageSource.getMessage(key, null, key, locale);
     }
 }

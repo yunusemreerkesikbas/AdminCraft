@@ -1,5 +1,7 @@
 package com.backend.infrastructure.persistence.commerce;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -11,4 +13,7 @@ interface CommerceProductVariantJpaRepository extends JpaRepository<ProductVaria
 
     @EntityGraph(attributePaths = { "product" })
     Optional<ProductVariant> findByUid(String uid);
+
+    @EntityGraph(attributePaths = { "product" })
+    List<ProductVariant> findByUidIn(Collection<String> uids);
 }

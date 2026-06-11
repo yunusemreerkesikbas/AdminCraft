@@ -1,11 +1,15 @@
 package com.backend.application.commerce;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 public interface CommerceProductVariantLookupPort {
 
     Optional<CommerceVariantSnapshot> findByVariantUid(String variantUid);
+
+    Map<String, CommerceVariantSnapshot> findByVariantUids(Collection<String> variantUids);
 
     record CommerceVariantSnapshot(
             String productUid,

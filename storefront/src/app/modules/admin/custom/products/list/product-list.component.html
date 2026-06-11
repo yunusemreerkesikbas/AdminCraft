@@ -25,6 +25,16 @@
         <button
             after-create
             mat-stroked-button
+            (click)="openVariantOptionsDialog()"
+            class="hidden sm:inline-flex"
+        >
+            <mat-icon class="mr-2 icon-size-5">tune</mat-icon>
+            Variant Options
+        </button>
+
+        <button
+            after-create
+            mat-stroked-button
             (click)="openFieldDialog()"
             class="hidden sm:inline-flex"
         >

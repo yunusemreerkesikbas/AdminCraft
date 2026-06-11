@@ -10,6 +10,7 @@ import com.backend.shared.validation.Sku;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record ProductVariantRequest(
@@ -20,7 +21,7 @@ public record ProductVariantRequest(
         @Min(value = 0, message = "validation.product.variant.stock.min") Integer stockQuantity,
         Boolean active,
         Long responsiveMediaId,
-        @Size(max = 2, message = "validation.product.variant.options.max") List<Long> optionValueIds) {
+		@Size(max = 2, message = "validation.product.variant.options.max") List<@NotNull Long> optionValueIds) {
     public ProductVariantRequest {
         sku = sku != null ? sku.trim() : null;
     }

@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.backend.domain.entity.ProductVariant;
+import com.backend.domain.entity.ProductVariantOptionValue;
 import com.backend.domain.enums.Currency;
 import com.backend.presentation.dto.PriceResponse;
 import com.backend.shared.util.ResponseValueFilter;
@@ -27,7 +28,12 @@ public record ProductVariantResponse(
                         ? null
                         : entity.getOptionValues().stream()
                                 .filter(value -> value.getOption() != null)
-                                .sorted(Comparator.comparing(value -> value.getOption().getSortOrder()))
+								.sorted(Comparator
+										.<ProductVariantOptionValue, Integer>comparing(
+												value -> value.getOption().getSortOrder(),
+												Comparator.nullsLast(Comparator.naturalOrder()))
+										.thenComparing(value -> value.getOption().getId(), Comparator.nullsLast(Comparator.naturalOrder()))
+										.thenComparing(value -> value.getId(), Comparator.nullsLast(Comparator.naturalOrder())))
                                 .map(ProductVariantOptionValueSelectionResponse::from)
                                 .toList());
         ResponsiveMediaResponse images = entity.getResponsiveMediaSet() == null

@@ -22,8 +22,8 @@ import com.backend.domain.entity.ProductVariantOption;
 import com.backend.domain.entity.ProductVariantOptionValue;
 import com.backend.domain.enums.ProductVariantOptionDisplayType;
 import com.backend.domain.exception.BusinessRuleViolationException;
-import com.backend.infrastructure.persistence.repository.ProductVariantOptionRepository;
-import com.backend.infrastructure.persistence.repository.ProductVariantRepository;
+import com.backend.domain.repository.ProductVariantOptionRepository;
+import com.backend.domain.repository.ProductVariantRepository;
 import com.backend.testutil.BaseServiceTest;
 
 class ProductVariantOptionServiceImplTest extends BaseServiceTest {

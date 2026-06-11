@@ -6,6 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record AddCartItemRequest(
-        @NotBlank String variantUid,
-        @NotNull @Min(1) @Max(99) Integer quantity) {
+	@NotBlank(message = "{commerce.cart.variant.uid.required}") String variantUid,
+	@NotNull(message = "{commerce.cart.quantity.required}") @Min(value = 1, message = "{commerce.cart.quantity.invalid}") @Max(value = 99, message = "{commerce.cart.quantity.invalid}") Integer quantity) {
 }

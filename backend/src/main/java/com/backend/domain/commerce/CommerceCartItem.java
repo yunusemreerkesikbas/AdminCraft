@@ -2,6 +2,9 @@ package com.backend.domain.commerce;
 
 import java.math.BigDecimal;
 
+import static com.backend.domain.commerce.CommerceCartLimits.MAX_QUANTITY;
+import static com.backend.domain.commerce.CommerceCartLimits.MIN_QUANTITY;
+
 import com.backend.domain.entity.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -59,8 +62,8 @@ public class CommerceCartItem extends BaseEntity {
     private String variantSku;
 
     @NotNull
-    @Min(1)
-    @Max(99)
+    @Min(MIN_QUANTITY)
+    @Max(MAX_QUANTITY)
     @Column(nullable = false)
     private Integer quantity;
 
@@ -72,5 +75,5 @@ public class CommerceCartItem extends BaseEntity {
     @NotNull
     @DecimalMin("0.0")
     @Column(name = "vat_rate", nullable = false, precision = 5, scale = 2)
-    private BigDecimal vatRate = BigDecimal.valueOf(20);
+    private BigDecimal vatRate;
 }
