@@ -13,6 +13,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
@@ -25,19 +27,25 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "commerce_carts", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "uid" }, name = "uk_commerce_cart_uid"),
-        @UniqueConstraint(columnNames = { "token_hash" }, name = "uk_commerce_cart_token_hash")
+		@UniqueConstraint(columnNames = { "uid" }, name = "uk_commerce_cart_uid"),
+		@UniqueConstraint(columnNames = { "token_hash" }, name = "uk_commerce_cart_token_hash")
 }, indexes = {
-        @Index(columnList = "status, expires_at", name = "idx_commerce_cart_status_expires")
+		@Index(columnList = "status, expires_at", name = "idx_commerce_cart_status_expires"),
+		@Index(columnList = "customer_id, status, expires_at", name = "idx_commerce_cart_customer_status_expires")
 })
 @Data
-@EqualsAndHashCode(callSuper = true, exclude = { "items" })
+@EqualsAndHashCode(callSuper = true, exclude = { "customer", "items" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommerceCart extends BaseEntity {
 
-    @Column(name = "token_hash", nullable = false, length = 64)
+	@Column(name = "token_hash", nullable = false, length = 64)
     private String tokenHash;
+
+	@ToString.Exclude
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "customer_id")
+	private CommerceCustomer customer;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

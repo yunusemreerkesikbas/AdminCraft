@@ -10,6 +10,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -41,6 +42,7 @@ public class CommerceCustomerAuthController {
 
 	@PostMapping("/register")
 	public ResponseEntity<ApiResponse<?>> register(
+			@RequestHeader(value = CommerceCartController.CART_TOKEN_HEADER, required = false) String cartToken,
 			@Valid @RequestBody RegisterCommerceCustomerRequest request,
 			HttpServletRequest httpRequest,
 			HttpServletResponse httpResponse) {
@@ -60,14 +62,17 @@ public class CommerceCustomerAuthController {
 				request.rememberMe(),
 				request.deviceFingerprint(),
 				request.source(),
+				cartToken,
 				RequestUtils.getClientIpAddress(httpRequest),
 				RequestUtils.getUserAgent(httpRequest)));
 		setRefreshCookie(httpResponse, result);
+		setCartTokenHeader(httpResponse, result);
 		return ResponseEntity.ok(ApiResponse.success(message("commerce.customer.auth.registered"), result.response()));
 	}
 
 	@PostMapping("/login")
 	public ResponseEntity<ApiResponse<?>> login(
+			@RequestHeader(value = CommerceCartController.CART_TOKEN_HEADER, required = false) String cartToken,
 			@Valid @RequestBody LoginCommerceCustomerRequest request,
 			HttpServletRequest httpRequest,
 			HttpServletResponse httpResponse) {
@@ -76,9 +81,11 @@ public class CommerceCustomerAuthController {
 				request.password(),
 				request.rememberMe(),
 				request.deviceFingerprint(),
+				cartToken,
 				RequestUtils.getClientIpAddress(httpRequest),
 				RequestUtils.getUserAgent(httpRequest)));
 		setRefreshCookie(httpResponse, result);
+		setCartTokenHeader(httpResponse, result);
 		return ResponseEntity.ok(ApiResponse.success(message("commerce.customer.auth.logged.in"), result.response()));
 	}
 
@@ -127,6 +134,12 @@ public class CommerceCustomerAuthController {
 				.maxAge(Duration.ZERO)
 				.build();
 		response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+	}
+
+	private void setCartTokenHeader(HttpServletResponse response, CommerceCustomerAuthResult result) {
+		if (result.response().cart() != null && result.response().cart().cartToken() != null) {
+			response.addHeader(CommerceCartController.CART_TOKEN_HEADER, result.response().cart().cartToken());
+		}
 	}
 
 	private String getRefreshCookie(HttpServletRequest request) {

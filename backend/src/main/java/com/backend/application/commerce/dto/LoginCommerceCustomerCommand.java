@@ -5,6 +5,7 @@ public record LoginCommerceCustomerCommand(
 		String password,
 		Boolean rememberMe,
 		String deviceFingerprint,
+		String cartToken,
 		String ipAddress,
 		String userAgent) {
 }

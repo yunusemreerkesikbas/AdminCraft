@@ -90,9 +90,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                path.startsWith("/config/auth/") ||
 			   path.startsWith("/commerce/customers/") ||
 			   path.startsWith("/api/commerce/customers/") ||
+			   matchesExactOrSubpath(path, "/commerce/cart") ||
+			   matchesExactOrSubpath(path, "/api/commerce/cart") ||
+			   path.startsWith("/commerce/checkout") ||
+			   path.startsWith("/api/commerce/checkout") ||
                path.startsWith("/health/") ||
                path.startsWith("/actuator/") ||
                path.startsWith("/v3/api-docs") ||
                path.startsWith("/swagger-ui");
     }
+
+	private boolean matchesExactOrSubpath(String path, String prefix) {
+		return path.equals(prefix) || path.startsWith(prefix + "/");
+	}
 }
