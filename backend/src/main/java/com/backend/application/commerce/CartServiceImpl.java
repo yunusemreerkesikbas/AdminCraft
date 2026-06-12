@@ -118,7 +118,7 @@ public class CartServiceImpl implements CartService {
 				.filter(item -> Objects.equals(item.getVariantUid(), variant.variantUid()))
 				.findFirst();
 		int finalQuantity = existingItem
-				.map(item -> item.getQuantity() + requestedQuantity)
+				.map(item -> Objects.requireNonNullElse(item.getQuantity(), 0) + requestedQuantity)
 				.orElse(requestedQuantity);
 		validateQuantity(finalQuantity);
 		validateStock(variant, finalQuantity);
@@ -248,7 +248,7 @@ public class CartServiceImpl implements CartService {
 	}
 
 	private boolean isExpired(CommerceCart cart) {
-		return cart.getExpiresAt() == null || cart.getExpiresAt().isBefore(LocalDateTime.now());
+		return cart.getExpiresAt() == null || !cart.getExpiresAt().isAfter(LocalDateTime.now());
 	}
 
     private CommerceCartItem loadCartItem(CommerceCart cart, String itemUid) {

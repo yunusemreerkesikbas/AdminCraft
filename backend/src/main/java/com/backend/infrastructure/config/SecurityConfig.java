@@ -84,6 +84,7 @@ public class SecurityConfig {
 												.requestMatchers("/public/**").permitAll() // Public API endpoints
 												.requestMatchers("/commerce/customers/auth/**").permitAll() // Public Commerce customer auth API
 												.requestMatchers("/commerce/customers/**").hasRole("COMMERCE_CUSTOMER")
+												.requestMatchers("/commerce/checkout", "/commerce/checkout/**").hasRole("COMMERCE_CUSTOMER")
 												.requestMatchers("/commerce/cart/**").permitAll() // Public Commerce cart API
 												.requestMatchers("/cms/preview/**").authenticated() // SmartEdit preview ticket issue (TENANT_ADMIN via @PreAuthorize)
                                                 .requestMatchers("/cms/**").permitAll() // CMS Delivery API (public)

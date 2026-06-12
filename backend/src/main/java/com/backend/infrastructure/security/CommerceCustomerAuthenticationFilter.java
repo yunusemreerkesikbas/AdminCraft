@@ -87,7 +87,8 @@ public class CommerceCustomerAuthenticationFilter extends OncePerRequestFilter {
 				|| path.startsWith("/commerce/customers/auth/refresh");
 		boolean commerceCustomerEndpoint = path.startsWith("/commerce/customers/");
 		boolean commerceCartEndpoint = path.equals("/commerce/cart") || path.startsWith("/commerce/cart/");
-		return commerceCustomerAuthEndpoint || (!commerceCustomerEndpoint && !commerceCartEndpoint);
+		boolean commerceCheckoutEndpoint = path.equals("/commerce/checkout") || path.startsWith("/commerce/checkout/");
+		return commerceCustomerAuthEndpoint || (!commerceCustomerEndpoint && !commerceCartEndpoint && !commerceCheckoutEndpoint);
 	}
 
 	private String requestPath(HttpServletRequest request) {

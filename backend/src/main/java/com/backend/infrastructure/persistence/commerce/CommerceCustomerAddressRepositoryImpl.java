@@ -34,6 +34,16 @@ class CommerceCustomerAddressRepositoryImpl implements CommerceCustomerAddressRe
 	}
 
 	@Override
+	public Optional<CommerceCustomerAddress> findFirstByCustomerIdAndDefaultDeliveryTrueOrderByIdAsc(Long customerId) {
+		return jpaRepository.findFirstByCustomerIdAndDefaultDeliveryTrueOrderByIdAsc(customerId);
+	}
+
+	@Override
+	public Optional<CommerceCustomerAddress> findFirstByCustomerIdAndDefaultBillingTrueOrderByIdAsc(Long customerId) {
+		return jpaRepository.findFirstByCustomerIdAndDefaultBillingTrueOrderByIdAsc(customerId);
+	}
+
+	@Override
 	@Transactional
 	public void delete(CommerceCustomerAddress address) {
 		jpaRepository.delete(address);

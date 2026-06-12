@@ -122,6 +122,23 @@ class CartServiceImplTest extends BaseServiceTest {
         assertThat(response.items().getFirst().quantity()).isEqualTo(3);
     }
 
+	@Test
+	void addItem_ShouldTreatNullExistingQuantityAsZero_WhenMergingVariant() {
+		CommerceCart cart = activeCart();
+		CommerceCartItem item = cartItem("item-uid", "variant-uid", 1, BigDecimal.valueOf(100));
+		item.setQuantity(null);
+		cart.addItem(item);
+		when(cartRepository.findByTokenHashAndStatus("hash-cart-token", CommerceCartStatus.ACTIVE))
+				.thenReturn(Optional.of(cart));
+		when(productVariantLookupPort.findByVariantUid("variant-uid"))
+				.thenReturn(Optional.of(sellableVariant(BigDecimal.valueOf(100), 5)));
+
+		var response = cartService.addItem("cart-token", "variant-uid", 2);
+
+		assertThat(response.items()).hasSize(1);
+		assertThat(response.items().getFirst().quantity()).isEqualTo(2);
+	}
+
     @Test
     void addItem_ShouldRejectInvalidQuantity() {
         assertThatThrownBy(() -> cartService.addItem(null, "variant-uid", 0))

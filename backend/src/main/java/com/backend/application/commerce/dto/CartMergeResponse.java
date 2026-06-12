@@ -8,6 +8,10 @@ public record CartMergeResponse(
 		int skippedItemCount,
 		List<String> warningMessageKeys) {
 
+	public CartMergeResponse {
+		warningMessageKeys = warningMessageKeys == null ? List.of() : List.copyOf(warningMessageKeys);
+	}
+
 	public static CartMergeResponse none() {
 		return new CartMergeResponse(CartMergeStatus.NONE, 0, 0, List.of());
 	}

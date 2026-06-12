@@ -83,6 +83,16 @@ class CommerceCustomerAuthenticationFilterTest {
 	void shouldNotFilter_ShouldAllowCustomerAuthenticationOnCartEndpoints() throws Exception {
 		CommerceCustomerAuthenticationFilter filter = filter();
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/commerce/cart");
+		MockHttpServletRequest apiRequest = new MockHttpServletRequest("GET", "/api/commerce/cart");
+
+		assertThat(filter.shouldNotFilter(request)).isFalse();
+		assertThat(filter.shouldNotFilter(apiRequest)).isFalse();
+	}
+
+	@Test
+	void shouldNotFilter_ShouldAllowCustomerAuthenticationOnCheckoutEndpoints() throws Exception {
+		CommerceCustomerAuthenticationFilter filter = filter();
+		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/commerce/checkout");
 
 		assertThat(filter.shouldNotFilter(request)).isFalse();
 	}

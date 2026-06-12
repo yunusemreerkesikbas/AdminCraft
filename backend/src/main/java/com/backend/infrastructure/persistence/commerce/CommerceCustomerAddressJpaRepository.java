@@ -16,6 +16,10 @@ interface CommerceCustomerAddressJpaRepository extends JpaRepository<CommerceCus
 
 	Optional<CommerceCustomerAddress> findByCustomerIdAndUid(Long customerId, String uid);
 
+	Optional<CommerceCustomerAddress> findFirstByCustomerIdAndDefaultDeliveryTrueOrderByIdAsc(Long customerId);
+
+	Optional<CommerceCustomerAddress> findFirstByCustomerIdAndDefaultBillingTrueOrderByIdAsc(Long customerId);
+
 	@Modifying(clearAutomatically = true)
 	@Query("UPDATE CommerceCustomerAddress a SET a.defaultDelivery = false WHERE a.customer.id = :customerId AND a.defaultDelivery = true")
 	int clearDefaultDelivery(@Param("customerId") Long customerId);

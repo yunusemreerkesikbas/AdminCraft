@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, and customer-cart bridge. It does not implement checkout, payment, order, fulfillment, or storefront UI yet.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, and checkout foundation. It does not implement payment, order, fulfillment, or storefront UI yet.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -23,6 +23,7 @@ Current tenant migrations:
 - `V1.0.1__cart_foundation.sql` creates anonymous cart and cart item tables.
 - `V1.0.2__customer_account_foundation.sql` creates commerce customer, refresh token, consent, address, and social identity skeleton tables.
 - `V1.0.3__customer_cart_bridge.sql` adds nullable customer ownership to carts for merge-on-auth and authenticated cart access.
+- `V1.0.4__checkout_foundation.sql` creates customer checkout and checkout item snapshot tables.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -88,6 +89,26 @@ Customer account rules:
 - Address book is TR-first flexible: `countryIso` defaults to `TR`, city/district are strings, phone is required, and corporate invoice addresses require company name, tax number, and tax office.
 - Google login is not implemented yet; social identity schema exists for a future OAuth slice.
 
+## Checkout API
+
+Base path: `/api/commerce/checkout`
+
+Checkout is customer-only and requires a commerce customer JWT. It does not create orders or payments.
+
+- `POST /api/commerce/checkout`: starts checkout from the authenticated customer's active cart and expires previous open checkouts.
+- `GET /api/commerce/checkout/current`: returns the current checkout with live cart/product validation flags.
+- `PATCH /api/commerce/checkout/{checkoutUid}/addresses`: updates delivery/billing address snapshots and recalculates totals.
+
+Checkout rules:
+
+- Checkout TTL is 24 hours.
+- Address UID fields are optional. Missing delivery/billing UID falls back to default delivery/default billing address.
+- `billingSameAsDelivery=true` uses the delivery address as the billing snapshot.
+- Empty cart, unavailable variant, and insufficient stock block checkout start.
+- Checkout item prices and VAT are snapshotted from live product variants at checkout start.
+- Checkout reads do not mutate the database; cart/price/stock differences are returned through validation flags and warning message keys.
+- Shipping uses `commerce.shipping.enabled`, `commerce.shipping.standard_fee`, and `commerce.shipping.free_shipping_threshold`; invalid or missing config safely falls back to `0 TRY`.
+
 Customer-cart bridge rules:
 
 - Register/login may receive optional `X-Cart-Token`; invalid, expired, cleared, or already-owned source carts do not fail authentication and return `SOURCE_NOT_FOUND`.
@@ -116,7 +137,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart, customer account, and customer-cart bridge are the first public commerce APIs. Storefront UI, checkout, payment, and order APIs remain backlog work.
+Anonymous cart, customer account, customer-cart bridge, and checkout foundation are the first public commerce APIs. Storefront UI, payment, and order APIs remain backlog work.
 
 ## Frontend integration
 
@@ -136,6 +157,7 @@ The `/commerce` admin route exists and is guarded by `requiredModule: 'commerce'
 - Customer account auth endpoints are public but tenant-scoped; tenant resolution is still required.
 - Customer profile and address endpoints require commerce customer authentication and do not accept admin JWTs as customer identity.
 - Cart endpoints remain public for anonymous carts and can optionally authenticate commerce customer JWTs for customer carts. Admin JWTs are not used as cart customer identity.
+- Checkout endpoints require commerce customer authentication and do not accept anonymous or admin JWT identity.
 - Commerce uses tenant DB isolation. Do not add `tenant_id` columns to tenant commerce tables.
 - Commerce services call `CommerceModuleAccessGuard` before tenant-scoped business operations.
 

@@ -13,6 +13,10 @@ public interface CommerceCustomerAddressRepository {
 
 	Optional<CommerceCustomerAddress> findByCustomerIdAndUid(Long customerId, String uid);
 
+	Optional<CommerceCustomerAddress> findFirstByCustomerIdAndDefaultDeliveryTrueOrderByIdAsc(Long customerId);
+
+	Optional<CommerceCustomerAddress> findFirstByCustomerIdAndDefaultBillingTrueOrderByIdAsc(Long customerId);
+
 	void delete(CommerceCustomerAddress address);
 
 	int clearDefaultDelivery(Long customerId);
