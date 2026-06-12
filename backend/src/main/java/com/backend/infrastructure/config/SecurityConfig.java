@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.backend.infrastructure.security.JwtAuthenticationFilter;
+import com.backend.infrastructure.security.CommerceCustomerAuthenticationFilter;
 import com.backend.infrastructure.tenant.TenantFilter;
 import com.backend.presentation.filter.CmsPreviewFilter;
 
@@ -42,6 +43,7 @@ public class SecurityConfig {
 
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter,
+						CommerceCustomerAuthenticationFilter commerceCustomerAuthenticationFilter,
                         TenantFilter tenantFilter, CmsPreviewFilter cmsPreviewFilter) throws Exception {
                 boolean isDev = Arrays.asList(env.getActiveProfiles()).contains("dev");
 
@@ -80,6 +82,8 @@ public class SecurityConfig {
 																										// other actuator
 																										// endpoints
 												.requestMatchers("/public/**").permitAll() // Public API endpoints
+												.requestMatchers("/commerce/customers/auth/**").permitAll() // Public Commerce customer auth API
+												.requestMatchers("/commerce/customers/**").hasRole("COMMERCE_CUSTOMER")
 												.requestMatchers("/commerce/cart/**").permitAll() // Public Commerce cart API
 												.requestMatchers("/cms/preview/**").authenticated() // SmartEdit preview ticket issue (TENANT_ADMIN via @PreAuthorize)
                                                 .requestMatchers("/cms/**").permitAll() // CMS Delivery API (public)
@@ -94,6 +98,7 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated())
                                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                                 .addFilterAfter(tenantFilter, JwtAuthenticationFilter.class)
+								.addFilterAfter(commerceCustomerAuthenticationFilter, TenantFilter.class)
                                 .addFilterAfter(cmsPreviewFilter, TenantFilter.class);
 
                 return http.build();

@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 
 import com.backend.application.commerce.CommerceCartRateLimitExceededException;
+import com.backend.application.commerce.CommerceCustomerRateLimitExceededException;
 import com.backend.application.service.PublicContactRateLimitExceededException;
 import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.ContentCannotBePublishedException;
@@ -138,7 +139,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<?>> handleBadCredentials(BadCredentialsException ex) {
         log.warn("Bad credentials exception: {}", ex.getMessage());
-        String message = getMessage("auth.invalid.credentials");
+		String message = resolveExceptionMessage(ex.getMessage(), "auth.invalid.credentials");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
@@ -358,7 +359,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleCommerceCartRateLimit(CommerceCartRateLimitExceededException ex) {
     String correlationId = MDC.get("correlationId");
     log.warn("[{}] Commerce cart rate limit exceeded", correlationId);
-    String message = getMessage("rate.limit.exceeded");
+    String message = resolveExceptionMessage(ex.getMessage(), "commerce.cart.rate.limit.exceeded");
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+			.header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+			.body(ApiResponse.error(message));
+    }
+
+    @ExceptionHandler(CommerceCustomerRateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<?>> handleCommerceCustomerRateLimit(CommerceCustomerRateLimitExceededException ex) {
+    String correlationId = MDC.get("correlationId");
+    log.warn("[{}] Commerce customer rate limit exceeded", correlationId);
+    String message = resolveExceptionMessage(ex.getMessage(), "commerce.customer.rate.limit.exceeded");
     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
 			.header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
 			.body(ApiResponse.error(message));

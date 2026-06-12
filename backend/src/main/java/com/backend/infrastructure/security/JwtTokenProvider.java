@@ -26,13 +26,24 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(String email, String role, Long userId, Long tenantId) {
+		return createToken(email, role, userId, tenantId, "access", accessTokenExpiration, false);
+    }
+
+    public String createToken(
+			String email,
+			String role,
+			Long userId,
+			Long tenantId,
+			String type,
+			long ttlMs,
+			boolean rememberMe) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
+		Date expiryDate = new Date(now.getTime() + ttlMs);
 
         JwtBuilder builder = Jwts.builder()
                 .subject(email)
                 .claim("role", role)
-                .claim("type", "access")
+				.claim("type", type)
                 .issuedAt(now)
                 .expiration(expiryDate);
 
@@ -45,6 +56,10 @@ public class JwtTokenProvider {
         if (tenantId != null) {
             builder.claim("tenantId", tenantId);
         }
+
+		if (rememberMe) {
+			builder.claim("rememberMe", true);
+		}
 
         return builder.signWith(secretKey).compact();
     }
