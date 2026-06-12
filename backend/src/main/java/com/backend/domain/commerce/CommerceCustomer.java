@@ -28,6 +28,7 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "commerce_customers", uniqueConstraints = {
+		@UniqueConstraint(columnNames = { "uuid" }, name = "uk_commerce_customer_uuid"),
 		@UniqueConstraint(columnNames = { "uid" }, name = "uk_commerce_customer_uid"),
 		@UniqueConstraint(columnNames = { "email_normalized" }, name = "uk_commerce_customer_email_normalized")
 }, indexes = {

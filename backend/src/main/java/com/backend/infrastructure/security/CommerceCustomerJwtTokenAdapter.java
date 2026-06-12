@@ -1,6 +1,7 @@
 package com.backend.infrastructure.security;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.backend.application.commerce.CommerceCustomerTokenPort;
 import com.backend.domain.commerce.CommerceCustomer;
@@ -43,12 +44,12 @@ public class CommerceCustomerJwtTokenAdapter implements CommerceCustomerTokenPor
 
 	@Override
 	public boolean validateAccessToken(String token) {
-		return jwtTokenProvider.validateToken(token) && ACCESS_TYPE.equals(jwtTokenProvider.getTokenType(token));
+		return hasTypeAndRequiredClaims(token, ACCESS_TYPE);
 	}
 
 	@Override
 	public boolean validateRefreshToken(String token) {
-		return jwtTokenProvider.validateToken(token) && REFRESH_TYPE.equals(jwtTokenProvider.getTokenType(token));
+		return hasTypeAndRequiredClaims(token, REFRESH_TYPE);
 	}
 
 	@Override
@@ -79,5 +80,17 @@ public class CommerceCustomerJwtTokenAdapter implements CommerceCustomerTokenPor
 	@Override
 	public long getRefreshTokenExpiration(boolean rememberMe) {
 		return jwtTokenProvider.getRefreshTokenExpiration(rememberMe);
+	}
+
+	private boolean hasTypeAndRequiredClaims(String token, String expectedType) {
+		try {
+			return jwtTokenProvider.validateToken(token)
+					&& expectedType.equals(jwtTokenProvider.getTokenType(token))
+					&& jwtTokenProvider.getUserIdFromToken(token) != null
+					&& jwtTokenProvider.getTenantIdFromToken(token) != null
+					&& StringUtils.hasText(jwtTokenProvider.getEmailFromToken(token));
+		} catch (Exception ex) {
+			return false;
+		}
 	}
 }

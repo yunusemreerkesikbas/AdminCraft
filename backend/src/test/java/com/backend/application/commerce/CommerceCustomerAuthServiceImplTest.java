@@ -114,12 +114,29 @@ class CommerceCustomerAuthServiceImplTest extends BaseServiceTest {
 		when(tokenPort.isRememberMeToken("old-refresh")).thenReturn(false);
 		when(tokenHashService.hashToken("old-refresh")).thenReturn("old-refresh-hash");
 		when(refreshTokenRepository.findByTokenHash("old-refresh-hash")).thenReturn(Optional.of(stored));
+		when(refreshTokenRepository.revokeByTokenHash("old-refresh-hash")).thenReturn(1);
 
 		var result = service.refresh("old-refresh", null, "127.0.0.1", "JUnit");
 
 		assertThat(result.refreshToken()).isEqualTo("refresh-token");
 		verify(refreshTokenRepository).revokeByTokenHash("old-refresh-hash");
 		verify(refreshTokenRepository).save(any(CommerceCustomerRefreshToken.class));
+	}
+
+	@Test
+	void refresh_ShouldRejectReplay_WhenStoredTokenWasAlreadyRevokedConcurrently() {
+		CommerceCustomerRefreshToken stored = new CommerceCustomerRefreshToken();
+		stored.setCustomer(customer());
+		stored.setExpiresAt(LocalDateTime.now().plusDays(1));
+		when(tokenPort.validateRefreshToken("old-refresh")).thenReturn(true);
+		when(tokenPort.getTenantId("old-refresh")).thenReturn(1L);
+		when(tokenHashService.hashToken("old-refresh")).thenReturn("old-refresh-hash");
+		when(refreshTokenRepository.findByTokenHash("old-refresh-hash")).thenReturn(Optional.of(stored));
+		when(refreshTokenRepository.revokeByTokenHash("old-refresh-hash")).thenReturn(0);
+
+		assertThatThrownBy(() -> service.refresh("old-refresh", null, "127.0.0.1", "JUnit"))
+				.isInstanceOf(BadCredentialsException.class)
+				.hasMessage("commerce.customer.auth.refresh.invalid");
 	}
 
 	private RegisterCommerceCustomerCommand registerCommand() {

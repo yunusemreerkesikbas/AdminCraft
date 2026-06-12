@@ -20,7 +20,13 @@ public interface CommerceCustomerTokenPort {
 
 	String getEmail(String token);
 
+	/**
+	 * Returns the access token expiration duration in milliseconds.
+	 */
 	long getAccessTokenExpiration();
 
+	/**
+	 * Returns the refresh token expiration duration in milliseconds.
+	 */
 	long getRefreshTokenExpiration(boolean rememberMe);
 }

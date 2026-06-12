@@ -131,7 +131,11 @@ class CommerceCustomerAddressServiceImpl implements CommerceCustomerAddressServi
 		if (invoiceType == null || invoiceType.isBlank()) {
 			return CommerceCustomerInvoiceType.INDIVIDUAL;
 		}
-		return CommerceCustomerInvoiceType.valueOf(invoiceType.trim().toUpperCase(Locale.ROOT));
+		try {
+			return CommerceCustomerInvoiceType.valueOf(invoiceType.trim().toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException ex) {
+			throw new IllegalArgumentException("commerce.customer.address.invoiceType.invalid", ex);
+		}
 	}
 
 	private boolean isBlank(String value) {

@@ -32,4 +32,68 @@ class CommerceCustomerJwtTokenAdapterTest {
 		assertThat(jwtTokenProvider.isAccessToken(token)).isFalse();
 		assertThat(jwtTokenProvider.getTokenType(token)).isEqualTo("commerce_customer_access");
 	}
+
+	@Test
+	void validateAccessToken_ShouldRejectCustomerToken_WhenRequiredClaimsAreMissing() {
+		String missingCustomerId = jwtTokenProvider.createToken(
+				"user@example.com",
+				"COMMERCE_CUSTOMER",
+				null,
+				1L,
+				"commerce_customer_access",
+				jwtTokenProvider.getAccessTokenExpiration(),
+				false);
+		String missingTenantId = jwtTokenProvider.createToken(
+				"user@example.com",
+				"COMMERCE_CUSTOMER",
+				10L,
+				null,
+				"commerce_customer_access",
+				jwtTokenProvider.getAccessTokenExpiration(),
+				false);
+		String missingEmail = jwtTokenProvider.createToken(
+				null,
+				"COMMERCE_CUSTOMER",
+				10L,
+				1L,
+				"commerce_customer_access",
+				jwtTokenProvider.getAccessTokenExpiration(),
+				false);
+
+		assertThat(adapter.validateAccessToken(missingCustomerId)).isFalse();
+		assertThat(adapter.validateAccessToken(missingTenantId)).isFalse();
+		assertThat(adapter.validateAccessToken(missingEmail)).isFalse();
+	}
+
+	@Test
+	void validateRefreshToken_ShouldRejectCustomerToken_WhenRequiredClaimsAreMissing() {
+		String missingCustomerId = jwtTokenProvider.createToken(
+				"user@example.com",
+				"COMMERCE_CUSTOMER",
+				null,
+				1L,
+				"commerce_customer_refresh",
+				jwtTokenProvider.getRefreshTokenExpiration(false),
+				false);
+		String missingTenantId = jwtTokenProvider.createToken(
+				"user@example.com",
+				"COMMERCE_CUSTOMER",
+				10L,
+				null,
+				"commerce_customer_refresh",
+				jwtTokenProvider.getRefreshTokenExpiration(false),
+				false);
+		String missingEmail = jwtTokenProvider.createToken(
+				null,
+				"COMMERCE_CUSTOMER",
+				10L,
+				1L,
+				"commerce_customer_refresh",
+				jwtTokenProvider.getRefreshTokenExpiration(false),
+				false);
+
+		assertThat(adapter.validateRefreshToken(missingCustomerId)).isFalse();
+		assertThat(adapter.validateRefreshToken(missingTenantId)).isFalse();
+		assertThat(adapter.validateRefreshToken(missingEmail)).isFalse();
+	}
 }

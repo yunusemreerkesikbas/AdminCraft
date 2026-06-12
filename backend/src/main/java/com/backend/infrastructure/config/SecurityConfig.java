@@ -128,6 +128,7 @@ public class SecurityConfig {
                                 "X-Tenant-Subdomain",
 								"X-User-ID",
 								"X-Client-Version",
+								"X-Device-Fingerprint",
 								"X-Cart-Token",
 								"X-Cms-Preview-Ticket"));
 

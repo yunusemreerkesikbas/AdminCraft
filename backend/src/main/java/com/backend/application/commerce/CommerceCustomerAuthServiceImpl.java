@@ -107,7 +107,10 @@ class CommerceCustomerAuthServiceImpl implements CommerceCustomerAuthService {
 		if (!customer.canLogin()) {
 			throw new CommerceDomainException("commerce.customer.auth.account.disabled");
 		}
-		refreshTokenRepository.revokeByTokenHash(tokenHash);
+		int revoked = refreshTokenRepository.revokeByTokenHash(tokenHash);
+		if (revoked != 1) {
+			throw new BadCredentialsException("commerce.customer.auth.refresh.invalid");
+		}
 		return issueAuthResult(customer, tokenPort.isRememberMeToken(refreshToken), deviceFingerprint, ipAddress, userAgent);
 	}
 
@@ -178,7 +181,11 @@ class CommerceCustomerAuthServiceImpl implements CommerceCustomerAuthService {
 		if (gender == null || gender.isBlank()) {
 			return null;
 		}
-		return CommerceCustomerGender.valueOf(gender.trim().toUpperCase(Locale.ROOT));
+		try {
+			return CommerceCustomerGender.valueOf(gender.trim().toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException ex) {
+			throw new IllegalArgumentException("commerce.customer.gender.invalid", ex);
+		}
 	}
 
 	private String normalizeEmail(String email) {

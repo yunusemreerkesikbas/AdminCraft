@@ -84,6 +84,22 @@ class CommerceCustomerAddressServiceImplTest extends BaseServiceTest {
 		assertThat(response.defaultBilling()).isTrue();
 	}
 
+	@Test
+	void update_ShouldClearExistingDefaults_WhenDefaultFlagsRequested() {
+		CommerceCustomerAddress address = new CommerceCustomerAddress();
+		address.setCustomer(customer());
+		address.setUid("address-uid");
+		when(addressRepository.findByCustomerIdAndUid(10L, "address-uid")).thenReturn(Optional.of(address));
+		when(addressRepository.save(any(CommerceCustomerAddress.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		var response = service.update(principal(), "address-uid", addressCommand(true, true, "INDIVIDUAL"));
+
+		assertThat(response.defaultDelivery()).isTrue();
+		assertThat(response.defaultBilling()).isTrue();
+		verify(addressRepository).clearDefaultDelivery(10L);
+		verify(addressRepository).clearDefaultBilling(10L);
+	}
+
 	private CommerceCustomerPrincipal principal() {
 		return new CommerceCustomerPrincipal(10L, "customer-uid", "user@example.com", 1L);
 	}

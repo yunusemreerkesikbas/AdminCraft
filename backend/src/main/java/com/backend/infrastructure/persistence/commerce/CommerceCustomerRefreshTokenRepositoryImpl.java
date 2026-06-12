@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.commerce;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 class CommerceCustomerRefreshTokenRepositoryImpl implements CommerceCustomerRefreshTokenRepository {
 
 	private final CommerceCustomerRefreshTokenJpaRepository jpaRepository;
+	private final Clock clock;
 
 	@Override
 	@Transactional
@@ -31,6 +33,6 @@ class CommerceCustomerRefreshTokenRepositoryImpl implements CommerceCustomerRefr
 	@Override
 	@Transactional
 	public int revokeByTokenHash(String tokenHash) {
-		return jpaRepository.revokeByTokenHash(tokenHash, LocalDateTime.now());
+		return jpaRepository.revokeByTokenHash(tokenHash, LocalDateTime.now(clock));
 	}
 }

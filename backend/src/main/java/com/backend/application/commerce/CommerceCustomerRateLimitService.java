@@ -25,15 +25,15 @@ public class CommerceCustomerRateLimitService {
 	private final ConcurrentHashMap<RateLimitKey, Lock> stripes = new ConcurrentHashMap<>();
 
 	public void checkLoginOrThrow(String email, String clientIp) {
-		checkOrThrow("commerce.customer.login", normalize(email), clientIp, LOGIN_LIMIT);
+		checkOrThrow("commerce.customer.login", email, clientIp, LOGIN_LIMIT);
 	}
 
 	public void checkRegisterOrThrow(String email, String clientIp) {
-		checkOrThrow("commerce.customer.register", normalize(email), clientIp, REGISTER_LIMIT);
+		checkOrThrow("commerce.customer.register", email, clientIp, REGISTER_LIMIT);
 	}
 
 	private void checkOrThrow(String scope, String email, String clientIp, int limit) {
-		RateLimitKey key = new RateLimitKey(scope, normalize(tenantContext.getTenantId()), email, normalize(clientIp));
+		RateLimitKey key = new RateLimitKey(scope, normalize(tenantContext.getTenantId()), normalize(email), normalize(clientIp));
 		Lock lock = stripes.computeIfAbsent(key, ignored -> new java.util.concurrent.locks.ReentrantLock());
 		long now = System.currentTimeMillis();
 		lock.lock();

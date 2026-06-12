@@ -33,9 +33,9 @@ class CommerceCustomerProfileServiceImpl implements CommerceCustomerProfileServi
 	public CommerceCustomerResponse updateMe(CommerceCustomerPrincipal principal, UpdateCommerceCustomerProfileCommand command) {
 		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
 		CommerceCustomer customer = loadCustomer(principal);
-		customer.setFirstName(command.firstName().trim());
-		customer.setLastName(command.lastName().trim());
-		customer.setPhone(command.phone().trim());
+		customer.setFirstName(command.firstName());
+		customer.setLastName(command.lastName());
+		customer.setPhone(command.phone());
 		customer.setGender(parseGender(command.gender()));
 		customer.setBirthDate(command.birthDate());
 		return CommerceCustomerResponse.from(customerRepository.save(customer));
@@ -50,6 +50,10 @@ class CommerceCustomerProfileServiceImpl implements CommerceCustomerProfileServi
 		if (gender == null || gender.isBlank()) {
 			return null;
 		}
-		return CommerceCustomerGender.valueOf(gender.trim().toUpperCase(Locale.ROOT));
+		try {
+			return CommerceCustomerGender.valueOf(gender.trim().toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException ex) {
+			throw new IllegalArgumentException("commerce.customer.gender.invalid", ex);
+		}
 	}
 }
