@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation and anonymous cart foundation. It does not implement customer account, checkout, payment, order, fulfillment, or storefront UI yet.
+The current implementation includes the module foundation, anonymous cart foundation, and backend customer account foundation. It does not implement checkout, payment, order, fulfillment, customer-cart merge, or storefront UI yet.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -21,6 +21,7 @@ Current tenant migrations:
 
 - `V1.0.0__baseline.sql` is intentionally no-op. It creates Flyway history for the commerce module without adding business tables.
 - `V1.0.1__cart_foundation.sql` creates anonymous cart and cart item tables.
+- `V1.0.2__customer_account_foundation.sql` creates commerce customer, refresh token, consent, address, and social identity skeleton tables.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -47,6 +48,41 @@ Cart rules:
 - Cart read compares snapshot price with current variant price and returns `priceChanged`.
 - Invalid, cleared, or expired cart tokens behave as cart not found.
 
+## Customer account API
+
+Base paths:
+
+- `/api/commerce/customers/auth`
+- `/api/commerce/customers`
+
+Customer account is separate from admin `User` authentication. Customer access tokens use commerce-specific JWT token types and are accepted only by commerce customer endpoints.
+
+Auth endpoints:
+
+- `POST /api/commerce/customers/auth/register`: creates an email/password customer, required legal/privacy consent snapshots, optional marketing consent snapshots, and a refresh token cookie.
+- `POST /api/commerce/customers/auth/login`: signs in an active customer.
+- `POST /api/commerce/customers/auth/refresh`: rotates the HttpOnly refresh cookie and returns a new access token.
+- `POST /api/commerce/customers/auth/logout`: revokes the refresh cookie token when present and clears the cookie.
+
+Profile and address endpoints require `ROLE_COMMERCE_CUSTOMER`:
+
+- `GET /api/commerce/customers/me`
+- `PATCH /api/commerce/customers/me`
+- `GET /api/commerce/customers/addresses`
+- `POST /api/commerce/customers/addresses`
+- `PATCH /api/commerce/customers/addresses/{addressUid}`
+- `DELETE /api/commerce/customers/addresses/{addressUid}`
+- `POST /api/commerce/customers/addresses/{addressUid}/default-delivery`
+- `POST /api/commerce/customers/addresses/{addressUid}/default-billing`
+
+Customer account rules:
+
+- Customer email is unique per tenant database through normalized lowercase email.
+- Email verification is state-only in this slice; login is not blocked when `emailVerified=false`.
+- Refresh tokens are stored only as SHA-256 hashes.
+- Address book is TR-first flexible: `countryIso` defaults to `TR`, city/district are strings, phone is required, and corporate invoice addresses require company name, tax number, and tax office.
+- Google login is not implemented yet; social identity schema exists for a future OAuth slice.
+
 ## Admin API
 
 Commerce does not expose a tenant-scoped admin API yet.
@@ -66,7 +102,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart is the first public commerce API. Storefront UI, checkout, payment, customer account, and order APIs remain backlog work.
+Anonymous cart and customer account are the first public commerce APIs. Storefront UI, checkout, payment, customer-cart merge, and order APIs remain backlog work.
 
 ## Frontend integration
 
@@ -83,8 +119,10 @@ The `/commerce` admin route exists and is guarded by `requiredModule: 'commerce'
 
 - Provisioning endpoints are SUPER_ADMIN-only through `ProvisioningController`.
 - The admin `/commerce` route is tenant-user guarded and also protected by `moduleGuard`.
+- Customer account auth endpoints are public but tenant-scoped; tenant resolution is still required.
+- Customer profile and address endpoints require commerce customer authentication and do not accept admin JWTs as customer identity.
 - Commerce uses tenant DB isolation. Do not add `tenant_id` columns to tenant commerce tables.
-- Future commerce services should call `CommerceModuleAccessGuard` before tenant-scoped business operations.
+- Commerce services call `CommerceModuleAccessGuard` before tenant-scoped business operations.
 
 ## Implementation guide
 
