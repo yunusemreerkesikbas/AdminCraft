@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, and backend customer account foundation. It does not implement checkout, payment, order, fulfillment, customer-cart merge, or storefront UI yet.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, and customer-cart bridge. It does not implement checkout, payment, order, fulfillment, or storefront UI yet.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -22,6 +22,7 @@ Current tenant migrations:
 - `V1.0.0__baseline.sql` is intentionally no-op. It creates Flyway history for the commerce module without adding business tables.
 - `V1.0.1__cart_foundation.sql` creates anonymous cart and cart item tables.
 - `V1.0.2__customer_account_foundation.sql` creates commerce customer, refresh token, consent, address, and social identity skeleton tables.
+- `V1.0.3__customer_cart_bridge.sql` adds nullable customer ownership to carts for merge-on-auth and authenticated cart access.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -29,7 +30,7 @@ Module execution order is documented in [`../global/migrations.md`](../global/mi
 
 Base path: `/api/commerce/cart`
 
-The cart API is public and tenant-scoped. It uses `X-Cart-Token` for anonymous cart identity. New cart tokens are returned in the response body and only a SHA-256 token hash is stored in the tenant database.
+The cart API is public and tenant-scoped. Anonymous requests use `X-Cart-Token` for cart identity. Authenticated commerce customer requests may use the same API with a customer access token and no cart token; the customer's active cart is the canonical cart. New anonymous cart tokens are returned in the response body and only a SHA-256 token hash is stored in the tenant database.
 
 - `POST /api/commerce/cart`: creates an empty anonymous cart.
 - `GET /api/commerce/cart`: returns the cart for `X-Cart-Token`.
@@ -47,6 +48,8 @@ Cart rules:
 - Cart item stores gross price and VAT snapshots.
 - Cart read compares snapshot price with current variant price and returns `priceChanged`.
 - Invalid, cleared, or expired cart tokens behave as cart not found.
+- Customer JWT cart requests do not implicitly merge a stale `X-Cart-Token`; the authenticated customer's active cart wins.
+- Customer cart tokens are not minted just to expose a raw token. `cartToken` can be `null` for customer-cart responses.
 
 ## Customer account API
 
@@ -59,10 +62,12 @@ Customer account is separate from admin `User` authentication. Customer access t
 
 Auth endpoints:
 
-- `POST /api/commerce/customers/auth/register`: creates an email/password customer, required legal/privacy consent snapshots, optional marketing consent snapshots, and a refresh token cookie.
-- `POST /api/commerce/customers/auth/login`: signs in an active customer.
+- `POST /api/commerce/customers/auth/register`: creates an email/password customer, required legal/privacy consent snapshots, optional marketing consent snapshots, optionally merges `X-Cart-Token`, and sets a refresh token cookie.
+- `POST /api/commerce/customers/auth/login`: signs in an active customer and optionally merges `X-Cart-Token`.
 - `POST /api/commerce/customers/auth/refresh`: rotates the HttpOnly refresh cookie and returns a new access token.
 - `POST /api/commerce/customers/auth/logout`: revokes the refresh cookie token when present and clears the cookie.
+
+Register/login responses can include optional `cart` and `cartMerge` data. `cartMerge.status` is one of `NONE`, `LINKED`, `MERGED`, `PARTIAL`, or `SOURCE_NOT_FOUND`.
 
 Profile and address endpoints require `ROLE_COMMERCE_CUSTOMER`:
 
@@ -83,6 +88,15 @@ Customer account rules:
 - Address book is TR-first flexible: `countryIso` defaults to `TR`, city/district are strings, phone is required, and corporate invoice addresses require company name, tax number, and tax office.
 - Google login is not implemented yet; social identity schema exists for a future OAuth slice.
 
+Customer-cart bridge rules:
+
+- Register/login may receive optional `X-Cart-Token`; invalid, expired, cleared, or already-owned source carts do not fail authentication and return `SOURCE_NOT_FOUND`.
+- If the customer has no active cart, the active anonymous cart is linked to the customer.
+- If the customer already has an active cart, source cart items are merged into the customer cart.
+- Same variant quantities are summed when the resulting quantity stays within `1..99` and current stock/sellability checks pass.
+- Problematic source lines are skipped, auth still succeeds, and `cartMerge.warningMessageKeys` carries frontend-displayable i18n keys.
+- After a merge attempt into an existing customer cart, the source anonymous cart is marked `CLEARED` to prevent double-merge.
+
 ## Admin API
 
 Commerce does not expose a tenant-scoped admin API yet.
@@ -102,7 +116,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart and customer account are the first public commerce APIs. Storefront UI, checkout, payment, customer-cart merge, and order APIs remain backlog work.
+Anonymous cart, customer account, and customer-cart bridge are the first public commerce APIs. Storefront UI, checkout, payment, and order APIs remain backlog work.
 
 ## Frontend integration
 
@@ -121,6 +135,7 @@ The `/commerce` admin route exists and is guarded by `requiredModule: 'commerce'
 - The admin `/commerce` route is tenant-user guarded and also protected by `moduleGuard`.
 - Customer account auth endpoints are public but tenant-scoped; tenant resolution is still required.
 - Customer profile and address endpoints require commerce customer authentication and do not accept admin JWTs as customer identity.
+- Cart endpoints remain public for anonymous carts and can optionally authenticate commerce customer JWTs for customer carts. Admin JWTs are not used as cart customer identity.
 - Commerce uses tenant DB isolation. Do not add `tenant_id` columns to tenant commerce tables.
 - Commerce services call `CommerceModuleAccessGuard` before tenant-scoped business operations.
 

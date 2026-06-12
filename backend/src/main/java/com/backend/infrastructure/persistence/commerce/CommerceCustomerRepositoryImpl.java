@@ -28,6 +28,11 @@ class CommerceCustomerRepositoryImpl implements CommerceCustomerRepository {
 	}
 
 	@Override
+	public Optional<CommerceCustomer> findByIdForUpdate(Long id) {
+		return jpaRepository.findByIdForUpdate(id);
+	}
+
+	@Override
 	public Optional<CommerceCustomer> findByUid(String uid) {
 		return jpaRepository.findByUid(uid);
 	}

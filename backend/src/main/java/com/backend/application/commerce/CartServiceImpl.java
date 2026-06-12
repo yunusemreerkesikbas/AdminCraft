@@ -23,11 +23,13 @@ import com.backend.application.commerce.dto.CartTotalsResponse;
 import com.backend.domain.commerce.CommerceCart;
 import com.backend.domain.commerce.CommerceCartItem;
 import com.backend.domain.commerce.CommerceCartStatus;
+import com.backend.domain.commerce.CommerceCustomer;
 import com.backend.domain.commerce.exception.CommerceDomainException;
 import com.backend.domain.enums.Currency;
 import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.commerce.repository.CommerceCartItemRepository;
 import com.backend.domain.commerce.repository.CommerceCartRepository;
+import com.backend.domain.commerce.repository.CommerceCustomerRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,128 +43,213 @@ public class CartServiceImpl implements CartService {
     private final CommerceModuleAccessGuard commerceModuleAccessGuard;
     private final CommerceCartRepository cartRepository;
     private final CommerceCartItemRepository cartItemRepository;
+	private final CommerceCustomerRepository customerRepository;
     private final CommerceProductVariantLookupPort productVariantLookupPort;
     private final CartTokenService cartTokenService;
 
     @Override
     @Transactional
     public CartResponse createCart() {
-        commerceModuleAccessGuard.assertEnabledForCurrentTenant();
-        CreatedCart createdCart = createActiveCart();
-        CommerceCart saved = cartRepository.save(createdCart.cart());
-        return toResponse(saved, createdCart.rawToken());
-    }
+		return createCart(null);
+	}
 
-    @Override
-    @Transactional(readOnly = true)
-    public CartResponse getCart(String cartToken) {
-        commerceModuleAccessGuard.assertEnabledForCurrentTenant();
-        CommerceCart cart = loadActiveCart(cartToken);
-        return toResponse(cart, cartToken);
-    }
+	@Override
+	@Transactional
+	public CartResponse createCart(CommerceCustomerPrincipal principal) {
+		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
+		CommerceCustomer customer = principal == null ? null : lockCustomer(principal);
+		if (customer != null) {
+			Optional<CommerceCart> existingCart = findActiveCustomerCart(customer.getId());
+			if (existingCart.isPresent()) {
+				return toResponse(existingCart.get(), null);
+			}
+		}
+		CreatedCart createdCart = createActiveCart(customer, principal == null);
+		CommerceCart saved = cartRepository.save(createdCart.cart());
+		return toResponse(saved, createdCart.rawToken());
+	}
 
-    @Override
-    @Transactional
-    public CartResponse addItem(String cartToken, String variantUid, Integer quantity) {
-        commerceModuleAccessGuard.assertEnabledForCurrentTenant();
-        int requestedQuantity = validateQuantity(quantity);
-        CommerceVariantSnapshot variant = loadVariant(variantUid);
-        validateSellable(variant);
+	@Override
+	@Transactional(readOnly = true)
+	public CartResponse getCart(String cartToken) {
+		return getCart(cartToken, null);
+	}
 
-        String responseToken = cartToken;
-        CommerceCart cart;
-        if (cartToken == null || cartToken.isBlank()) {
-            CreatedCart createdCart = createActiveCart();
-            cart = createdCart.cart();
-            responseToken = createdCart.rawToken();
-        } else {
-            cart = loadActiveCart(cartToken);
-        }
+	@Override
+	@Transactional(readOnly = true)
+	public CartResponse getCart(String cartToken, CommerceCustomerPrincipal principal) {
+		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
+		if (principal != null) {
+			CommerceCart cart = loadActiveCustomerCart(principal);
+			return toResponse(cart, null);
+		}
+		CommerceCart cart = loadActiveAnonymousCart(cartToken);
+		return toResponse(cart, cartToken);
+	}
 
-        Optional<CommerceCartItem> existingItem = cart.getItems().stream()
-                .filter(item -> Objects.equals(item.getVariantUid(), variant.variantUid()))
-                .findFirst();
-        int finalQuantity = existingItem
-                .map(item -> item.getQuantity() + requestedQuantity)
-                .orElse(requestedQuantity);
-        validateQuantity(finalQuantity);
-        validateStock(variant, finalQuantity);
+	@Override
+	@Transactional
+	public CartResponse addItem(String cartToken, String variantUid, Integer quantity) {
+		return addItem(cartToken, null, variantUid, quantity);
+	}
 
-        if (existingItem.isPresent()) {
-            existingItem.get().setQuantity(finalQuantity);
-        } else {
-            CommerceCartItem item = new CommerceCartItem();
-            item.setProductUid(variant.productUid());
-            item.setProductSku(variant.productSku());
-            item.setVariantUid(variant.variantUid());
-            item.setVariantSku(variant.variantSku());
-            item.setQuantity(finalQuantity);
-            item.setUnitGrossPrice(variant.price());
-            item.setVatRate(variant.vatRate());
-            cart.addItem(item);
-        }
+	@Override
+	@Transactional
+	public CartResponse addItem(String cartToken, CommerceCustomerPrincipal principal, String variantUid, Integer quantity) {
+		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
+		int requestedQuantity = validateQuantity(quantity);
+		CommerceVariantSnapshot variant = loadVariant(variantUid);
+		validateSellable(variant);
 
-        CommerceCart saved = cartRepository.save(cart);
-        return toResponse(saved, responseToken);
-    }
+		String responseToken = cartToken;
+		CommerceCart cart;
+		if (principal != null) {
+			cart = loadOrCreateActiveCustomerCart(principal);
+			responseToken = null;
+		} else if (cartToken == null || cartToken.isBlank()) {
+			CreatedCart createdCart = createActiveCart(null, true);
+			cart = createdCart.cart();
+			responseToken = createdCart.rawToken();
+		} else {
+			cart = loadActiveAnonymousCart(cartToken);
+		}
 
-    @Override
-    @Transactional
-    public CartResponse updateItem(String cartToken, String itemUid, Integer quantity) {
-        commerceModuleAccessGuard.assertEnabledForCurrentTenant();
-        int requestedQuantity = validateQuantity(quantity);
-        CommerceCart cart = loadActiveCart(cartToken);
-        CommerceCartItem item = loadCartItem(cart, itemUid);
-        CommerceVariantSnapshot variant = loadVariant(item.getVariantUid());
-        validateSellable(variant);
-        validateStock(variant, requestedQuantity);
-        item.setQuantity(requestedQuantity);
-        CommerceCart saved = cartRepository.save(cart);
-        return toResponse(saved, cartToken);
-    }
+		Optional<CommerceCartItem> existingItem = cart.getItems().stream()
+				.filter(item -> Objects.equals(item.getVariantUid(), variant.variantUid()))
+				.findFirst();
+		int finalQuantity = existingItem
+				.map(item -> item.getQuantity() + requestedQuantity)
+				.orElse(requestedQuantity);
+		validateQuantity(finalQuantity);
+		validateStock(variant, finalQuantity);
 
-    @Override
-    @Transactional
-    public CartResponse deleteItem(String cartToken, String itemUid) {
-        commerceModuleAccessGuard.assertEnabledForCurrentTenant();
-        CommerceCart cart = loadActiveCart(cartToken);
-        CommerceCartItem item = loadCartItem(cart, itemUid);
-        cart.getItems().remove(item);
-        CommerceCart saved = cartRepository.save(cart);
-        return toResponse(saved, cartToken);
-    }
+		if (existingItem.isPresent()) {
+			existingItem.get().setQuantity(finalQuantity);
+		} else {
+			CommerceCartItem item = new CommerceCartItem();
+			item.setProductUid(variant.productUid());
+			item.setProductSku(variant.productSku());
+			item.setVariantUid(variant.variantUid());
+			item.setVariantSku(variant.variantSku());
+			item.setQuantity(finalQuantity);
+			item.setUnitGrossPrice(variant.price());
+			item.setVatRate(variant.vatRate());
+			cart.addItem(item);
+		}
 
-    @Override
-    @Transactional
-    public void clearCart(String cartToken) {
-        commerceModuleAccessGuard.assertEnabledForCurrentTenant();
-        CommerceCart cart = loadActiveCart(cartToken);
-        cart.getItems().clear();
-        cart.setStatus(CommerceCartStatus.CLEARED);
-        cartRepository.save(cart);
-    }
+		CommerceCart saved = cartRepository.save(cart);
+		return toResponse(saved, responseToken);
+	}
 
-    private CreatedCart createActiveCart() {
-        String rawToken = cartTokenService.generateToken();
-        CommerceCart cart = new CommerceCart();
-        cart.setTokenHash(cartTokenService.hashToken(rawToken));
-        cart.setStatus(CommerceCartStatus.ACTIVE);
-        cart.setExpiresAt(LocalDateTime.now().plusDays(CART_TTL_DAYS));
-        return new CreatedCart(cart, rawToken);
-    }
+	@Override
+	@Transactional
+	public CartResponse updateItem(String cartToken, String itemUid, Integer quantity) {
+		return updateItem(cartToken, null, itemUid, quantity);
+	}
 
-    private CommerceCart loadActiveCart(String cartToken) {
-        if (cartToken == null || cartToken.isBlank()) {
+	@Override
+	@Transactional
+	public CartResponse updateItem(String cartToken, CommerceCustomerPrincipal principal, String itemUid, Integer quantity) {
+		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
+		int requestedQuantity = validateQuantity(quantity);
+		CommerceCart cart = principal == null ? loadActiveAnonymousCart(cartToken) : loadActiveCustomerCart(principal);
+		CommerceCartItem item = loadCartItem(cart, itemUid);
+		CommerceVariantSnapshot variant = loadVariant(item.getVariantUid());
+		validateSellable(variant);
+		validateStock(variant, requestedQuantity);
+		item.setQuantity(requestedQuantity);
+		CommerceCart saved = cartRepository.save(cart);
+		return toResponse(saved, principal == null ? cartToken : null);
+	}
+
+	@Override
+	@Transactional
+	public CartResponse deleteItem(String cartToken, String itemUid) {
+		return deleteItem(cartToken, null, itemUid);
+	}
+
+	@Override
+	@Transactional
+	public CartResponse deleteItem(String cartToken, CommerceCustomerPrincipal principal, String itemUid) {
+		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
+		CommerceCart cart = principal == null ? loadActiveAnonymousCart(cartToken) : loadActiveCustomerCart(principal);
+		CommerceCartItem item = loadCartItem(cart, itemUid);
+		cart.getItems().remove(item);
+		CommerceCart saved = cartRepository.save(cart);
+		return toResponse(saved, principal == null ? cartToken : null);
+	}
+
+	@Override
+	@Transactional
+	public void clearCart(String cartToken) {
+		clearCart(cartToken, null);
+	}
+
+	@Override
+	@Transactional
+	public void clearCart(String cartToken, CommerceCustomerPrincipal principal) {
+		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
+		CommerceCart cart = principal == null ? loadActiveAnonymousCart(cartToken) : loadActiveCustomerCart(principal);
+		cart.getItems().clear();
+		cart.setStatus(CommerceCartStatus.CLEARED);
+		cartRepository.save(cart);
+	}
+
+	private CreatedCart createActiveCart(CommerceCustomer customer, boolean exposeRawToken) {
+		String rawToken = cartTokenService.generateToken();
+		CommerceCart cart = new CommerceCart();
+		cart.setTokenHash(cartTokenService.hashToken(rawToken));
+		if (customer != null) {
+			cart.setCustomer(customer);
+		}
+		cart.setStatus(CommerceCartStatus.ACTIVE);
+		cart.setExpiresAt(LocalDateTime.now().plusDays(CART_TTL_DAYS));
+		return new CreatedCart(cart, exposeRawToken ? rawToken : null);
+	}
+
+	private CommerceCart loadActiveAnonymousCart(String cartToken) {
+		if (cartToken == null || cartToken.isBlank()) {
 			throw new IllegalArgumentException("commerce.cart.token.required");
-        }
-        String tokenHash = cartTokenService.hashToken(cartToken);
-        CommerceCart cart = cartRepository.findByTokenHashAndStatus(tokenHash, CommerceCartStatus.ACTIVE)
-                .orElseThrow(() -> new EntityNotFoundException(CART_NOT_FOUND, "token"));
-        if (cart.getExpiresAt() == null || cart.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new EntityNotFoundException(CART_NOT_FOUND, "expired token");
-        }
-        return cart;
-    }
+		}
+		String tokenHash = cartTokenService.hashToken(cartToken);
+		CommerceCart cart = cartRepository.findByTokenHashAndStatus(tokenHash, CommerceCartStatus.ACTIVE)
+				.orElseThrow(() -> new EntityNotFoundException(CART_NOT_FOUND, "token"));
+		if (cart.getCustomer() != null || isExpired(cart)) {
+			throw new EntityNotFoundException(CART_NOT_FOUND, "expired token");
+		}
+		return cart;
+	}
+
+	private CommerceCart loadActiveCustomerCart(CommerceCustomerPrincipal principal) {
+		return findActiveCustomerCart(principal)
+				.orElseThrow(() -> new EntityNotFoundException(CART_NOT_FOUND, "customer"));
+	}
+
+	private CommerceCart loadOrCreateActiveCustomerCart(CommerceCustomerPrincipal principal) {
+		CommerceCustomer customer = lockCustomer(principal);
+		return findActiveCustomerCart(customer.getId())
+				.orElseGet(() -> createActiveCart(customer, false).cart());
+	}
+
+	private Optional<CommerceCart> findActiveCustomerCart(CommerceCustomerPrincipal principal) {
+		return findActiveCustomerCart(principal.customerId());
+	}
+
+	private Optional<CommerceCart> findActiveCustomerCart(Long customerId) {
+		return cartRepository.findFirstByCustomerIdAndStatusAndExpiresAtAfterOrderByIdAsc(
+				customerId,
+				CommerceCartStatus.ACTIVE,
+				LocalDateTime.now());
+	}
+
+	private CommerceCustomer lockCustomer(CommerceCustomerPrincipal principal) {
+		return customerRepository.findByIdForUpdate(principal.customerId())
+				.orElseThrow(() -> new EntityNotFoundException("commerce.customer.not.found"));
+	}
+
+	private boolean isExpired(CommerceCart cart) {
+		return cart.getExpiresAt() == null || cart.getExpiresAt().isBefore(LocalDateTime.now());
+	}
 
     private CommerceCartItem loadCartItem(CommerceCart cart, String itemUid) {
         if (itemUid == null || itemUid.isBlank()) {

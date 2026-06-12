@@ -79,6 +79,14 @@ class CommerceCustomerAuthenticationFilterTest {
 		verify(filterChain).doFilter(request, response);
 	}
 
+	@Test
+	void shouldNotFilter_ShouldAllowCustomerAuthenticationOnCartEndpoints() throws Exception {
+		CommerceCustomerAuthenticationFilter filter = filter();
+		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/commerce/cart");
+
+		assertThat(filter.shouldNotFilter(request)).isFalse();
+	}
+
 	private MockHttpServletRequest requestWithToken(String token) {
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/commerce/customers/me");
 		request.addHeader("Authorization", "Bearer " + token);

@@ -3,6 +3,7 @@ package com.backend.application.commerce;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
@@ -23,10 +24,12 @@ import com.backend.application.commerce.CommerceProductVariantLookupPort.Commerc
 import com.backend.domain.commerce.CommerceCart;
 import com.backend.domain.commerce.CommerceCartItem;
 import com.backend.domain.commerce.CommerceCartStatus;
+import com.backend.domain.commerce.CommerceCustomer;
 import com.backend.domain.commerce.exception.CommerceDomainException;
 import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.commerce.repository.CommerceCartItemRepository;
 import com.backend.domain.commerce.repository.CommerceCartRepository;
+import com.backend.domain.commerce.repository.CommerceCustomerRepository;
 import com.backend.testutil.BaseServiceTest;
 
 class CartServiceImplTest extends BaseServiceTest {
@@ -39,6 +42,9 @@ class CartServiceImplTest extends BaseServiceTest {
 
     @Mock
     private CommerceCartItemRepository cartItemRepository;
+
+	@Mock
+	private CommerceCustomerRepository customerRepository;
 
     @Mock
     private CommerceProductVariantLookupPort productVariantLookupPort;
@@ -181,6 +187,42 @@ class CartServiceImplTest extends BaseServiceTest {
                 .hasMessageContaining("expired token");
     }
 
+	@Test
+	void getCart_ShouldReturnCustomerCart_WhenCustomerPrincipalPresentAndTokenMissing() {
+		CommerceCart cart = activeCart();
+		cart.setCustomer(customer());
+		when(cartRepository.findFirstByCustomerIdAndStatusAndExpiresAtAfterOrderByIdAsc(
+				eq(10L),
+				eq(CommerceCartStatus.ACTIVE),
+				any(LocalDateTime.class)))
+				.thenReturn(Optional.of(cart));
+
+		var response = cartService.getCart(null, principal());
+
+		assertThat(response.cartToken()).isNull();
+		assertThat(response.cartUid()).isEqualTo("cart-uid");
+	}
+
+	@Test
+	void addItem_ShouldCreateCustomerCart_WhenCustomerPrincipalPresentAndNoActiveCartExists() {
+		when(customerRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(customer()));
+		when(cartRepository.findFirstByCustomerIdAndStatusAndExpiresAtAfterOrderByIdAsc(
+				eq(10L),
+				eq(CommerceCartStatus.ACTIVE),
+				any(LocalDateTime.class)))
+				.thenReturn(Optional.empty());
+		when(productVariantLookupPort.findByVariantUid("variant-uid"))
+				.thenReturn(Optional.of(sellableVariant(BigDecimal.valueOf(100), 5)));
+
+		var response = cartService.addItem("stale-token", principal(), "variant-uid", 2);
+
+		assertThat(response.cartToken()).isNull();
+		assertThat(response.items()).hasSize(1);
+		ArgumentCaptor<CommerceCart> cartCaptor = ArgumentCaptor.forClass(CommerceCart.class);
+		verify(cartRepository).save(cartCaptor.capture());
+		assertThat(cartCaptor.getValue().getCustomer().getId()).isEqualTo(10L);
+	}
+
     @Test
     void createCart_ShouldReject_WhenCommerceModuleDisabled() {
         doThrow(new IllegalStateException("commerce.module.not.enabled"))
@@ -228,4 +270,20 @@ class CartServiceImplTest extends BaseServiceTest {
                 BigDecimal.valueOf(20),
                 stockQuantity);
     }
+
+	private CommerceCustomerPrincipal principal() {
+		return new CommerceCustomerPrincipal(10L, "customer-uid", "user@example.com", 1L);
+	}
+
+	private CommerceCustomer customer() {
+		CommerceCustomer customer = new CommerceCustomer();
+		customer.setId(10L);
+		customer.setUid("customer-uid");
+		customer.setEmail("user@example.com");
+		customer.setEmailNormalized("user@example.com");
+		customer.setFirstName("Emre");
+		customer.setLastName("Erkesikbas");
+		customer.setPhone("+905551112233");
+		return customer;
+	}
 }

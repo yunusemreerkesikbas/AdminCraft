@@ -81,11 +81,28 @@ public class CommerceCustomerAuthenticationFilter extends OncePerRequestFilter {
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
-		String path = request.getServletPath();
-		return !path.startsWith("/commerce/customers/")
-				|| path.startsWith("/commerce/customers/auth/register")
+		String path = requestPath(request);
+		boolean commerceCustomerAuthEndpoint = path.startsWith("/commerce/customers/auth/register")
 				|| path.startsWith("/commerce/customers/auth/login")
 				|| path.startsWith("/commerce/customers/auth/refresh");
+		boolean commerceCustomerEndpoint = path.startsWith("/commerce/customers/");
+		boolean commerceCartEndpoint = path.equals("/commerce/cart") || path.startsWith("/commerce/cart/");
+		return commerceCustomerAuthEndpoint || (!commerceCustomerEndpoint && !commerceCartEndpoint);
+	}
+
+	private String requestPath(HttpServletRequest request) {
+		String path = request.getServletPath();
+		if (!StringUtils.hasText(path)) {
+			path = request.getRequestURI();
+		}
+		String contextPath = request.getContextPath();
+		if (StringUtils.hasText(contextPath) && path.startsWith(contextPath)) {
+			path = path.substring(contextPath.length());
+		}
+		if (path.startsWith("/api/")) {
+			path = path.substring(4);
+		}
+		return path;
 	}
 
 	private String getBearerToken(HttpServletRequest request) {

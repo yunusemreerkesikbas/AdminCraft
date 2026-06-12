@@ -42,6 +42,7 @@ class CommerceCustomerAuthServiceImpl implements CommerceCustomerAuthService {
 	private final CommerceCustomerTokenPort tokenPort;
 	private final CommerceCustomerTokenHashService tokenHashService;
 	private final CommerceCustomerRateLimitService rateLimitService;
+	private final CustomerCartBridgeService customerCartBridgeService;
 	private final TenantContextPort tenantContext;
 	private final PasswordEncoder passwordEncoder;
 
@@ -68,7 +69,7 @@ class CommerceCustomerAuthServiceImpl implements CommerceCustomerAuthService {
 		customer.setBirthDate(command.birthDate());
 		CommerceCustomer saved = customerRepository.save(customer);
 		consentRepository.saveAll(createRegistrationConsents(saved, command));
-		return issueAuthResult(saved, Boolean.TRUE.equals(command.rememberMe()), command.deviceFingerprint(), command.ipAddress(), command.userAgent());
+		return issueAuthResult(saved, Boolean.TRUE.equals(command.rememberMe()), command.deviceFingerprint(), command.ipAddress(), command.userAgent(), command.cartToken());
 	}
 
 	@Override
@@ -83,7 +84,7 @@ class CommerceCustomerAuthServiceImpl implements CommerceCustomerAuthService {
 		}
 		customer.recordLogin(command.ipAddress());
 		CommerceCustomer saved = customerRepository.save(customer);
-		return issueAuthResult(saved, Boolean.TRUE.equals(command.rememberMe()), command.deviceFingerprint(), command.ipAddress(), command.userAgent());
+		return issueAuthResult(saved, Boolean.TRUE.equals(command.rememberMe()), command.deviceFingerprint(), command.ipAddress(), command.userAgent(), command.cartToken());
 	}
 
 	@Override
@@ -111,7 +112,7 @@ class CommerceCustomerAuthServiceImpl implements CommerceCustomerAuthService {
 		if (revoked != 1) {
 			throw new BadCredentialsException("commerce.customer.auth.refresh.invalid");
 		}
-		return issueAuthResult(customer, tokenPort.isRememberMeToken(refreshToken), deviceFingerprint, ipAddress, userAgent);
+		return issueAuthResult(customer, tokenPort.isRememberMeToken(refreshToken), deviceFingerprint, ipAddress, userAgent, null);
 	}
 
 	@Override
@@ -129,7 +130,8 @@ class CommerceCustomerAuthServiceImpl implements CommerceCustomerAuthService {
 			boolean rememberMe,
 			String deviceFingerprint,
 			String ipAddress,
-			String userAgent) {
+			String userAgent,
+			String sourceCartToken) {
 		Long tenantId = currentTenantId();
 		String accessToken = tokenPort.createAccessToken(customer, tenantId);
 		String refreshToken = tokenPort.createRefreshToken(customer, tenantId, rememberMe);
@@ -142,10 +144,14 @@ class CommerceCustomerAuthServiceImpl implements CommerceCustomerAuthService {
 		stored.setIpAddress(truncate(ipAddress, 45));
 		stored.setUserAgent(truncate(userAgent, 512));
 		refreshTokenRepository.save(stored);
+		CustomerCartBridgeService.CustomerCartBridgeResult bridgeResult =
+				customerCartBridgeService.mergeOnAuth(customer, sourceCartToken);
 		CommerceCustomerAuthResponse response = new CommerceCustomerAuthResponse(
 				accessToken,
 				tokenPort.getAccessTokenExpiration() / 1000,
-				CommerceCustomerResponse.from(customer));
+				CommerceCustomerResponse.from(customer),
+				bridgeResult.cart(),
+				bridgeResult.merge());
 		return new CommerceCustomerAuthResult(response, refreshToken, rememberMe);
 	}
 

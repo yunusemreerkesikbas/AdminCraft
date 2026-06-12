@@ -3,6 +3,7 @@ package com.backend.application.commerce;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.backend.application.commerce.dto.LoginCommerceCustomerCommand;
 import com.backend.application.commerce.dto.RegisterCommerceCustomerCommand;
+import com.backend.application.commerce.dto.CartMergeResponse;
 import com.backend.domain.commerce.CommerceCustomer;
 import com.backend.domain.commerce.CommerceCustomerConsent;
 import com.backend.domain.commerce.CommerceCustomerRefreshToken;
@@ -40,6 +42,7 @@ class CommerceCustomerAuthServiceImplTest extends BaseServiceTest {
 	@Mock private CommerceCustomerTokenPort tokenPort;
 	@Mock private CommerceCustomerTokenHashService tokenHashService;
 	@Mock private CommerceCustomerRateLimitService rateLimitService;
+	@Mock private CustomerCartBridgeService customerCartBridgeService;
 	@Mock private TenantContextPort tenantContext;
 	@Mock private PasswordEncoder passwordEncoder;
 
@@ -56,6 +59,8 @@ class CommerceCustomerAuthServiceImplTest extends BaseServiceTest {
 		lenient().when(tokenPort.getAccessTokenExpiration()).thenReturn(86_400_000L);
 		lenient().when(tokenPort.getRefreshTokenExpiration(false)).thenReturn(604_800_000L);
 		lenient().when(tokenHashService.hashToken("refresh-token")).thenReturn("refresh-token-hash");
+		lenient().when(customerCartBridgeService.mergeOnAuth(any(CommerceCustomer.class), any()))
+				.thenReturn(new CustomerCartBridgeService.CustomerCartBridgeResult(null, CartMergeResponse.none()));
 		lenient().when(customerRepository.save(any(CommerceCustomer.class))).thenAnswer(invocation -> {
 			CommerceCustomer customer = invocation.getArgument(0);
 			customer.setId(10L);
@@ -101,6 +106,22 @@ class CommerceCustomerAuthServiceImplTest extends BaseServiceTest {
 
 		assertThatThrownBy(() -> service.login(loginCommand()))
 				.isInstanceOf(BadCredentialsException.class);
+	}
+
+	@Test
+	void login_ShouldInvokeCartBridge_WhenCartTokenIsPresent() {
+		when(customerRepository.findByEmailNormalized("user@example.com")).thenReturn(Optional.of(customer()));
+
+		service.login(new LoginCommerceCustomerCommand(
+				"User@Example.com",
+				"Password123",
+				false,
+				"device",
+				"source-cart-token",
+				"127.0.0.1",
+				"JUnit"));
+
+		verify(customerCartBridgeService).mergeOnAuth(any(CommerceCustomer.class), eq("source-cart-token"));
 	}
 
 	@Test
@@ -156,12 +177,13 @@ class CommerceCustomerAuthServiceImplTest extends BaseServiceTest {
 				false,
 				"device",
 				"storefront",
+				null,
 				"127.0.0.1",
 				"JUnit");
 	}
 
 	private LoginCommerceCustomerCommand loginCommand() {
-		return new LoginCommerceCustomerCommand("User@Example.com", "Password123", false, "device", "127.0.0.1", "JUnit");
+		return new LoginCommerceCustomerCommand("User@Example.com", "Password123", false, "device", null, "127.0.0.1", "JUnit");
 	}
 
 	private CommerceCustomer customer() {

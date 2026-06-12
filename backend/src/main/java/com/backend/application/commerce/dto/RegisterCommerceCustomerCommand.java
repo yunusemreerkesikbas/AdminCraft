@@ -18,6 +18,7 @@ public record RegisterCommerceCustomerCommand(
 		Boolean rememberMe,
 		String deviceFingerprint,
 		String source,
+		String cartToken,
 		String ipAddress,
 		String userAgent) {
 }

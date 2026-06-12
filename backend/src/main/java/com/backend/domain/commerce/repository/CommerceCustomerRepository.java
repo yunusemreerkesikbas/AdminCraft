@@ -10,6 +10,8 @@ public interface CommerceCustomerRepository {
 
 	Optional<CommerceCustomer> findById(Long id);
 
+	Optional<CommerceCustomer> findByIdForUpdate(Long id);
+
 	Optional<CommerceCustomer> findByUid(String uid);
 
 	Optional<CommerceCustomer> findByEmailNormalized(String emailNormalized);
