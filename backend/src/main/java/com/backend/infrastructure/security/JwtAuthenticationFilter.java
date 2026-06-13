@@ -92,8 +92,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			   path.startsWith("/api/commerce/customers/") ||
 			   matchesExactOrSubpath(path, "/commerce/cart") ||
 			   matchesExactOrSubpath(path, "/api/commerce/cart") ||
-			   path.startsWith("/commerce/checkout") ||
-			   path.startsWith("/api/commerce/checkout") ||
+			   matchesExactOrSubpath(path, "/commerce/checkout") ||
+			   matchesExactOrSubpath(path, "/api/commerce/checkout") ||
+			   matchesExactOrSubpath(path, "/commerce/payments") ||
+			   matchesExactOrSubpath(path, "/api/commerce/payments") ||
                path.startsWith("/health/") ||
                path.startsWith("/actuator/") ||
                path.startsWith("/v3/api-docs") ||

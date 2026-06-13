@@ -97,6 +97,16 @@ class CommerceCustomerAuthenticationFilterTest {
 		assertThat(filter.shouldNotFilter(request)).isFalse();
 	}
 
+	@Test
+	void shouldNotFilter_ShouldAllowCustomerAuthenticationOnPaymentEndpoints() throws Exception {
+		CommerceCustomerAuthenticationFilter filter = filter();
+		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/commerce/payments/attempts");
+		MockHttpServletRequest apiRequest = new MockHttpServletRequest("GET", "/api/commerce/payments/attempts/attempt-uid");
+
+		assertThat(filter.shouldNotFilter(request)).isFalse();
+		assertThat(filter.shouldNotFilter(apiRequest)).isFalse();
+	}
+
 	private MockHttpServletRequest requestWithToken(String token) {
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/commerce/customers/me");
 		request.addHeader("Authorization", "Bearer " + token);

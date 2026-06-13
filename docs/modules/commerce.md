@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, and checkout foundation. It does not implement payment, order, fulfillment, or storefront UI yet.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, and payment attempt foundation. It does not implement real payment provider calls, order, fulfillment, or storefront UI yet.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -24,6 +24,7 @@ Current tenant migrations:
 - `V1.0.2__customer_account_foundation.sql` creates commerce customer, refresh token, consent, address, and social identity skeleton tables.
 - `V1.0.3__customer_cart_bridge.sql` adds nullable customer ownership to carts for merge-on-auth and authenticated cart access.
 - `V1.0.4__checkout_foundation.sql` creates customer checkout and checkout item snapshot tables.
+- `V1.0.5__payment_attempt_foundation.sql` creates internal payment attempt snapshot tables.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -108,6 +109,25 @@ Checkout rules:
 - Checkout item prices and VAT are snapshotted from live product variants at checkout start.
 - Checkout reads do not mutate the database; cart/price/stock differences are returned through validation flags and warning message keys.
 - Shipping uses `commerce.shipping.enabled`, `commerce.shipping.standard_fee`, and `commerce.shipping.free_shipping_threshold`; invalid or missing config safely falls back to `0 TRY`.
+
+## Payment attempt API
+
+Base path: `/api/commerce/payments`
+
+Payment attempt is customer-only and requires a commerce customer JWT. It does not call iyzico yet and does not create customer-facing orders.
+
+- `POST /api/commerce/payments/attempts`: creates a pending internal payment attempt for a ready checkout.
+- `GET /api/commerce/payments/attempts/{attemptUid}`: returns the authenticated customer's payment attempt.
+
+Payment attempt rules:
+
+- `commerce.payment.enabled=true` is required. Missing provider config defaults to `iyzico`; unsupported providers are rejected.
+- Attempt TTL is 30 minutes.
+- The attempt snapshots checkout totals and currency.
+- Creating a new attempt expires previous pending attempts for the same customer checkout.
+- Checkout must still be `READY`, unexpired, and live-valid against cart/product price and stock.
+- Expired or checkout-changed pending attempts are returned as `EXPIRED`.
+- `FAILED` and `SUCCEEDED` statuses are schema/domain-ready for the future iyzico callback slice.
 
 Customer-cart bridge rules:
 
