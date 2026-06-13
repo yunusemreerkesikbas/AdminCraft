@@ -65,4 +65,29 @@ class CommerceCartMigrationTest {
 			assertThat(migration).doesNotContain("tenant_id");
 		}
 	}
+
+	@Test
+	void paymentAttemptMigration_ShouldCreatePaymentAttemptSnapshotTableWithoutTenantId() throws Exception {
+		try (var resource = getClass().getClassLoader()
+				.getResourceAsStream("db/tenant/commerce/V1.0.5__payment_attempt_foundation.sql")) {
+			assertThat(resource).isNotNull();
+			String migration = new String(
+					resource.readAllBytes(),
+					StandardCharsets.UTF_8)
+					.toLowerCase();
+
+			assertThat(migration).contains("create table commerce_payment_attempts");
+			assertThat(migration).contains("fk_commerce_payment_attempt_customer");
+			assertThat(migration).contains("fk_commerce_payment_attempt_checkout");
+			assertThat(migration).contains("idx_commerce_payment_attempt_customer_status_expires");
+			assertThat(migration).contains("idx_commerce_payment_attempt_checkout_status");
+			assertThat(migration).contains("provider_reference");
+			assertThat(migration).contains("provider_transaction_id");
+			assertThat(migration).contains("subtotal decimal(15,2)");
+			assertThat(migration).contains("vat_total decimal(15,2)");
+			assertThat(migration).contains("shipping_total decimal(15,2)");
+			assertThat(migration).contains("total decimal(15,2)");
+			assertThat(migration).doesNotContain("tenant_id");
+		}
+	}
 }

@@ -1,0 +1,33 @@
+CREATE TABLE commerce_payment_attempts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL,
+    uid VARCHAR(50) NOT NULL,
+    customer_id BIGINT NOT NULL,
+    checkout_id BIGINT NOT NULL,
+    provider VARCHAR(40) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    currency_iso VARCHAR(3) NOT NULL,
+    subtotal DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    vat_total DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    shipping_total DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    total DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    expires_at DATETIME NOT NULL,
+    provider_reference VARCHAR(191) NULL,
+    provider_transaction_id VARCHAR(191) NULL,
+    failure_code VARCHAR(100) NULL,
+    failure_message_key VARCHAR(191) NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    created_by BIGINT NULL,
+    updated_by BIGINT NULL,
+    CONSTRAINT uk_commerce_payment_attempt_uuid UNIQUE (uuid),
+    CONSTRAINT uk_commerce_payment_attempt_uid UNIQUE (uid),
+    CONSTRAINT fk_commerce_payment_attempt_customer FOREIGN KEY (customer_id)
+        REFERENCES commerce_customers(id) ON DELETE CASCADE,
+    CONSTRAINT fk_commerce_payment_attempt_checkout FOREIGN KEY (checkout_id)
+        REFERENCES commerce_checkouts(id) ON DELETE RESTRICT,
+    INDEX idx_commerce_payment_attempt_customer_status_expires (customer_id, status, expires_at),
+    INDEX idx_commerce_payment_attempt_checkout_status (checkout_id, status),
+    INDEX idx_commerce_payment_attempt_provider_reference (provider, provider_reference),
+    INDEX idx_commerce_payment_attempt_provider_transaction (provider, provider_transaction_id)
+);
