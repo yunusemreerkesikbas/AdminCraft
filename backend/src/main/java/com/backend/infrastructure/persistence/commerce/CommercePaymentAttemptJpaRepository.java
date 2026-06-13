@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.commerce;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -15,6 +16,24 @@ interface CommercePaymentAttemptJpaRepository extends JpaRepository<CommercePaym
 
 	@EntityGraph(attributePaths = { "checkout", "checkout.items", "checkout.cart", "checkout.cart.items" })
 	Optional<CommercePaymentAttempt> findByCustomerIdAndUid(Long customerId, String uid);
+
+	@EntityGraph(attributePaths = { "customer", "checkout", "checkout.items", "checkout.cart", "checkout.cart.items" })
+	Optional<CommercePaymentAttempt> findFirstByProviderAndProviderReferenceOrderByIdDesc(String provider, String providerReference);
+
+	@Modifying(clearAutomatically = true)
+	@Query("""
+			UPDATE CommercePaymentAttempt attempt
+			SET attempt.status = :initializingStatus
+			WHERE attempt.id = :attemptId
+				AND attempt.status = :pendingStatus
+				AND attempt.providerReference IS NULL
+				AND attempt.expiresAt > :now
+			""")
+	int reservePendingAttemptInitialization(
+			@Param("attemptId") Long attemptId,
+			@Param("pendingStatus") CommercePaymentAttemptStatus pendingStatus,
+			@Param("initializingStatus") CommercePaymentAttemptStatus initializingStatus,
+			@Param("now") LocalDateTime now);
 
 	@Modifying(clearAutomatically = true)
 	@Query("""

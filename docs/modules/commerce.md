@@ -114,10 +114,12 @@ Checkout rules:
 
 Base path: `/api/commerce/payments`
 
-Payment attempt is customer-only and requires a commerce customer JWT. It does not call iyzico yet and does not create customer-facing orders.
+Payment attempt is customer-only and requires a commerce customer JWT. Hosted iyzico CheckoutForm sandbox initialization is supported, but successful payment callbacks do not create customer-facing orders yet.
 
 - `POST /api/commerce/payments/attempts`: creates a pending internal payment attempt for a ready checkout.
 - `GET /api/commerce/payments/attempts/{attemptUid}`: returns the authenticated customer's payment attempt.
+- `POST /api/commerce/payments/attempts/{attemptUid}/initialize`: initializes hosted iyzico CheckoutForm and returns `paymentPageUrl`.
+- `POST /api/commerce/payments/iyzico/checkout-form/callback`: public tenant-scoped iyzico callback endpoint; updates the payment attempt and redirects to configured return URLs.
 
 Payment attempt rules:
 
@@ -127,7 +129,13 @@ Payment attempt rules:
 - Creating a new attempt expires previous pending attempts for the same customer checkout.
 - Checkout must still be `READY`, unexpired, and live-valid against cart/product price and stock.
 - Expired or checkout-changed pending attempts are returned as `EXPIRED`.
-- `FAILED` and `SUCCEEDED` statuses are schema/domain-ready for the future iyzico callback slice.
+- Initialize is single-use. An attempt with a provider token cannot be initialized again.
+- `INITIALIZING` is an internal reservation status used to prevent concurrent hosted payment initialization for the same attempt.
+- iyzico SDK credentials are tenant config values. `commerce.payment.iyzico.api_key` and `commerce.payment.iyzico.secret_key` must be stored as secret config values.
+- `commerce.payment.iyzico.base_url` defaults to `https://sandbox-api.iyzipay.com`.
+- `commerce.payment.iyzico.default_identity_number`, `commerce.payment.return_success_url`, and `commerce.payment.return_failure_url` are required for initialization/callback.
+- Callback result retrieval verifies the iyzico response signature. Success marks the attempt `SUCCEEDED`; failure marks it `FAILED`.
+- Order creation, stock decrement, cart clear, and legal snapshot remain separate slices.
 
 Customer-cart bridge rules:
 

@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,8 +21,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import com.backend.application.commerce.CommercePaymentProviderPort.CheckoutFormInitializeResult;
+import com.backend.application.commerce.CommercePaymentProviderPort.CheckoutFormResult;
 import com.backend.application.commerce.CommerceProductVariantLookupPort.CommerceVariantSnapshot;
 import com.backend.application.commerce.dto.CreatePaymentAttemptCommand;
+import com.backend.application.commerce.dto.InitializePaymentAttemptCommand;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.domain.commerce.CommerceCart;
 import com.backend.domain.commerce.CommerceCartItem;
@@ -35,8 +39,11 @@ import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 import com.backend.domain.commerce.exception.CommerceDomainException;
 import com.backend.domain.commerce.repository.CommerceCheckoutRepository;
 import com.backend.domain.commerce.repository.CommercePaymentAttemptRepository;
+import com.backend.domain.entity.ConfigProperty;
+import com.backend.domain.port.EncryptionServicePort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.testutil.BaseServiceTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
@@ -46,18 +53,24 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 	@Mock private CommerceProductVariantLookupPort productVariantLookupPort;
 	@Mock private ConfigPropertyService configPropertyService;
 	@Mock private TenantContextPort tenantContext;
+	@Mock private EncryptionServicePort encryptionService;
+	@Mock private CommercePaymentProviderPort paymentProvider;
 
 	private PaymentAttemptServiceImpl service;
 
 	@BeforeEach
 	void setUp() {
+		lenient().when(paymentProvider.providerCode()).thenReturn("iyzico");
 		service = new PaymentAttemptServiceImpl(
 				commerceModuleAccessGuard,
 				checkoutRepository,
 				paymentAttemptRepository,
 				productVariantLookupPort,
 				configPropertyService,
-				tenantContext);
+				tenantContext,
+				encryptionService,
+				new ObjectMapper(),
+				List.of(paymentProvider));
 		lenient().when(tenantContext.getTenantId()).thenReturn("1");
 		lenient().when(tenantContext.getTenantDbName()).thenReturn("tenant_1");
 	}
@@ -154,6 +167,231 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 	}
 
 	@Test
+	void initialize_ShouldInitializePendingAttemptAndStoreProviderToken() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		when(paymentAttemptRepository.findByCustomerIdAndUid(10L, "attempt-uid")).thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+		when(paymentProvider.initializeCheckoutForm(any()))
+				.thenReturn(new CheckoutFormInitializeResult("provider-token", "https://sandbox-payment.example/pay"));
+		when(paymentAttemptRepository.reservePendingAttemptInitialization(
+				eq(40L),
+				eq(CommercePaymentAttemptStatus.PENDING),
+				eq(CommercePaymentAttemptStatus.INITIALIZING),
+				any(LocalDateTime.class)))
+				.thenReturn(1);
+		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		var response = service.initialize(
+				principal(),
+				new InitializePaymentAttemptCommand(
+						"attempt-uid",
+						"https://api.example.com/commerce/payments/iyzico/checkout-form/callback",
+						"10.0.0.1"));
+
+		assertThat(response.paymentPageUrl()).isEqualTo("https://sandbox-payment.example/pay");
+		assertThat(attempt.getProviderReference()).isEqualTo("provider-token");
+		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.PENDING);
+		verify(paymentProvider).initializeCheckoutForm(any());
+		verify(paymentAttemptRepository).save(attempt);
+	}
+
+	@Test
+	void initialize_ShouldReject_WhenConcurrentReserveFails() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		when(paymentAttemptRepository.findByCustomerIdAndUid(10L, "attempt-uid")).thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+		when(paymentAttemptRepository.reservePendingAttemptInitialization(
+				eq(40L),
+				eq(CommercePaymentAttemptStatus.PENDING),
+				eq(CommercePaymentAttemptStatus.INITIALIZING),
+				any(LocalDateTime.class)))
+				.thenReturn(0);
+
+		assertThatThrownBy(() -> service.initialize(
+				principal(),
+				new InitializePaymentAttemptCommand(
+						"attempt-uid",
+						"https://api.example.com/commerce/payments/iyzico/checkout-form/callback",
+						"10.0.0.1")))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("commerce.payment.attempt.already.initialized");
+		verify(paymentProvider, never()).initializeCheckoutForm(any());
+	}
+
+	@Test
+	void initialize_ShouldMarkFailed_WhenProviderInitializeFailsAfterReserve() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		when(paymentAttemptRepository.findByCustomerIdAndUid(10L, "attempt-uid")).thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+		when(paymentAttemptRepository.reservePendingAttemptInitialization(
+				eq(40L),
+				eq(CommercePaymentAttemptStatus.PENDING),
+				eq(CommercePaymentAttemptStatus.INITIALIZING),
+				any(LocalDateTime.class)))
+				.thenReturn(1);
+		when(paymentProvider.initializeCheckoutForm(any()))
+				.thenThrow(new CommercePaymentProviderException("commerce.payment.provider.initialize.failed"));
+		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		assertThatThrownBy(() -> service.initialize(
+				principal(),
+				new InitializePaymentAttemptCommand(
+						"attempt-uid",
+						"https://api.example.com/commerce/payments/iyzico/checkout-form/callback",
+						"10.0.0.1")))
+				.isInstanceOf(CommercePaymentProviderException.class)
+				.hasMessageContaining("commerce.payment.provider.initialize.failed");
+		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.FAILED);
+		assertThat(attempt.getFailureMessageKey()).isEqualTo("commerce.payment.provider.initialize.failed");
+		verify(paymentAttemptRepository).save(attempt);
+	}
+
+	@Test
+	void initialize_ShouldReject_WhenAttemptAlreadyInitialized() {
+		stubPaymentEnabled();
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setProviderReference("provider-token");
+		when(paymentAttemptRepository.findByCustomerIdAndUid(10L, "attempt-uid")).thenReturn(Optional.of(attempt));
+
+		assertThatThrownBy(() -> service.initialize(
+				principal(),
+				new InitializePaymentAttemptCommand(
+						"attempt-uid",
+						"https://api.example.com/commerce/payments/iyzico/checkout-form/callback",
+						"10.0.0.1")))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("commerce.payment.attempt.already.initialized");
+		verify(paymentProvider, never()).initializeCheckoutForm(any());
+	}
+
+	@Test
+	void initialize_ShouldReject_WhenApiKeyIsNotSecretConfig() {
+		stubPaymentEnabled();
+		CommercePaymentAttempt attempt = attempt();
+		when(paymentAttemptRepository.findByCustomerIdAndUid(10L, "attempt-uid")).thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+		when(configPropertyService.find(1L, "tenant_1", "commerce.payment.iyzico.api_key"))
+				.thenReturn(Optional.of(config("plain-api-key", false)));
+
+		assertThatThrownBy(() -> service.initialize(
+				principal(),
+				new InitializePaymentAttemptCommand(
+						"attempt-uid",
+						"https://api.example.com/commerce/payments/iyzico/checkout-form/callback",
+						"10.0.0.1")))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("commerce.payment.config.secret.required");
+		verify(paymentProvider, never()).initializeCheckoutForm(any());
+	}
+
+	@Test
+	void callback_ShouldMarkAttemptSucceededAndReturnSuccessUrl() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setProviderReference("provider-token");
+		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
+				.thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+		when(paymentProvider.retrieveCheckoutForm(any()))
+				.thenReturn(new CheckoutFormResult(true, "payment-123", null, null));
+		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
+
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success");
+		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.SUCCEEDED);
+		assertThat(attempt.getProviderTransactionId()).isEqualTo("payment-123");
+		verify(paymentAttemptRepository).save(attempt);
+	}
+
+	@Test
+	void callback_ShouldMarkAttemptFailed_WhenProviderResultFails() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setProviderReference("provider-token");
+		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
+				.thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+		when(paymentProvider.retrieveCheckoutForm(any()))
+				.thenReturn(new CheckoutFormResult(false, null, "NOT_SUFFICIENT_FUNDS", "commerce.payment.provider.failed"));
+		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
+
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.FAILED);
+		assertThat(attempt.getFailureCode()).isEqualTo("NOT_SUFFICIENT_FUNDS");
+		assertThat(attempt.getFailureMessageKey()).isEqualTo("commerce.payment.provider.failed");
+	}
+
+	@Test
+	void callback_ShouldMarkAttemptFailed_WhenProviderRetrieveThrows() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setProviderReference("provider-token");
+		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
+				.thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+		when(paymentProvider.retrieveCheckoutForm(any()))
+				.thenThrow(new CommercePaymentProviderException("commerce.payment.provider.retrieve.failed"));
+		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
+
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.FAILED);
+		assertThat(attempt.getFailureCode()).isEqualTo("PROVIDER_RETRIEVE_FAILED");
+		assertThat(attempt.getFailureMessageKey()).isEqualTo("commerce.payment.provider.retrieve.failed");
+		verify(paymentAttemptRepository).save(attempt);
+	}
+
+	@Test
+	void callback_ShouldNotOverwriteTerminalStatus() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setProviderReference("provider-token");
+		attempt.setStatus(CommercePaymentAttemptStatus.SUCCEEDED);
+		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
+				.thenReturn(Optional.of(attempt));
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
+
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success");
+		verify(paymentProvider, never()).retrieveCheckoutForm(any());
+		verify(paymentAttemptRepository, never()).save(any());
+	}
+
+	@Test
+	void callback_ShouldReturnFailureUrl_WhenTokenUnknown() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "unknown-token"))
+				.thenReturn(Optional.empty());
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback("unknown-token");
+
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		verify(paymentProvider, never()).retrieveCheckoutForm(any());
+	}
+
+	@Test
 	void create_ShouldReject_WhenCommerceDisabled() {
 		doThrow(new IllegalStateException("commerce.module.not.enabled"))
 				.when(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
@@ -166,6 +404,30 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 	private void stubPaymentEnabled() {
 		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.payment.enabled", false)).thenReturn(true);
 		when(configPropertyService.findRaw(1L, "tenant_1", "commerce.payment.provider")).thenReturn(Optional.empty());
+	}
+
+	private void stubProviderConfig() {
+		when(configPropertyService.find(1L, "tenant_1", "commerce.payment.iyzico.api_key"))
+				.thenReturn(Optional.of(config("encrypted-api-key", true)));
+		when(configPropertyService.find(1L, "tenant_1", "commerce.payment.iyzico.secret_key"))
+				.thenReturn(Optional.of(config("encrypted-secret-key", true)));
+		when(encryptionService.decrypt("encrypted-api-key")).thenReturn("sandbox-api-key");
+		when(encryptionService.decrypt("encrypted-secret-key")).thenReturn("sandbox-secret-key");
+		when(configPropertyService.findRaw(1L, "tenant_1", "commerce.payment.iyzico.base_url"))
+				.thenReturn(Optional.empty());
+		when(configPropertyService.findRaw(1L, "tenant_1", "commerce.payment.iyzico.default_identity_number"))
+				.thenReturn(Optional.of("11111111110"));
+		when(configPropertyService.findRaw(1L, "tenant_1", "commerce.payment.return_success_url"))
+				.thenReturn(Optional.of("https://storefront.example.com/payment/success"));
+		when(configPropertyService.findRaw(1L, "tenant_1", "commerce.payment.return_failure_url"))
+				.thenReturn(Optional.of("https://storefront.example.com/payment/failure"));
+	}
+
+	private ConfigProperty config(String value, boolean secret) {
+		ConfigProperty property = new ConfigProperty();
+		property.setConfigValue(value);
+		property.setSecret(secret);
+		return property;
 	}
 
 	private CommercePaymentAttempt attempt() {
@@ -198,8 +460,33 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 		checkout.setShippingTotal(BigDecimal.ZERO.setScale(2));
 		checkout.setTotal(BigDecimal.valueOf(200).setScale(2));
 		checkout.setExpiresAt(LocalDateTime.now().plusHours(1));
+		checkout.setDeliveryAddressSnapshot(addressSnapshot());
+		checkout.setBillingAddressSnapshot(addressSnapshot());
 		checkout.addItem(checkoutItem());
 		return checkout;
+	}
+
+	private String addressSnapshot() {
+		return """
+				{
+				  "uid": "address-uid",
+				  "label": "Home",
+				  "firstName": "Jane",
+				  "lastName": "Doe",
+				  "phone": "+905350000000",
+				  "countryIso": "TR",
+				  "city": "Istanbul",
+				  "district": "Kadikoy",
+				  "addressLine1": "Test Street 1",
+				  "addressLine2": null,
+				  "postalCode": "34710",
+				  "invoiceType": "INDIVIDUAL",
+				  "companyName": null,
+				  "taxNumber": null,
+				  "taxOffice": null,
+				  "invoiceIdentityNumber": null
+				}
+				""";
 	}
 
 	private CommerceCheckoutItem checkoutItem() {
@@ -259,6 +546,9 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 		customer.setId(10L);
 		customer.setUid("customer-uid");
 		customer.setEmail("user@example.com");
+		customer.setFirstName("John");
+		customer.setLastName("Doe");
+		customer.setPhone("+905350000000");
 		return customer;
 	}
 

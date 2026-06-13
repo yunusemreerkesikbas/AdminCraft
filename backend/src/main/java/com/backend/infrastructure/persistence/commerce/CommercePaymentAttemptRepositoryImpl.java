@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.commerce;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -26,6 +27,21 @@ class CommercePaymentAttemptRepositoryImpl implements CommercePaymentAttemptRepo
 	@Override
 	public Optional<CommercePaymentAttempt> findByCustomerIdAndUid(Long customerId, String uid) {
 		return jpaRepository.findByCustomerIdAndUid(customerId, uid);
+	}
+
+	@Override
+	public Optional<CommercePaymentAttempt> findFirstByProviderAndProviderReference(String provider, String providerReference) {
+		return jpaRepository.findFirstByProviderAndProviderReferenceOrderByIdDesc(provider, providerReference);
+	}
+
+	@Override
+	@Transactional
+	public int reservePendingAttemptInitialization(
+			Long attemptId,
+			CommercePaymentAttemptStatus pendingStatus,
+			CommercePaymentAttemptStatus initializingStatus,
+			LocalDateTime now) {
+		return jpaRepository.reservePendingAttemptInitialization(attemptId, pendingStatus, initializingStatus, now);
 	}
 
 	@Override

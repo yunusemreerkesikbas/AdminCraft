@@ -30,4 +30,4 @@ CREATE TABLE commerce_payment_attempts (
     INDEX idx_commerce_payment_attempt_checkout_status (checkout_id, status),
     INDEX idx_commerce_payment_attempt_provider_reference (provider, provider_reference),
     INDEX idx_commerce_payment_attempt_provider_transaction (provider, provider_transaction_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
