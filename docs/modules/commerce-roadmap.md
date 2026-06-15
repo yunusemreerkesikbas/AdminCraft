@@ -2,6 +2,8 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization ve customer order read API hazırlandı. Storefront commerce UI, commerce admin operasyon ekranları, full legal snapshot rendering, iptal/iade, fulfillment ve transactional bildirimler henüz yapılmadı.
+
 ## 1. Konumlandırma
 
 Craftive commerce, self-serve mağaza kurucu değil; projeye özel kurulan, yönetilen headless D2C commerce temelidir.

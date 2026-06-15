@@ -4,11 +4,34 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, and payment attempt foundation. It does not implement real payment provider calls, order, fulfillment, or storefront UI yet.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, and customer order read APIs. It does not implement fulfillment, transactional notifications, admin order operations, or storefront UI yet.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
 Product Catalog now owns the commerce-ready sellable product foundation: reusable variant options, product variants, variant SKU, gross price, VAT rate, stock, and active state. Commerce cart/order work should reference product variants instead of base products.
+
+## MVP implementation status
+
+Implemented foundations:
+
+- Commerce module registration, provisioning dependency on Product Catalog, tenant migration baseline, and admin route shell.
+- Product Catalog variant foundation for reusable options/values, product variants, SKU, gross price, VAT, stock, and publish validation.
+- Anonymous cart API with token hash storage, price snapshots, stock checks, and customer-aware cart access.
+- Commerce customer account auth, refresh/logout, profile, consents, and address book.
+- Customer-cart bridge with merge-on-auth and authenticated customer cart ownership.
+- Customer-only checkout draft/ready snapshot, address snapshots, shipping totals, and live revalidation.
+- Internal payment attempt lifecycle with checkout totals snapshot, pending expiry, owner checks, and i18n response messages.
+- Hosted iyzico CheckoutForm sandbox initialization and callback handling through a payment provider port.
+- Customer-facing paid order creation after successful payment, daily order number counters, idempotent callback finalization, cart clear, checkout completion, stock decrement, and legal snapshot placeholders.
+
+Not implemented yet:
+
+- Admin order list/detail, payment attempt history UI, commerce dashboard, and sidebar navigation.
+- Storefront order history.
+- Full legal template rendering and rendered legal snapshot capture.
+- Cancellation/return requests, manual fulfillment, shipping tracking, refunds, and transactional email/SMS.
+- Storefront commerce UI for product purchase flow, account, checkout, payment return, and order history.
+- Guest checkout, coupons/promotions, advanced analytics, multi-currency, and additional payment providers.
 
 ## Database
 
@@ -25,6 +48,7 @@ Current tenant migrations:
 - `V1.0.3__customer_cart_bridge.sql` adds nullable customer ownership to carts for merge-on-auth and authenticated cart access.
 - `V1.0.4__checkout_foundation.sql` creates customer checkout and checkout item snapshot tables.
 - `V1.0.5__payment_attempt_foundation.sql` creates internal payment attempt snapshot tables.
+- `V1.0.6__order_foundation.sql` creates paid order snapshot tables and daily order number counters.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -114,7 +138,7 @@ Checkout rules:
 
 Base path: `/api/commerce/payments`
 
-Payment attempt is customer-only and requires a commerce customer JWT. Hosted iyzico CheckoutForm sandbox initialization is supported, but successful payment callbacks do not create customer-facing orders yet.
+Payment attempt is customer-only and requires a commerce customer JWT. Hosted iyzico CheckoutForm sandbox initialization is supported. Successful payment callbacks finalize a customer-facing paid order on the backend.
 
 - `POST /api/commerce/payments/attempts`: creates a pending internal payment attempt for a ready checkout.
 - `GET /api/commerce/payments/attempts/{attemptUid}`: returns the authenticated customer's payment attempt.
@@ -134,8 +158,20 @@ Payment attempt rules:
 - iyzico SDK credentials are tenant config values. `commerce.payment.iyzico.api_key` and `commerce.payment.iyzico.secret_key` must be stored as secret config values.
 - `commerce.payment.iyzico.base_url` defaults to `https://sandbox-api.iyzipay.com`.
 - `commerce.payment.iyzico.default_identity_number`, `commerce.payment.return_success_url`, and `commerce.payment.return_failure_url` are required for initialization/callback.
-- Callback result retrieval verifies the iyzico response signature. Success marks the attempt `SUCCEEDED`; failure marks it `FAILED`.
-- Order creation, stock decrement, cart clear, and legal snapshot remain separate slices.
+- `app.commerce.payment.callback-base-url` configures the public backend callback origin used for iyzico CheckoutForm initialization. It may contain `%s` for the tenant subdomain and must route to the backend `/api` context path.
+- Callback result retrieval verifies the iyzico response signature. Success marks the attempt `SUCCEEDED`, creates an idempotent `PAID` order, decrements stock when available, clears the cart, marks checkout `COMPLETED`, and redirects to the configured success URL. Failure marks the attempt `FAILED`.
+- Order numbers use `commerce.order.number_prefix` when configured, default to `ORD`, and follow `ORD-YYYYMMDD-000001` with a tenant-local daily counter.
+- If stock can no longer be deducted after provider success, the paid order is still created with `requiresAttention=true` and no negative stock is written. Refund/reversal remains an operational follow-up slice.
+- Legal snapshot fields exist on the order with `NOT_CAPTURED` status; full legal template rendering remains backlog work.
+
+## Customer order API
+
+Base path: `/api/commerce/orders`
+
+Customer order reads are customer-only and require a commerce customer JWT. The API only returns orders owned by the authenticated customer; cross-customer order UIDs behave as not found. Raw payment provider fields such as provider transaction IDs are not exposed through customer-facing responses.
+
+- `GET /api/commerce/orders`: returns a paginated order summary list with `page`, `size`, and whitelisted `sort` support. Default sort is `createdAt,desc`; allowed sort fields are `createdAt`, `total`, `orderNumber`, and `status`.
+- `GET /api/commerce/orders/{orderUid}`: returns order detail with items, shipping, delivery/billing address snapshots, legal snapshot status, totals, and attention flags.
 
 Customer-cart bridge rules:
 
@@ -165,7 +201,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart, customer account, customer-cart bridge, and checkout foundation are the first public commerce APIs. Storefront UI, payment, and order APIs remain backlog work.
+Anonymous cart, customer account, customer-cart bridge, checkout, payment attempt, backend order finalization, and customer order read APIs are the first commerce APIs/workflows. Storefront UI and operational admin APIs remain backlog work.
 
 ## Frontend integration
 
