@@ -26,6 +26,11 @@ class CommerceCheckoutRepositoryImpl implements CommerceCheckoutRepository {
 	}
 
 	@Override
+	public Optional<CommerceCheckout> findByIdForUpdate(Long id) {
+		return jpaRepository.findByIdForUpdate(id);
+	}
+
+	@Override
 	public Optional<CommerceCheckout> findByCustomerIdAndUid(Long customerId, String uid) {
 		return jpaRepository.findByCustomerIdAndUid(customerId, uid);
 	}

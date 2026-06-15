@@ -38,7 +38,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +94,7 @@ public class CommercePaymentController {
 
 	@PostMapping("/iyzico/checkout-form/callback")
 	@Operation(summary = "Handle iyzico CheckoutForm callback")
-	public ResponseEntity<Void> iyzicoCheckoutFormCallback(@RequestParam(required = true) @NotBlank String token) {
+	public ResponseEntity<Void> iyzicoCheckoutFormCallback(@RequestParam(required = false) String token) {
 		String redirectUrl = paymentAttemptService.handleIyzicoCheckoutFormCallback(token);
 		return ResponseEntity.status(HttpStatus.FOUND)
 				.location(URI.create(redirectUrl))

@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,6 +23,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -145,6 +149,19 @@ class CommercePaymentControllerTest {
 
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 		assertThat(result.getHeaders().getLocation()).hasToString("https://storefront.example.com/payment/success");
+	}
+
+	@Test
+	void iyzicoCheckoutFormCallback_ShouldRedirectToFailureUrl_WhenTokenIsMissing() throws Exception {
+		CommercePaymentController controller = controller();
+		when(paymentAttemptService.handleIyzicoCheckoutFormCallback(null))
+				.thenReturn("https://storefront.example.com/payment/failure");
+
+		MockMvcBuilders.standaloneSetup(controller)
+				.build()
+				.perform(post("/commerce/payments/iyzico/checkout-form/callback"))
+				.andExpect(status().isFound())
+				.andExpect(header().string("Location", "https://storefront.example.com/payment/failure"));
 	}
 
 	private CommercePaymentController controller() {

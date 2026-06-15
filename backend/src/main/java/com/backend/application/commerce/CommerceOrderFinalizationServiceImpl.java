@@ -26,6 +26,7 @@ import com.backend.domain.commerce.CommerceOrderLegalSnapshotStatus;
 import com.backend.domain.commerce.CommerceOrderStatus;
 import com.backend.domain.commerce.CommercePaymentAttempt;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
+import com.backend.domain.commerce.repository.CommerceCheckoutRepository;
 import com.backend.domain.commerce.repository.CommerceOrderNumberCounterRepository;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.port.TenantContextPort;
@@ -43,6 +44,7 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 	private static final String STOCK_ATTENTION_KEY = "commerce.order.attention.stock_not_deducted";
 
 	private final CommerceOrderRepository orderRepository;
+	private final CommerceCheckoutRepository checkoutRepository;
 	private final CommerceOrderNumberCounterRepository orderNumberCounterRepository;
 	private final CommerceProductVariantStockPort stockPort;
 	private final ConfigPropertyService configPropertyService;
@@ -57,33 +59,35 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 		if (attempt.getStatus() != CommercePaymentAttemptStatus.SUCCEEDED) {
 			throw new IllegalStateException("commerce.payment.attempt.not.succeeded");
 		}
-		Optional<CommerceOrder> existingByAttempt = orderRepository.findByPaymentAttemptId(attempt.getId());
-		if (existingByAttempt.isPresent()) {
-			return existingByAttempt.get();
-		}
 		CommerceCheckout checkout = attempt.getCheckout();
 		if (checkout == null || checkout.getId() == null) {
 			throw new IllegalStateException("commerce.checkout.required");
 		}
-		Optional<CommerceOrder> existingByCheckout = orderRepository.findByCheckoutId(checkout.getId());
+		CommerceCheckout lockedCheckout = checkoutRepository.findByIdForUpdate(checkout.getId())
+				.orElseThrow(() -> new IllegalStateException("commerce.checkout.required"));
+		Optional<CommerceOrder> existingByAttempt = orderRepository.findByPaymentAttemptId(attempt.getId());
+		if (existingByAttempt.isPresent()) {
+			return existingByAttempt.get();
+		}
+		Optional<CommerceOrder> existingByCheckout = orderRepository.findByCheckoutId(lockedCheckout.getId());
 		if (existingByCheckout.isPresent()) {
 			return existingByCheckout.get();
 		}
 
-		CommerceProductVariantStockPort.StockDeductionResult stockResult = stockPort.deductIfAvailable(variantQuantities(checkout));
-		CommerceOrder order = buildOrder(attempt, stockResult);
-		CommerceCart cart = checkout.getCart();
+		CommerceProductVariantStockPort.StockDeductionResult stockResult = stockPort.deductIfAvailable(variantQuantities(lockedCheckout));
+		CommerceOrder order = buildOrder(attempt, lockedCheckout, stockResult);
+		CommerceCart cart = lockedCheckout.getCart();
 		if (cart != null) {
 			cart.setStatus(CommerceCartStatus.CLEARED);
 		}
-		checkout.setStatus(CommerceCheckoutStatus.COMPLETED);
+		lockedCheckout.setStatus(CommerceCheckoutStatus.COMPLETED);
 		return orderRepository.save(order);
 	}
 
 	private CommerceOrder buildOrder(
 			CommercePaymentAttempt attempt,
+			CommerceCheckout checkout,
 			CommerceProductVariantStockPort.StockDeductionResult stockResult) {
-		CommerceCheckout checkout = attempt.getCheckout();
 		CommerceOrder order = new CommerceOrder();
 		order.setOrderNumber(nextOrderNumber());
 		order.setCustomer(attempt.getCustomer());

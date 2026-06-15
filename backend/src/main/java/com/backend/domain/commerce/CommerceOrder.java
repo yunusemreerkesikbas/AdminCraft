@@ -112,10 +112,10 @@ public class CommerceOrder extends BaseEntity {
 	private String legalSnapshotJson;
 
 	@Column(name = "stock_deducted", nullable = false)
-	private Boolean stockDeducted = false;
+	private boolean stockDeducted = false;
 
 	@Column(name = "requires_attention", nullable = false)
-	private Boolean requiresAttention = false;
+	private boolean requiresAttention = false;
 
 	@Column(name = "attention_reason_key", length = 191)
 	private String attentionReasonKey;

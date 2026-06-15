@@ -2,6 +2,7 @@ package com.backend.application.commerce;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 
 import com.backend.application.commerce.CommerceProductVariantStockPort.StockDeductionResult;
@@ -32,6 +34,7 @@ import com.backend.domain.commerce.CommerceOrderLegalSnapshotStatus;
 import com.backend.domain.commerce.CommerceOrderStatus;
 import com.backend.domain.commerce.CommercePaymentAttempt;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
+import com.backend.domain.commerce.repository.CommerceCheckoutRepository;
 import com.backend.domain.commerce.repository.CommerceOrderNumberCounterRepository;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.port.TenantContextPort;
@@ -40,6 +43,7 @@ import com.backend.testutil.BaseServiceTest;
 class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 
 	@Mock private CommerceOrderRepository orderRepository;
+	@Mock private CommerceCheckoutRepository checkoutRepository;
 	@Mock private CommerceOrderNumberCounterRepository orderNumberCounterRepository;
 	@Mock private CommerceProductVariantStockPort stockPort;
 	@Mock private ConfigPropertyService configPropertyService;
@@ -51,6 +55,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	void setUp() {
 		service = new CommerceOrderFinalizationServiceImpl(
 				orderRepository,
+				checkoutRepository,
 				orderNumberCounterRepository,
 				stockPort,
 				configPropertyService,
@@ -64,6 +69,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	@Test
 	void finalizeSuccessfulPayment_ShouldCreatePaidOrderFromCheckoutSnapshot() {
 		CommercePaymentAttempt attempt = attempt();
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
 		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
 		when(orderRepository.findByCheckoutId(30L)).thenReturn(Optional.empty());
 		when(orderNumberCounterRepository.nextSequence(any(String.class), any(LocalDate.class))).thenReturn(1);
@@ -79,8 +85,8 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		assertThat(order.getPaymentAttempt()).isSameAs(attempt);
 		assertThat(order.getProviderTransactionId()).isEqualTo("payment-123");
 		assertThat(order.getLegalSnapshotStatus()).isEqualTo(CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
-		assertThat(order.getStockDeducted()).isTrue();
-		assertThat(order.getRequiresAttention()).isFalse();
+		assertThat(order.isStockDeducted()).isTrue();
+		assertThat(order.isRequiresAttention()).isFalse();
 		assertThat(order.getItems()).hasSize(1);
 		assertThat(order.getItems().getFirst().getVariantUid()).isEqualTo("variant-uid");
 		assertThat(order.getItems().getFirst().getLineTotal()).isEqualByComparingTo("200.00");
@@ -90,8 +96,28 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	}
 
 	@Test
+	void finalizeSuccessfulPayment_ShouldLockCheckoutBeforeStockDeduction() {
+		CommercePaymentAttempt attempt = attempt();
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
+		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
+		when(orderRepository.findByCheckoutId(30L)).thenReturn(Optional.empty());
+		when(orderNumberCounterRepository.nextSequence(any(String.class), any(LocalDate.class))).thenReturn(1);
+		when(stockPort.deductIfAvailable(Map.of("variant-uid", 2))).thenReturn(new StockDeductionResult(true, null));
+		when(orderRepository.save(any(CommerceOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		service.finalizeSuccessfulPayment(attempt);
+
+		InOrder inOrder = inOrder(checkoutRepository, orderRepository, stockPort);
+		inOrder.verify(checkoutRepository).findByIdForUpdate(30L);
+		inOrder.verify(orderRepository).findByPaymentAttemptId(40L);
+		inOrder.verify(orderRepository).findByCheckoutId(30L);
+		inOrder.verify(stockPort).deductIfAvailable(Map.of("variant-uid", 2));
+	}
+
+	@Test
 	void finalizeSuccessfulPayment_ShouldUseConfiguredPrefixAndDailyCounter() {
 		CommercePaymentAttempt attempt = attempt();
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
 		when(configPropertyService.findRaw(1L, "tenant_1", "commerce.order.number_prefix"))
 				.thenReturn(Optional.of("web"));
 		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
@@ -111,6 +137,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	@Test
 	void finalizeSuccessfulPayment_ShouldFallbackToDefaultPrefix_WhenConfiguredPrefixIsInvalid() {
 		CommercePaymentAttempt attempt = attempt();
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
 		when(configPropertyService.findRaw(1L, "tenant_1", "commerce.order.number_prefix"))
 				.thenReturn(Optional.of("this-prefix-is-way-too-long"));
 		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
@@ -132,6 +159,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		CommercePaymentAttempt attempt = attempt();
 		CommerceOrder existing = new CommerceOrder();
 		existing.setOrderNumber("ORD-20260615-000001");
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
 		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.of(existing));
 
 		CommerceOrder order = service.finalizeSuccessfulPayment(attempt);
@@ -144,6 +172,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	@Test
 	void finalizeSuccessfulPayment_ShouldCreatePaidAttentionOrder_WhenStockCannotBeDeducted() {
 		CommercePaymentAttempt attempt = attempt();
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
 		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
 		when(orderRepository.findByCheckoutId(30L)).thenReturn(Optional.empty());
 		when(orderNumberCounterRepository.nextSequence(any(String.class), any(LocalDate.class))).thenReturn(1);
@@ -154,8 +183,8 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		CommerceOrder order = service.finalizeSuccessfulPayment(attempt);
 
 		assertThat(order.getStatus()).isEqualTo(CommerceOrderStatus.PAID);
-		assertThat(order.getStockDeducted()).isFalse();
-		assertThat(order.getRequiresAttention()).isTrue();
+		assertThat(order.isStockDeducted()).isFalse();
+		assertThat(order.isRequiresAttention()).isTrue();
 		assertThat(order.getAttentionReasonKey()).isEqualTo("commerce.order.attention.stock_not_deducted");
 		assertThat(attempt.getCheckout().getCart().getStatus()).isEqualTo(CommerceCartStatus.CLEARED);
 		assertThat(attempt.getCheckout().getStatus()).isEqualTo(CommerceCheckoutStatus.COMPLETED);

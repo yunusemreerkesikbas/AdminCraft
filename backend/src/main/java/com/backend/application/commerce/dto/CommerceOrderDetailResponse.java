@@ -41,7 +41,7 @@ public record CommerceOrderDetailResponse(
 						order.getShippingTotal(),
 						order.getTotal()),
 				items.size(),
-				order.getRequiresAttention(),
+				order.isRequiresAttention(),
 				order.getAttentionReasonKey(),
 				items,
 				new CheckoutShippingResponse(

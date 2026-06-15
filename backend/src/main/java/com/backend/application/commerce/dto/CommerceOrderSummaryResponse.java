@@ -33,7 +33,7 @@ public record CommerceOrderSummaryResponse(
 						order.getShippingTotal(),
 						order.getTotal()),
 				itemCount,
-				order.getRequiresAttention(),
+				order.isRequiresAttention(),
 				order.getAttentionReasonKey());
 	}
 }
