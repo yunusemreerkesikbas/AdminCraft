@@ -55,6 +55,9 @@ app:
   tenant:
     auto-sync-on-startup: true
     trust-forwarded-host: ${TENANT_TRUST_FORWARDED_HOST:false}
+  commerce:
+    payment:
+      callback-base-url: ${APP_COMMERCE_PAYMENT_CALLBACK_BASE_URL:https://s1-%s.craftive.io/api}
   platform-domain: ${PLATFORM_DOMAIN:s1.craftive.io}
   email:
     log-content: false

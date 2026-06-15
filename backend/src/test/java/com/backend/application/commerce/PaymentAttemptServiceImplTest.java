@@ -50,6 +50,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 	@Mock private CommerceModuleAccessGuard commerceModuleAccessGuard;
 	@Mock private CommerceCheckoutRepository checkoutRepository;
 	@Mock private CommercePaymentAttemptRepository paymentAttemptRepository;
+	@Mock private CommerceOrderFinalizationService orderFinalizationService;
 	@Mock private CommerceProductVariantLookupPort productVariantLookupPort;
 	@Mock private ConfigPropertyService configPropertyService;
 	@Mock private TenantContextPort tenantContext;
@@ -65,6 +66,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 				commerceModuleAccessGuard,
 				checkoutRepository,
 				paymentAttemptRepository,
+				orderFinalizationService,
 				productVariantLookupPort,
 				configPropertyService,
 				tenantContext,
@@ -295,6 +297,48 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 	}
 
 	@Test
+	void initialize_ShouldReject_WhenDeliveryAddressSnapshotIsNull() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		attempt.getCheckout().setDeliveryAddressSnapshot(null);
+		when(paymentAttemptRepository.findByCustomerIdAndUid(10L, "attempt-uid")).thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+
+		assertThatThrownBy(() -> service.initialize(
+				principal(),
+				new InitializePaymentAttemptCommand(
+						"attempt-uid",
+						"https://api.example.com/commerce/payments/iyzico/checkout-form/callback",
+						"10.0.0.1")))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("commerce.checkout.address.snapshot.invalid");
+		verify(paymentProvider, never()).initializeCheckoutForm(any());
+	}
+
+	@Test
+	void initialize_ShouldReject_WhenBillingAddressSnapshotIsBlank() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		attempt.getCheckout().setBillingAddressSnapshot(" ");
+		when(paymentAttemptRepository.findByCustomerIdAndUid(10L, "attempt-uid")).thenReturn(Optional.of(attempt));
+		when(productVariantLookupPort.findByVariantUids(anyCollection()))
+				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
+
+		assertThatThrownBy(() -> service.initialize(
+				principal(),
+				new InitializePaymentAttemptCommand(
+						"attempt-uid",
+						"https://api.example.com/commerce/payments/iyzico/checkout-form/callback",
+						"10.0.0.1")))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("commerce.checkout.address.snapshot.invalid");
+		verify(paymentProvider, never()).initializeCheckoutForm(any());
+	}
+
+	@Test
 	void callback_ShouldMarkAttemptSucceededAndReturnSuccessUrl() {
 		stubPaymentEnabled();
 		stubProviderConfig();
@@ -302,8 +346,6 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 		attempt.setProviderReference("provider-token");
 		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
 				.thenReturn(Optional.of(attempt));
-		when(productVariantLookupPort.findByVariantUids(anyCollection()))
-				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
 		when(paymentProvider.retrieveCheckoutForm(any()))
 				.thenReturn(new CheckoutFormResult(true, "payment-123", null, null));
 		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -314,6 +356,29 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.SUCCEEDED);
 		assertThat(attempt.getProviderTransactionId()).isEqualTo("payment-123");
 		verify(paymentAttemptRepository).save(attempt);
+		verify(orderFinalizationService).finalizeSuccessfulPayment(attempt);
+	}
+
+	@Test
+	void callback_ShouldFinalizeSuccessfulProviderResult_WhenLocalCheckoutNoLongerValid() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setProviderReference("provider-token");
+		attempt.getCheckout().getCart().setStatus(CommerceCartStatus.CLEARED);
+		attempt.getCheckout().setExpiresAt(LocalDateTime.now().minusMinutes(1));
+		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
+				.thenReturn(Optional.of(attempt));
+		when(paymentProvider.retrieveCheckoutForm(any()))
+				.thenReturn(new CheckoutFormResult(true, "payment-123", null, null));
+		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
+
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success");
+		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.SUCCEEDED);
+		verify(paymentProvider).retrieveCheckoutForm(any());
+		verify(orderFinalizationService).finalizeSuccessfulPayment(attempt);
 	}
 
 	@Test
@@ -324,8 +389,6 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 		attempt.setProviderReference("provider-token");
 		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
 				.thenReturn(Optional.of(attempt));
-		when(productVariantLookupPort.findByVariantUids(anyCollection()))
-				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
 		when(paymentProvider.retrieveCheckoutForm(any()))
 				.thenReturn(new CheckoutFormResult(false, null, "NOT_SUFFICIENT_FUNDS", "commerce.payment.provider.failed"));
 		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -346,8 +409,6 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 		attempt.setProviderReference("provider-token");
 		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
 				.thenReturn(Optional.of(attempt));
-		when(productVariantLookupPort.findByVariantUids(anyCollection()))
-				.thenReturn(Map.of("variant-uid", variant(BigDecimal.valueOf(100), 5)));
 		when(paymentProvider.retrieveCheckoutForm(any()))
 				.thenThrow(new CommercePaymentProviderException("commerce.payment.provider.retrieve.failed"));
 		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -376,6 +437,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success");
 		verify(paymentProvider, never()).retrieveCheckoutForm(any());
 		verify(paymentAttemptRepository, never()).save(any());
+		verify(orderFinalizationService).finalizeSuccessfulPayment(attempt);
 	}
 
 	@Test
@@ -386,6 +448,28 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 				.thenReturn(Optional.empty());
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback("unknown-token");
+
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		verify(paymentProvider, never()).retrieveCheckoutForm(any());
+	}
+
+	@Test
+	void callback_ShouldReturnFailureUrl_WhenTokenIsNull() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback(null);
+
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		verify(paymentProvider, never()).retrieveCheckoutForm(any());
+	}
+
+	@Test
+	void callback_ShouldReturnFailureUrl_WhenTokenIsBlank() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback(" ");
 
 		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
 		verify(paymentProvider, never()).retrieveCheckoutForm(any());

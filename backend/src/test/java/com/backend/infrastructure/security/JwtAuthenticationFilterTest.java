@@ -46,4 +46,16 @@ class JwtAuthenticationFilterTest {
 		assertThat(filter.shouldNotFilter(new MockHttpServletRequest("GET", "/commerce/checkout-summary"))).isFalse();
 		assertThat(filter.shouldNotFilter(new MockHttpServletRequest("GET", "/api/commerce/checkout-summary"))).isFalse();
 	}
+
+	@Test
+	void shouldNotFilter_ShouldSkipOnlyExactOrderEndpointOrSubpath() throws Exception {
+		JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtTokenProvider);
+
+		assertThat(filter.shouldNotFilter(new MockHttpServletRequest("GET", "/commerce/orders"))).isTrue();
+		assertThat(filter.shouldNotFilter(new MockHttpServletRequest("GET", "/commerce/orders/order-uid"))).isTrue();
+		assertThat(filter.shouldNotFilter(new MockHttpServletRequest("GET", "/api/commerce/orders"))).isTrue();
+		assertThat(filter.shouldNotFilter(new MockHttpServletRequest("GET", "/api/commerce/orders/order-uid"))).isTrue();
+		assertThat(filter.shouldNotFilter(new MockHttpServletRequest("GET", "/commerce/orders-summary"))).isFalse();
+		assertThat(filter.shouldNotFilter(new MockHttpServletRequest("GET", "/api/commerce/orders-summary"))).isFalse();
+	}
 }

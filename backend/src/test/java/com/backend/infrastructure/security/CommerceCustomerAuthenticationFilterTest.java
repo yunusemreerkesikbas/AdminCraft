@@ -107,6 +107,18 @@ class CommerceCustomerAuthenticationFilterTest {
 		assertThat(filter.shouldNotFilter(apiRequest)).isFalse();
 	}
 
+	@Test
+	void shouldNotFilter_ShouldAllowCustomerAuthenticationOnOrderEndpoints() throws Exception {
+		CommerceCustomerAuthenticationFilter filter = filter();
+		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/commerce/orders");
+		MockHttpServletRequest detailRequest = new MockHttpServletRequest("GET", "/commerce/orders/order-uid");
+		MockHttpServletRequest apiRequest = new MockHttpServletRequest("GET", "/api/commerce/orders/order-uid");
+
+		assertThat(filter.shouldNotFilter(request)).isFalse();
+		assertThat(filter.shouldNotFilter(detailRequest)).isFalse();
+		assertThat(filter.shouldNotFilter(apiRequest)).isFalse();
+	}
+
 	private MockHttpServletRequest requestWithToken(String token) {
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/commerce/customers/me");
 		request.addHeader("Authorization", "Bearer " + token);

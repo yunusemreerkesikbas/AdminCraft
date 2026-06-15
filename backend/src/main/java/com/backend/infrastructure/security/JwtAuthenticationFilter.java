@@ -96,6 +96,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			   matchesExactOrSubpath(path, "/api/commerce/checkout") ||
 			   matchesExactOrSubpath(path, "/commerce/payments") ||
 			   matchesExactOrSubpath(path, "/api/commerce/payments") ||
+			   matchesExactOrSubpath(path, "/commerce/orders") ||
+			   matchesExactOrSubpath(path, "/api/commerce/orders") ||
                path.startsWith("/health/") ||
                path.startsWith("/actuator/") ||
                path.startsWith("/v3/api-docs") ||

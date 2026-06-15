@@ -3,6 +3,7 @@ package com.backend.infrastructure.payment;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.backend.application.commerce.CommercePaymentProviderException;
 import com.backend.application.commerce.CommercePaymentProviderPort;
@@ -37,9 +38,7 @@ class IyzicoCheckoutFormPaymentProviderAdapter implements CommercePaymentProvide
 					|| !initialize.verifySignature(command.credentials().secretKey())) {
 				throw new CommercePaymentProviderException("commerce.payment.provider.initialize.failed");
 			}
-			return new CheckoutFormInitializeResult(
-					initialize.getToken(),
-					initialize.getPaymentPageUrl());
+			return toResult(initialize);
 		} catch (CommercePaymentProviderException ex) {
 			throw ex;
 		} catch (RuntimeException ex) {
@@ -93,6 +92,15 @@ class IyzicoCheckoutFormPaymentProviderAdapter implements CommercePaymentProvide
 				.map(this::toBasketItem)
 				.toList());
 		return request;
+	}
+
+	CheckoutFormInitializeResult toResult(CheckoutFormInitialize initialize) {
+		if (!StringUtils.hasText(initialize.getToken()) || !StringUtils.hasText(initialize.getPaymentPageUrl())) {
+			throw new CommercePaymentProviderException("commerce.payment.provider.initialize.failed");
+		}
+		return new CheckoutFormInitializeResult(
+				initialize.getToken().trim(),
+				initialize.getPaymentPageUrl().trim());
 	}
 
 	private com.iyzipay.model.Buyer toBuyer(CommercePaymentProviderPort.Buyer source) {
