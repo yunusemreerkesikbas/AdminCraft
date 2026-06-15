@@ -168,6 +168,22 @@ public final class SortableFieldsConfig {
                         SortOptionDto.defaultOption("date,desc", "admin.sort.newest"),
                         SortOptionDto.of("date,asc", "admin.sort.oldest"));
 
+	// ========== Commerce Order Entity ==========
+	public static final Set<String> COMMERCE_ORDER_ALLOWED_FIELDS = Set.of(
+			"createdAt", "total", "orderNumber", "status");
+
+	public static final String COMMERCE_ORDER_DEFAULT_SORT = "createdAt,desc";
+
+	public static final List<SortOptionDto> COMMERCE_ORDER_SORT_OPTIONS = List.of(
+			SortOptionDto.defaultOption("createdAt,desc", "commerce.order.sort.newest"),
+			SortOptionDto.of("createdAt,asc", "commerce.order.sort.oldest"),
+			SortOptionDto.of("total,desc", "commerce.order.sort.totalDesc"),
+			SortOptionDto.of("total,asc", "commerce.order.sort.totalAsc"),
+			SortOptionDto.of("orderNumber,asc", "commerce.order.sort.orderNumberAsc"),
+			SortOptionDto.of("orderNumber,desc", "commerce.order.sort.orderNumberDesc"),
+			SortOptionDto.of("status,asc", "commerce.order.sort.statusAsc"),
+			SortOptionDto.of("status,desc", "commerce.order.sort.statusDesc"));
+
         // ========== Tenant Entity ==========
         public static final Set<String> TENANT_ALLOWED_FIELDS = Set.of(
                         "createdAt", "companyName", "subdomain", "status");

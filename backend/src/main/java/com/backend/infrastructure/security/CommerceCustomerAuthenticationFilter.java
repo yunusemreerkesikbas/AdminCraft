@@ -89,8 +89,13 @@ public class CommerceCustomerAuthenticationFilter extends OncePerRequestFilter {
 		boolean commerceCartEndpoint = path.equals("/commerce/cart") || path.startsWith("/commerce/cart/");
 		boolean commerceCheckoutEndpoint = path.equals("/commerce/checkout") || path.startsWith("/commerce/checkout/");
 		boolean commercePaymentEndpoint = path.equals("/commerce/payments") || path.startsWith("/commerce/payments/");
+		boolean commerceOrderEndpoint = path.equals("/commerce/orders") || path.startsWith("/commerce/orders/");
 		return commerceCustomerAuthEndpoint
-				|| (!commerceCustomerEndpoint && !commerceCartEndpoint && !commerceCheckoutEndpoint && !commercePaymentEndpoint);
+				|| (!commerceCustomerEndpoint
+						&& !commerceCartEndpoint
+						&& !commerceCheckoutEndpoint
+						&& !commercePaymentEndpoint
+						&& !commerceOrderEndpoint);
 	}
 
 	private String requestPath(HttpServletRequest request) {

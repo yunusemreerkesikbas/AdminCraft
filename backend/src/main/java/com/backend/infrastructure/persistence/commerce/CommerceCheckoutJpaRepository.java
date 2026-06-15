@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +14,14 @@ import org.springframework.data.repository.query.Param;
 import com.backend.domain.commerce.CommerceCheckout;
 import com.backend.domain.commerce.CommerceCheckoutStatus;
 
+import jakarta.persistence.LockModeType;
+
 interface CommerceCheckoutJpaRepository extends JpaRepository<CommerceCheckout, Long> {
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@EntityGraph(attributePaths = { "customer", "cart", "items" })
+	@Query("SELECT checkout FROM CommerceCheckout checkout WHERE checkout.id = :id")
+	Optional<CommerceCheckout> findByIdForUpdate(@Param("id") Long id);
 
 	@EntityGraph(attributePaths = { "items" })
 	Optional<CommerceCheckout> findByCustomerIdAndUid(Long customerId, String uid);

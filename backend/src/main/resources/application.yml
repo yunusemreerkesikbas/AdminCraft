@@ -53,6 +53,9 @@ app:
   tenant:
     auto-sync-on-startup: ${TENANT_AUTO_SYNC:true}
     trust-forwarded-host: ${TENANT_TRUST_FORWARDED_HOST:false}
+  commerce:
+    payment:
+      callback-base-url: ${APP_COMMERCE_PAYMENT_CALLBACK_BASE_URL:http://localhost:8080/api}
   security:
     trust-cf-connecting-ip: ${APP_SECURITY_TRUST_CF_CONNECTING_IP:false}
     trusted-proxy-cidrs: []

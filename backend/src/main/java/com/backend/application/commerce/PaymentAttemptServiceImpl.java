@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import com.backend.application.commerce.CommercePaymentProviderPort.Address;
 import com.backend.application.commerce.CommercePaymentProviderPort.BasketItem;
@@ -53,6 +54,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 class PaymentAttemptServiceImpl implements PaymentAttemptService {
 
@@ -74,6 +76,7 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 	private final CommerceModuleAccessGuard commerceModuleAccessGuard;
 	private final CommerceCheckoutRepository checkoutRepository;
 	private final CommercePaymentAttemptRepository paymentAttemptRepository;
+	private final CommerceOrderFinalizationService orderFinalizationService;
 	private final CommerceProductVariantLookupPort productVariantLookupPort;
 	private final ConfigPropertyService configPropertyService;
 	private final TenantContextPort tenantContext;
@@ -173,12 +176,10 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 		}
 		CommercePaymentAttempt attempt = attemptOpt.get();
 		if (attempt.getStatus() != CommercePaymentAttemptStatus.PENDING) {
+			if (attempt.getStatus() == CommercePaymentAttemptStatus.SUCCEEDED) {
+				orderFinalizationService.finalizeSuccessfulPayment(attempt);
+			}
 			return redirectUrlForStatus(attempt, config);
-		}
-		if (attemptNoLongerValid(attempt)) {
-			attempt.setStatus(CommercePaymentAttemptStatus.EXPIRED);
-			paymentAttemptRepository.save(attempt);
-			return config.failureReturnUrl();
 		}
 		CheckoutFormResult result;
 		try {
@@ -196,7 +197,8 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 			attempt.setProviderTransactionId(result.providerTransactionId());
 			attempt.setFailureCode(null);
 			attempt.setFailureMessageKey(null);
-			paymentAttemptRepository.save(attempt);
+			CommercePaymentAttempt saved = paymentAttemptRepository.save(attempt);
+			orderFinalizationService.finalizeSuccessfulPayment(saved);
 			return config.successReturnUrl();
 		}
 		attempt.setStatus(CommercePaymentAttemptStatus.FAILED);
@@ -323,6 +325,9 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 	}
 
 	private CheckoutAddressSnapshotResponse addressSnapshot(String json) {
+		if (json == null || json.isBlank()) {
+			throw new IllegalStateException("commerce.checkout.address.snapshot.invalid");
+		}
 		try {
 			return objectMapper.readValue(json, CheckoutAddressSnapshotResponse.class);
 		} catch (JsonProcessingException ex) {
@@ -450,17 +455,24 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 	}
 
 	private boolean attemptNoLongerValid(CommercePaymentAttempt attempt) {
+		if (attemptBaseNoLongerValid(attempt)) {
+			return true;
+		}
+		if (attempt.getProviderReference() != null && !attempt.getProviderReference().isBlank()) {
+			return false;
+		}
+		Map<String, CommerceVariantSnapshot> variants = loadCheckoutVariants(attempt.getCheckout());
+		return priceChanged(attempt.getCheckout(), variants) || stockChanged(attempt.getCheckout(), variants);
+	}
+
+	private boolean attemptBaseNoLongerValid(CommercePaymentAttempt attempt) {
 		CommerceCheckout checkout = attempt.getCheckout();
-		if (attempt.getExpiresAt() == null
+		return attempt.getExpiresAt() == null
 				|| !attempt.getExpiresAt().isAfter(LocalDateTime.now())
 				|| checkout == null
 				|| checkout.getStatus() != CommerceCheckoutStatus.READY
 				|| checkoutExpired(checkout)
-				|| cartChanged(checkout)) {
-			return true;
-		}
-		Map<String, CommerceVariantSnapshot> variants = loadCheckoutVariants(checkout);
-		return priceChanged(checkout, variants) || stockChanged(checkout, variants);
+				|| cartChanged(checkout);
 	}
 
 	private boolean checkoutExpired(CommerceCheckout checkout) {

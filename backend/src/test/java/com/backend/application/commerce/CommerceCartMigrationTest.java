@@ -90,4 +90,29 @@ class CommerceCartMigrationTest {
 			assertThat(migration).doesNotContain("tenant_id");
 		}
 	}
+
+	@Test
+	void orderMigration_ShouldCreateOrderSnapshotTablesAndDailyCounterWithoutTenantId() throws Exception {
+		try (var resource = getClass().getClassLoader()
+				.getResourceAsStream("db/tenant/commerce/V1.0.6__order_foundation.sql")) {
+			assertThat(resource).isNotNull();
+			String migration = new String(
+					resource.readAllBytes(),
+					StandardCharsets.UTF_8)
+					.toLowerCase();
+
+			assertThat(migration).contains("create table commerce_orders");
+			assertThat(migration).contains("create table commerce_order_items");
+			assertThat(migration).contains("create table commerce_order_number_counters");
+			assertThat(migration).contains("uk_commerce_order_checkout");
+			assertThat(migration).contains("uk_commerce_order_payment_attempt");
+			assertThat(migration).contains("uk_commerce_order_number");
+			assertThat(migration).contains("uk_commerce_order_number_counter_prefix_date");
+			assertThat(migration).contains("legal_snapshot_status");
+			assertThat(migration).contains("legal_snapshot_json json null");
+			assertThat(migration).contains("requires_attention");
+			assertThat(migration).contains("stock_deducted");
+			assertThat(migration).doesNotContain("tenant_id");
+		}
+	}
 }

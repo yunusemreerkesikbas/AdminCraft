@@ -11,6 +11,8 @@ public interface CommerceCheckoutRepository {
 
 	CommerceCheckout save(CommerceCheckout checkout);
 
+	Optional<CommerceCheckout> findByIdForUpdate(Long id);
+
 	Optional<CommerceCheckout> findByCustomerIdAndUid(Long customerId, String uid);
 
 	Optional<CommerceCheckout> findFirstByCustomerIdAndStatusInAndExpiresAtAfterOrderByIdDesc(
