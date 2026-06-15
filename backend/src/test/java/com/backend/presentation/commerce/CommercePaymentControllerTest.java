@@ -3,6 +3,7 @@ package com.backend.presentation.commerce;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -11,15 +12,22 @@ import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.backend.application.commerce.CommerceCustomerPrincipal;
 import com.backend.application.commerce.PaymentAttemptService;
+import com.backend.application.commerce.dto.InitializePaymentAttemptCommand;
 import com.backend.application.commerce.dto.PaymentAttemptResponse;
 import com.backend.application.commerce.dto.PaymentAttemptTotalsResponse;
+import com.backend.application.commerce.dto.PaymentInitializeResponse;
 
 @ExtendWith(MockitoExtension.class)
 class CommercePaymentControllerTest {
@@ -41,6 +49,51 @@ class CommercePaymentControllerTest {
 		assertThat(result.getBody()).isNotNull();
 		assertThat(result.getBody().getMessage()).isEqualTo("Payment attempt created");
 		assertThat(result.getBody().getData().attemptUid()).isEqualTo("attempt-uid");
+	}
+
+	@Test
+	void initializeAttempt_ShouldReturnPaymentPageUrlAndBuildCallbackUrl() {
+		CommercePaymentController controller = new CommercePaymentController(paymentAttemptService, messageSource);
+		CommerceCustomerPrincipal principal = new CommerceCustomerPrincipal(10L, "customer-uid", "customer@example.com", 1L);
+		TestingAuthenticationToken authentication = new TestingAuthenticationToken(principal, null, "ROLE_COMMERCE_CUSTOMER");
+		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/commerce/payments/attempts/attempt-uid/initialize");
+		request.setScheme("https");
+		request.setServerName("api.example.com");
+		request.setServerPort(443);
+		request.setContextPath("/api");
+		request.addHeader("X-Forwarded-For", "10.0.0.1, 10.0.0.2");
+		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+		when(paymentAttemptService.initialize(any(), any()))
+				.thenReturn(new PaymentInitializeResponse("attempt-uid", "PENDING", "iyzico", "https://pay.example.com"));
+		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
+				.thenAnswer(invocation -> "Payment attempt initialized");
+
+		try {
+			var result = controller.initializeAttempt(authentication, "attempt-uid", request);
+
+			assertThat(result.getBody()).isNotNull();
+			assertThat(result.getBody().getMessage()).isEqualTo("Payment attempt initialized");
+			assertThat(result.getBody().getData().paymentPageUrl()).isEqualTo("https://pay.example.com");
+			ArgumentCaptor<InitializePaymentAttemptCommand> captor = ArgumentCaptor.forClass(InitializePaymentAttemptCommand.class);
+			verify(paymentAttemptService).initialize(any(), captor.capture());
+			assertThat(captor.getValue().callbackUrl())
+					.isEqualTo("https://api.example.com/api/commerce/payments/iyzico/checkout-form/callback");
+			assertThat(captor.getValue().clientIp()).isEqualTo("10.0.0.1");
+		} finally {
+			RequestContextHolder.resetRequestAttributes();
+		}
+	}
+
+	@Test
+	void iyzicoCheckoutFormCallback_ShouldRedirectToServiceUrl() {
+		CommercePaymentController controller = new CommercePaymentController(paymentAttemptService, messageSource);
+		when(paymentAttemptService.handleIyzicoCheckoutFormCallback("provider-token"))
+				.thenReturn("https://storefront.example.com/payment/success");
+
+		var result = controller.iyzicoCheckoutFormCallback("provider-token");
+
+		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+		assertThat(result.getHeaders().getLocation()).hasToString("https://storefront.example.com/payment/success");
 	}
 
 	private PaymentAttemptResponse response() {

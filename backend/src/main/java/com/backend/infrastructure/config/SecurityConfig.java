@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -85,6 +86,7 @@ public class SecurityConfig {
 												.requestMatchers("/commerce/customers/auth/**").permitAll() // Public Commerce customer auth API
 												.requestMatchers("/commerce/customers/**").hasRole("COMMERCE_CUSTOMER")
 												.requestMatchers("/commerce/checkout", "/commerce/checkout/**").hasRole("COMMERCE_CUSTOMER")
+												.requestMatchers(HttpMethod.POST, "/commerce/payments/iyzico/checkout-form/callback").permitAll()
 												.requestMatchers("/commerce/payments", "/commerce/payments/**").hasRole("COMMERCE_CUSTOMER")
 												.requestMatchers("/commerce/cart/**").permitAll() // Public Commerce cart API
 												.requestMatchers("/cms/preview/**").authenticated() // SmartEdit preview ticket issue (TENANT_ADMIN via @PreAuthorize)
