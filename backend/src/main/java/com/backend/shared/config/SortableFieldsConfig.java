@@ -184,6 +184,38 @@ public final class SortableFieldsConfig {
 			SortOptionDto.of("status,asc", "commerce.order.sort.statusAsc"),
 			SortOptionDto.of("status,desc", "commerce.order.sort.statusDesc"));
 
+	public static final Set<String> COMMERCE_ADMIN_ORDER_ALLOWED_FIELDS = Set.of(
+			"createdAt", "total", "orderNumber", "status", "requiresAttention");
+
+	public static final String COMMERCE_ADMIN_ORDER_DEFAULT_SORT = "createdAt,desc";
+
+	public static final List<SortOptionDto> COMMERCE_ADMIN_ORDER_SORT_OPTIONS = List.of(
+			SortOptionDto.defaultOption("createdAt,desc", "admin.commerce.sort.newest"),
+			SortOptionDto.of("createdAt,asc", "admin.commerce.sort.oldest"),
+			SortOptionDto.of("total,desc", "admin.commerce.sort.totalDesc"),
+			SortOptionDto.of("total,asc", "admin.commerce.sort.totalAsc"),
+			SortOptionDto.of("orderNumber,asc", "admin.commerce.sort.orderNumberAsc"),
+			SortOptionDto.of("orderNumber,desc", "admin.commerce.sort.orderNumberDesc"),
+			SortOptionDto.of("status,asc", "admin.commerce.sort.statusAsc"),
+			SortOptionDto.of("status,desc", "admin.commerce.sort.statusDesc"),
+			SortOptionDto.of("requiresAttention,desc", "admin.commerce.sort.attentionDesc"));
+
+	public static final Set<String> COMMERCE_ADMIN_PAYMENT_ATTEMPT_ALLOWED_FIELDS = Set.of(
+			"createdAt", "expiresAt", "total", "status", "provider");
+
+	public static final String COMMERCE_ADMIN_PAYMENT_ATTEMPT_DEFAULT_SORT = "createdAt,desc";
+
+	public static final List<SortOptionDto> COMMERCE_ADMIN_PAYMENT_ATTEMPT_SORT_OPTIONS = List.of(
+			SortOptionDto.defaultOption("createdAt,desc", "admin.commerce.sort.newest"),
+			SortOptionDto.of("createdAt,asc", "admin.commerce.sort.oldest"),
+			SortOptionDto.of("expiresAt,asc", "admin.commerce.sort.expiresAsc"),
+			SortOptionDto.of("expiresAt,desc", "admin.commerce.sort.expiresDesc"),
+			SortOptionDto.of("total,desc", "admin.commerce.sort.totalDesc"),
+			SortOptionDto.of("total,asc", "admin.commerce.sort.totalAsc"),
+			SortOptionDto.of("status,asc", "admin.commerce.sort.statusAsc"),
+			SortOptionDto.of("status,desc", "admin.commerce.sort.statusDesc"),
+			SortOptionDto.of("provider,asc", "admin.commerce.sort.providerAsc"));
+
         // ========== Tenant Entity ==========
         public static final Set<String> TENANT_ALLOWED_FIELDS = Set.of(
                         "createdAt", "companyName", "subdomain", "status");

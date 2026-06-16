@@ -1,0 +1,88 @@
+<div class="bg-card flex min-w-0 flex-auto flex-col overflow-hidden sm:absolute sm:inset-0 dark:bg-transparent">
+    <admin-page-header
+        [title]="'admin.commerce.dashboard.title' | transloco"
+        [subtitle]="'admin.commerce.dashboard.subtitle' | transloco"
+        [showCreateButton]="false"
+        [showSearch]="false"
+        [isLoading]="isLoadingSig()"
+    >
+        <ng-container actions>
+            <button mat-stroked-button type="button" (click)="loadDashboard()">
+                <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
+                <span>{{ 'admin.common.actions.refresh' | transloco }}</span>
+            </button>
+        </ng-container>
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-y-auto p-6 md:p-8">
+        @if (isLoadingSig() && !dashboardSig()) {
+            <div class="flex flex-auto items-center justify-center py-16">
+                <mat-progress-spinner mode="indeterminate" diameter="48" />
+            </div>
+        } @else {
+            @if (dashboardSig(); as dashboard) {
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <a
+                    class="rounded border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary dark:border-slate-700 dark:bg-slate-900"
+                    routerLink="../orders"
+                >
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm text-slate-500">{{ 'admin.commerce.dashboard.todayOrders' | transloco }}</p>
+                            <p class="mt-2 text-3xl font-semibold">{{ dashboard.today.orderCount }}</p>
+                        </div>
+                        <mat-icon svgIcon="heroicons_outline:shopping-bag" class="text-primary"></mat-icon>
+                    </div>
+                    <p class="mt-4 text-sm font-medium text-slate-600">
+                        {{ dashboard.today.revenue | number: '1.2-2' }} {{ dashboard.currencyIso }}
+                    </p>
+                </a>
+
+                <a
+                    class="rounded border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary dark:border-slate-700 dark:bg-slate-900"
+                    routerLink="../orders"
+                >
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm text-slate-500">{{ 'admin.commerce.dashboard.lastSevenDaysOrders' | transloco }}</p>
+                            <p class="mt-2 text-3xl font-semibold">{{ dashboard.lastSevenDays.orderCount }}</p>
+                        </div>
+                        <mat-icon svgIcon="heroicons_outline:chart-bar-square" class="text-primary"></mat-icon>
+                    </div>
+                    <p class="mt-4 text-sm font-medium text-slate-600">
+                        {{ dashboard.lastSevenDays.revenue | number: '1.2-2' }} {{ dashboard.currencyIso }}
+                    </p>
+                </a>
+
+                <a
+                    class="rounded border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary dark:border-slate-700 dark:bg-slate-900"
+                    routerLink="../orders"
+                >
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm text-slate-500">{{ 'admin.commerce.dashboard.attentionOrders' | transloco }}</p>
+                            <p class="mt-2 text-3xl font-semibold">{{ dashboard.attentionOrderCount }}</p>
+                        </div>
+                        <mat-icon svgIcon="heroicons_outline:exclamation-triangle" class="text-amber-500"></mat-icon>
+                    </div>
+                    <p class="mt-4 text-sm text-slate-500">{{ 'admin.commerce.dashboard.attentionHint' | transloco }}</p>
+                </a>
+
+                <a
+                    class="rounded border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary dark:border-slate-700 dark:bg-slate-900"
+                    routerLink="../payment-attempts"
+                >
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm text-slate-500">{{ 'admin.commerce.dashboard.failedAttempts' | transloco }}</p>
+                            <p class="mt-2 text-3xl font-semibold">{{ dashboard.failedPaymentAttemptCount }}</p>
+                        </div>
+                        <mat-icon svgIcon="heroicons_outline:credit-card" class="text-rose-500"></mat-icon>
+                    </div>
+                    <p class="mt-4 text-sm text-slate-500">{{ 'admin.commerce.dashboard.failedAttemptsHint' | transloco }}</p>
+                </a>
+                </div>
+            }
+        }
+    </div>
+</div>

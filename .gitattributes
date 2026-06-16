@@ -1,6 +1,9 @@
 # Auto detect text files and normalize line endings to LF
 * text=auto eol=lf
 
+# Match .editorconfig: source files use space indentation.
+* whitespace=trailing-space,space-before-tab
+
 # Source code
 *.java text eol=lf
 *.ts text eol=lf

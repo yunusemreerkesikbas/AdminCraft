@@ -3,6 +3,8 @@ package com.backend.infrastructure.persistence.commerce;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,6 +21,25 @@ interface CommercePaymentAttemptJpaRepository extends JpaRepository<CommercePaym
 
 	@EntityGraph(attributePaths = { "customer", "checkout", "checkout.items", "checkout.cart", "checkout.cart.items" })
 	Optional<CommercePaymentAttempt> findFirstByProviderAndProviderReferenceOrderByIdDesc(String provider, String providerReference);
+
+	@EntityGraph(attributePaths = { "customer", "checkout" })
+	@Query("""
+			select attempt from CommercePaymentAttempt attempt
+			join attempt.customer customer
+			where (:status is null or attempt.status = :status)
+				and (:search is null
+					or lower(attempt.uid) like concat('%', :search, '%')
+					or lower(attempt.provider) like concat('%', :search, '%')
+					or lower(coalesce(attempt.providerReference, '')) like concat('%', :search, '%')
+					or lower(coalesce(attempt.providerTransactionId, '')) like concat('%', :search, '%')
+					or lower(customer.email) like concat('%', :search, '%')
+					or lower(customer.firstName) like concat('%', :search, '%')
+					or lower(customer.lastName) like concat('%', :search, '%'))
+			""")
+	Page<CommercePaymentAttempt> findAdminPaymentAttempts(
+			@Param("search") String search,
+			@Param("status") CommercePaymentAttemptStatus status,
+			Pageable pageable);
 
 	@Modifying(clearAutomatically = true)
 	@Query("""
@@ -47,4 +68,8 @@ interface CommercePaymentAttemptJpaRepository extends JpaRepository<CommercePaym
 			@Param("customerId") Long customerId,
 			@Param("checkoutId") Long checkoutId,
 			@Param("pendingStatus") CommercePaymentAttemptStatus pendingStatus);
+
+	long countByStatusAndCreatedAtGreaterThanEqual(
+			CommercePaymentAttemptStatus status,
+			LocalDateTime createdAt);
 }

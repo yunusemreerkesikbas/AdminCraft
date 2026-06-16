@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.domain.commerce.CommerceOrder;
+import com.backend.domain.commerce.CommerceOrderStatus;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -48,13 +51,47 @@ class CommerceOrderRepositoryImpl implements CommerceOrderRepository {
 	}
 
 	@Override
+	public Page<CommerceOrder> findAdminOrders(
+			String search,
+			CommerceOrderStatus status,
+			Boolean requiresAttention,
+			Pageable pageable) {
+		return jpaRepository.findAdminOrders(search, status, requiresAttention, pageable);
+	}
+
+	@Override
+	public Optional<CommerceOrder> findAdminByUid(String uid) {
+		return jpaRepository.findAdminByUid(uid);
+	}
+
+	@Override
 	public Map<Long, Integer> countItemsByOrderIds(List<Long> orderIds) {
 		if (orderIds == null || orderIds.isEmpty()) {
 			return Map.of();
 		}
 		return jpaRepository.countItemsByOrderIds(orderIds).stream()
 				.collect(Collectors.toMap(
-						CommerceOrderJpaRepository.OrderItemCount::getOrderId,
-						count -> Math.toIntExact(count.getItemCount())));
+				CommerceOrderJpaRepository.OrderItemCount::getOrderId,
+				count -> Math.toIntExact(count.getItemCount())));
+	}
+
+	@Override
+	public long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
+		return jpaRepository.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(start, end);
+	}
+
+	@Override
+	public BigDecimal sumTotalByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
+		return jpaRepository.sumTotalByCreatedAtBetween(start, end);
+	}
+
+	@Override
+	public long countByRequiresAttentionTrue() {
+		return jpaRepository.countByRequiresAttentionTrue();
+	}
+
+	@Override
+	public Optional<String> findMostRecentCurrencyIso() {
+		return jpaRepository.findMostRecentCurrencyIso(Pageable.ofSize(1)).stream().findFirst();
 	}
 }

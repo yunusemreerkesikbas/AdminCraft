@@ -3,6 +3,8 @@ package com.backend.infrastructure.persistence.commerce;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,5 +53,20 @@ class CommercePaymentAttemptRepositoryImpl implements CommercePaymentAttemptRepo
 			Long checkoutId,
 			CommercePaymentAttemptStatus pendingStatus) {
 		return jpaRepository.expirePendingAttemptsForCheckout(customerId, checkoutId, pendingStatus);
+	}
+
+	@Override
+	public Page<CommercePaymentAttempt> findAdminPaymentAttempts(
+			String search,
+			CommercePaymentAttemptStatus status,
+			Pageable pageable) {
+		return jpaRepository.findAdminPaymentAttempts(search, status, pageable);
+	}
+
+	@Override
+	public long countByStatusAndCreatedAtGreaterThanEqual(
+			CommercePaymentAttemptStatus status,
+			LocalDateTime createdAt) {
+		return jpaRepository.countByStatusAndCreatedAtGreaterThanEqual(status, createdAt);
 	}
 }

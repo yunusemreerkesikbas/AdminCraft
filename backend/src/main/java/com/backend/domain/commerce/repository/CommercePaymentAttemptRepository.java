@@ -3,6 +3,9 @@ package com.backend.domain.commerce.repository;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.domain.commerce.CommercePaymentAttempt;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 
@@ -21,4 +24,13 @@ public interface CommercePaymentAttemptRepository {
 			LocalDateTime now);
 
 	int expirePendingAttemptsForCheckout(Long customerId, Long checkoutId, CommercePaymentAttemptStatus pendingStatus);
+
+	Page<CommercePaymentAttempt> findAdminPaymentAttempts(
+			String search,
+			CommercePaymentAttemptStatus status,
+			Pageable pageable);
+
+	long countByStatusAndCreatedAtGreaterThanEqual(
+			CommercePaymentAttemptStatus status,
+			LocalDateTime createdAt);
 }

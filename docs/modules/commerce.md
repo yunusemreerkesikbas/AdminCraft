@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, and customer order read APIs. It does not implement fulfillment, transactional notifications, admin order operations, or storefront UI yet.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, and read-only tenant admin commerce operations. It does not implement fulfillment, transactional notifications, mutable admin order operations, or storefront UI yet.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -23,10 +23,11 @@ Implemented foundations:
 - Internal payment attempt lifecycle with checkout totals snapshot, pending expiry, owner checks, and i18n response messages.
 - Hosted iyzico CheckoutForm sandbox initialization and callback handling through a payment provider port.
 - Customer-facing paid order creation after successful payment, daily order number counters, idempotent callback finalization, cart clear, checkout completion, stock decrement, and legal snapshot placeholders.
+- Tenant admin read-only commerce operations: dashboard summary, order list/detail, payment attempt history, and commerce sidebar navigation.
 
 Not implemented yet:
 
-- Admin order list/detail, payment attempt history UI, commerce dashboard, and sidebar navigation.
+- Mutable admin order operations such as status transitions, fulfillment, shipment tracking, cancellation/return decisions, refunds, and internal notes.
 - Storefront order history.
 - Full legal template rendering and rendered legal snapshot capture.
 - Cancellation/return requests, manual fulfillment, shipping tracking, refunds, and transactional email/SMS.
@@ -49,6 +50,7 @@ Current tenant migrations:
 - `V1.0.4__checkout_foundation.sql` creates customer checkout and checkout item snapshot tables.
 - `V1.0.5__payment_attempt_foundation.sql` creates internal payment attempt snapshot tables.
 - `V1.0.6__order_foundation.sql` creates paid order snapshot tables and daily order number counters.
+- `V1.0.7__commerce_admin_read_indexes.sql` adds read indexes for admin order and payment attempt operations.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -184,7 +186,14 @@ Customer-cart bridge rules:
 
 ## Admin API
 
-Commerce does not expose a tenant-scoped admin API yet.
+Base path: `/api/commerce/admin`
+
+Commerce admin APIs are tenant-scoped, require tenant admin authentication, and expose read-only operational visibility. They do not accept commerce customer JWTs and do not mutate order/payment state.
+
+- `GET /api/commerce/admin/dashboard`: returns today and last-7-days order count/revenue, attention order count, and failed payment attempt count.
+- `GET /api/commerce/admin/orders`: returns a paginated order list with `page`, `size`, whitelisted `sort`, optional `search`, optional `status`, and optional `requiresAttention`.
+- `GET /api/commerce/admin/orders/{orderUid}`: returns admin order detail with customer, totals, items, address snapshots, payment attempt summary, provider transaction id, legal snapshot status, and attention flags.
+- `GET /api/commerce/admin/payment-attempts`: returns a paginated payment attempt history with `page`, `size`, whitelisted `sort`, optional `search`, and optional `status`.
 
 Provisioning is handled by the platform provisioning API:
 
@@ -201,7 +210,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart, customer account, customer-cart bridge, checkout, payment attempt, backend order finalization, and customer order read APIs are the first commerce APIs/workflows. Storefront UI and operational admin APIs remain backlog work.
+Anonymous cart, customer account, customer-cart bridge, checkout, payment attempt, backend order finalization, customer order read APIs, and read-only operational admin APIs are the first commerce APIs/workflows. Storefront UI and mutable operational admin APIs remain backlog work.
 
 ## Frontend integration
 
@@ -212,12 +221,19 @@ Admin shell paths:
 - Module constants: [`../../storefront/src/app/core/navigation/navigation-modules.constants.ts`](../../storefront/src/app/core/navigation/navigation-modules.constants.ts)
 - Provisioning dialog dependency behavior: [`../../storefront/src/app/shared/components/module-provision-dialog/module-provision-dialog.component.ts`](../../storefront/src/app/shared/components/module-provision-dialog/module-provision-dialog.component.ts)
 
-The `/commerce` admin route exists and is guarded by `requiredModule: 'commerce'`, but no sidebar navigation item is registered yet. The first real commerce admin page should add navigation.
+The `/commerce` admin route is guarded by `requiredModule: 'commerce'` and exposes read-only tenant admin pages:
+
+- `/commerce/dashboard`
+- `/commerce/orders`
+- `/commerce/orders/:orderUid`
+- `/commerce/payment-attempts`
+
+Sidebar navigation is registered for tenant admins with the commerce module enabled.
 
 ## Security & tenant isolation
 
 - Provisioning endpoints are SUPER_ADMIN-only through `ProvisioningController`.
-- The admin `/commerce` route is tenant-user guarded and also protected by `moduleGuard`.
+- The admin `/commerce` route is tenant-admin guarded and also protected by `moduleGuard`.
 - Customer account auth endpoints are public but tenant-scoped; tenant resolution is still required.
 - Customer profile and address endpoints require commerce customer authentication and do not accept admin JWTs as customer identity.
 - Cart endpoints remain public for anonymous carts and can optionally authenticate commerce customer JWTs for customer carts. Admin JWTs are not used as cart customer identity.
