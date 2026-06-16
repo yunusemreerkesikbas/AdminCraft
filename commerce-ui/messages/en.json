@@ -1,0 +1,55 @@
+{
+  "Navigation": {
+    "home": "Store",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "account": "Account",
+    "orders": "Orders"
+  },
+  "Shell": {
+    "brand": "Commerce UI",
+    "subtitle": "Craftive commerce storefront foundation"
+  },
+  "Home": {
+    "title": "Commerce storefront foundation",
+    "description": "This shell is the clean Next.js base for cart, checkout, payment return, and account flows.",
+    "primaryAction": "Open cart",
+    "secondaryAction": "View orders"
+  },
+  "Product": {
+    "title": "Product detail",
+    "description": "Real product variants and purchase controls will be connected in the next slice.",
+    "uidLabel": "Product UID"
+  },
+  "Cart": {
+    "title": "Cart",
+    "description": "Cart state and line actions will be added with the next API integration."
+  },
+  "Checkout": {
+    "title": "Checkout",
+    "description": "Address selection, summary, and payment initialization will be built here."
+  },
+  "CheckoutReturn": {
+    "title": "Payment return",
+    "description": "Hosted iyzico payment results will be interpreted through this route."
+  },
+  "Account": {
+    "title": "Account",
+    "description": "Profile, addresses, and customer session flows will live here."
+  },
+  "Orders": {
+    "title": "My orders",
+    "description": "Customer order history and details will be wired in upcoming integrations.",
+    "detailTitle": "Order detail",
+    "uidLabel": "Order UID"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The requested commerce page is not defined in this shell."
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "description": "An error occurred while loading the page.",
+    "retry": "Try again"
+  }
+}

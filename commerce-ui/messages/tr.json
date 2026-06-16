@@ -1,0 +1,55 @@
+{
+  "Navigation": {
+    "home": "Magaza",
+    "cart": "Sepet",
+    "checkout": "Odeme",
+    "account": "Hesabim",
+    "orders": "Siparisler"
+  },
+  "Shell": {
+    "brand": "Commerce UI",
+    "subtitle": "Craftive commerce storefront altyapisi"
+  },
+  "Home": {
+    "title": "Commerce storefront hazirlik alani",
+    "description": "Bu shell cart, checkout, odeme donusu ve hesap akislarinin eklenecegi temiz Next.js temelidir.",
+    "primaryAction": "Sepeti ac",
+    "secondaryAction": "Siparislere git"
+  },
+  "Product": {
+    "title": "Urun detayi",
+    "description": "Gercek urun varyantlari ve satin alma kontrolleri sonraki slice'ta baglanacak.",
+    "uidLabel": "Urun UID"
+  },
+  "Cart": {
+    "title": "Sepet",
+    "description": "Sepet state ve satir islemleri sonraki API entegrasyonu ile eklenecek."
+  },
+  "Checkout": {
+    "title": "Checkout",
+    "description": "Adres secimi, ozet ve odeme baslatma akisi burada kurulacak."
+  },
+  "CheckoutReturn": {
+    "title": "Odeme donusu",
+    "description": "Iyzico hosted payment sonucu bu route uzerinden yorumlanacak."
+  },
+  "Account": {
+    "title": "Hesabim",
+    "description": "Profil, adresler ve musteri oturumu bu alanda gelisecek."
+  },
+  "Orders": {
+    "title": "Siparislerim",
+    "description": "Musteri siparis gecmisi ve detaylari sonraki entegrasyonlarda baglanacak.",
+    "detailTitle": "Siparis detayi",
+    "uidLabel": "Siparis UID"
+  },
+  "NotFound": {
+    "title": "Sayfa bulunamadi",
+    "description": "Istenen commerce sayfasi bu shell'de tanimli degil."
+  },
+  "Error": {
+    "title": "Bir seyler ters gitti",
+    "description": "Sayfa yuklenirken bir hata olustu.",
+    "retry": "Tekrar dene"
+  }
+}
