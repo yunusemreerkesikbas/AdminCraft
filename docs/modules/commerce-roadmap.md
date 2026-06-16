@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization ve customer order read API hazırlandı. Storefront commerce UI, commerce admin operasyon ekranları, full legal snapshot rendering, iptal/iade, fulfillment ve transactional bildirimler henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API ve read-only commerce admin operasyon görünürlüğü hazırlandı. Storefront commerce UI, mutable commerce admin operasyonları, full legal snapshot rendering, iptal/iade, fulfillment ve transactional bildirimler henüz yapılmadı.
 
 ## 1. Konumlandırma
 
@@ -340,6 +340,20 @@ Kapsam:
 - Sipariş listesi ve detay
 - İptal/iade talepleri listesi
 - Payment attempts / başarısız ödeme denemeleri
+
+Hazır:
+
+- Read-only dashboard: bugünkü sipariş/ciro, son 7 gün sipariş/ciro, attention order count, başarısız ödeme denemesi count
+- Read-only sipariş listesi ve detayı
+- Read-only payment attempt history
+- Commerce sidebar navigation
+
+Kalan:
+
+- Status transition ve fulfillment aksiyonları
+- İç notlar
+- İptal/iade talepleri listesi ve karar akışı
+- Düşük stok uyarıları
 
 MVP dışında:
 

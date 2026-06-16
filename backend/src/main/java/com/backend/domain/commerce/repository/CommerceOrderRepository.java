@@ -3,11 +3,14 @@ package com.backend.domain.commerce.repository;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.backend.domain.commerce.CommerceOrder;
+import com.backend.domain.commerce.CommerceOrderStatus;
 
 public interface CommerceOrderRepository {
 
@@ -21,5 +24,21 @@ public interface CommerceOrderRepository {
 
 	Optional<CommerceOrder> findByCustomerIdAndUid(Long customerId, String uid);
 
+	Page<CommerceOrder> findAdminOrders(
+			String search,
+			CommerceOrderStatus status,
+			Boolean requiresAttention,
+			Pageable pageable);
+
+	Optional<CommerceOrder> findAdminByUid(String uid);
+
 	Map<Long, Integer> countItemsByOrderIds(List<Long> orderIds);
+
+	long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+	BigDecimal sumTotalByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+	long countByRequiresAttentionTrue();
+
+	Optional<String> findMostRecentCurrencyIso();
 }

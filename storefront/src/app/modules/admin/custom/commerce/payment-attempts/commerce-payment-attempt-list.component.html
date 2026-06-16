@@ -1,0 +1,40 @@
+<div class="bg-card flex min-w-0 flex-auto flex-col overflow-hidden sm:absolute sm:inset-0 dark:bg-transparent">
+    <admin-page-header
+        [title]="'admin.commerce.paymentAttempts.title' | transloco"
+        [subtitle]="'admin.commerce.paymentAttempts.subtitle' | transloco"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.commerce.paymentAttempts.searchPlaceholder' | transloco"
+        (search)="onSearchInput($event)"
+        [isLoading]="store.isLoading()"
+    >
+        <ng-container actions>
+            <spa-admin-sort-dropdown
+                [availableSorts]="store.sortConfig()?.availableSorts || []"
+                [sortCode]="sortCodeSig()"
+                (sortChange)="onSortChange($event)"
+            />
+        </ng-container>
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="store.items()"
+                [columns]="columnsSig()"
+                [actions]="[]"
+                [isLoading]="store.isLoading()"
+                [emptyTitle]="'admin.commerce.paymentAttempts.empty' | transloco"
+            />
+        </div>
+
+        @if (store.totalElements() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [pageIndex]="pageIndexSig()"
+                [pageSize]="pageSizeSig()"
+                [length]="store.totalElements()"
+                (pageCallback)="onPageChange($event)"
+            />
+        }
+    </div>
+</div>

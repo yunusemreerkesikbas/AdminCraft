@@ -315,6 +315,12 @@ export const SPA_ENDPOINTS_CONFIG = {
     productVariantOptions: 'products/variant-options',
     productVariantOptionById: 'products/variant-options/${id}',
 
+    // ----- COMMERCE ADMIN -----
+    commerceAdminDashboard: 'commerce/admin/dashboard',
+    commerceAdminOrders: 'commerce/admin/orders',
+    commerceAdminOrderByUid: 'commerce/admin/orders/${orderUid}',
+    commerceAdminPaymentAttempts: 'commerce/admin/payment-attempts',
+
     // ----- IMPEX -----
     impexExecute: 'impex/execute',
 } as const;
