@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -97,6 +98,64 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(response.provider()).isEqualTo("iyzico");
 		assertThat(response.requiresAttention()).isTrue();
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
+	}
+
+	@Test
+	void listOrders_ShouldNormalizeSearchWithLocaleRoot_WhenDefaultLocaleIsTurkish() {
+		Locale previousLocale = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+		PageRequest pageable = PageRequest.of(0, 20);
+		when(orderRepository.findAdminOrders(
+				org.mockito.ArgumentMatchers.any(),
+				org.mockito.ArgumentMatchers.any(),
+				org.mockito.ArgumentMatchers.any(),
+				org.mockito.ArgumentMatchers.any()))
+				.thenReturn(new PageImpl<>(List.of()));
+
+		try {
+			service.listOrders(pageable, " I ", null, null);
+		} finally {
+			Locale.setDefault(previousLocale);
+		}
+
+		verify(orderRepository).findAdminOrders(
+				org.mockito.ArgumentMatchers.eq("i"),
+				org.mockito.ArgumentMatchers.isNull(),
+				org.mockito.ArgumentMatchers.isNull(),
+				org.mockito.ArgumentMatchers.eq(pageable));
+	}
+
+	@Test
+	void listOrders_ShouldMapCustomerNameWithoutNullParts() {
+		CommerceOrder order = order(1L, "order-uid");
+		order.getCustomer().setFirstName(null);
+		order.getCustomer().setLastName("Doe");
+		when(orderRepository.findAdminOrders("doe", null, null, PageRequest.of(0, 20)))
+				.thenReturn(new PageImpl<>(List.of(order)));
+		when(orderRepository.countItemsByOrderIds(List.of(1L))).thenReturn(Map.of(1L, 1));
+
+		CommerceAdminOrderSummaryResponse response = service
+				.listOrders(PageRequest.of(0, 20), "Doe", null, null)
+				.getContent()
+				.getFirst();
+
+		assertThat(response.customerName()).isEqualTo("Doe");
+	}
+
+	@Test
+	void listPaymentAttempts_ShouldReturnNullCustomerName_WhenNamePartsAreBlank() {
+		CommercePaymentAttempt attempt = paymentAttempt();
+		attempt.getCustomer().setFirstName(null);
+		attempt.getCustomer().setLastName(" ");
+		when(paymentAttemptRepository.findAdminPaymentAttempts("jane", null, PageRequest.of(0, 20)))
+				.thenReturn(new PageImpl<>(List.of(attempt)));
+
+		CommerceAdminPaymentAttemptResponse response = service
+				.listPaymentAttempts(PageRequest.of(0, 20), "Jane", null)
+				.getContent()
+				.getFirst();
+
+		assertThat(response.customerName()).isNull();
 	}
 
 	@Test

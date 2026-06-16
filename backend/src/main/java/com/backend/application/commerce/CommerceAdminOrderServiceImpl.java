@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
@@ -123,7 +124,7 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 		if (!StringUtils.hasText(search)) {
 			return null;
 		}
-		return search.trim().toLowerCase();
+		return search.trim().toLowerCase(Locale.ROOT);
 	}
 
 	private String defaultCurrencyIso() {

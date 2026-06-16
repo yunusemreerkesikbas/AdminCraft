@@ -79,7 +79,7 @@
                 <aside class="flex flex-col gap-6">
                     <section class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <h2 class="mb-4 text-lg font-semibold">{{ 'admin.commerce.orderDetail.customer' | transloco }}</h2>
-                        <p class="font-medium">{{ detail.summary.customerName }}</p>
+                        <p class="font-medium">{{ detail.summary.customerName || detail.summary.customerEmail }}</p>
                         <p class="text-sm text-slate-500">{{ detail.summary.customerEmail }}</p>
                         <p class="text-sm text-slate-500">{{ detail.customerPhone }}</p>
                     </section>
@@ -119,11 +119,11 @@
                             </div>
                             <div class="flex justify-between gap-4">
                                 <dt>{{ 'admin.commerce.orderDetail.providerReference' | transloco }}</dt>
-                                <dd class="truncate text-right">{{ detail.paymentAttempt.providerReference || '-' }}</dd>
+                                <dd class="truncate text-right">{{ detail.paymentAttempt.providerReference || ('admin.commerce.common.emptyValue' | transloco) }}</dd>
                             </div>
                             <div class="flex justify-between gap-4">
                                 <dt>{{ 'admin.commerce.orderDetail.providerTransactionId' | transloco }}</dt>
-                                <dd class="truncate text-right">{{ detail.providerTransactionId || '-' }}</dd>
+                                <dd class="truncate text-right">{{ detail.providerTransactionId || ('admin.commerce.common.emptyValue' | transloco) }}</dd>
                             </div>
                         </dl>
                     </section>
@@ -133,7 +133,7 @@
                         <dl class="space-y-3 text-sm">
                             <div class="flex justify-between gap-4">
                                 <dt>{{ 'admin.commerce.orderDetail.stockDeducted' | transloco }}</dt>
-                                <dd>{{ detail.stockDeducted ? 'YES' : 'NO' }}</dd>
+                                <dd>{{ (detail.stockDeducted ? 'admin.commerce.common.yes' : 'admin.commerce.common.no') | transloco }}</dd>
                             </div>
                             <div class="flex justify-between gap-4">
                                 <dt>{{ 'admin.commerce.orderDetail.legalSnapshotStatus' | transloco }}</dt>
@@ -141,7 +141,13 @@
                             </div>
                             <div class="flex justify-between gap-4">
                                 <dt>{{ 'admin.commerce.orderDetail.attention' | transloco }}</dt>
-                                <dd>{{ detail.summary.requiresAttention ? detail.summary.attentionReasonKey : '-' }}</dd>
+                                <dd>
+                                    @if (detail.summary.requiresAttention && detail.summary.attentionReasonKey) {
+                                        {{ detail.summary.attentionReasonKey | transloco }}
+                                    } @else {
+                                        {{ 'admin.commerce.common.emptyValue' | transloco }}
+                                    }
+                                </dd>
                             </div>
                         </dl>
                     </section>

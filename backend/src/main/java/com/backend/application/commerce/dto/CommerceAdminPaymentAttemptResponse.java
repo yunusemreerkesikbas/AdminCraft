@@ -30,7 +30,7 @@ public record CommerceAdminPaymentAttemptResponse(
 				attempt.getUid(),
 				attempt.getCheckout().getUid(),
 				customer.getUid(),
-				customer.getFirstName() + " " + customer.getLastName(),
+				CommerceCustomerNameFormatter.format(customer.getFirstName(), customer.getLastName()),
 				customer.getEmail(),
 				attempt.getStatus().name(),
 				attempt.getProvider(),

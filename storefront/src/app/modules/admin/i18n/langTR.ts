@@ -2224,8 +2224,14 @@ export const langTR = {
             },
         },
         commerce: {
+            common: {
+                emptyValue: '-',
+                yes: 'Evet',
+                no: 'Hayır',
+            },
             messages: {
                 loadFailed: 'Commerce verileri yüklenemedi',
+                missingOrderUid: 'Sipariş tanımlayıcısı eksik',
             },
             dashboard: {
                 title: 'Commerce Paneli',
@@ -3179,6 +3185,13 @@ export const langTR = {
             otpInfo: 'E-postanıza bir doğrulama kodu gönderildi.',
             otpLabel: 'Doğrulama Kodu',
             verify: 'Doğrula',
+        },
+    },
+    commerce: {
+        order: {
+            attention: {
+                stock_not_deducted: 'Stok otomatik olarak düşülemedi',
+            },
         },
     },
     common: {

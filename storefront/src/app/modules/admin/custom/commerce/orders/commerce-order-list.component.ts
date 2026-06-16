@@ -57,6 +57,7 @@ export class SpaCommerceOrderListComponent extends BasePaginatedListComponent<
                 key: 'customerName',
                 label: 'admin.commerce.orders.fields.customer',
                 type: 'text',
+                getValue: (item) => item.customerName || item.customerEmail,
                 getSecondaryValue: (item) => item.customerEmail,
                 width: '1fr',
             },

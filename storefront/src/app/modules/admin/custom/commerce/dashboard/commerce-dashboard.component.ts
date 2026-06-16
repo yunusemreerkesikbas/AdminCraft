@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -22,7 +22,7 @@ import { CommerceAdminService } from '../services/commerce-admin.service';
     selector: 'spa-commerce-dashboard',
     standalone: true,
     imports: [
-        CommonModule,
+        DecimalPipe,
         TranslocoModule,
         RouterLink,
         MatButtonModule,

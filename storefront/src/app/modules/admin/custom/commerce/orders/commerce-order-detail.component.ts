@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -15,7 +15,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { Subject, switchMap, takeUntil } from 'rxjs';
+import { EMPTY, Subject, switchMap, takeUntil } from 'rxjs';
 import {
     CommerceAddressSnapshot,
     CommerceAdminOrderDetail,
@@ -26,7 +26,7 @@ import { CommerceAdminOrderService } from '../services/commerce-admin.service';
     selector: 'spa-commerce-order-detail',
     standalone: true,
     imports: [
-        CommonModule,
+        DecimalPipe,
         TranslocoModule,
         RouterLink,
         MatButtonModule,
@@ -51,9 +51,17 @@ export class SpaCommerceOrderDetailComponent implements OnInit, OnDestroy {
         this.isLoadingSig.set(true);
         this.#route.paramMap
             .pipe(
-                switchMap((params) =>
-                    this.#orderService.getOrder(params.get('orderUid') || '')
-                ),
+                switchMap((params) => {
+                    const orderUid = params.get('orderUid');
+                    if (!orderUid) {
+                        this.isLoadingSig.set(false);
+                        this.#notificationService.alert(
+                            'admin.commerce.messages.missingOrderUid'
+                        );
+                        return EMPTY;
+                    }
+                    return this.#orderService.getOrder(orderUid);
+                }),
                 takeUntil(this.#destroy$)
             )
             .subscribe({

@@ -28,7 +28,7 @@ public record CommerceAdminOrderSummaryResponse(
 				order.getUid(),
 				order.getOrderNumber(),
 				customer.getUid(),
-				customer.getFirstName() + " " + customer.getLastName(),
+				CommerceCustomerNameFormatter.format(customer.getFirstName(), customer.getLastName()),
 				customer.getEmail(),
 				order.getStatus().name(),
 				order.getCreatedAt(),

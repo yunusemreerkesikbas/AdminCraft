@@ -50,6 +50,7 @@ export class SpaCommercePaymentAttemptListComponent extends BasePaginatedListCom
                 key: 'customerName',
                 label: 'admin.commerce.paymentAttempts.fields.customer',
                 type: 'text',
+                getValue: (item) => item.customerName || item.customerEmail,
                 getSecondaryValue: (item) => item.customerEmail,
                 width: '1fr',
             },

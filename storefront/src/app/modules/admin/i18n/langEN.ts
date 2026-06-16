@@ -2244,8 +2244,14 @@ export const langEN = {
             },
         },
         commerce: {
+            common: {
+                emptyValue: '-',
+                yes: 'Yes',
+                no: 'No',
+            },
             messages: {
                 loadFailed: 'Failed to load commerce data',
+                missingOrderUid: 'Order identifier is missing',
             },
             dashboard: {
                 title: 'Commerce Dashboard',
@@ -3160,6 +3166,13 @@ export const langEN = {
             otpInfo: 'A verification code has been sent to your email.',
             otpLabel: 'Verification Code',
             verify: 'Verify',
+        },
+    },
+    commerce: {
+        order: {
+            attention: {
+                stock_not_deducted: 'Stock was not deducted automatically',
+            },
         },
     },
     common: {

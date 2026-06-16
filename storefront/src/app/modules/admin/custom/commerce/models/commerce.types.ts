@@ -29,7 +29,7 @@ export interface CommerceAdminOrderRow {
     orderUid: string;
     orderNumber: string;
     customerUid: string;
-    customerName: string;
+    customerName: string | null;
     customerEmail: string;
     status: string;
     createdAt: string;
@@ -109,7 +109,7 @@ export interface CommerceAdminPaymentAttemptRow {
     attemptUid: string;
     checkoutUid: string;
     customerUid: string;
-    customerName: string;
+    customerName: string | null;
     customerEmail: string;
     status: string;
     provider: string;
