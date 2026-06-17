@@ -2,6 +2,8 @@ type PageShellProps = {
   eyebrow?: string;
   title: string;
   description: string;
+  actions?: React.ReactNode;
+  visual?: React.ReactNode;
   children?: React.ReactNode;
 };
 
@@ -9,24 +11,22 @@ export function PageShell({
   eyebrow,
   title,
   description,
+  actions,
+  visual,
   children,
 }: PageShellProps) {
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-96px)] max-w-6xl flex-col justify-center px-6 py-16">
-      <section className="max-w-3xl">
-        {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            {eyebrow}
-          </p>
-        ) : null}
-        <h1 className="mt-4 text-4xl font-semibold tracking-normal md:text-6xl">
-          {title}
-        </h1>
-        <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">
-          {description}
-        </p>
-        {children ? <div className="mt-8">{children}</div> : null}
-      </section>
+    <main id="main-content" className="page-shell commerce-container">
+      <div className="page-shell__grid">
+        <section className="page-shell__intro">
+          {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+          <h1 className="page-title">{title}</h1>
+          <p className="page-description">{description}</p>
+          {actions ? <div className="page-actions">{actions}</div> : null}
+        </section>
+        {visual}
+      </div>
+      {children ? <div className="page-body">{children}</div> : null}
     </main>
   );
 }

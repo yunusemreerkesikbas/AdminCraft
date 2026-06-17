@@ -1,7 +1,12 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { CartProvider } from "@/components/cart/CartProvider";
 import { CommerceShell } from "@/components/ui/CommerceShell";
+import {
+  getCommerceBaseUrl,
+  getTenantHeadersAsync,
+} from "@/lib/core/config/runtime-env";
 import {
   isValidLocaleFormat,
   requireMessageLocale,
@@ -29,10 +34,18 @@ export default async function LocaleLayout({
 
   setRequestLocale(messageLocale);
   const messages = await getMessages();
+  const tenantHeaders = await getTenantHeadersAsync();
+  const apiBaseUrl = getCommerceBaseUrl();
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <CommerceShell lang={messageLocale}>{children}</CommerceShell>
+      <CartProvider
+        apiBaseUrl={apiBaseUrl}
+        lang={messageLocale}
+        tenantHeaders={tenantHeaders}
+      >
+        <CommerceShell lang={messageLocale}>{children}</CommerceShell>
+      </CartProvider>
     </NextIntlClientProvider>
   );
 }

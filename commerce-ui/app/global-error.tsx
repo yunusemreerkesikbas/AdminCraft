@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { FALLBACK_LOCALE } from "@/lib/core/i18n/locale";
+import trMessages from "@/messages/tr.json";
 
 export default function GlobalError({
   error,
@@ -10,6 +11,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const copy = trMessages.Error;
+
   useEffect(() => {
     console.error("[commerce-ui] Root error:", error);
   }, [error]);
@@ -17,17 +20,21 @@ export default function GlobalError({
   return (
     <html lang={FALLBACK_LOCALE}>
       <body>
-        <main className="flex min-h-screen items-center justify-center px-6 text-center">
-          <div className="max-w-md space-y-4">
-            <h1 className="text-2xl font-semibold">Bir hata olustu</h1>
-            <p className="text-sm text-neutral-500">
-              Commerce storefront istegi tamamlayamadi.
+        <main
+          id="main-content"
+          className="commerce-shell flex min-h-screen items-center justify-center px-6 text-center"
+        >
+          <div className="surface-panel max-w-md px-6 py-8">
+            <p className="eyebrow">{copy.title}</p>
+            <h1 className="mt-3 text-3xl font-semibold">{copy.rootTitle}</h1>
+            <p className="mt-3 text-sm text-[var(--muted)]">
+              {copy.rootDescription}
             </p>
             <button
               onClick={reset}
-              className="rounded-md bg-neutral-950 px-4 py-2 text-sm font-medium text-white"
+              className="commerce-action mt-6"
             >
-              Tekrar dene
+              {copy.retry}
             </button>
           </div>
         </main>

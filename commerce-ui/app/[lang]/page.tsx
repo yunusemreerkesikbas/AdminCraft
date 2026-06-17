@@ -1,6 +1,10 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageShell } from "@/components/ui/PageShell";
+import {
+  ActionLink,
+  CapabilityGrid,
+  ProductFrame,
+} from "@/components/ui/StorefrontPrimitives";
 import { withLocalePath } from "@/lib/core/i18n/locale";
 
 export default async function HomePage({
@@ -10,27 +14,52 @@ export default async function HomePage({
 }) {
   const { lang } = await params;
   const translate = await getTranslations("Home");
+  const capabilities = [
+    {
+      title: translate("capabilityCatalogTitle"),
+      description: translate("capabilityCatalogDescription"),
+    },
+    {
+      title: translate("capabilityCartTitle"),
+      description: translate("capabilityCartDescription"),
+    },
+    {
+      title: translate("capabilityCheckoutTitle"),
+      description: translate("capabilityCheckoutDescription"),
+    },
+    {
+      title: translate("capabilityAccountTitle"),
+      description: translate("capabilityAccountDescription"),
+    },
+  ];
 
   return (
     <PageShell
-      eyebrow="commerce-ui"
+      eyebrow={translate("eyebrow")}
       title={translate("title")}
       description={translate("description")}
+      actions={
+        <>
+          <ActionLink href={withLocalePath(lang, "cart")} label={translate("primaryAction")} />
+          <ActionLink
+            href={withLocalePath(lang, "account/orders")}
+            label={translate("secondaryAction")}
+            variant="secondary"
+          />
+        </>
+      }
+      visual={
+        <ProductFrame
+          label={translate("visualLabel")}
+          status={[
+            translate("visualStatusCatalog"),
+            translate("visualStatusCheckout"),
+            translate("visualStatusTenant"),
+          ]}
+        />
+      }
     >
-      <div className="flex flex-wrap gap-3">
-        <Link
-          href={withLocalePath(lang, "cart")}
-          className="rounded-md bg-neutral-950 px-5 py-3 text-sm font-medium text-white"
-        >
-          {translate("primaryAction")}
-        </Link>
-        <Link
-          href={withLocalePath(lang, "account/orders")}
-          className="rounded-md border border-[var(--border)] px-5 py-3 text-sm font-medium"
-        >
-          {translate("secondaryAction")}
-        </Link>
-      </div>
+      <CapabilityGrid title={translate("capabilitiesLabel")} items={capabilities} />
     </PageShell>
   );
 }

@@ -12,11 +12,13 @@ Implemented in this slice:
 - tenant header injection through `proxy.ts`
 - minimal app shell and commerce route skeletons
 - clean Tailwind v4 global CSS
+- typed cart API client, localStorage cart token handling, cart provider, cart page wiring, and header cart badge
+- product detail delivery client, real product detail rendering, variant/quantity selection, and add-to-cart from real variants
 
 Not implemented yet:
 
-- commerce API client integration
-- cart, checkout, payment, and customer account state
+- product listing/search API integration
+- checkout, payment, and customer account state
 - final commerce visual design
 - legal snapshot rendering
 

@@ -17,15 +17,20 @@ export default function LocaleError({
   }, [error]);
 
   return (
-    <section className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="text-2xl font-semibold">{translate("title")}</h1>
-      <p className="text-sm text-neutral-500">{translate("description")}</p>
-      <button
-        onClick={reset}
-        className="rounded-md bg-neutral-950 px-4 py-2 text-sm font-medium text-white"
-      >
-        {translate("retry")}
-      </button>
-    </section>
+    <main
+      id="main-content"
+      className="commerce-container flex min-h-[70vh] items-center justify-center py-16 text-center"
+    >
+      <section className="surface-panel max-w-md px-6 py-8">
+        <p className="eyebrow">{translate("eyebrow")}</p>
+        <h1 className="mt-3 text-3xl font-semibold">{translate("title")}</h1>
+        <p className="mt-3 text-sm text-[var(--muted)]">
+          {translate("description")}
+        </p>
+        <button onClick={reset} className="commerce-action mt-6">
+          {translate("retry")}
+        </button>
+      </section>
+    </main>
   );
 }

@@ -1,6 +1,7 @@
 export const COMMERCE_ENDPOINTS = {
   cart: "commerce/cart",
   cartItems: "commerce/cart/items",
+  cartItemByUid: "commerce/cart/items/${itemUid}",
   checkout: "commerce/checkout",
   checkoutAddresses: "commerce/checkout/${checkoutUid}/addresses",
   currentCheckout: "commerce/checkout/current",
