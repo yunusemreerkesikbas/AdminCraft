@@ -62,21 +62,5 @@ export const getTenantHeaders = (): Record<string, string> => {
   return { [tenantContext.headerName]: tenantContext.headerValue };
 };
 
-export const getTenantHeadersAsync = async (): Promise<Record<string, string>> => {
-  try {
-    const { headers } = await import("next/headers");
-    const h = await headers();
-    const subdomain = h.get("x-tenant-subdomain");
-    if (subdomain) {
-      return { "X-Tenant-Subdomain": subdomain };
-    }
-    const tenantId = h.get("x-tenant-id");
-    if (tenantId) {
-      return { "X-Tenant-ID": tenantId };
-    }
-  } catch {
-    return getTenantHeaders();
-  }
-
-  return getTenantHeaders();
-};
+export const getTenantHeadersAsync = async (): Promise<Record<string, string>> =>
+  getTenantHeaders();

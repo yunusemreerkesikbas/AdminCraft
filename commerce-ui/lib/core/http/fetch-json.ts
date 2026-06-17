@@ -1,11 +1,13 @@
 import type { ApiResponse } from "./api-response";
 import { buildJsonHeaders } from "./headers";
 import { buildCommerceUrl, type QueryValue } from "./query";
+import { createRequestTimeoutSignal } from "./request-timeout";
 
 export type FetchJsonOptions = {
   cache?: RequestCache;
   revalidate?: number;
   extraHeaders?: Record<string, string>;
+  timeoutMs?: number;
 };
 
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -22,6 +24,7 @@ export const fetchCommerceJson = async <T>(
   const fetchOptions: RequestInit & { next?: { revalidate?: number } } = {
     headers: { ...(await buildJsonHeaders()), ...options?.extraHeaders },
     cache: requestCache,
+    signal: createRequestTimeoutSignal(options?.timeoutMs),
   };
 
   if (!isDevelopment && options?.revalidate !== undefined) {

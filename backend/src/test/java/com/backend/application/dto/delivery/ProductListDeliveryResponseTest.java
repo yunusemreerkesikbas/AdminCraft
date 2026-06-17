@@ -37,4 +37,27 @@ class ProductListDeliveryResponseTest {
         assertThat(response.getPrice().value()).isEqualByComparingTo("149.90");
         assertThat(response.getPrice().formattedValue()).isNotBlank();
     }
+
+    @Test
+    @DisplayName("Should use default currency when currency is not specified")
+    void from_UsesDefaultCurrency() {
+        Product product = new Product();
+        product.setUid("product-002");
+        product.setSku("SKU-002");
+        product.setBasePrice(BigDecimal.valueOf(99.99));
+
+        ProductI18n translation = new ProductI18n();
+        translation.setLanguage(Language.EN);
+        translation.setName("Test Product");
+        product.addI18n(translation);
+
+        ProductListDeliveryResponse response = ProductListDeliveryResponse.from(product, Language.EN);
+
+        assertThat(response.getBasePrice()).isEqualByComparingTo("99.99");
+        assertThat(response.getPrice()).isNotNull();
+        assertThat(response.getPrice().currencyIso()).isEqualTo(Currency.getDefault().getIsoCode());
+        assertThat(response.getPrice().priceType()).isEqualTo("BUY");
+        assertThat(response.getPrice().value()).isEqualByComparingTo("99.99");
+        assertThat(response.getPrice().formattedValue()).isNotBlank();
+    }
 }

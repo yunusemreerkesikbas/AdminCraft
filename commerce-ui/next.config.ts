@@ -4,7 +4,15 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
-const outputMode = process.env.NEXT_OUTPUT as "export" | "standalone" | undefined;
+const rawOutputMode = process.env.NEXT_OUTPUT;
+const outputMode =
+  rawOutputMode === undefined ||
+  rawOutputMode === "export" ||
+  rawOutputMode === "standalone"
+    ? rawOutputMode
+    : (() => {
+        throw new Error("NEXT_OUTPUT must be 'export' or 'standalone' when provided.");
+      })();
 
 const buildImageRemotePatterns = (): NextConfig["images"] => {
   const patterns: { protocol: "http" | "https"; hostname: string }[] = [];

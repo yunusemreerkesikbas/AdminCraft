@@ -44,7 +44,7 @@ const buildProductsHref = (
   if (query) {
     params.set("q", query);
   }
-  if (pageNumber > 1) {
+  if (pageNumber > 0) {
     params.set("page", String(pageNumber));
   }
 
@@ -115,7 +115,7 @@ export function ProductListView({
   const items = products?.content ?? [];
   const totalElements = products?.totalElements ?? 0;
   const totalPages = products?.totalPages ?? 0;
-  const hasPrevious = Boolean(products && !products.first && pageNumber > 1);
+  const hasPrevious = Boolean(products && !products.first && pageNumber > 0);
   const hasNext = Boolean(products && !products.last);
 
   return (
@@ -153,7 +153,7 @@ export function ProductListView({
         </p>
         {totalPages > 0 ? (
           <p>
-            {copy.pageLabel}: {pageNumber} / {totalPages}
+            {copy.pageLabel}: {pageNumber + 1} / {totalPages}
           </p>
         ) : null}
       </div>

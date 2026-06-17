@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { CustomerSessionProvider } from "@/components/customer/CustomerSessionProvider";
 import { CommerceShell } from "@/components/ui/CommerceShell";
 import {
   getCommerceBaseUrl,
@@ -34,8 +35,16 @@ export default async function LocaleLayout({
 
   setRequestLocale(messageLocale);
   const messages = await getMessages();
-  const tenantHeaders = await getTenantHeadersAsync();
-  const apiBaseUrl = getCommerceBaseUrl();
+  let tenantHeaders: Awaited<ReturnType<typeof getTenantHeadersAsync>>;
+  let apiBaseUrl: string;
+  try {
+    tenantHeaders = await getTenantHeadersAsync();
+    apiBaseUrl = getCommerceBaseUrl();
+  } catch (error) {
+    throw new Error("Failed to load commerce tenant configuration.", {
+      cause: error,
+    });
+  }
 
   return (
     <NextIntlClientProvider messages={messages}>
@@ -44,7 +53,13 @@ export default async function LocaleLayout({
         lang={messageLocale}
         tenantHeaders={tenantHeaders}
       >
-        <CommerceShell lang={messageLocale}>{children}</CommerceShell>
+        <CustomerSessionProvider
+          apiBaseUrl={apiBaseUrl}
+          lang={messageLocale}
+          tenantHeaders={tenantHeaders}
+        >
+          <CommerceShell lang={messageLocale}>{children}</CommerceShell>
+        </CustomerSessionProvider>
       </CartProvider>
     </NextIntlClientProvider>
   );

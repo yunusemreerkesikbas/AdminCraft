@@ -1,10 +1,12 @@
 import { getTenantHeadersAsync } from "../config/runtime-env";
 import { buildCommerceUrl, type QueryValue } from "./query";
+import { createRequestTimeoutSignal } from "./request-timeout";
 
 export type FetchTextOptions = {
   cache?: RequestCache;
   revalidate?: number;
   accept?: string;
+  timeoutMs?: number;
 };
 
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -21,6 +23,7 @@ export const fetchCommerceText = async (
       ...(await getTenantHeadersAsync()),
     },
     cache: requestCache,
+    signal: createRequestTimeoutSignal(options?.timeoutMs),
   };
 
   if (!isDevelopment && options?.revalidate !== undefined) {

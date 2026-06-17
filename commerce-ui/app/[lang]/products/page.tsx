@@ -24,7 +24,7 @@ const firstParamValue = (value?: string | string[]): string =>
 
 const parsePageNumber = (value?: string | string[]): number => {
   const parsed = Number.parseInt(firstParamValue(value), 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 };
 
 export default async function ProductsPage({

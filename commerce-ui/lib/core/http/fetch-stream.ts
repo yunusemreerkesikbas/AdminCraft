@@ -1,10 +1,12 @@
 import type { NextRequest } from "next/server";
 import { buildForwardHeaders } from "./headers";
 import { buildCommerceUrl } from "./query";
+import { createRequestTimeoutSignal } from "./request-timeout";
 
 export type FetchStreamOptions = {
   cache?: RequestCache;
   responseHeaderNames?: string[];
+  timeoutMs?: number;
 };
 
 const DEFAULT_RESPONSE_HEADERS = [
@@ -30,7 +32,8 @@ export const fetchCommerceStream = async (
 
   const upstream = await fetch(upstreamUrl, {
     headers: buildForwardHeaders(request),
-    cache: options?.cache ?? "force-cache",
+    cache: options?.cache ?? "no-store",
+    signal: createRequestTimeoutSignal(options?.timeoutMs),
   });
 
   const responseHeaders = new Headers();

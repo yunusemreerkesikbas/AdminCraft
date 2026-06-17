@@ -1,5 +1,6 @@
 import type { ApiResponse } from "@/lib/core/http/api-response";
 import { resolveCommerceEndpoint } from "@/lib/core/http/endpoints";
+import { createRequestTimeoutSignal } from "@/lib/core/http/request-timeout";
 import type { CartMutationResult, CartResponse } from "./types";
 
 const CART_TOKEN_HEADER = "X-Cart-Token";
@@ -11,6 +12,7 @@ export type CommerceCartClientConfig = {
   getCartToken: () => string | null;
   setCartToken: (cartToken: string) => void;
   clearCartToken: () => void;
+  getAccessToken?: () => string | null;
 };
 
 type CartRequestOptions = {
@@ -54,13 +56,15 @@ export const createCommerceCartClient = ({
   getCartToken,
   setCartToken,
   clearCartToken,
+  getAccessToken,
 }: CommerceCartClientConfig): CommerceCartClient => {
   const requestCart = async (
     path: string,
     options: CartRequestOptions = {},
   ): Promise<CartMutationResult> => {
     const cartToken = getCartToken();
-    if (!options.allowMissingToken && !cartToken) {
+    const accessToken = getAccessToken?.() ?? null;
+    if (!options.allowMissingToken && !cartToken && !accessToken) {
       return null;
     }
 
@@ -74,6 +78,10 @@ export const createCommerceCartClient = ({
       headers.set(CART_TOKEN_HEADER, cartToken);
     }
 
+    if (accessToken) {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
+
     if (options.body !== undefined) {
       headers.set("Content-Type", "application/json");
     }
@@ -83,6 +91,7 @@ export const createCommerceCartClient = ({
       headers,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       cache: "no-store",
+      signal: createRequestTimeoutSignal(),
     });
 
     if (response.status === 404) {

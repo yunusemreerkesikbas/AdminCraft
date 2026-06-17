@@ -2,6 +2,7 @@ import type { ApiResponse } from "@/lib/core/http/api-response";
 import { getCommerceBaseUrl } from "@/lib/core/config/runtime-env";
 import { buildJsonHeaders } from "@/lib/core/http/headers";
 import { buildCommerceUrl } from "@/lib/core/http/query";
+import { createRequestTimeoutSignal } from "@/lib/core/http/request-timeout";
 import { toApiLocale } from "@/lib/core/i18n/locale";
 import type {
   PageResponse,
@@ -109,6 +110,7 @@ export const getProductByUid = async (
         "Accept-Language": lang,
       },
       cache: "no-store",
+      signal: createRequestTimeoutSignal(),
     },
   );
 
@@ -130,16 +132,17 @@ export const PRODUCT_LIST_PAGE_SIZE = 20;
 export const searchProducts = async (
   query: string,
   lang: string,
-  pageNumber = 1,
+  pageNumber = 0,
   size = PRODUCT_LIST_PAGE_SIZE,
 ): Promise<PageResponse<ProductListDeliveryResponse> | null> => {
-  const pageIndex = Math.max(pageNumber, 1) - 1;
+  const pageIndex = Math.max(pageNumber, 0);
   const response = await fetch(buildProductSearchUrl(query, lang, pageIndex, size), {
     headers: {
       ...(await buildJsonHeaders()),
       "Accept-Language": lang,
     },
     cache: "no-store",
+    signal: createRequestTimeoutSignal(),
   });
 
   const payload = (await response.json()) as ApiResponse<

@@ -19,16 +19,8 @@ export const buildForwardHeaders = (
     }
   }
 
-  const subdomain = request.headers.get("x-tenant-subdomain");
-  const tenantId = request.headers.get("x-tenant-id");
-  if (subdomain) {
-    headers.set("X-Tenant-Subdomain", subdomain);
-  } else if (tenantId) {
-    headers.set("X-Tenant-ID", tenantId);
-  } else {
-    for (const [name, value] of Object.entries(getTenantHeaders())) {
-      headers.set(name, value);
-    }
+  for (const [name, value] of Object.entries(getTenantHeaders())) {
+    headers.set(name, value);
   }
 
   return headers;

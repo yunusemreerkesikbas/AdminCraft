@@ -37,7 +37,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   line-height: 1.6;
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizelegibility;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: rgba(53, 95, 78, 0.18);
 }
@@ -194,7 +194,7 @@ a {
   align-items: center;
   justify-content: center;
   margin-left: 0.5rem;
-  border: 1px solid currentColor;
+  border: 1px solid currentcolor;
   color: var(--foreground);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
@@ -811,6 +811,156 @@ a {
   padding-top: 1rem;
 }
 
+.account-status-panel,
+.account-loading,
+.account-auth-panel,
+.account-profile-panel,
+.account-teaser {
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.account-status-panel {
+  display: grid;
+  min-height: 18rem;
+  align-content: end;
+  gap: 0.75rem;
+}
+
+.account-auth-grid,
+.account-dashboard,
+.account-form,
+.account-profile-panel,
+.account-summary,
+.account-teaser-grid,
+.account-teaser {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-auth-panel {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.account-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.account-tab {
+  min-height: 44px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.account-tab:last-child {
+  border-right: 0;
+}
+
+.account-tab[aria-selected="true"] {
+  background: var(--foreground);
+  color: var(--surface);
+}
+
+.account-form__split {
+  display: grid;
+  gap: 1rem;
+}
+
+.account-field {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.account-field input {
+  min-height: 44px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  padding: 0.65rem 0.8rem;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.account-field input:focus {
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 3px rgba(53, 95, 78, 0.12);
+}
+
+.account-checkbox {
+  display: grid;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.account-checkbox input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  accent-color: var(--accent);
+}
+
+.account-form-error {
+  border: 1px solid rgba(140, 47, 47, 0.34);
+  background: rgba(140, 47, 47, 0.08);
+  color: #7c2d2d;
+  margin: 0;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.account-loading {
+  display: grid;
+  min-height: 10rem;
+  align-content: center;
+  gap: 1rem;
+}
+
+.account-summary {
+  margin: 0;
+}
+
+.account-summary div {
+  display: grid;
+  gap: 0.25rem;
+  border-top: 1px solid var(--border);
+  padding-block: 0.85rem;
+}
+
+.account-summary dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 680;
+  text-transform: uppercase;
+}
+
+.account-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 620;
+}
+
+.account-teaser {
+  opacity: 0.78;
+}
+
 .receipt-row {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -906,6 +1056,16 @@ a {
 
   .cart-line {
     grid-template-columns: minmax(0, 1fr) minmax(10rem, auto);
+  }
+
+  .account-auth-grid,
+  .account-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-form__split,
+  .account-teaser-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .capability-item {

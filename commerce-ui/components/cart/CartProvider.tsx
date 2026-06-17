@@ -19,6 +19,7 @@ import {
   type CommerceCartClient,
 } from "@/lib/commerce/cart/cart-client";
 import type { CartResponse } from "@/lib/commerce/cart/types";
+import { getCustomerAccessToken } from "@/lib/commerce/customer/customer-token-memory";
 
 type CartContextValue = {
   cart: CartResponse | null;
@@ -30,6 +31,7 @@ type CartContextValue = {
   updateQuantity: (itemUid: string, quantity: number) => Promise<void>;
   removeItem: (itemUid: string) => Promise<void>;
   clearCart: () => Promise<void>;
+  replaceCart: (cart: CartResponse | null) => void;
 };
 
 type CartProviderProps = {
@@ -61,13 +63,27 @@ export function CartProvider({
         getCartToken: getStoredCartToken,
         setCartToken: storeCartToken,
         clearCartToken: clearStoredCartToken,
+        getAccessToken: getCustomerAccessToken,
       }),
     [apiBaseUrl, lang, tenantHeaders],
   );
 
+  const applyCartState = useCallback((nextCart: CartResponse | null) => {
+    if (nextCart?.cartToken) {
+      storeCartToken(nextCart.cartToken);
+    } else if (!nextCart || nextCart.cartToken === null) {
+      clearStoredCartToken();
+    }
+
+    setCart(nextCart);
+    setError(null);
+    setIsLoading(false);
+  }, []);
+
   const refresh = useCallback(async () => {
     const cartToken = getStoredCartToken();
-    if (!cartToken) {
+    const accessToken = getCustomerAccessToken();
+    if (!cartToken && !accessToken) {
       setCart(null);
       setError(null);
       setIsLoading(false);
@@ -78,13 +94,13 @@ export function CartProvider({
     setError(null);
     try {
       const nextCart = await client.getCart();
-      setCart(nextCart);
+      applyCartState(nextCart);
     } catch (err) {
       setError(err instanceof Error ? err.message : "");
     } finally {
       setIsLoading(false);
     }
-  }, [client]);
+  }, [applyCartState, client]);
 
   const runMutation = useCallback(
     async (mutation: () => Promise<CartResponse | null | void>): Promise<boolean> => {
@@ -92,7 +108,9 @@ export function CartProvider({
       setError(null);
       try {
         const nextCart = await mutation();
-        setCart(nextCart ?? null);
+        if (nextCart !== undefined) {
+          applyCartState(nextCart);
+        }
         return true;
       } catch (err) {
         setError(err instanceof Error ? err.message : "");
@@ -101,7 +119,7 @@ export function CartProvider({
         setIsMutating(false);
       }
     },
-    [],
+    [applyCartState],
   );
 
   const addCartItem = useCallback(
@@ -131,6 +149,13 @@ export function CartProvider({
     });
   }, [client, runMutation]);
 
+  const replaceCart = useCallback(
+    (nextCart: CartResponse | null) => {
+      applyCartState(nextCart);
+    },
+    [applyCartState],
+  );
+
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -146,6 +171,7 @@ export function CartProvider({
       updateQuantity,
       removeItem,
       clearCart,
+      replaceCart,
     }),
     [
       cart,
@@ -157,6 +183,7 @@ export function CartProvider({
       updateQuantity,
       removeItem,
       clearCart,
+      replaceCart,
     ],
   );
 
