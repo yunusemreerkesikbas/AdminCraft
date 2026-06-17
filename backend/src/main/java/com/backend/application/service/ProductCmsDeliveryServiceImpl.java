@@ -63,7 +63,7 @@ public class ProductCmsDeliveryServiceImpl implements ProductCmsDeliveryService 
         return categoryRepository.findByUid(categoryUid)
                 .map(category -> {
                     Page<Product> products = productRepository.findPublishedByCategoryId(category.getId(), pageable);
-                    return products.map(p -> ProductListDeliveryResponse.from(p, language));
+                    return products.map(p -> ProductListDeliveryResponse.from(p, language, tenantContext.getCurrency()));
                 })
                 .orElse(Page.empty());
     }
@@ -74,7 +74,7 @@ public class ProductCmsDeliveryServiceImpl implements ProductCmsDeliveryService 
         log.debug("CMS Delivery: Searching products query={}, lang={}", query, language);
 
         Page<Product> products = productRepository.searchPublished(query, pageable);
-        return products.map(p -> ProductListDeliveryResponse.from(p, language));
+        return products.map(p -> ProductListDeliveryResponse.from(p, language, tenantContext.getCurrency()));
     }
 
     @Override

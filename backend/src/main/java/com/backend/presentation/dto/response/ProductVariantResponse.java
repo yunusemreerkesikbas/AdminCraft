@@ -6,7 +6,7 @@ import java.util.List;
 import com.backend.domain.entity.ProductVariant;
 import com.backend.domain.entity.ProductVariantOptionValue;
 import com.backend.domain.enums.Currency;
-import com.backend.presentation.dto.PriceResponse;
+import com.backend.shared.common.PriceResponse;
 import com.backend.shared.util.ResponseValueFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 

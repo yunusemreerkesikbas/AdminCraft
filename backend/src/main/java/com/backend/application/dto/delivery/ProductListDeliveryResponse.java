@@ -2,7 +2,9 @@ package com.backend.application.dto.delivery;
 
 import com.backend.domain.entity.Product;
 import com.backend.domain.entity.ProductI18n;
+import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
+import com.backend.shared.common.PriceResponse;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,10 +18,15 @@ public class ProductListDeliveryResponse {
     private String name;
     private String shortDescription;
     private BigDecimal basePrice;
+    private PriceResponse price;
     private String thumbnailUrl;
     private String productTypeName;
 
     public static ProductListDeliveryResponse from(Product product, Language language) {
+        return from(product, language, Currency.getDefault());
+    }
+
+    public static ProductListDeliveryResponse from(Product product, Language language, Currency currency) {
         if (product == null) return null;
 
         String name = null, shortDesc = null;
@@ -46,6 +53,7 @@ public class ProductListDeliveryResponse {
                 .name(name != null ? name : product.getSku())
                 .shortDescription(shortDesc)
                 .basePrice(product.getBasePrice())
+                .price(PriceResponse.from(product.getBasePrice(), currency))
                 .thumbnailUrl(thumbnailUrl)
                 .productTypeName(product.getProductType() != null ? product.getProductType().getName() : null)
                 .build();

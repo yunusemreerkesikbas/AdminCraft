@@ -1,0 +1,219 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { useCart } from "@/components/cart/CartProvider";
+import {
+  clearStoredCartToken,
+  getStoredCartToken,
+  storeCartToken,
+} from "@/lib/commerce/cart/cart-token-store";
+import { createCommerceCustomerClient } from "@/lib/commerce/customer/customer-client";
+import {
+  clearCustomerAccessToken,
+  setCustomerAccessToken,
+} from "@/lib/commerce/customer/customer-token-memory";
+import type {
+  CommerceCustomer,
+  CommerceCustomerAuthResponse,
+  CommerceCustomerLoginRequest,
+  CommerceCustomerRegisterRequest,
+} from "@/lib/commerce/customer/types";
+
+type CustomerSessionContextValue = {
+  customer: CommerceCustomer | null;
+  isAuthenticated: boolean;
+  isRestoring: boolean;
+  isMutating: boolean;
+  error: string | null;
+  login: (request: CommerceCustomerLoginRequest) => Promise<boolean>;
+  register: (request: CommerceCustomerRegisterRequest) => Promise<boolean>;
+  logout: () => Promise<void>;
+  refreshSession: () => Promise<boolean>;
+};
+
+type CustomerSessionProviderProps = {
+  apiBaseUrl: string;
+  lang: string;
+  tenantHeaders: Record<string, string>;
+  children: ReactNode;
+};
+
+const CustomerSessionContext =
+  createContext<CustomerSessionContextValue | null>(null);
+
+export function CustomerSessionProvider({
+  apiBaseUrl,
+  lang,
+  tenantHeaders,
+  children,
+}: CustomerSessionProviderProps) {
+  const { refresh: refreshCart, replaceCart } = useCart();
+  const [customer, setCustomer] = useState<CommerceCustomer | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isRestoring, setIsRestoring] = useState(true);
+  const [isMutating, setIsMutating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const didRestore = useRef(false);
+
+  const client = useMemo(
+    () =>
+      createCommerceCustomerClient({
+        apiBaseUrl,
+        lang,
+        tenantHeaders,
+        getCartToken: getStoredCartToken,
+        setCartToken: storeCartToken,
+        clearCartToken: clearStoredCartToken,
+      }),
+    [apiBaseUrl, lang, tenantHeaders],
+  );
+
+  const applyAuthResponse = useCallback(
+    async (response: CommerceCustomerAuthResponse) => {
+      setAccessToken(response.accessToken);
+      setCustomerAccessToken(response.accessToken);
+      setCustomer(response.customer);
+
+      if (response.cart) {
+        replaceCart(response.cart);
+        return;
+      }
+
+      await refreshCart();
+    },
+    [refreshCart, replaceCart],
+  );
+
+  const clearSession = useCallback(() => {
+    setAccessToken(null);
+    clearCustomerAccessToken();
+    setCustomer(null);
+  }, []);
+
+  const refreshSession = useCallback(async (): Promise<boolean> => {
+    setError(null);
+    try {
+      const response = await client.refresh();
+      if (!response) {
+        clearSession();
+        return false;
+      }
+
+      await applyAuthResponse(response);
+      return true;
+    } catch {
+      clearSession();
+      return false;
+    }
+  }, [applyAuthResponse, clearSession, client]);
+
+  const runAuthMutation = useCallback(
+    async (
+      mutation: () => Promise<CommerceCustomerAuthResponse>,
+    ): Promise<boolean> => {
+      setIsMutating(true);
+      setError(null);
+      try {
+        const response = await mutation();
+        await applyAuthResponse(response);
+        return true;
+      } catch (err) {
+        clearSession();
+        setError(err instanceof Error ? err.message : "");
+        return false;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [applyAuthResponse, clearSession],
+  );
+
+  const login = useCallback(
+    (request: CommerceCustomerLoginRequest) =>
+      runAuthMutation(() => client.login(request)),
+    [client, runAuthMutation],
+  );
+
+  const register = useCallback(
+    (request: CommerceCustomerRegisterRequest) =>
+      runAuthMutation(() => client.register(request)),
+    [client, runAuthMutation],
+  );
+
+  const logout = useCallback(async () => {
+    setIsMutating(true);
+    setError(null);
+    try {
+      await client.logout();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "");
+    } finally {
+      clearSession();
+      replaceCart(null);
+      setIsMutating(false);
+    }
+  }, [clearSession, client, replaceCart]);
+
+  useEffect(() => {
+    if (didRestore.current) {
+      return;
+    }
+
+    didRestore.current = true;
+    setIsRestoring(true);
+    void refreshSession().finally(() => {
+      setIsRestoring(false);
+    });
+  }, [refreshSession]);
+
+  const value = useMemo<CustomerSessionContextValue>(
+    () => ({
+      customer,
+      isAuthenticated: Boolean(accessToken && customer),
+      isRestoring,
+      isMutating,
+      error,
+      login,
+      register,
+      logout,
+      refreshSession,
+    }),
+    [
+      customer,
+      accessToken,
+      isRestoring,
+      isMutating,
+      error,
+      login,
+      register,
+      logout,
+      refreshSession,
+    ],
+  );
+
+  return (
+    <CustomerSessionContext.Provider value={value}>
+      {children}
+    </CustomerSessionContext.Provider>
+  );
+}
+
+export const useCustomerSession = (): CustomerSessionContextValue => {
+  const context = useContext(CustomerSessionContext);
+  if (!context) {
+    throw new Error(
+      "useCustomerSession must be used within CustomerSessionProvider.",
+    );
+  }
+
+  return context;
+};
