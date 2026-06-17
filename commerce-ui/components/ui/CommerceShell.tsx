@@ -13,7 +13,7 @@ export async function CommerceShell({ lang, children }: CommerceShellProps) {
   const shell = await getTranslations("Shell");
 
   const links = [
-    { href: withLocalePath(lang), label: navigation("home") },
+    { href: withLocalePath(lang, "products"), label: navigation("home") },
     { href: withLocalePath(lang, "checkout"), label: navigation("checkout") },
     { href: withLocalePath(lang, "account/orders"), label: navigation("orders") },
   ];

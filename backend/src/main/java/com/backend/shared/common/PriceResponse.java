@@ -1,7 +1,7 @@
-package com.backend.presentation.dto;
+package com.backend.shared.common;
 
 import com.backend.domain.enums.Currency;
-import com.backend.infrastructure.util.PriceFormatterUtil;
+import com.backend.shared.util.PriceFormatterUtil;
 
 import java.math.BigDecimal;
 

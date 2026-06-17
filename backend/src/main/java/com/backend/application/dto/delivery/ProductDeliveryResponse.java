@@ -15,7 +15,7 @@ import com.backend.domain.entity.ProductVariantOptionValue;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.PriceResponse;
+import com.backend.shared.common.PriceResponse;
 
 import lombok.Builder;
 import lombok.Data;

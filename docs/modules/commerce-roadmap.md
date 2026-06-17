@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, read-only commerce admin operasyon görünürlüğü ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product detail add-to-cart foundation hazırlandı. Full storefront commerce akışları, mutable commerce admin operasyonları, full legal snapshot rendering, iptal/iade, fulfillment ve transactional bildirimler henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, read-only commerce admin operasyon görünürlüğü ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart foundation hazırlandı. Full storefront commerce akışları, mutable commerce admin operasyonları, full legal snapshot rendering, iptal/iade, fulfillment ve transactional bildirimler henüz yapılmadı.
 
 ## 1. Konumlandırma
 
@@ -413,11 +413,10 @@ Hazır:
 - `/[lang]` locale routing, tenant header foundation, minimal app shell ve skeleton route'lar
 - Quiet Retail minimal design skeleton
 - Typed cart API client, `localStorage` cart token handling, cart provider, header item count badge ve `/[lang]/cart` read/mutation wiring
-- Product detail delivery client, `/[lang]/products/[productUid]` real product render, variant/quantity selection ve real variant add-to-cart
+- Product listing/search route, Product detail delivery client, `/[lang]/products/[productUid]` real product render, variant/quantity selection ve real variant add-to-cart
 
 Kalan:
 
-- Ürün listeleme/search API entegrasyonu
 - Customer auth/account UI entegrasyonu
 - Checkout, payment return ve sipariş geçmişi UI entegrasyonu
 - Tenant/theme final redesign

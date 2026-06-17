@@ -14,10 +14,10 @@ Implemented in this slice:
 - clean Tailwind v4 global CSS
 - typed cart API client, localStorage cart token handling, cart provider, cart page wiring, and header cart badge
 - product detail delivery client, real product detail rendering, variant/quantity selection, and add-to-cart from real variants
+- product listing/search route with paginated public delivery integration and detail links
 
 Not implemented yet:
 
-- product listing/search API integration
 - checkout, payment, and customer account state
 - final commerce visual design
 - legal snapshot rendering

@@ -68,3 +68,25 @@ export type ProductDeliveryResponse = {
   gallery: ResponsiveMediaDelivery[];
   variants: VariantDelivery[];
 };
+
+export type ProductListDeliveryResponse = {
+  uid: string;
+  sku: string;
+  name: string;
+  shortDescription: string | null;
+  basePrice: number | string | null;
+  price: PriceResponse;
+  thumbnailUrl: string | null;
+  productTypeName: string | null;
+};
+
+export type PageResponse<T> = {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  numberOfElements: number;
+  first: boolean;
+  last: boolean;
+};

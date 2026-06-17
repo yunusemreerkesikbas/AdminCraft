@@ -1,4 +1,4 @@
-package com.backend.infrastructure.util;
+package com.backend.shared.util;
 
 import com.backend.domain.enums.Currency;
 

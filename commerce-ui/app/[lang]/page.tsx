@@ -40,9 +40,9 @@ export default async function HomePage({
       description={translate("description")}
       actions={
         <>
-          <ActionLink href={withLocalePath(lang, "cart")} label={translate("primaryAction")} />
+          <ActionLink href={withLocalePath(lang, "products")} label={translate("primaryAction")} />
           <ActionLink
-            href={withLocalePath(lang, "account/orders")}
+            href={withLocalePath(lang, "cart")}
             label={translate("secondaryAction")}
             variant="secondary"
           />

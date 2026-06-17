@@ -5,7 +5,7 @@ import com.backend.domain.entity.ProductI18n;
 import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
-import com.backend.presentation.dto.PriceResponse;
+import com.backend.shared.common.PriceResponse;
 import com.backend.shared.util.ResponseValueFilter;
 
 import java.time.LocalDateTime;
