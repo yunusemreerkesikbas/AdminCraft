@@ -2,9 +2,9 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import {
   ProductDetailView,
-  type ProductDetailCopy,
   type ProductDetailViewProduct,
 } from "@/components/product/ProductDetailView";
+import { createProductDetailModel } from "@/components/product/product-detail-model";
 import { getProductByUid } from "@/lib/commerce/product/product-client";
 import type {
   ProductDeliveryResponse,
@@ -74,38 +74,12 @@ export default async function ProductPage({
     notFound();
   }
 
-  const copy: ProductDetailCopy = {
-    eyebrow: translate("eyebrow"),
-    secondaryAction: translate("secondaryAction"),
-    visualLabel: translate("visualLabel"),
-    statusMedia: translate("statusMedia"),
-    statusVariant: translate("statusVariant"),
-    statusStock: translate("statusStock"),
-    controlsTitle: translate("controlsTitle"),
-    skuLabel: translate("skuLabel"),
-    categoryLabel: translate("categoryLabel"),
-    variantLabel: translate("variantLabel"),
-    quantityLabel: translate("quantityLabel"),
-    decreaseAction: translate("decreaseAction"),
-    increaseAction: translate("increaseAction"),
-    addToCartAction: translate("addToCartAction"),
-    addingToCartAction: translate("addingToCartAction"),
-    addedToCartTitle: translate("addedToCartTitle"),
-    addedToCartDescription: translate("addedToCartDescription"),
-    viewCartAction: translate("viewCartAction"),
-    unavailableTitle: translate("unavailableTitle"),
-    unavailableDescription: translate("unavailableDescription"),
-    outOfStockLabel: translate("outOfStockLabel"),
-    stockLabel: translate("stockLabel"),
-    priceLabel: translate("priceLabel"),
-    errorTitle: translate("errorTitle"),
-    errorDescription: translate("errorDescription"),
-  };
+  const model = createProductDetailModel(translate);
 
   return (
     <ProductDetailView
       product={toProductDetailViewProduct(product)}
-      copy={copy}
+      model={model}
       storeHref={withLocalePath(lang)}
       cartHref={withLocalePath(lang, "cart")}
     />

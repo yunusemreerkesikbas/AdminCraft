@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, type FormEvent } from "react";
-import { AddressBookPanel, type AddressBookCopy } from "@/components/customer/AddressBookPanel";
+import { AddressBookPanel } from "@/components/customer/AddressBookPanel";
 import { PageShell } from "@/components/ui/PageShell";
 import { ReceiptFrame } from "@/components/ui/StorefrontPrimitives";
 import { createCommerceCheckoutClient } from "@/lib/commerce/checkout/checkout-client";
@@ -9,69 +9,10 @@ import type { CheckoutResponse } from "@/lib/commerce/checkout/types";
 import type { CommerceCustomerAddress } from "@/lib/commerce/customer/types";
 import { createCommercePaymentClient } from "@/lib/commerce/payment/payment-client";
 import { useCustomerSession } from "@/components/customer/CustomerSessionProvider";
-
-export type CheckoutAuthCopy = {
-  title: string;
-  description: string;
-  loginTab: string;
-  registerTab: string;
-  emailLabel: string;
-  passwordLabel: string;
-  firstNameLabel: string;
-  lastNameLabel: string;
-  phoneLabel: string;
-  rememberMeLabel: string;
-  termsAcceptedLabel: string;
-  privacyAcceptedLabel: string;
-  loginAction: string;
-  registerAction: string;
-  submittingLabel: string;
-};
-
-export type CheckoutCopy = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  authenticatedDescription: string;
-  secondaryAction: string;
-  summaryTitle: string;
-  summaryNote: string;
-  rowStatus: string;
-  rowShipping: string;
-  rowSubtotal: string;
-  rowVat: string;
-  rowShippingTotal: string;
-  shippingMethodStandardLabel: string;
-  shippingMethodFallback: string;
-  totalLabel: string;
-  addressStepTitle: string;
-  addressStepDescription: string;
-  deliveryAddressLabel: string;
-  billingSameAsDeliveryLabel: string;
-  billingAddressLabel: string;
-  noAddressOption: string;
-  startAction: string;
-  updateAction: string;
-  loadingLabel: string;
-  errorFallback: string;
-  validationTitle: string;
-  validLabel: string;
-  invalidLabel: string;
-  cartChangedLabel: string;
-  priceChangedLabel: string;
-  stockChangedLabel: string;
-  warningKeysLabel: string;
-  paymentAction: string;
-  paymentDisabled: string;
-  paymentPreparingLabel: string;
-  itemSummaryTitle: string;
-  itemFallback: string;
-  auth: CheckoutAuthCopy;
-  addressBook: AddressBookCopy;
-};
+import type { CheckoutModel } from "./checkout-model";
 
 type CheckoutViewProps = {
-  copy: CheckoutCopy;
+  model: CheckoutModel;
   apiBaseUrl: string;
   lang: string;
   tenantHeaders: Record<string, string>;
@@ -128,17 +69,17 @@ const addressLabel = (address: CommerceCustomerAddress): string =>
 
 const shippingMethodLabel = (
   methodNameKey: string | null | undefined,
-  copy: CheckoutCopy,
+  model: CheckoutModel,
 ): string => {
   if (methodNameKey === "commerce.shipping.method.standard") {
-    return copy.shippingMethodStandardLabel;
+    return model.shippingMethodStandardLabel;
   }
 
-  return methodNameKey || copy.shippingMethodFallback;
+  return methodNameKey || model.shippingMethodFallback;
 };
 
 export function CheckoutView({
-  copy,
+  model,
   apiBaseUrl,
   lang,
   tenantHeaders,
@@ -268,23 +209,23 @@ export function CheckoutView({
   const currencyIso = checkout?.totals.currencyIso;
   const summaryRows = [
     {
-      label: copy.rowStatus,
-      value: checkout?.status ?? copy.summaryNote,
+      label: model.rowStatus,
+      value: checkout?.status ?? model.summaryNote,
     },
     {
-      label: copy.rowShipping,
-      value: shippingMethodLabel(checkout?.shipping.methodNameKey, copy),
+      label: model.rowShipping,
+      value: shippingMethodLabel(checkout?.shipping.methodNameKey, model),
     },
     {
-      label: copy.rowSubtotal,
+      label: model.rowSubtotal,
       value: formatMoney(lang, currencyIso, checkout?.totals.subtotal),
     },
     {
-      label: copy.rowVat,
+      label: model.rowVat,
       value: formatMoney(lang, currencyIso, checkout?.totals.vatTotal),
     },
     {
-      label: copy.rowShippingTotal,
+      label: model.rowShippingTotal,
       value: formatMoney(lang, currencyIso, checkout?.totals.shippingTotal),
     },
   ];
@@ -305,10 +246,10 @@ export function CheckoutView({
 
   return (
     <PageShell
-      eyebrow={copy.eyebrow}
-      title={copy.title}
+      eyebrow={model.eyebrow}
+      title={model.title}
       description={
-        isAuthenticated ? copy.authenticatedDescription : copy.description
+        isAuthenticated ? model.authenticatedDescription : model.description
       }
       actions={
         <>
@@ -319,38 +260,38 @@ export function CheckoutView({
             disabled={!canStartPayment}
           >
             {isPaymentMutating
-              ? copy.paymentPreparingLabel
+              ? model.paymentPreparingLabel
               : canStartPayment
-                ? copy.paymentAction
-                : copy.paymentDisabled}
+                ? model.paymentAction
+                : model.paymentDisabled}
           </button>
           <a
             href={cartHref}
             className="commerce-action commerce-action--secondary"
           >
-            {copy.secondaryAction}
+            {model.secondaryAction}
           </a>
         </>
       }
       visual={
         <ReceiptFrame
-          title={copy.summaryTitle}
-          note={checkout ? undefined : copy.summaryNote}
+          title={model.summaryTitle}
+          note={checkout ? undefined : model.summaryNote}
           rows={summaryRows}
-          totalLabel={copy.totalLabel}
+          totalLabel={model.totalLabel}
           totalValue={formatMoney(lang, currencyIso, checkout?.totals.total)}
         />
       }
     >
       {isRestoring ? (
         <section className="surface-panel checkout-panel">
-          <p className="frame-note">{copy.loadingLabel}</p>
+          <p className="frame-note">{model.loadingLabel}</p>
         </section>
       ) : !isAuthenticated ? (
         <CheckoutAuthGate
-          copy={copy.auth}
+          model={model.auth}
           error={sessionError}
-          errorFallback={copy.errorFallback}
+          errorFallback={model.errorFallback}
           isMutating={isMutating}
           onLogin={login}
           onRegister={register}
@@ -359,11 +300,11 @@ export function CheckoutView({
         <section className="checkout-grid">
           <div className="checkout-main">
             <section className="surface-panel checkout-panel">
-              <h2 className="frame-title">{copy.addressStepTitle}</h2>
-              <p className="frame-note">{copy.addressStepDescription}</p>
+              <h2 className="frame-title">{model.addressStepTitle}</h2>
+              <p className="frame-note">{model.addressStepDescription}</p>
               <div className="checkout-address-controls">
                 <label className="account-field" htmlFor="delivery-address">
-                  <span>{copy.deliveryAddressLabel}</span>
+                  <span>{model.deliveryAddressLabel}</span>
                   <select
                     id="delivery-address"
                     value={deliveryAddressUid}
@@ -372,7 +313,7 @@ export function CheckoutView({
                       markCheckoutDirty();
                     }}
                   >
-                    <option value="">{copy.noAddressOption}</option>
+                    <option value="">{model.noAddressOption}</option>
                     {addresses.map((address) => (
                       <option key={address.uid} value={address.uid}>
                         {addressLabel(address)}
@@ -389,11 +330,11 @@ export function CheckoutView({
                       markCheckoutDirty();
                     }}
                   />
-                  <span>{copy.billingSameAsDeliveryLabel}</span>
+                  <span>{model.billingSameAsDeliveryLabel}</span>
                 </label>
                 {!billingSameAsDelivery ? (
                   <label className="account-field" htmlFor="billing-address">
-                    <span>{copy.billingAddressLabel}</span>
+                    <span>{model.billingAddressLabel}</span>
                     <select
                       id="billing-address"
                       value={billingAddressUid}
@@ -402,7 +343,7 @@ export function CheckoutView({
                         markCheckoutDirty();
                       }}
                     >
-                      <option value="">{copy.noAddressOption}</option>
+                      <option value="">{model.noAddressOption}</option>
                       {addresses.map((address) => (
                         <option key={address.uid} value={address.uid}>
                           {addressLabel(address)}
@@ -417,7 +358,7 @@ export function CheckoutView({
                   {checkoutError ||
                     paymentError ||
                     sessionError ||
-                    copy.errorFallback}
+                    model.errorFallback}
                 </p>
               ) : null}
               <button
@@ -432,20 +373,20 @@ export function CheckoutView({
                 }
               >
                 {isCheckoutMutating
-                  ? copy.loadingLabel
+                  ? model.loadingLabel
                   : checkout
-                    ? copy.updateAction
-                    : copy.startAction}
+                    ? model.updateAction
+                    : model.startAction}
               </button>
             </section>
 
             <AddressBookPanel
-              copy={copy.addressBook}
+              model={model.addressBook}
               onAddressesChange={syncAddresses}
             />
           </div>
 
-          <CheckoutSnapshot copy={copy} checkout={checkout} lang={lang} />
+          <CheckoutSnapshot model={model} checkout={checkout} lang={lang} />
         </section>
       )}
     </PageShell>
@@ -453,14 +394,14 @@ export function CheckoutView({
 }
 
 function CheckoutAuthGate({
-  copy,
+  model,
   error,
   errorFallback,
   isMutating,
   onLogin,
   onRegister,
 }: {
-  copy: CheckoutAuthCopy;
+  model: CheckoutModel["auth"];
   error: string | null;
   errorFallback: string;
   isMutating: boolean;
@@ -488,9 +429,9 @@ function CheckoutAuthGate({
 
   return (
     <section className="surface-panel account-auth-panel">
-      <h2 className="frame-title">{copy.title}</h2>
-      <p className="frame-note">{copy.description}</p>
-      <div className="account-tabs" role="tablist" aria-label={copy.title}>
+      <h2 className="frame-title">{model.title}</h2>
+      <p className="frame-note">{model.description}</p>
+      <div className="account-tabs" role="tablist" aria-label={model.title}>
         <button
           type="button"
           role="tab"
@@ -498,7 +439,7 @@ function CheckoutAuthGate({
           className="account-tab"
           onClick={() => setMode("login")}
         >
-          {copy.loginTab}
+          {model.loginTab}
         </button>
         <button
           type="button"
@@ -507,7 +448,7 @@ function CheckoutAuthGate({
           className="account-tab"
           onClick={() => setMode("register")}
         >
-          {copy.registerTab}
+          {model.registerTab}
         </button>
       </div>
 
@@ -521,7 +462,7 @@ function CheckoutAuthGate({
         <form className="account-form" onSubmit={submitLogin}>
           <CheckoutAuthField
             id="checkout-login-email"
-            label={copy.emailLabel}
+            label={model.emailLabel}
             type="email"
             value={loginForm.email}
             onChange={(email) =>
@@ -530,7 +471,7 @@ function CheckoutAuthGate({
           />
           <CheckoutAuthField
             id="checkout-login-password"
-            label={copy.passwordLabel}
+            label={model.passwordLabel}
             type="password"
             value={loginForm.password}
             onChange={(password) =>
@@ -538,14 +479,14 @@ function CheckoutAuthGate({
             }
           />
           <CheckoutAuthCheckbox
-            label={copy.rememberMeLabel}
+            label={model.rememberMeLabel}
             checked={loginForm.rememberMe}
             onChange={(rememberMe) =>
               setLoginForm((current) => ({ ...current, rememberMe }))
             }
           />
           <button type="submit" className="commerce-action" disabled={isMutating}>
-            {isMutating ? copy.submittingLabel : copy.loginAction}
+            {isMutating ? model.submittingLabel : model.loginAction}
           </button>
         </form>
       ) : (
@@ -553,7 +494,7 @@ function CheckoutAuthGate({
           <div className="account-form__split">
             <CheckoutAuthField
               id="checkout-register-first-name"
-              label={copy.firstNameLabel}
+              label={model.firstNameLabel}
               value={registerForm.firstName}
               onChange={(firstName) =>
                 setRegisterForm((current) => ({ ...current, firstName }))
@@ -561,7 +502,7 @@ function CheckoutAuthGate({
             />
             <CheckoutAuthField
               id="checkout-register-last-name"
-              label={copy.lastNameLabel}
+              label={model.lastNameLabel}
               value={registerForm.lastName}
               onChange={(lastName) =>
                 setRegisterForm((current) => ({ ...current, lastName }))
@@ -570,7 +511,7 @@ function CheckoutAuthGate({
           </div>
           <CheckoutAuthField
             id="checkout-register-email"
-            label={copy.emailLabel}
+            label={model.emailLabel}
             type="email"
             value={registerForm.email}
             onChange={(email) =>
@@ -579,7 +520,7 @@ function CheckoutAuthGate({
           />
           <CheckoutAuthField
             id="checkout-register-phone"
-            label={copy.phoneLabel}
+            label={model.phoneLabel}
             type="tel"
             value={registerForm.phone}
             onChange={(phone) =>
@@ -588,7 +529,7 @@ function CheckoutAuthGate({
           />
           <CheckoutAuthField
             id="checkout-register-password"
-            label={copy.passwordLabel}
+            label={model.passwordLabel}
             type="password"
             value={registerForm.password}
             onChange={(password) =>
@@ -596,7 +537,7 @@ function CheckoutAuthGate({
             }
           />
           <CheckoutAuthCheckbox
-            label={copy.termsAcceptedLabel}
+            label={model.termsAcceptedLabel}
             checked={registerForm.termsAccepted}
             required
             onChange={(termsAccepted) =>
@@ -604,7 +545,7 @@ function CheckoutAuthGate({
             }
           />
           <CheckoutAuthCheckbox
-            label={copy.privacyAcceptedLabel}
+            label={model.privacyAcceptedLabel}
             checked={registerForm.privacyAccepted}
             required
             onChange={(privacyAccepted) =>
@@ -612,14 +553,14 @@ function CheckoutAuthGate({
             }
           />
           <CheckoutAuthCheckbox
-            label={copy.rememberMeLabel}
+            label={model.rememberMeLabel}
             checked={registerForm.rememberMe}
             onChange={(rememberMe) =>
               setRegisterForm((current) => ({ ...current, rememberMe }))
             }
           />
           <button type="submit" className="commerce-action" disabled={isMutating}>
-            {isMutating ? copy.submittingLabel : copy.registerAction}
+            {isMutating ? model.submittingLabel : model.registerAction}
           </button>
         </form>
       )}
@@ -628,52 +569,52 @@ function CheckoutAuthGate({
 }
 
 function CheckoutSnapshot({
-  copy,
+  model,
   checkout,
   lang,
 }: {
-  copy: CheckoutCopy;
+  model: CheckoutModel;
   checkout: CheckoutResponse | null;
   lang: string;
 }) {
   if (!checkout) {
     return (
       <aside className="surface-panel checkout-panel">
-        <h2 className="frame-title">{copy.itemSummaryTitle}</h2>
-        <p className="frame-note">{copy.summaryNote}</p>
+        <h2 className="frame-title">{model.itemSummaryTitle}</h2>
+        <p className="frame-note">{model.summaryNote}</p>
       </aside>
     );
   }
 
   return (
     <aside className="surface-panel checkout-panel checkout-snapshot">
-      <h2 className="frame-title">{copy.validationTitle}</h2>
+      <h2 className="frame-title">{model.validationTitle}</h2>
       <div className="checkout-validation">
         <span className="quiet-chip">
-          {checkout.validation.valid ? copy.validLabel : copy.invalidLabel}
+          {checkout.validation.valid ? model.validLabel : model.invalidLabel}
         </span>
         {checkout.validation.cartChanged ? (
-          <span className="quiet-chip">{copy.cartChangedLabel}</span>
+          <span className="quiet-chip">{model.cartChangedLabel}</span>
         ) : null}
         {checkout.validation.priceChanged ? (
-          <span className="quiet-chip">{copy.priceChangedLabel}</span>
+          <span className="quiet-chip">{model.priceChangedLabel}</span>
         ) : null}
         {checkout.validation.stockChanged ? (
-          <span className="quiet-chip">{copy.stockChangedLabel}</span>
+          <span className="quiet-chip">{model.stockChangedLabel}</span>
         ) : null}
       </div>
       {checkout.validation.warningMessageKeys.length > 0 ? (
         <p className="frame-note">
-          {copy.warningKeysLabel}:{" "}
+          {model.warningKeysLabel}:{" "}
           {checkout.validation.warningMessageKeys.join(", ")}
         </p>
       ) : null}
-      <h3 className="row-title">{copy.itemSummaryTitle}</h3>
+      <h3 className="row-title">{model.itemSummaryTitle}</h3>
       <div className="checkout-items">
         {checkout.items.map((item) => (
           <article key={item.uid} className="checkout-item-row">
             <span>
-              {item.productSku || item.variantSku || item.productUid || copy.itemFallback}
+              {item.productSku || item.variantSku || item.productUid || model.itemFallback}
             </span>
             <strong>
               {item.quantity} x{" "}
@@ -683,7 +624,7 @@ function CheckoutSnapshot({
         ))}
       </div>
       <p className="frame-note">
-        {checkout.validation.valid ? copy.paymentAction : copy.paymentDisabled}
+        {checkout.validation.valid ? model.paymentAction : model.paymentDisabled}
       </p>
     </aside>
   );

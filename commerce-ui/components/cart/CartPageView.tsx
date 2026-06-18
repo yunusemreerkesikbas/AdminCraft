@@ -9,43 +9,10 @@ import {
 } from "@/components/ui/StorefrontPrimitives";
 import { useCart } from "./CartProvider";
 import type { CartItemResponse } from "@/lib/commerce/cart/types";
-
-export type CartPageCopy = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  checkoutDisabled: string;
-  checkoutAction: string;
-  secondaryAction: string;
-  summaryTitle: string;
-  summaryNote: string;
-  rowItems: string;
-  rowShipping: string;
-  rowShippingValue: string;
-  rowDiscount: string;
-  rowDiscountValue: string;
-  totalLabel: string;
-  emptyTitle: string;
-  emptyDescription: string;
-  loadingLabel: string;
-  errorTitle: string;
-  errorDescription: string;
-  retryAction: string;
-  clearAction: string;
-  removeAction: string;
-  decreaseAction: string;
-  increaseAction: string;
-  quantityLabel: string;
-  unitPriceLabel: string;
-  lineTotalLabel: string;
-  priceChangedLabel: string;
-  unavailableLabel: string;
-  stockLabel: string;
-  productFallback: string;
-};
+import type { CartPageModel } from "./cart-page-model";
 
 type CartPageViewProps = {
-  copy: CartPageCopy;
+  model: CartPageModel;
   lang: string;
   storeHref: string;
   checkoutHref: string;
@@ -78,7 +45,7 @@ const displayName = (item: CartItemResponse, fallback: string): string =>
   item.productSku || item.variantSku || item.productUid || fallback;
 
 export function CartPageView({
-  copy,
+  model,
   lang,
   storeHref,
   checkoutHref,
@@ -99,46 +66,46 @@ export function CartPageView({
   const summaryRows = useMemo(
     () => [
       {
-        label: copy.rowItems,
+        label: model.rowItems,
         value: hasItems
           ? String(cart?.totals.itemCount ?? 0)
           : "0",
       },
-      { label: copy.rowShipping, value: copy.rowShippingValue },
-      { label: copy.rowDiscount, value: copy.rowDiscountValue },
+      { label: model.rowShipping, value: model.rowShippingValue },
+      { label: model.rowDiscount, value: model.rowDiscountValue },
     ],
     [
       cart?.totals.itemCount,
-      copy.rowDiscount,
-      copy.rowDiscountValue,
-      copy.rowItems,
-      copy.rowShipping,
-      copy.rowShippingValue,
+      model.rowDiscount,
+      model.rowDiscountValue,
+      model.rowItems,
+      model.rowShipping,
+      model.rowShippingValue,
       hasItems,
     ],
   );
 
   return (
     <PageShell
-      eyebrow={copy.eyebrow}
-      title={copy.title}
-      description={copy.description}
+      eyebrow={model.eyebrow}
+      title={model.title}
+      description={model.description}
       actions={
         <>
           {hasItems && !isLoading && !error ? (
-            <ActionLink href={checkoutHref} label={copy.checkoutAction} />
+            <ActionLink href={checkoutHref} label={model.checkoutAction} />
           ) : (
-            <DisabledAction label={copy.checkoutDisabled} />
+            <DisabledAction label={model.checkoutDisabled} />
           )}
-          <ActionLink href={storeHref} label={copy.secondaryAction} variant="secondary" />
+          <ActionLink href={storeHref} label={model.secondaryAction} variant="secondary" />
         </>
       }
       visual={
         <ReceiptFrame
-          title={copy.summaryTitle}
-          note={hasItems ? undefined : copy.summaryNote}
+          title={model.summaryTitle}
+          note={hasItems ? undefined : model.summaryNote}
           rows={summaryRows}
-          totalLabel={copy.totalLabel}
+          totalLabel={model.totalLabel}
           totalValue={formatMoney(lang, currencyIso, cart?.totals.currentTotal)}
         />
       }
@@ -146,24 +113,24 @@ export function CartPageView({
       <section className="cart-panel surface-panel" aria-live="polite">
         {error ? (
           <div className="cart-status">
-            <h2 className="frame-title">{copy.errorTitle}</h2>
-            <p className="frame-note">{error || copy.errorDescription}</p>
+            <h2 className="frame-title">{model.errorTitle}</h2>
+            <p className="frame-note">{error || model.errorDescription}</p>
             <button type="button" className="commerce-action mt-5" onClick={refresh}>
-              {copy.retryAction}
+              {model.retryAction}
             </button>
           </div>
         ) : null}
 
         {!error && isLoading ? (
           <div className="cart-status" role="status">
-            <p className="frame-note">{copy.loadingLabel}</p>
+            <p className="frame-note">{model.loadingLabel}</p>
           </div>
         ) : null}
 
         {!error && !isLoading && !hasItems ? (
           <div className="cart-status">
-            <h2 className="frame-title">{copy.emptyTitle}</h2>
-            <p className="frame-note">{copy.emptyDescription}</p>
+            <h2 className="frame-title">{model.emptyTitle}</h2>
+            <p className="frame-note">{model.emptyDescription}</p>
           </div>
         ) : null}
 
@@ -173,22 +140,22 @@ export function CartPageView({
               <article key={item.itemUid} className="cart-line">
                 <div className="cart-line__main">
                   <h2 className="cart-line__title">
-                    {displayName(item, copy.productFallback)}
+                    {displayName(item, model.productFallback)}
                   </h2>
                   <p className="cart-line__meta">
-                    {copy.unitPriceLabel}:{" "}
+                    {model.unitPriceLabel}:{" "}
                     {formatMoney(lang, currencyIso, item.currentUnitPrice)}
                   </p>
                   <div className="cart-line__flags">
                     {item.priceChanged ? (
-                      <span className="quiet-chip">{copy.priceChangedLabel}</span>
+                      <span className="quiet-chip">{model.priceChangedLabel}</span>
                     ) : null}
                     {!item.available ? (
-                      <span className="quiet-chip">{copy.unavailableLabel}</span>
+                      <span className="quiet-chip">{model.unavailableLabel}</span>
                     ) : null}
                     {item.stockQuantity !== null ? (
                       <span className="quiet-chip">
-                        {copy.stockLabel}: {item.stockQuantity}
+                        {model.stockLabel}: {item.stockQuantity}
                       </span>
                     ) : null}
                   </div>
@@ -196,13 +163,13 @@ export function CartPageView({
                 <div className="cart-line__controls">
                   <div
                     className="quantity-control"
-                    aria-label={`${copy.quantityLabel}: ${item.quantity}`}
+                    aria-label={`${model.quantityLabel}: ${item.quantity}`}
                   >
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.itemUid, item.quantity - 1)}
                       disabled={isMutating || item.quantity <= 1}
-                      aria-label={copy.decreaseAction}
+                      aria-label={model.decreaseAction}
                     >
                       -
                     </button>
@@ -211,13 +178,13 @@ export function CartPageView({
                       type="button"
                       onClick={() => updateQuantity(item.itemUid, item.quantity + 1)}
                       disabled={isMutating || item.quantity >= 99}
-                      aria-label={copy.increaseAction}
+                      aria-label={model.increaseAction}
                     >
                       +
                     </button>
                   </div>
                   <p className="cart-line__total">
-                    <span>{copy.lineTotalLabel}</span>
+                    <span>{model.lineTotalLabel}</span>
                     <strong>{formatMoney(lang, currencyIso, item.lineTotal)}</strong>
                   </p>
                   <button
@@ -226,7 +193,7 @@ export function CartPageView({
                     onClick={() => removeItem(item.itemUid)}
                     disabled={isMutating}
                   >
-                    {copy.removeAction}
+                    {model.removeAction}
                   </button>
                 </div>
               </article>
@@ -238,7 +205,7 @@ export function CartPageView({
                 onClick={clearCart}
                 disabled={isMutating}
               >
-                {copy.clearAction}
+                {model.clearAction}
               </button>
             </div>
           </div>

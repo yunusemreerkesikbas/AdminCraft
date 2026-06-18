@@ -8,34 +8,7 @@ import {
   ActionLink,
   ProductFrame,
 } from "@/components/ui/StorefrontPrimitives";
-
-export type ProductDetailCopy = {
-  eyebrow: string;
-  secondaryAction: string;
-  visualLabel: string;
-  statusMedia: string;
-  statusVariant: string;
-  statusStock: string;
-  controlsTitle: string;
-  skuLabel: string;
-  categoryLabel: string;
-  variantLabel: string;
-  quantityLabel: string;
-  decreaseAction: string;
-  increaseAction: string;
-  addToCartAction: string;
-  addingToCartAction: string;
-  addedToCartTitle: string;
-  addedToCartDescription: string;
-  viewCartAction: string;
-  unavailableTitle: string;
-  unavailableDescription: string;
-  outOfStockLabel: string;
-  stockLabel: string;
-  priceLabel: string;
-  errorTitle: string;
-  errorDescription: string;
-};
+import type { ProductDetailModel } from "./product-detail-model";
 
 export type ProductDetailMedia = {
   url: string;
@@ -63,7 +36,7 @@ export type ProductDetailViewProduct = {
 
 type ProductDetailViewProps = {
   product: ProductDetailViewProduct;
-  copy: ProductDetailCopy;
+  model: ProductDetailModel;
   storeHref: string;
   cartHref: string;
 };
@@ -81,22 +54,22 @@ const clampQuantity = (quantity: number, maxQuantity: number): number =>
 
 function ProductMedia({
   product,
-  copy,
+  model,
 }: {
   product: ProductDetailViewProduct;
-  copy: ProductDetailCopy;
+  model: ProductDetailModel;
 }) {
   if (!product.media) {
     return (
       <ProductFrame
-        label={copy.visualLabel}
-        status={[copy.statusMedia, copy.statusVariant, copy.statusStock]}
+        label={model.visualLabel}
+        status={[model.statusMedia, model.statusVariant, model.statusStock]}
       />
     );
   }
 
   return (
-    <aside className="visual-frame product-media-frame" aria-label={copy.visualLabel}>
+    <aside className="visual-frame product-media-frame" aria-label={model.visualLabel}>
       <Image
         src={product.media.url}
         alt={product.media.alt}
@@ -111,7 +84,7 @@ function ProductMedia({
 
 export function ProductDetailView({
   product,
-  copy,
+  model,
   storeHref,
   cartHref,
 }: ProductDetailViewProps) {
@@ -149,40 +122,40 @@ export function ProductDetailView({
 
   return (
     <PageShell
-      eyebrow={copy.eyebrow}
+      eyebrow={model.eyebrow}
       title={product.name}
       description={product.description}
       actions={
         <>
-          <ActionLink href={cartHref} label={copy.viewCartAction} />
-          <ActionLink href={storeHref} label={copy.secondaryAction} variant="secondary" />
+          <ActionLink href={cartHref} label={model.viewCartAction} />
+          <ActionLink href={storeHref} label={model.secondaryAction} variant="secondary" />
         </>
       }
-      visual={<ProductMedia product={product} copy={copy} />}
+      visual={<ProductMedia product={product} model={model} />}
     >
       <section className="surface-panel product-purchase-panel">
         <div className="product-purchase-panel__header">
           <div>
-            <h2 className="frame-title">{copy.controlsTitle}</h2>
+            <h2 className="frame-title">{model.controlsTitle}</h2>
             <p className="frame-note">
-              {copy.skuLabel}: {product.sku}
+              {model.skuLabel}: {product.sku}
             </p>
           </div>
           <div className="product-price-block">
-            <span>{copy.priceLabel}</span>
+            <span>{model.priceLabel}</span>
             <strong>{selectedVariant?.priceFormatted ?? product.priceFormatted}</strong>
           </div>
         </div>
 
         {categories ? (
           <p className="product-meta-line">
-            {copy.categoryLabel}: {categories}
+            {model.categoryLabel}: {categories}
           </p>
         ) : null}
 
         {product.variants.length > 0 ? (
-          <div className="product-variant-group" aria-label={copy.variantLabel}>
-            <p className="row-title">{copy.variantLabel}</p>
+          <div className="product-variant-group" aria-label={model.variantLabel}>
+            <p className="row-title">{model.variantLabel}</p>
             <div className="product-variant-options">
               {product.variants.map((variant) => {
                 const isSelected = variant.uid === selectedVariant?.uid;
@@ -203,8 +176,8 @@ export function ProductDetailView({
                     <span>{variantLabel(variant)}</span>
                     <span className="row-description">
                       {isAvailable
-                        ? `${copy.stockLabel}: ${variant.stockQuantity}`
-                        : copy.outOfStockLabel}
+                        ? `${model.stockLabel}: ${variant.stockQuantity}`
+                        : model.outOfStockLabel}
                     </span>
                   </button>
                 );
@@ -213,15 +186,15 @@ export function ProductDetailView({
           </div>
         ) : (
           <div className="product-attention">
-            <h3 className="row-title">{copy.unavailableTitle}</h3>
-            <p className="row-description">{copy.unavailableDescription}</p>
+            <h3 className="row-title">{model.unavailableTitle}</h3>
+            <p className="row-description">{model.unavailableDescription}</p>
           </div>
         )}
 
         <div className="product-purchase-actions">
           <div
             className="quantity-control"
-            aria-label={`${copy.quantityLabel}: ${effectiveQuantity}`}
+            aria-label={`${model.quantityLabel}: ${effectiveQuantity}`}
           >
             <button
               type="button"
@@ -231,7 +204,7 @@ export function ProductDetailView({
                 setAddFailed(false);
               }}
               disabled={!canAddToCart || effectiveQuantity <= 1}
-              aria-label={copy.decreaseAction}
+              aria-label={model.decreaseAction}
             >
               -
             </button>
@@ -244,7 +217,7 @@ export function ProductDetailView({
                 setAddFailed(false);
               }}
               disabled={!canAddToCart || effectiveQuantity >= maxQuantity}
-              aria-label={copy.increaseAction}
+              aria-label={model.increaseAction}
             >
               +
             </button>
@@ -255,28 +228,28 @@ export function ProductDetailView({
             onClick={handleAddToCart}
             disabled={!canAddToCart || isMutating}
           >
-            {isMutating ? copy.addingToCartAction : copy.addToCartAction}
+            {isMutating ? model.addingToCartAction : model.addToCartAction}
           </button>
         </div>
 
         {!canAddToCart ? (
           <p className="product-attention row-description">
-            {copy.unavailableDescription}
+            {model.unavailableDescription}
           </p>
         ) : null}
 
         {wasAdded ? (
           <div className="product-confirmation" role="status">
-            <strong>{copy.addedToCartTitle}</strong>
-            <span>{copy.addedToCartDescription}</span>
-            <ActionLink href={cartHref} label={copy.viewCartAction} variant="secondary" />
+            <strong>{model.addedToCartTitle}</strong>
+            <span>{model.addedToCartDescription}</span>
+            <ActionLink href={cartHref} label={model.viewCartAction} variant="secondary" />
           </div>
         ) : null}
 
         {cartError || addFailed ? (
           <div className="product-attention" role="alert">
-            <h3 className="row-title">{copy.errorTitle}</h3>
-            <p className="row-description">{cartError || copy.errorDescription}</p>
+            <h3 className="row-title">{model.errorTitle}</h3>
+            <p className="row-description">{cartError || model.errorDescription}</p>
           </div>
         ) : null}
       </section>

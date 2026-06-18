@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import {
   CheckoutReturnView,
-  type CheckoutReturnCopy,
 } from "@/components/checkout/CheckoutReturnView";
+import { createCheckoutReturnModel } from "@/components/checkout/checkout-return-model";
 import {
   getCommerceBaseUrl,
   getTenantHeadersAsync,
@@ -27,34 +27,11 @@ export default async function CheckoutReturnPage({
     return value ?? null;
   };
   const orderUid = first("orderUid");
-  const copy: CheckoutReturnCopy = {
-    eyebrow: translate("eyebrow"),
-    title: translate("title"),
-    successTitle: translate("successTitle"),
-    failureTitle: translate("failureTitle"),
-    unknownTitle: translate("unknownTitle"),
-    successDescription: translate("successDescription"),
-    failureDescription: translate("failureDescription"),
-    unknownDescription: translate("unknownDescription"),
-    loadingLabel: translate("loadingLabel"),
-    summaryTitle: translate("summaryTitle"),
-    summaryNote: translate("summaryNote"),
-    rowStatus: translate("rowStatus"),
-    rowAttempt: translate("rowAttempt"),
-    rowOrder: translate("rowOrder"),
-    rowProvider: translate("rowProvider"),
-    rowTotal: translate("rowTotal"),
-    missingValue: translate("missingValue"),
-    primaryAction: translate("primaryAction"),
-    orderAction: translate("orderAction"),
-    retryAction: translate("retryAction"),
-    secondaryAction: translate("secondaryAction"),
-    errorFallback: translate("errorFallback"),
-  };
+  const model = createCheckoutReturnModel(translate);
 
   return (
     <CheckoutReturnView
-      copy={copy}
+      model={model}
       apiBaseUrl={getCommerceBaseUrl()}
       lang={lang}
       tenantHeaders={await getTenantHeadersAsync()}

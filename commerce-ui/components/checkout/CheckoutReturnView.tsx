@@ -9,34 +9,10 @@ import {
 import { useCustomerSession } from "@/components/customer/CustomerSessionProvider";
 import { createCommercePaymentClient } from "@/lib/commerce/payment/payment-client";
 import type { PaymentAttemptResponse } from "@/lib/commerce/payment/types";
-
-export type CheckoutReturnCopy = {
-  eyebrow: string;
-  title: string;
-  successTitle: string;
-  failureTitle: string;
-  unknownTitle: string;
-  successDescription: string;
-  failureDescription: string;
-  unknownDescription: string;
-  loadingLabel: string;
-  summaryTitle: string;
-  summaryNote: string;
-  rowStatus: string;
-  rowAttempt: string;
-  rowOrder: string;
-  rowProvider: string;
-  rowTotal: string;
-  missingValue: string;
-  primaryAction: string;
-  orderAction: string;
-  retryAction: string;
-  secondaryAction: string;
-  errorFallback: string;
-};
+import type { CheckoutReturnModel } from "./checkout-return-model";
 
 type CheckoutReturnViewProps = {
-  copy: CheckoutReturnCopy;
+  model: CheckoutReturnModel;
   apiBaseUrl: string;
   lang: string;
   tenantHeaders: Record<string, string>;
@@ -86,7 +62,7 @@ const formatMoney = (
   }).format(toNumber(value));
 
 export function CheckoutReturnView({
-  copy,
+  model,
   apiBaseUrl,
   lang,
   tenantHeaders,
@@ -156,65 +132,65 @@ export function CheckoutReturnView({
   const isSuccess = effectiveStatus === "SUCCEEDED";
   const isFailure = effectiveStatus === "FAILED" || effectiveStatus === "EXPIRED";
   const title = isSuccess
-    ? copy.successTitle
+    ? model.successTitle
     : isFailure
-      ? copy.failureTitle
-      : copy.unknownTitle;
+      ? model.failureTitle
+      : model.unknownTitle;
   const description = isSuccess
-    ? copy.successDescription
+    ? model.successDescription
     : isFailure
-      ? copy.failureDescription
-      : copy.unknownDescription;
+      ? model.failureDescription
+      : model.unknownDescription;
   const primaryHref = isSuccess ? orderHref || ordersHref : checkoutHref;
   const primaryLabel = isSuccess
     ? orderHref
-      ? copy.orderAction
-      : copy.primaryAction
-    : copy.retryAction;
+      ? model.orderAction
+      : model.primaryAction
+    : model.retryAction;
   const isLoading = shouldVerifyAttempt && !attempt && !error;
 
   return (
     <PageShell
-      eyebrow={copy.eyebrow}
+      eyebrow={model.eyebrow}
       title={title}
-      description={isLoading ? copy.loadingLabel : description}
+      description={isLoading ? model.loadingLabel : description}
       actions={
         <>
           <ActionLink href={primaryHref} label={primaryLabel} />
           <ActionLink
             href={isSuccess ? ordersHref : storeHref}
-            label={isSuccess ? copy.primaryAction : copy.secondaryAction}
+            label={isSuccess ? model.primaryAction : model.secondaryAction}
             variant="secondary"
           />
         </>
       }
       visual={
         <ReceiptFrame
-          title={copy.summaryTitle}
-          note={error ? error || copy.errorFallback : copy.summaryNote}
+          title={model.summaryTitle}
+          note={error ? error || model.errorFallback : model.summaryNote}
           rows={[
             {
-              label: copy.rowStatus,
-              value: effectiveStatus ?? copy.missingValue,
+              label: model.rowStatus,
+              value: effectiveStatus ?? model.missingValue,
             },
             {
-              label: copy.rowAttempt,
-              value: attempt?.attemptUid ?? resolvedAttemptUid ?? copy.missingValue,
+              label: model.rowAttempt,
+              value: attempt?.attemptUid ?? resolvedAttemptUid ?? model.missingValue,
             },
             {
-              label: copy.rowOrder,
-              value: orderUid ?? copy.missingValue,
+              label: model.rowOrder,
+              value: orderUid ?? model.missingValue,
             },
             {
-              label: copy.rowProvider,
-              value: attempt?.provider ?? copy.missingValue,
+              label: model.rowProvider,
+              value: attempt?.provider ?? model.missingValue,
             },
           ]}
-          totalLabel={copy.rowTotal}
+          totalLabel={model.rowTotal}
           totalValue={
             attempt
               ? formatMoney(lang, attempt.currencyIso, attempt.totals.total)
-              : copy.missingValue
+              : model.missingValue
           }
         />
       }

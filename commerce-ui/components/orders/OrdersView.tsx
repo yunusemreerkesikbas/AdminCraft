@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import {
-  InlineCustomerAuthGate,
-  type InlineCustomerAuthCopy,
-} from "@/components/customer/InlineCustomerAuthGate";
+import { InlineCustomerAuthGate } from "@/components/customer/InlineCustomerAuthGate";
 import { useCustomerSession } from "@/components/customer/CustomerSessionProvider";
 import { PageShell } from "@/components/ui/PageShell";
 import { ActionLink, ReceiptFrame } from "@/components/ui/StorefrontPrimitives";
@@ -15,36 +12,10 @@ import type {
   CommerceOrderSummaryResponse,
 } from "@/lib/commerce/order/types";
 import { withLocalePath } from "@/lib/core/i18n/locale";
-
-export type OrdersCopy = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  detailTitle: string;
-  listTitle: string;
-  emptyTitle: string;
-  emptyDescription: string;
-  loadingLabel: string;
-  errorFallback: string;
-  rowOrderUid: string;
-  rowItems: string;
-  rowStatus: string;
-  rowCreatedAt: string;
-  rowShipping: string;
-  rowDelivery: string;
-  rowBilling: string;
-  rowLegal: string;
-  rowTotal: string;
-  attentionLabel: string;
-  detailsAction: string;
-  primaryAction: string;
-  secondaryAction: string;
-  itemFallback: string;
-  auth: InlineCustomerAuthCopy;
-};
+import type { OrdersModel } from "./orders-model";
 
 type OrdersViewProps = {
-  copy: OrdersCopy;
+  model: OrdersModel;
   apiBaseUrl: string;
   lang: string;
   tenantHeaders: Record<string, string>;
@@ -97,7 +68,7 @@ const addressSummary = (
 };
 
 export function OrdersView({
-  copy,
+  model,
   apiBaseUrl,
   lang,
   tenantHeaders,
@@ -149,19 +120,19 @@ export function OrdersView({
 
   return (
     <PageShell
-      eyebrow={copy.eyebrow}
-      title={copy.title}
-      description={copy.description}
+      eyebrow={model.eyebrow}
+      title={model.title}
+      description={model.description}
       visual={
         <ReceiptFrame
-          title={copy.listTitle}
+          title={model.listTitle}
           note={
-            isLoading ? copy.loadingLabel : currentError || copy.emptyDescription
+            isLoading ? model.loadingLabel : currentError || model.emptyDescription
           }
           rows={[
-            { label: copy.rowItems, value: String(orders.length) },
+            { label: model.rowItems, value: String(orders.length) },
             {
-              label: copy.rowTotal,
+              label: model.rowTotal,
               value:
                 visibleOrders.length > 0
                   ? formatMoney(
@@ -177,21 +148,21 @@ export function OrdersView({
     >
       {isRestoring ? (
         <section className="surface-panel account-loading">
-          <p className="row-title">{copy.loadingLabel}</p>
+          <p className="row-title">{model.loadingLabel}</p>
         </section>
       ) : !isAuthenticated ? (
-        <InlineCustomerAuthGate copy={copy.auth} source="commerce-ui-orders" />
+        <InlineCustomerAuthGate model={model.auth} source="commerce-ui-orders" />
       ) : (
         <section className="orders-panel">
           {currentError ? (
             <p className="account-form-error" role="alert">
-              {currentError || copy.errorFallback}
+              {currentError || model.errorFallback}
             </p>
           ) : null}
           {visibleOrders.length === 0 && !isLoading ? (
             <article className="surface-panel order-empty">
-              <h2 className="frame-title">{copy.emptyTitle}</h2>
-              <p className="frame-note">{copy.emptyDescription}</p>
+              <h2 className="frame-title">{model.emptyTitle}</h2>
+              <p className="frame-note">{model.emptyDescription}</p>
             </article>
           ) : null}
           {visibleOrders.map((order) => (
@@ -200,7 +171,7 @@ export function OrdersView({
                 <span className="quiet-chip">{order.status}</span>
                 {order.requiresAttention ? (
                   <span className="quiet-chip quiet-chip--attention">
-                    {copy.attentionLabel}
+                    {model.attentionLabel}
                   </span>
                 ) : null}
               </div>
@@ -210,11 +181,11 @@ export function OrdersView({
               </div>
               <dl className="order-meta">
                 <div>
-                  <dt>{copy.rowItems}</dt>
+                  <dt>{model.rowItems}</dt>
                   <dd>{order.itemCount}</dd>
                 </div>
                 <div>
-                  <dt>{copy.rowTotal}</dt>
+                  <dt>{model.rowTotal}</dt>
                   <dd>
                     {formatMoney(lang, order.currencyIso, order.totals.total)}
                   </dd>
@@ -224,7 +195,7 @@ export function OrdersView({
                 className="commerce-action commerce-action--secondary"
                 href={withLocalePath(lang, `account/orders/${order.orderUid}`)}
               >
-                {copy.detailsAction}
+                {model.detailsAction}
               </Link>
             </article>
           ))}
@@ -235,7 +206,7 @@ export function OrdersView({
 }
 
 export function OrderDetailView({
-  copy,
+  model,
   apiBaseUrl,
   lang,
   tenantHeaders,
@@ -289,31 +260,31 @@ export function OrderDetailView({
 
   return (
     <PageShell
-      eyebrow={copy.eyebrow}
-      title={order?.orderNumber ?? copy.detailTitle}
-      description={isLoading ? copy.loadingLabel : copy.description}
+      eyebrow={model.eyebrow}
+      title={order?.orderNumber ?? model.detailTitle}
+      description={isLoading ? model.loadingLabel : model.description}
       actions={
         <ActionLink
           href={withLocalePath(lang, "account/orders")}
-          label={copy.primaryAction}
+          label={model.primaryAction}
           variant="secondary"
         />
       }
       visual={
         <ReceiptFrame
-          title={copy.detailTitle}
-          note={currentError ? currentError || copy.errorFallback : undefined}
+          title={model.detailTitle}
+          note={currentError ? currentError || model.errorFallback : undefined}
           rows={[
-            { label: copy.rowOrderUid, value: order?.orderUid ?? orderUid },
-            { label: copy.rowStatus, value: order?.status ?? "-" },
+            { label: model.rowOrderUid, value: order?.orderUid ?? orderUid },
+            { label: model.rowStatus, value: order?.status ?? "-" },
             {
-              label: copy.rowCreatedAt,
+              label: model.rowCreatedAt,
               value: order ? formatDate(lang, order.createdAt) : "-",
             },
-            { label: copy.rowItems, value: String(order?.itemCount ?? 0) },
-            { label: copy.rowLegal, value: order?.legalSnapshotStatus ?? "-" },
+            { label: model.rowItems, value: String(order?.itemCount ?? 0) },
+            { label: model.rowLegal, value: order?.legalSnapshotStatus ?? "-" },
           ]}
-          totalLabel={copy.rowTotal}
+          totalLabel={model.rowTotal}
           totalValue={
             order ? formatMoney(lang, order.currencyIso, order.totals.total) : "-"
           }
@@ -322,24 +293,24 @@ export function OrderDetailView({
     >
       {isRestoring ? (
         <section className="surface-panel account-loading">
-          <p className="row-title">{copy.loadingLabel}</p>
+          <p className="row-title">{model.loadingLabel}</p>
         </section>
       ) : !isAuthenticated ? (
         <InlineCustomerAuthGate
-          copy={copy.auth}
+          model={model.auth}
           source="commerce-ui-order-detail"
         />
       ) : (
         <section className="orders-panel">
           {currentError ? (
             <p className="account-form-error" role="alert">
-              {currentError || copy.errorFallback}
+              {currentError || model.errorFallback}
             </p>
           ) : null}
           {order ? (
             <>
               <section className="surface-panel order-detail-panel">
-                <h2 className="frame-title">{copy.rowItems}</h2>
+                <h2 className="frame-title">{model.rowItems}</h2>
                 <div className="checkout-items">
                   {order.items.map((item) => (
                     <article key={item.uid} className="checkout-item-row">
@@ -347,7 +318,7 @@ export function OrderDetailView({
                         {item.productSku ||
                           item.variantSku ||
                           item.productUid ||
-                          copy.itemFallback}
+                          model.itemFallback}
                       </span>
                       <strong>
                         {item.quantity} x{" "}
@@ -362,22 +333,22 @@ export function OrderDetailView({
                 </div>
               </section>
               <section className="surface-panel order-detail-panel">
-                <h2 className="frame-title">{copy.rowShipping}</h2>
+                <h2 className="frame-title">{model.rowShipping}</h2>
                 <dl className="order-meta order-meta--stacked">
                   <div>
-                    <dt>{copy.rowShipping}</dt>
+                    <dt>{model.rowShipping}</dt>
                     <dd>{order.shipping.methodNameKey}</dd>
                   </div>
                   <div>
-                    <dt>{copy.rowDelivery}</dt>
+                    <dt>{model.rowDelivery}</dt>
                     <dd>
-                      {addressSummary(order.deliveryAddress, copy.emptyDescription)}
+                      {addressSummary(order.deliveryAddress, model.emptyDescription)}
                     </dd>
                   </div>
                   <div>
-                    <dt>{copy.rowBilling}</dt>
+                    <dt>{model.rowBilling}</dt>
                     <dd>
-                      {addressSummary(order.billingAddress, copy.emptyDescription)}
+                      {addressSummary(order.billingAddress, model.emptyDescription)}
                     </dd>
                   </div>
                 </dl>

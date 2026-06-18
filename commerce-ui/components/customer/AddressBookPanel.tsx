@@ -6,50 +6,11 @@ import type {
   CommerceCustomerAddressRequest,
   InvoiceType,
 } from "@/lib/commerce/customer/types";
+import type { AddressBookModel } from "./address-book-model";
 import { useCustomerSession } from "./CustomerSessionProvider";
 
-export type AddressBookCopy = {
-  title: string;
-  description: string;
-  loadingLabel: string;
-  emptyTitle: string;
-  emptyDescription: string;
-  addAction: string;
-  editAction: string;
-  saveAction: string;
-  cancelAction: string;
-  deleteAction: string;
-  defaultDeliveryAction: string;
-  defaultBillingAction: string;
-  defaultDeliveryLabel: string;
-  defaultBillingLabel: string;
-  formTitleCreate: string;
-  formTitleEdit: string;
-  labelLabel: string;
-  firstNameLabel: string;
-  lastNameLabel: string;
-  phoneLabel: string;
-  countryLabel: string;
-  cityLabel: string;
-  districtLabel: string;
-  addressLine1Label: string;
-  addressLine2Label: string;
-  postalCodeLabel: string;
-  invoiceTypeLabel: string;
-  individualLabel: string;
-  corporateLabel: string;
-  companyNameLabel: string;
-  taxNumberLabel: string;
-  taxOfficeLabel: string;
-  invoiceIdentityNumberLabel: string;
-  defaultDeliveryInputLabel: string;
-  defaultBillingInputLabel: string;
-  errorFallback: string;
-  authRequiredLabel: string;
-};
-
 type AddressBookPanelProps = {
-  copy: AddressBookCopy;
+  model: AddressBookModel;
   onAddressesChange?: (addresses: CommerceCustomerAddress[]) => void;
 };
 
@@ -147,7 +108,7 @@ const toRequest = (form: AddressFormState): CommerceCustomerAddressRequest => ({
 });
 
 export function AddressBookPanel({
-  copy,
+  model,
   onAddressesChange,
 }: AddressBookPanelProps) {
   const {
@@ -254,8 +215,8 @@ export function AddressBookPanel({
   if (!accessToken) {
     return (
       <section className="surface-panel address-panel">
-        <h2 className="frame-title">{copy.title}</h2>
-        <p className="frame-note">{copy.authRequiredLabel}</p>
+        <h2 className="frame-title">{model.title}</h2>
+        <p className="frame-note">{model.authRequiredLabel}</p>
       </section>
     );
   }
@@ -264,8 +225,8 @@ export function AddressBookPanel({
     <section className="surface-panel address-panel">
       <div className="address-panel__header">
         <div>
-          <h2 className="frame-title">{copy.title}</h2>
-          <p className="frame-note">{copy.description}</p>
+          <h2 className="frame-title">{model.title}</h2>
+          <p className="frame-note">{model.description}</p>
         </div>
         <button
           type="button"
@@ -273,22 +234,22 @@ export function AddressBookPanel({
           onClick={openCreateForm}
           disabled={isMutating}
         >
-          {copy.addAction}
+          {model.addAction}
         </button>
       </div>
 
       {visibleError ? (
         <p className="account-form-error" role="alert">
-          {visibleError || copy.errorFallback}
+          {visibleError || model.errorFallback}
         </p>
       ) : null}
 
       {isLoading ? (
-        <p className="frame-note">{copy.loadingLabel}</p>
+        <p className="frame-note">{model.loadingLabel}</p>
       ) : addresses.length === 0 ? (
         <div className="address-empty">
-          <h3 className="row-title">{copy.emptyTitle}</h3>
-          <p className="row-description">{copy.emptyDescription}</p>
+          <h3 className="row-title">{model.emptyTitle}</h3>
+          <p className="row-description">{model.emptyDescription}</p>
         </div>
       ) : (
         <div className="address-list">
@@ -307,16 +268,16 @@ export function AddressBookPanel({
                 <div className="address-card__chips">
                   {address.defaultDelivery ? (
                     <span className="quiet-chip">
-                      {copy.defaultDeliveryLabel}
+                      {model.defaultDeliveryLabel}
                     </span>
                   ) : null}
                   {address.defaultBilling ? (
-                    <span className="quiet-chip">{copy.defaultBillingLabel}</span>
+                    <span className="quiet-chip">{model.defaultBillingLabel}</span>
                   ) : null}
                   <span className="quiet-chip">
                     {address.invoiceType === "CORPORATE"
-                      ? copy.corporateLabel
-                      : copy.individualLabel}
+                      ? model.corporateLabel
+                      : model.individualLabel}
                   </span>
                 </div>
               </div>
@@ -327,7 +288,7 @@ export function AddressBookPanel({
                   onClick={() => openEditForm(address)}
                   disabled={isMutating}
                 >
-                  {copy.editAction}
+                  {model.editAction}
                 </button>
                 <button
                   type="button"
@@ -335,7 +296,7 @@ export function AddressBookPanel({
                   onClick={() => markDefaultDelivery(address.uid)}
                   disabled={isMutating || address.defaultDelivery}
                 >
-                  {copy.defaultDeliveryAction}
+                  {model.defaultDeliveryAction}
                 </button>
                 <button
                   type="button"
@@ -343,7 +304,7 @@ export function AddressBookPanel({
                   onClick={() => markDefaultBilling(address.uid)}
                   disabled={isMutating || address.defaultBilling}
                 >
-                  {copy.defaultBillingAction}
+                  {model.defaultBillingAction}
                 </button>
                 <button
                   type="button"
@@ -351,7 +312,7 @@ export function AddressBookPanel({
                   onClick={() => removeAddress(address.uid)}
                   disabled={isMutating}
                 >
-                  {copy.deleteAction}
+                  {model.deleteAction}
                 </button>
               </div>
             </article>
@@ -362,18 +323,18 @@ export function AddressBookPanel({
       {isFormOpen ? (
         <form className="address-form" onSubmit={submitForm}>
           <h3 className="row-title">
-            {editingUid ? copy.formTitleEdit : copy.formTitleCreate}
+            {editingUid ? model.formTitleEdit : model.formTitleCreate}
           </h3>
           <AddressField
             id="address-label"
-            label={copy.labelLabel}
+            label={model.labelLabel}
             value={form.label}
             onChange={(label) => setForm((current) => ({ ...current, label }))}
           />
           <div className="address-form__split">
             <AddressField
               id="address-first-name"
-              label={copy.firstNameLabel}
+              label={model.firstNameLabel}
               value={form.firstName}
               required
               onChange={(firstName) =>
@@ -382,7 +343,7 @@ export function AddressBookPanel({
             />
             <AddressField
               id="address-last-name"
-              label={copy.lastNameLabel}
+              label={model.lastNameLabel}
               value={form.lastName}
               required
               onChange={(lastName) =>
@@ -393,7 +354,7 @@ export function AddressBookPanel({
           <div className="address-form__split">
             <AddressField
               id="address-phone"
-              label={copy.phoneLabel}
+              label={model.phoneLabel}
               type="tel"
               value={form.phone}
               required
@@ -401,7 +362,7 @@ export function AddressBookPanel({
             />
             <AddressField
               id="address-country"
-              label={copy.countryLabel}
+              label={model.countryLabel}
               value={form.countryIso}
               required
               maxLength={2}
@@ -416,14 +377,14 @@ export function AddressBookPanel({
           <div className="address-form__split">
             <AddressField
               id="address-city"
-              label={copy.cityLabel}
+              label={model.cityLabel}
               value={form.city}
               required
               onChange={(city) => setForm((current) => ({ ...current, city }))}
             />
             <AddressField
               id="address-district"
-              label={copy.districtLabel}
+              label={model.districtLabel}
               value={form.district}
               required
               onChange={(district) =>
@@ -433,7 +394,7 @@ export function AddressBookPanel({
           </div>
           <AddressField
             id="address-line-1"
-            label={copy.addressLine1Label}
+            label={model.addressLine1Label}
             value={form.addressLine1}
             required
             onChange={(addressLine1) =>
@@ -443,7 +404,7 @@ export function AddressBookPanel({
           <div className="address-form__split">
             <AddressField
               id="address-line-2"
-              label={copy.addressLine2Label}
+              label={model.addressLine2Label}
               value={form.addressLine2}
               onChange={(addressLine2) =>
                 setForm((current) => ({ ...current, addressLine2 }))
@@ -451,7 +412,7 @@ export function AddressBookPanel({
             />
             <AddressField
               id="address-postal-code"
-              label={copy.postalCodeLabel}
+              label={model.postalCodeLabel}
               value={form.postalCode}
               onChange={(postalCode) =>
                 setForm((current) => ({ ...current, postalCode }))
@@ -459,7 +420,7 @@ export function AddressBookPanel({
             />
           </div>
           <label className="account-field" htmlFor="address-invoice-type">
-            <span>{copy.invoiceTypeLabel}</span>
+            <span>{model.invoiceTypeLabel}</span>
             <select
               id="address-invoice-type"
               value={form.invoiceType}
@@ -470,15 +431,15 @@ export function AddressBookPanel({
                 }))
               }
             >
-              <option value="INDIVIDUAL">{copy.individualLabel}</option>
-              <option value="CORPORATE">{copy.corporateLabel}</option>
+              <option value="INDIVIDUAL">{model.individualLabel}</option>
+              <option value="CORPORATE">{model.corporateLabel}</option>
             </select>
           </label>
           {form.invoiceType === "CORPORATE" ? (
             <>
               <AddressField
                 id="address-company-name"
-                label={copy.companyNameLabel}
+                label={model.companyNameLabel}
                 value={form.companyName}
                 required
                 onChange={(companyName) =>
@@ -488,7 +449,7 @@ export function AddressBookPanel({
               <div className="address-form__split">
                 <AddressField
                   id="address-tax-number"
-                  label={copy.taxNumberLabel}
+                  label={model.taxNumberLabel}
                   value={form.taxNumber}
                   required
                   onChange={(taxNumber) =>
@@ -497,7 +458,7 @@ export function AddressBookPanel({
                 />
                 <AddressField
                   id="address-tax-office"
-                  label={copy.taxOfficeLabel}
+                  label={model.taxOfficeLabel}
                   value={form.taxOffice}
                   required
                   onChange={(taxOffice) =>
@@ -509,7 +470,7 @@ export function AddressBookPanel({
           ) : (
             <AddressField
               id="address-invoice-identity"
-              label={copy.invoiceIdentityNumberLabel}
+              label={model.invoiceIdentityNumberLabel}
               value={form.invoiceIdentityNumber}
               onChange={(invoiceIdentityNumber) =>
                 setForm((current) => ({ ...current, invoiceIdentityNumber }))
@@ -518,14 +479,14 @@ export function AddressBookPanel({
           )}
           <div className="address-form__checks">
             <AddressCheckbox
-              label={copy.defaultDeliveryInputLabel}
+              label={model.defaultDeliveryInputLabel}
               checked={form.defaultDelivery}
               onChange={(defaultDelivery) =>
                 setForm((current) => ({ ...current, defaultDelivery }))
               }
             />
             <AddressCheckbox
-              label={copy.defaultBillingInputLabel}
+              label={model.defaultBillingInputLabel}
               checked={form.defaultBilling}
               onChange={(defaultBilling) =>
                 setForm((current) => ({ ...current, defaultBilling }))
@@ -538,7 +499,7 @@ export function AddressBookPanel({
               className="commerce-action"
               disabled={isMutating}
             >
-              {copy.saveAction}
+              {model.saveAction}
             </button>
             <button
               type="button"
@@ -546,7 +507,7 @@ export function AddressBookPanel({
               onClick={closeForm}
               disabled={isMutating}
             >
-              {copy.cancelAction}
+              {model.cancelAction}
             </button>
           </div>
         </form>

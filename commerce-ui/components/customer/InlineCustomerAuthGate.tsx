@@ -1,29 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import type { InlineCustomerAuthModel } from "./inline-customer-auth-model";
 import { useCustomerSession } from "./CustomerSessionProvider";
 
-export type InlineCustomerAuthCopy = {
-  title: string;
-  description: string;
-  loginTab: string;
-  registerTab: string;
-  emailLabel: string;
-  passwordLabel: string;
-  firstNameLabel: string;
-  lastNameLabel: string;
-  phoneLabel: string;
-  rememberMeLabel: string;
-  termsAcceptedLabel: string;
-  privacyAcceptedLabel: string;
-  loginAction: string;
-  registerAction: string;
-  submittingLabel: string;
-  errorFallback: string;
-};
-
 type InlineCustomerAuthGateProps = {
-  copy: InlineCustomerAuthCopy;
+  model: InlineCustomerAuthModel;
   source: string;
 };
 
@@ -47,7 +29,7 @@ const defaultRegisterState = {
 };
 
 export function InlineCustomerAuthGate({
-  copy,
+  model,
   source,
 }: InlineCustomerAuthGateProps) {
   const { error, isMutating, login, register } = useCustomerSession();
@@ -70,9 +52,9 @@ export function InlineCustomerAuthGate({
 
   return (
     <section className="surface-panel account-auth-panel">
-      <h2 className="frame-title">{copy.title}</h2>
-      <p className="frame-note">{copy.description}</p>
-      <div className="account-tabs" role="tablist" aria-label={copy.title}>
+      <h2 className="frame-title">{model.title}</h2>
+      <p className="frame-note">{model.description}</p>
+      <div className="account-tabs" role="tablist" aria-label={model.title}>
         <button
           type="button"
           role="tab"
@@ -80,7 +62,7 @@ export function InlineCustomerAuthGate({
           className="account-tab"
           onClick={() => setMode("login")}
         >
-          {copy.loginTab}
+          {model.loginTab}
         </button>
         <button
           type="button"
@@ -89,13 +71,13 @@ export function InlineCustomerAuthGate({
           className="account-tab"
           onClick={() => setMode("register")}
         >
-          {copy.registerTab}
+          {model.registerTab}
         </button>
       </div>
 
       {error !== null ? (
         <p className="account-form-error" role="alert">
-          {error || copy.errorFallback}
+          {error || model.errorFallback}
         </p>
       ) : null}
 
@@ -103,7 +85,7 @@ export function InlineCustomerAuthGate({
         <form className="account-form" onSubmit={submitLogin}>
           <AuthField
             id={`${source}-login-email`}
-            label={copy.emailLabel}
+            label={model.emailLabel}
             type="email"
             value={loginForm.email}
             autoComplete="email"
@@ -113,7 +95,7 @@ export function InlineCustomerAuthGate({
           />
           <AuthField
             id={`${source}-login-password`}
-            label={copy.passwordLabel}
+            label={model.passwordLabel}
             type="password"
             value={loginForm.password}
             autoComplete="current-password"
@@ -123,14 +105,14 @@ export function InlineCustomerAuthGate({
             }
           />
           <AuthCheckbox
-            label={copy.rememberMeLabel}
+            label={model.rememberMeLabel}
             checked={loginForm.rememberMe}
             onChange={(rememberMe) =>
               setLoginForm((current) => ({ ...current, rememberMe }))
             }
           />
           <button className="commerce-action" type="submit" disabled={isMutating}>
-            {isMutating ? copy.submittingLabel : copy.loginAction}
+            {isMutating ? model.submittingLabel : model.loginAction}
           </button>
         </form>
       ) : (
@@ -138,7 +120,7 @@ export function InlineCustomerAuthGate({
           <div className="account-form__split">
             <AuthField
               id={`${source}-register-first-name`}
-              label={copy.firstNameLabel}
+              label={model.firstNameLabel}
               value={registerForm.firstName}
               autoComplete="given-name"
               onChange={(firstName) =>
@@ -147,7 +129,7 @@ export function InlineCustomerAuthGate({
             />
             <AuthField
               id={`${source}-register-last-name`}
-              label={copy.lastNameLabel}
+              label={model.lastNameLabel}
               value={registerForm.lastName}
               autoComplete="family-name"
               onChange={(lastName) =>
@@ -157,7 +139,7 @@ export function InlineCustomerAuthGate({
           </div>
           <AuthField
             id={`${source}-register-email`}
-            label={copy.emailLabel}
+            label={model.emailLabel}
             type="email"
             value={registerForm.email}
             autoComplete="email"
@@ -167,7 +149,7 @@ export function InlineCustomerAuthGate({
           />
           <AuthField
             id={`${source}-register-phone`}
-            label={copy.phoneLabel}
+            label={model.phoneLabel}
             type="tel"
             value={registerForm.phone}
             autoComplete="tel"
@@ -177,7 +159,7 @@ export function InlineCustomerAuthGate({
           />
           <AuthField
             id={`${source}-register-password`}
-            label={copy.passwordLabel}
+            label={model.passwordLabel}
             type="password"
             value={registerForm.password}
             autoComplete="new-password"
@@ -187,7 +169,7 @@ export function InlineCustomerAuthGate({
             }
           />
           <AuthCheckbox
-            label={copy.termsAcceptedLabel}
+            label={model.termsAcceptedLabel}
             checked={registerForm.termsAccepted}
             required
             onChange={(termsAccepted) =>
@@ -195,7 +177,7 @@ export function InlineCustomerAuthGate({
             }
           />
           <AuthCheckbox
-            label={copy.privacyAcceptedLabel}
+            label={model.privacyAcceptedLabel}
             checked={registerForm.privacyAccepted}
             required
             onChange={(privacyAccepted) =>
@@ -203,14 +185,14 @@ export function InlineCustomerAuthGate({
             }
           />
           <AuthCheckbox
-            label={copy.rememberMeLabel}
+            label={model.rememberMeLabel}
             checked={registerForm.rememberMe}
             onChange={(rememberMe) =>
               setRegisterForm((current) => ({ ...current, rememberMe }))
             }
           />
           <button className="commerce-action" type="submit" disabled={isMutating}>
-            {isMutating ? copy.submittingLabel : copy.registerAction}
+            {isMutating ? model.submittingLabel : model.registerAction}
           </button>
         </form>
       )}
