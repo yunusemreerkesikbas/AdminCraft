@@ -7,10 +7,12 @@ export type PaymentAttemptStatus =
   | "FAILED"
   | "EXPIRED";
 
+export type PaymentAttemptStatusValue = PaymentAttemptStatus | (string & {});
+
 export type PaymentAttemptResponse = {
   attemptUid: string;
   checkoutUid: string;
-  status: PaymentAttemptStatus | string;
+  status: PaymentAttemptStatusValue;
   provider: string;
   currencyIso: string;
   totals: CheckoutTotalsResponse;
@@ -20,7 +22,7 @@ export type PaymentAttemptResponse = {
 
 export type PaymentInitializeResponse = {
   attemptUid: string;
-  status: PaymentAttemptStatus | string;
+  status: PaymentAttemptStatusValue;
   provider: string;
   paymentPageUrl: string;
 };

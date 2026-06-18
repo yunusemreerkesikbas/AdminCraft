@@ -1,5 +1,5 @@
-import type { ApiResponse } from "@/lib/core/http/api-response";
 import { getCommerceBaseUrl } from "@/lib/core/config/runtime-env";
+import { readApiResponse } from "@/lib/core/http/api-response";
 import { buildJsonHeaders } from "@/lib/core/http/headers";
 import { buildCommerceUrl } from "@/lib/core/http/query";
 import { createRequestTimeoutSignal } from "@/lib/core/http/request-timeout";
@@ -118,9 +118,12 @@ export const getProductByUid = async (
     return null;
   }
 
-  const payload = (await response.json()) as ApiResponse<ProductDeliveryResponse>;
+  const payload = await readApiResponse<ProductDeliveryResponse>(
+    response,
+    "Product request failed.",
+  );
 
-  if (!response.ok || payload.result === "ERROR") {
+  if (payload.result === "ERROR") {
     throw new Error(payload.message ?? "Product request failed.");
   }
 
@@ -145,11 +148,12 @@ export const searchProducts = async (
     signal: createRequestTimeoutSignal(),
   });
 
-  const payload = (await response.json()) as ApiResponse<
-    PageResponse<ProductListDeliveryResponse>
-  >;
+  const payload = await readApiResponse<PageResponse<ProductListDeliveryResponse>>(
+    response,
+    "Product search request failed.",
+  );
 
-  if (!response.ok || payload.result === "ERROR") {
+  if (payload.result === "ERROR") {
     throw new Error(payload.message ?? "Product search request failed.");
   }
 

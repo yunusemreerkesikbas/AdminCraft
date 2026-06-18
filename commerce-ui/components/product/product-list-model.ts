@@ -18,10 +18,10 @@ export type ProductListModel = {
   retryAction: string;
 };
 
-type Translator = (key: string) => string;
+type Translator<TModel> = (key: keyof TModel & string) => string;
 
 export const createProductListModel = (
-  translate: Translator,
+  translate: Translator<ProductListModel>,
 ): ProductListModel => ({
   searchLabel: translate("searchLabel"),
   searchPlaceholder: translate("searchPlaceholder"),

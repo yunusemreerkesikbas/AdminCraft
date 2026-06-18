@@ -19,11 +19,16 @@ export type InlineCustomerAuthModel = {
 
 export type CustomerAuthModel = Omit<InlineCustomerAuthModel, "errorFallback">;
 
-type Translator = (key: string) => string;
+type CustomerAuthSourceModel = {
+  authTitle: string;
+  authDescription: string;
+};
+
+type Translator<TModel> = (key: keyof TModel & string) => string;
 
 const createCustomerAuthModel = (
-  translate: Translator,
-  account: Translator,
+  translate: Translator<CustomerAuthSourceModel>,
+  account: Translator<InlineCustomerAuthModel>,
 ): CustomerAuthModel => ({
   title: translate("authTitle"),
   description: translate("authDescription"),
@@ -43,14 +48,14 @@ const createCustomerAuthModel = (
 });
 
 export const createInlineCustomerAuthModel = (
-  translate: Translator,
-  account: Translator,
+  translate: Translator<CustomerAuthSourceModel>,
+  account: Translator<InlineCustomerAuthModel>,
 ): InlineCustomerAuthModel => ({
   ...createCustomerAuthModel(translate, account),
   errorFallback: account("errorFallback"),
 });
 
 export const createCheckoutAuthModel = (
-  translate: Translator,
-  account: Translator,
+  translate: Translator<CustomerAuthSourceModel>,
+  account: Translator<InlineCustomerAuthModel>,
 ): CustomerAuthModel => createCustomerAuthModel(translate, account);

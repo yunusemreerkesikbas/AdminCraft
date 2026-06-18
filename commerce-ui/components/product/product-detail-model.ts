@@ -26,10 +26,10 @@ export type ProductDetailModel = {
   errorDescription: string;
 };
 
-type Translator = (key: string) => string;
+type Translator<TModel> = (key: keyof TModel & string) => string;
 
 export const createProductDetailModel = (
-  translate: Translator,
+  translate: Translator<ProductDetailModel>,
 ): ProductDetailModel => ({
   eyebrow: translate("eyebrow"),
   secondaryAction: translate("secondaryAction"),

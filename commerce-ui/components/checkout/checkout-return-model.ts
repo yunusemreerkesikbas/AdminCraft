@@ -23,10 +23,10 @@ export type CheckoutReturnModel = {
   errorFallback: string;
 };
 
-type Translator = (key: string) => string;
+type Translator<TModel> = (key: keyof TModel & string) => string;
 
 export const createCheckoutReturnModel = (
-  translate: Translator,
+  translate: Translator<CheckoutReturnModel>,
 ): CheckoutReturnModel => ({
   eyebrow: translate("eyebrow"),
   title: translate("title"),

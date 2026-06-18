@@ -22,6 +22,7 @@ type CheckoutViewProps = {
 type AuthMode = "login" | "register";
 
 const LAST_PAYMENT_ATTEMPT_KEY = "commerce-ui:last-payment-attempt";
+const MAX_ERROR_MESSAGE_LENGTH = 500;
 
 const defaultLoginState = {
   email: "",
@@ -76,6 +77,15 @@ const shippingMethodLabel = (
   }
 
   return methodNameKey || model.shippingMethodFallback;
+};
+
+const normalizeCheckoutError = (error: unknown, fallback: string): string => {
+  if (!(error instanceof Error)) {
+    return fallback;
+  }
+
+  const message = error.message.trim();
+  return (message || fallback).slice(0, MAX_ERROR_MESSAGE_LENGTH);
 };
 
 export function CheckoutView({
@@ -161,7 +171,7 @@ export function CheckoutView({
         : await checkoutClient.startCheckout(accessToken, request);
       setCheckout(nextCheckout);
     } catch (err) {
-      setCheckoutError(err instanceof Error ? err.message : "");
+      setCheckoutError(normalizeCheckoutError(err, model.errorFallback));
     } finally {
       setIsCheckoutMutating(false);
     }
@@ -201,7 +211,7 @@ export function CheckoutView({
       );
       window.location.assign(initialize.paymentPageUrl);
     } catch (err) {
-      setPaymentError(err instanceof Error ? err.message : "");
+      setPaymentError(normalizeCheckoutError(err, model.errorFallback));
       setIsPaymentMutating(false);
     }
   };

@@ -148,6 +148,7 @@ export function CheckoutReturnView({
       : model.primaryAction
     : model.retryAction;
   const isLoading = shouldVerifyAttempt && !attempt && !error;
+  const showSecondaryAction = !isSuccess || Boolean(orderHref);
 
   return (
     <PageShell
@@ -157,11 +158,13 @@ export function CheckoutReturnView({
       actions={
         <>
           <ActionLink href={primaryHref} label={primaryLabel} />
-          <ActionLink
-            href={isSuccess ? ordersHref : storeHref}
-            label={isSuccess ? model.primaryAction : model.secondaryAction}
-            variant="secondary"
-          />
+          {showSecondaryAction ? (
+            <ActionLink
+              href={isSuccess ? ordersHref : storeHref}
+              label={isSuccess ? model.primaryAction : model.secondaryAction}
+              variant="secondary"
+            />
+          ) : null}
         </>
       }
       visual={

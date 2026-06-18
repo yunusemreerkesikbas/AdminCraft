@@ -68,6 +68,16 @@ type CustomerSessionProviderProps = {
 const CustomerSessionContext =
   createContext<CustomerSessionContextValue | null>(null);
 
+const MAX_ERROR_MESSAGE_LENGTH = 500;
+
+const normalizeSessionError = (error: unknown): string => {
+  if (!(error instanceof Error)) {
+    return "";
+  }
+
+  return error.message.trim().slice(0, MAX_ERROR_MESSAGE_LENGTH);
+};
+
 export function CustomerSessionProvider({
   apiBaseUrl,
   lang,
@@ -146,7 +156,7 @@ export function CustomerSessionProvider({
         return true;
       } catch (err) {
         clearSession();
-        setError(err instanceof Error ? err.message : "");
+        setError(normalizeSessionError(err));
         return false;
       } finally {
         setIsMutating(false);
@@ -173,7 +183,7 @@ export function CustomerSessionProvider({
     try {
       await client.logout();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "");
+      setError(normalizeSessionError(err));
     } finally {
       clearSession();
       replaceCart(null);
@@ -201,7 +211,7 @@ export function CustomerSessionProvider({
       try {
         return await client.createAddress(requireAccessToken(), request);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "");
+        setError(normalizeSessionError(err));
         return null;
       } finally {
         setIsMutating(false);
@@ -221,7 +231,7 @@ export function CustomerSessionProvider({
           request,
         );
       } catch (err) {
-        setError(err instanceof Error ? err.message : "");
+        setError(normalizeSessionError(err));
         return null;
       } finally {
         setIsMutating(false);
@@ -238,7 +248,7 @@ export function CustomerSessionProvider({
         await client.deleteAddress(requireAccessToken(), addressUid);
         return true;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "");
+        setError(normalizeSessionError(err));
         return false;
       } finally {
         setIsMutating(false);
@@ -254,7 +264,7 @@ export function CustomerSessionProvider({
       try {
         return await client.setDefaultDelivery(requireAccessToken(), addressUid);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "");
+        setError(normalizeSessionError(err));
         return null;
       } finally {
         setIsMutating(false);
@@ -270,7 +280,7 @@ export function CustomerSessionProvider({
       try {
         return await client.setDefaultBilling(requireAccessToken(), addressUid);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "");
+        setError(normalizeSessionError(err));
         return null;
       } finally {
         setIsMutating(false);

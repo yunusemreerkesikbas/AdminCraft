@@ -54,11 +54,10 @@ export function InlineCustomerAuthGate({
     <section className="surface-panel account-auth-panel">
       <h2 className="frame-title">{model.title}</h2>
       <p className="frame-note">{model.description}</p>
-      <div className="account-tabs" role="tablist" aria-label={model.title}>
+      <div className="account-tabs" role="group" aria-label={model.title}>
         <button
           type="button"
-          role="tab"
-          aria-selected={mode === "login"}
+          aria-pressed={mode === "login"}
           className="account-tab"
           onClick={() => setMode("login")}
         >
@@ -66,8 +65,7 @@ export function InlineCustomerAuthGate({
         </button>
         <button
           type="button"
-          role="tab"
-          aria-selected={mode === "register"}
+          aria-pressed={mode === "register"}
           className="account-tab"
           onClick={() => setMode("register")}
         >

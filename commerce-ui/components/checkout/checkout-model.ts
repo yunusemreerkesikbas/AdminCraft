@@ -1,6 +1,9 @@
 import type { AddressBookModel } from "@/components/customer/address-book-model";
 import { createAddressBookModel } from "@/components/customer/address-book-model";
-import type { CustomerAuthModel } from "@/components/customer/inline-customer-auth-model";
+import type {
+  CustomerAuthModel,
+  InlineCustomerAuthModel,
+} from "@/components/customer/inline-customer-auth-model";
 import { createCheckoutAuthModel } from "@/components/customer/inline-customer-auth-model";
 
 export type CheckoutModel = {
@@ -45,12 +48,16 @@ export type CheckoutModel = {
   addressBook: AddressBookModel;
 };
 
-type Translator = (key: string) => string;
+type Translator<TModel> = (key: keyof TModel & string) => string;
+type CheckoutTranslationModel = CheckoutModel & {
+  authTitle: string;
+  authDescription: string;
+};
 
 export const createCheckoutModel = (
-  translate: Translator,
-  account: Translator,
-  addressBook: Translator,
+  translate: Translator<CheckoutTranslationModel>,
+  account: Translator<InlineCustomerAuthModel>,
+  addressBook: Translator<AddressBookModel>,
 ): CheckoutModel => ({
   eyebrow: translate("eyebrow"),
   title: translate("title"),

@@ -1,4 +1,4 @@
-import type { ApiResponse } from "@/lib/core/http/api-response";
+import { readApiResponse } from "@/lib/core/http/api-response";
 import { resolveCommerceEndpoint } from "@/lib/core/http/endpoints";
 import { createRequestTimeoutSignal } from "@/lib/core/http/request-timeout";
 import type {
@@ -66,9 +66,9 @@ export const createCommerceCheckoutClient = ({
       signal: createRequestTimeoutSignal(),
     });
 
-    const payload = (await response.json()) as ApiResponse<CheckoutResponse>;
+    const payload = await readApiResponse<CheckoutResponse>(response, "");
 
-    if (!response.ok || payload.result === "ERROR" || !payload.data) {
+    if (payload.result === "ERROR" || !payload.data) {
       throw new Error(payload.message ?? "");
     }
 

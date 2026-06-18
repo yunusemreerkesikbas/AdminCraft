@@ -40,11 +40,11 @@ export type AccountModel = {
   addressBook: AddressBookModel;
 };
 
-type Translator = (key: string) => string;
+type Translator<TModel> = (key: keyof TModel & string) => string;
 
 export const createAccountModel = (
-  translate: Translator,
-  addressBook: Translator,
+  translate: Translator<AccountModel>,
+  addressBook: Translator<AddressBookModel>,
 ): AccountModel => ({
   eyebrow: translate("eyebrow"),
   title: translate("title"),

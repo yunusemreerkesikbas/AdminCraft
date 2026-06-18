@@ -130,7 +130,7 @@ export function OrdersView({
             isLoading ? model.loadingLabel : currentError || model.emptyDescription
           }
           rows={[
-            { label: model.rowItems, value: String(orders.length) },
+            { label: model.rowItems, value: String(visibleOrders.length) },
             {
               label: model.rowTotal,
               value:
@@ -252,7 +252,10 @@ export function OrderDetailView({
     };
   }, [accessToken, isAuthenticated, isRestoring, orderClient, orderUid]);
   const requestKey = accessToken ? `${accessToken}:${orderUid}` : null;
-  const currentError = loadState.key === requestKey ? error : null;
+  const currentError =
+    loadState.key === requestKey && loadState.status === "error" ? error : null;
+  const visibleOrder =
+    loadState.key === requestKey && loadState.status === "loaded" ? order : null;
   const isLoading =
     !isRestoring &&
     Boolean(isAuthenticated && accessToken) &&
@@ -261,7 +264,7 @@ export function OrderDetailView({
   return (
     <PageShell
       eyebrow={model.eyebrow}
-      title={order?.orderNumber ?? model.detailTitle}
+      title={visibleOrder?.orderNumber ?? model.detailTitle}
       description={isLoading ? model.loadingLabel : model.description}
       actions={
         <ActionLink
@@ -275,18 +278,23 @@ export function OrderDetailView({
           title={model.detailTitle}
           note={currentError ? currentError || model.errorFallback : undefined}
           rows={[
-            { label: model.rowOrderUid, value: order?.orderUid ?? orderUid },
-            { label: model.rowStatus, value: order?.status ?? "-" },
+            { label: model.rowOrderUid, value: visibleOrder?.orderUid ?? orderUid },
+            { label: model.rowStatus, value: visibleOrder?.status ?? "-" },
             {
               label: model.rowCreatedAt,
-              value: order ? formatDate(lang, order.createdAt) : "-",
+              value: visibleOrder ? formatDate(lang, visibleOrder.createdAt) : "-",
             },
-            { label: model.rowItems, value: String(order?.itemCount ?? 0) },
-            { label: model.rowLegal, value: order?.legalSnapshotStatus ?? "-" },
+            { label: model.rowItems, value: String(visibleOrder?.itemCount ?? 0) },
+            {
+              label: model.rowLegal,
+              value: visibleOrder?.legalSnapshotStatus ?? "-",
+            },
           ]}
           totalLabel={model.rowTotal}
           totalValue={
-            order ? formatMoney(lang, order.currencyIso, order.totals.total) : "-"
+            visibleOrder
+              ? formatMoney(lang, visibleOrder.currencyIso, visibleOrder.totals.total)
+              : "-"
           }
         />
       }
@@ -307,12 +315,12 @@ export function OrderDetailView({
               {currentError || model.errorFallback}
             </p>
           ) : null}
-          {order ? (
+          {visibleOrder ? (
             <>
               <section className="surface-panel order-detail-panel">
                 <h2 className="frame-title">{model.rowItems}</h2>
                 <div className="checkout-items">
-                  {order.items.map((item) => (
+                  {visibleOrder.items.map((item) => (
                     <article key={item.uid} className="checkout-item-row">
                       <span>
                         {item.productSku ||
@@ -324,7 +332,7 @@ export function OrderDetailView({
                         {item.quantity} x{" "}
                         {formatMoney(
                           lang,
-                          order.currencyIso,
+                          visibleOrder.currencyIso,
                           item.unitGrossPrice,
                         )}
                       </strong>
@@ -337,18 +345,24 @@ export function OrderDetailView({
                 <dl className="order-meta order-meta--stacked">
                   <div>
                     <dt>{model.rowShipping}</dt>
-                    <dd>{order.shipping.methodNameKey}</dd>
+                    <dd>{visibleOrder.shipping.methodNameKey}</dd>
                   </div>
                   <div>
                     <dt>{model.rowDelivery}</dt>
                     <dd>
-                      {addressSummary(order.deliveryAddress, model.emptyDescription)}
+                      {addressSummary(
+                        visibleOrder.deliveryAddress,
+                        model.emptyDescription,
+                      )}
                     </dd>
                   </div>
                   <div>
                     <dt>{model.rowBilling}</dt>
                     <dd>
-                      {addressSummary(order.billingAddress, model.emptyDescription)}
+                      {addressSummary(
+                        visibleOrder.billingAddress,
+                        model.emptyDescription,
+                      )}
                     </dd>
                   </div>
                 </dl>

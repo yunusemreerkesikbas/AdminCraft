@@ -39,7 +39,11 @@ export default async function CheckoutReturnPage({
       attemptUid={first("attemptUid")}
       orderUid={orderUid}
       ordersHref={withLocalePath(lang, "account/orders")}
-      orderHref={orderUid ? withLocalePath(lang, `account/orders/${orderUid}`) : null}
+      orderHref={
+        orderUid
+          ? withLocalePath(lang, `account/orders/${encodeURIComponent(orderUid)}`)
+          : null
+      }
       checkoutHref={withLocalePath(lang, "checkout")}
       storeHref={withLocalePath(lang)}
     />

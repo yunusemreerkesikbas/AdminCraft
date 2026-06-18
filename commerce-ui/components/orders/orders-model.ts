@@ -28,11 +28,15 @@ export type OrdersModel = {
   auth: InlineCustomerAuthModel;
 };
 
-type Translator = (key: string) => string;
+type ModelTranslator<TModel> = (key: keyof TModel & string) => string;
+type OrdersTranslationModel = OrdersModel & {
+  authTitle: string;
+  authDescription: string;
+};
 
 export const createOrdersModel = (
-  translate: Translator,
-  account: Translator,
+  translate: ModelTranslator<OrdersTranslationModel>,
+  account: ModelTranslator<InlineCustomerAuthModel>,
 ): OrdersModel => ({
   eyebrow: translate("eyebrow"),
   title: translate("title"),

@@ -38,10 +38,10 @@ export type AddressBookModel = {
   authRequiredLabel: string;
 };
 
-type Translator = (key: string) => string;
+type Translator<TModel> = (key: keyof TModel & string) => string;
 
 export const createAddressBookModel = (
-  translate: Translator,
+  translate: Translator<AddressBookModel>,
 ): AddressBookModel => ({
   title: translate("title"),
   description: translate("description"),

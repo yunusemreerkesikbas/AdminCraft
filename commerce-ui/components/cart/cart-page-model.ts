@@ -32,10 +32,10 @@ export type CartPageModel = {
   productFallback: string;
 };
 
-type Translator = (key: string) => string;
+type Translator<TModel> = (key: keyof TModel & string) => string;
 
 export const createCartPageModel = (
-  translate: Translator,
+  translate: Translator<CartPageModel>,
 ): CartPageModel => ({
   eyebrow: translate("eyebrow"),
   title: translate("title"),

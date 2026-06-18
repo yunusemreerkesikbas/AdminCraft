@@ -566,12 +566,12 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 			String attemptUid,
 			String orderUid) {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(baseUrl)
-				.queryParam("paymentStatus", paymentStatus.name());
+				.replaceQueryParam("paymentStatus", paymentStatus.name());
 		if (attemptUid != null && !attemptUid.isBlank()) {
-			builder.queryParam("attemptUid", attemptUid);
+			builder.replaceQueryParam("attemptUid", attemptUid);
 		}
 		if (orderUid != null && !orderUid.isBlank()) {
-			builder.queryParam("orderUid", orderUid);
+			builder.replaceQueryParam("orderUid", orderUid);
 		}
 		return builder.build().toUriString();
 	}

@@ -139,7 +139,9 @@ export function AddressBookPanel({
 
   const loadAddresses = useCallback(async () => {
     if (!accessToken) {
-      applyAddresses([]);
+      if (!isMutating) {
+        applyAddresses([]);
+      }
       return;
     }
 
@@ -152,7 +154,7 @@ export function AddressBookPanel({
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, applyAddresses, listAddresses]);
+  }, [accessToken, applyAddresses, isMutating, listAddresses]);
 
   useEffect(() => {
     void loadAddresses();
@@ -211,6 +213,15 @@ export function AddressBookPanel({
   };
 
   const visibleError = localError || error;
+
+  if (!accessToken && isMutating) {
+    return (
+      <section className="surface-panel address-panel">
+        <h2 className="frame-title">{model.title}</h2>
+        <p className="frame-note">{model.loadingLabel}</p>
+      </section>
+    );
+  }
 
   if (!accessToken) {
     return (
