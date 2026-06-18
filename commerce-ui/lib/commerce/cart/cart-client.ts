@@ -1,4 +1,4 @@
-import type { ApiResponse } from "@/lib/core/http/api-response";
+import { readApiResponse, type ApiResponse } from "@/lib/core/http/api-response";
 import { resolveCommerceEndpoint } from "@/lib/core/http/endpoints";
 import { createRequestTimeoutSignal } from "@/lib/core/http/request-timeout";
 import type { CartMutationResult, CartResponse } from "./types";
@@ -99,9 +99,9 @@ export const createCommerceCartClient = ({
       return null;
     }
 
-    const payload = (await response.json()) as ApiResponse<CartResponse | null>;
+    const payload = await readApiResponse<CartResponse | null>(response, "");
 
-    if (!response.ok || payload.result === "ERROR") {
+    if (payload.result === "ERROR") {
       throw new Error(payload.message ?? "");
     }
 

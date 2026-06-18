@@ -1,8 +1,10 @@
-import type { ApiResponse } from "@/lib/core/http/api-response";
+import { readApiResponse } from "@/lib/core/http/api-response";
 import { resolveCommerceEndpoint } from "@/lib/core/http/endpoints";
 import { createRequestTimeoutSignal } from "@/lib/core/http/request-timeout";
 import type {
   CommerceCustomer,
+  CommerceCustomerAddress,
+  CommerceCustomerAddressRequest,
   CommerceCustomerAuthResponse,
   CommerceCustomerLoginRequest,
   CommerceCustomerRegisterRequest,
@@ -20,7 +22,7 @@ export type CommerceCustomerClientConfig = {
 };
 
 type CustomerRequestOptions = {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   accessToken?: string | null;
   includeCartToken?: boolean;
@@ -42,6 +44,25 @@ export type CommerceCustomerClient = {
   refresh: () => Promise<CommerceCustomerAuthResponse | null>;
   logout: () => Promise<void>;
   getProfile: (accessToken: string) => Promise<CommerceCustomer>;
+  listAddresses: (accessToken: string) => Promise<CommerceCustomerAddress[]>;
+  createAddress: (
+    accessToken: string,
+    request: CommerceCustomerAddressRequest,
+  ) => Promise<CommerceCustomerAddress>;
+  updateAddress: (
+    accessToken: string,
+    addressUid: string,
+    request: CommerceCustomerAddressRequest,
+  ) => Promise<CommerceCustomerAddress>;
+  deleteAddress: (accessToken: string, addressUid: string) => Promise<void>;
+  setDefaultDelivery: (
+    accessToken: string,
+    addressUid: string,
+  ) => Promise<CommerceCustomerAddress>;
+  setDefaultBilling: (
+    accessToken: string,
+    addressUid: string,
+  ) => Promise<CommerceCustomerAddress>;
 };
 
 const buildCustomerUrl = (apiBaseUrl: string, path: string): string => {
@@ -122,9 +143,9 @@ export const createCommerceCustomerClient = ({
       return null;
     }
 
-    const payload = (await response.json()) as ApiResponse<T>;
+    const payload = await readApiResponse<T>(response, "");
 
-    if (!response.ok || payload.result === "ERROR") {
+    if (payload.result === "ERROR") {
       throw new Error(payload.message ?? "");
     }
 
@@ -190,6 +211,76 @@ export const createCommerceCustomerClient = ({
       const result = await request<CommerceCustomer>(
         resolveCommerceEndpoint("customerProfile"),
         { accessToken },
+      );
+      if (!result?.data) {
+        throw new Error("");
+      }
+      return result.data;
+    },
+    listAddresses: async (accessToken) => {
+      const result = await request<CommerceCustomerAddress[]>(
+        resolveCommerceEndpoint("customerAddresses"),
+        { accessToken },
+      );
+      return result?.data ?? [];
+    },
+    createAddress: async (accessToken, addressRequest) => {
+      const result = await request<CommerceCustomerAddress>(
+        resolveCommerceEndpoint("customerAddresses"),
+        {
+          method: "POST",
+          body: addressRequest,
+          accessToken,
+        },
+      );
+      if (!result?.data) {
+        throw new Error("");
+      }
+      return result.data;
+    },
+    updateAddress: async (accessToken, addressUid, addressRequest) => {
+      const result = await request<CommerceCustomerAddress>(
+        resolveCommerceEndpoint("customerAddressByUid", { addressUid }),
+        {
+          method: "PATCH",
+          body: addressRequest,
+          accessToken,
+        },
+      );
+      if (!result?.data) {
+        throw new Error("");
+      }
+      return result.data;
+    },
+    deleteAddress: async (accessToken, addressUid) => {
+      await request<void>(
+        resolveCommerceEndpoint("customerAddressByUid", { addressUid }),
+        {
+          method: "DELETE",
+          accessToken,
+        },
+      );
+    },
+    setDefaultDelivery: async (accessToken, addressUid) => {
+      const result = await request<CommerceCustomerAddress>(
+        resolveCommerceEndpoint("customerAddressDefaultDelivery", { addressUid }),
+        {
+          method: "POST",
+          accessToken,
+        },
+      );
+      if (!result?.data) {
+        throw new Error("");
+      }
+      return result.data;
+    },
+    setDefaultBilling: async (accessToken, addressUid) => {
+      const result = await request<CommerceCustomerAddress>(
+        resolveCommerceEndpoint("customerAddressDefaultBilling", { addressUid }),
+        {
+          method: "POST",
+          accessToken,
+        },
       );
       if (!result?.data) {
         throw new Error("");

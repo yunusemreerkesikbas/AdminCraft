@@ -23,6 +23,18 @@ Not implemented yet:
 - final commerce visual design
 - legal snapshot rendering
 
+## UI model convention
+
+Commerce UI components receive presentation data through `model` props. Do not introduce new `copy`, `Copy`, or `ViewModel` contracts for component input data.
+
+Rules:
+
+- Put UI model types and factory functions next to the owning feature component, using kebab-case file names such as `components/orders/orders-model.ts`.
+- Name contracts as `*Model` (`OrdersModel`, `CheckoutModel`, `AddressBookModel`) and pass them as `model={model}`.
+- Build translated models with pure `create*Model(...)` factory functions. These factories accept translator functions and must not import `next-intl/server`.
+- Keep backend API DTOs in `lib/commerce/**/types.ts`; do not mix API response/request contracts with UI presentation models.
+- Compose shared nested models instead of duplicating translation mapping. For example, account and checkout flows should reuse `createAddressBookModel(...)`.
+
 ## Environment
 
 Required:

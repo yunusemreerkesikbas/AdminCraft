@@ -12,6 +12,49 @@ export type CommerceCustomer = {
   emailVerified: boolean;
 };
 
+export type InvoiceType = "INDIVIDUAL" | "CORPORATE";
+
+export type CommerceCustomerAddress = {
+  uid: string;
+  label: string | null;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  countryIso: string;
+  city: string;
+  district: string;
+  addressLine1: string;
+  addressLine2: string | null;
+  postalCode: string | null;
+  defaultDelivery: boolean;
+  defaultBilling: boolean;
+  invoiceType: InvoiceType;
+  companyName: string | null;
+  taxNumber: string | null;
+  taxOffice: string | null;
+  invoiceIdentityNumber: string | null;
+};
+
+export type CommerceCustomerAddressRequest = {
+  label?: string | null;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  countryIso?: string | null;
+  city: string;
+  district: string;
+  addressLine1: string;
+  addressLine2?: string | null;
+  postalCode?: string | null;
+  defaultDelivery?: boolean;
+  defaultBilling?: boolean;
+  invoiceType?: InvoiceType;
+  companyName?: string | null;
+  taxNumber?: string | null;
+  taxOffice?: string | null;
+  invoiceIdentityNumber?: string | null;
+};
+
 export type CartMergeResponse = {
   status: string;
   mergedItemCount: number;

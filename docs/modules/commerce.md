@@ -236,6 +236,15 @@ Standalone storefront app:
 - Status: Next.js app shell, locale routing, tenant-aware request foundation, minimal Quiet Retail skeleton, typed cart API client, localStorage cart token handling, cart provider, `/[lang]/cart` read/mutation wiring, header cart badge, `/[lang]/products` listing/search, `/[lang]/products/[productUid]` product delivery, variant selection, quantity selection, add-to-cart from real variants, and `/[lang]/account` customer auth/account foundation are in place.
 - Remaining storefront work: address book, checkout, payment return, order history, and final tenant/theme redesign.
 
+Commerce UI model convention:
+
+- Component input presentation data is named `model`, not `copy`.
+- Type names use `*Model`; do not add `*Copy` or `*ViewModel` types for new commerce UI components.
+- Feature-owned model files live next to the component, for example `components/orders/orders-model.ts`.
+- Model factories are pure `create*Model(...)` functions that accept translator functions. They must not import `next-intl/server`; server pages own `getTranslations(...)`.
+- Backend request/response DTOs remain under `lib/commerce/**/types.ts`; UI models are presentation contracts and must not become API contracts.
+- Shared nested models should be composed rather than duplicated, such as reusing `createAddressBookModel(...)` from account and checkout flows.
+
 ## Security & tenant isolation
 
 - Provisioning endpoints are SUPER_ADMIN-only through `ProvisioningController`.

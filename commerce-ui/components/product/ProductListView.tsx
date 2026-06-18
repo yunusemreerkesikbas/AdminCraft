@@ -5,26 +5,7 @@ import type {
   PageResponse,
   ProductListDeliveryResponse,
 } from "@/lib/commerce/product/types";
-
-export type ProductListCopy = {
-  searchLabel: string;
-  searchPlaceholder: string;
-  searchAction: string;
-  clearAction: string;
-  resultsLabel: string;
-  emptyTitle: string;
-  emptyDescription: string;
-  productTypeFallback: string;
-  priceLabel: string;
-  detailsAction: string;
-  previousAction: string;
-  nextAction: string;
-  pageLabel: string;
-  imageAltFallback: string;
-  errorTitle: string;
-  errorDescription: string;
-  retryAction: string;
-};
+import type { ProductListModel } from "./product-list-model";
 
 type ProductListViewProps = {
   lang: string;
@@ -32,7 +13,7 @@ type ProductListViewProps = {
   pageNumber: number;
   products: PageResponse<ProductListDeliveryResponse> | null;
   errorMessage: string | null;
-  copy: ProductListCopy;
+  model: ProductListModel;
 };
 
 const buildProductsHref = (
@@ -55,11 +36,11 @@ const buildProductsHref = (
 function ProductCard({
   lang,
   product,
-  copy,
+  model,
 }: {
   lang: string;
   product: ProductListDeliveryResponse;
-  copy: ProductListCopy;
+  model: ProductListModel;
 }) {
   const detailHref = withLocalePath(lang, `products/${product.uid}`);
 
@@ -69,7 +50,7 @@ function ProductCard({
         {product.thumbnailUrl ? (
           <Image
             src={product.thumbnailUrl}
-            alt={product.name || copy.imageAltFallback}
+            alt={product.name || model.imageAltFallback}
             fill
             sizes="(max-width: 760px) 100vw, (max-width: 1180px) 50vw, 33vw"
             className="product-card__image"
@@ -81,7 +62,7 @@ function ProductCard({
       <div className="product-card__body">
         <div>
           <p className="product-card__type">
-            {product.productTypeName || copy.productTypeFallback}
+            {product.productTypeName || model.productTypeFallback}
           </p>
           <h2 className="product-card__title">
             <Link href={detailHref}>{product.name}</Link>
@@ -92,11 +73,11 @@ function ProductCard({
         </div>
         <div className="product-card__footer">
           <div className="product-card__price">
-            <span>{copy.priceLabel}</span>
+            <span>{model.priceLabel}</span>
             <strong>{product.price.formattedValue}</strong>
           </div>
           <Link href={detailHref} className="commerce-action commerce-action--secondary">
-            {copy.detailsAction}
+            {model.detailsAction}
           </Link>
         </div>
       </div>
@@ -110,7 +91,7 @@ export function ProductListView({
   pageNumber,
   products,
   errorMessage,
-  copy,
+  model,
 }: ProductListViewProps) {
   const items = products?.content ?? [];
   const totalElements = products?.totalElements ?? 0;
@@ -122,7 +103,7 @@ export function ProductListView({
     <section className="product-listing">
       <form className="product-search-panel surface-panel" action={withLocalePath(lang, "products")}>
         <label className="product-search-panel__label" htmlFor="product-search">
-          {copy.searchLabel}
+          {model.searchLabel}
         </label>
         <div className="product-search-panel__controls">
           <input
@@ -130,18 +111,18 @@ export function ProductListView({
             name="q"
             type="search"
             defaultValue={query}
-            placeholder={copy.searchPlaceholder}
+            placeholder={model.searchPlaceholder}
             className="product-search-panel__input"
           />
           <button type="submit" className="commerce-action">
-            {copy.searchAction}
+            {model.searchAction}
           </button>
           {query ? (
             <Link
               href={withLocalePath(lang, "products")}
               className="commerce-action commerce-action--secondary"
             >
-              {copy.clearAction}
+              {model.clearAction}
             </Link>
           ) : null}
         </div>
@@ -149,24 +130,24 @@ export function ProductListView({
 
       <div className="product-listing__meta">
         <p>
-          {copy.resultsLabel}: {totalElements}
+          {model.resultsLabel}: {totalElements}
         </p>
         {totalPages > 0 ? (
           <p>
-            {copy.pageLabel}: {pageNumber + 1} / {totalPages}
+            {model.pageLabel}: {pageNumber + 1} / {totalPages}
           </p>
         ) : null}
       </div>
 
       {errorMessage ? (
         <div className="surface-panel product-empty-state" role="alert">
-          <h2 className="frame-title">{copy.errorTitle}</h2>
-          <p className="frame-note">{errorMessage || copy.errorDescription}</p>
+          <h2 className="frame-title">{model.errorTitle}</h2>
+          <p className="frame-note">{errorMessage || model.errorDescription}</p>
           <Link
             href={buildProductsHref(lang, query, pageNumber)}
             className="commerce-action commerce-action--secondary"
           >
-            {copy.retryAction}
+            {model.retryAction}
           </Link>
         </div>
       ) : items.length > 0 ? (
@@ -176,38 +157,38 @@ export function ProductListView({
               key={product.uid}
               lang={lang}
               product={product}
-              copy={copy}
+              model={model}
             />
           ))}
         </div>
       ) : (
         <div className="surface-panel product-empty-state">
-          <h2 className="frame-title">{copy.emptyTitle}</h2>
-          <p className="frame-note">{copy.emptyDescription}</p>
+          <h2 className="frame-title">{model.emptyTitle}</h2>
+          <p className="frame-note">{model.emptyDescription}</p>
         </div>
       )}
 
       {totalPages > 1 ? (
-        <nav className="product-pagination" aria-label={copy.pageLabel}>
+        <nav className="product-pagination" aria-label={model.pageLabel}>
           {hasPrevious ? (
             <Link
               className="commerce-action commerce-action--secondary"
               href={buildProductsHref(lang, query, pageNumber - 1)}
             >
-              {copy.previousAction}
+              {model.previousAction}
             </Link>
           ) : (
-            <span className="commerce-action-disabled">{copy.previousAction}</span>
+            <span className="commerce-action-disabled">{model.previousAction}</span>
           )}
           {hasNext ? (
             <Link
               className="commerce-action commerce-action--secondary"
               href={buildProductsHref(lang, query, pageNumber + 1)}
             >
-              {copy.nextAction}
+              {model.nextAction}
             </Link>
           ) : (
-            <span className="commerce-action-disabled">{copy.nextAction}</span>
+            <span className="commerce-action-disabled">{model.nextAction}</span>
           )}
         </nav>
       ) : null}

@@ -11,6 +11,11 @@ export const COMMERCE_ENDPOINTS = {
   customerAuthLogout: "commerce/customers/auth/logout",
   customerProfile: "commerce/customers/me",
   customerAddresses: "commerce/customers/addresses",
+  customerAddressByUid: "commerce/customers/addresses/${addressUid}",
+  customerAddressDefaultDelivery:
+    "commerce/customers/addresses/${addressUid}/default-delivery",
+  customerAddressDefaultBilling:
+    "commerce/customers/addresses/${addressUid}/default-billing",
   paymentAttempts: "commerce/payments/attempts",
   paymentAttemptByUid: "commerce/payments/attempts/${attemptUid}",
   paymentInitialize: "commerce/payments/attempts/${attemptUid}/initialize",

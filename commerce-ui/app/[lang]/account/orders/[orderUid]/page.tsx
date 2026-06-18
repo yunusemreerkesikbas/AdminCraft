@@ -1,10 +1,10 @@
 import { getTranslations } from "next-intl/server";
-import { PageShell } from "@/components/ui/PageShell";
+import { createOrdersModel } from "@/components/orders/orders-model";
+import { OrderDetailView } from "@/components/orders/OrdersView";
 import {
-  ActionLink,
-  ReceiptFrame,
-} from "@/components/ui/StorefrontPrimitives";
-import { withLocalePath } from "@/lib/core/i18n/locale";
+  getCommerceBaseUrl,
+  getTenantHeadersAsync,
+} from "@/lib/core/config/runtime-env";
 
 export default async function OrderDetailPage({
   params,
@@ -13,30 +13,16 @@ export default async function OrderDetailPage({
 }) {
   const { lang, orderUid } = await params;
   const translate = await getTranslations("Orders");
+  const account = await getTranslations("Account");
+  const model = createOrdersModel(translate, account);
 
   return (
-    <PageShell
-      eyebrow={translate("eyebrow")}
-      title={translate("detailTitle")}
-      description={translate("description")}
-      actions={
-        <ActionLink
-          href={withLocalePath(lang, "account/orders")}
-          label={translate("primaryAction")}
-          variant="secondary"
-        />
-      }
-      visual={
-        <ReceiptFrame
-          title={translate("detailFrameTitle")}
-          rows={[
-            { label: translate("rowOrderUid"), value: orderUid },
-            { label: translate("rowItems"), value: translate("rowItemsValue") },
-            { label: translate("rowPayment"), value: translate("rowPaymentValue") },
-            { label: translate("rowLegal"), value: translate("rowLegalValue") },
-          ]}
-        />
-      }
+    <OrderDetailView
+      model={model}
+      apiBaseUrl={getCommerceBaseUrl()}
+      lang={lang}
+      tenantHeaders={await getTenantHeadersAsync()}
+      orderUid={orderUid}
     />
   );
 }

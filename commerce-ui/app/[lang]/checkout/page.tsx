@@ -1,10 +1,10 @@
 import { getTranslations } from "next-intl/server";
-import { PageShell } from "@/components/ui/PageShell";
+import { createCheckoutModel } from "@/components/checkout/checkout-model";
+import { CheckoutView } from "@/components/checkout/CheckoutView";
 import {
-  ActionLink,
-  DisabledAction,
-  StepFrame,
-} from "@/components/ui/StorefrontPrimitives";
+  getCommerceBaseUrl,
+  getTenantHeadersAsync,
+} from "@/lib/core/config/runtime-env";
 import { withLocalePath } from "@/lib/core/i18n/locale";
 
 export default async function CheckoutPage({
@@ -14,41 +14,17 @@ export default async function CheckoutPage({
 }) {
   const { lang } = await params;
   const translate = await getTranslations("Checkout");
+  const account = await getTranslations("Account");
+  const addressBook = await getTranslations("AddressBook");
+  const model = createCheckoutModel(translate, account, addressBook);
 
   return (
-    <PageShell
-      eyebrow={translate("eyebrow")}
-      title={translate("title")}
-      description={translate("description")}
-      actions={
-        <>
-          <DisabledAction label={translate("primaryDisabled")} />
-          <ActionLink
-            href={withLocalePath(lang, "cart")}
-            label={translate("secondaryAction")}
-            variant="secondary"
-          />
-        </>
-      }
-      visual={
-        <StepFrame
-          title={translate("stepsTitle")}
-          steps={[
-            {
-              title: translate("stepAddressTitle"),
-              description: translate("stepAddressDescription"),
-            },
-            {
-              title: translate("stepPaymentTitle"),
-              description: translate("stepPaymentDescription"),
-            },
-            {
-              title: translate("stepReviewTitle"),
-              description: translate("stepReviewDescription"),
-            },
-          ]}
-        />
-      }
+    <CheckoutView
+      model={model}
+      apiBaseUrl={getCommerceBaseUrl()}
+      lang={lang}
+      tenantHeaders={await getTenantHeadersAsync()}
+      cartHref={withLocalePath(lang, "cart")}
     />
   );
 }

@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import {
   ProductListView,
-  type ProductListCopy,
 } from "@/components/product/ProductListView";
+import { createProductListModel } from "@/components/product/product-list-model";
 import { PageShell } from "@/components/ui/PageShell";
 import { ProductFrame } from "@/components/ui/StorefrontPrimitives";
 import { searchProducts } from "@/lib/commerce/product/product-client";
@@ -45,25 +45,7 @@ export default async function ProductsPage({
     errorMessage = translate("errorDescription");
   }
 
-  const copy: ProductListCopy = {
-    searchLabel: translate("searchLabel"),
-    searchPlaceholder: translate("searchPlaceholder"),
-    searchAction: translate("searchAction"),
-    clearAction: translate("clearAction"),
-    resultsLabel: translate("resultsLabel"),
-    emptyTitle: translate("emptyTitle"),
-    emptyDescription: translate("emptyDescription"),
-    productTypeFallback: translate("productTypeFallback"),
-    priceLabel: translate("priceLabel"),
-    detailsAction: translate("detailsAction"),
-    previousAction: translate("previousAction"),
-    nextAction: translate("nextAction"),
-    pageLabel: translate("pageLabel"),
-    imageAltFallback: translate("imageAltFallback"),
-    errorTitle: translate("errorTitle"),
-    errorDescription: translate("errorDescription"),
-    retryAction: translate("retryAction"),
-  };
+  const model = createProductListModel(translate);
 
   return (
     <PageShell
@@ -87,7 +69,7 @@ export default async function ProductsPage({
         pageNumber={pageNumber}
         products={products}
         errorMessage={errorMessage}
-        copy={copy}
+        model={model}
       />
     </PageShell>
   );
