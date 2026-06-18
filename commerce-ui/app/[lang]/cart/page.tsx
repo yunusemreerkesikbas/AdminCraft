@@ -14,6 +14,7 @@ export default async function CartPage({
     title: translate("title"),
     description: translate("description"),
     checkoutDisabled: translate("checkoutDisabled"),
+    checkoutAction: translate("checkoutAction"),
     secondaryAction: translate("secondaryAction"),
     summaryTitle: translate("summaryTitle"),
     summaryNote: translate("summaryNote"),
@@ -43,6 +44,11 @@ export default async function CartPage({
   };
 
   return (
-    <CartPageView copy={copy} lang={lang} storeHref={withLocalePath(lang)} />
+    <CartPageView
+      copy={copy}
+      lang={lang}
+      storeHref={withLocalePath(lang)}
+      checkoutHref={withLocalePath(lang, "checkout")}
+    />
   );
 }

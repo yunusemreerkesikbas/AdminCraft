@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.backend.application.commerce.CommercePaymentProviderPort.Address;
 import com.backend.application.commerce.CommercePaymentProviderPort.BasketItem;
@@ -39,6 +40,7 @@ import com.backend.domain.commerce.CommerceCheckout;
 import com.backend.domain.commerce.CommerceCheckoutItem;
 import com.backend.domain.commerce.CommerceCheckoutStatus;
 import com.backend.domain.commerce.CommerceCustomer;
+import com.backend.domain.commerce.CommerceOrder;
 import com.backend.domain.commerce.CommercePaymentAttempt;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 import com.backend.domain.commerce.exception.CommerceDomainException;
@@ -167,19 +169,20 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 		String providerCode = resolveProvider();
 		ProviderConfig config = loadProviderConfig();
 		if (token == null || token.isBlank()) {
-			return config.failureReturnUrl();
+			return appendReturnParams(config.failureReturnUrl(), CommercePaymentAttemptStatus.FAILED, null, null);
 		}
 		Optional<CommercePaymentAttempt> attemptOpt = paymentAttemptRepository
 				.findFirstByProviderAndProviderReference(providerCode, token.trim());
 		if (attemptOpt.isEmpty()) {
-			return config.failureReturnUrl();
+			return appendReturnParams(config.failureReturnUrl(), CommercePaymentAttemptStatus.FAILED, null, null);
 		}
 		CommercePaymentAttempt attempt = attemptOpt.get();
 		if (attempt.getStatus() != CommercePaymentAttemptStatus.PENDING) {
+			CommerceOrder order = null;
 			if (attempt.getStatus() == CommercePaymentAttemptStatus.SUCCEEDED) {
-				orderFinalizationService.finalizeSuccessfulPayment(attempt);
+				order = orderFinalizationService.finalizeSuccessfulPayment(attempt);
 			}
-			return redirectUrlForStatus(attempt, config);
+			return redirectUrlForStatus(attempt, config, order);
 		}
 		CheckoutFormResult result;
 		try {
@@ -190,7 +193,7 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 							token.trim()));
 		} catch (CommercePaymentProviderException ex) {
 			markProviderFailure(attempt, "PROVIDER_RETRIEVE_FAILED", "commerce.payment.provider.retrieve.failed");
-			return config.failureReturnUrl();
+			return redirectUrlForStatus(attempt, config, null);
 		}
 		if (result.successful()) {
 			attempt.setStatus(CommercePaymentAttemptStatus.SUCCEEDED);
@@ -198,8 +201,8 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 			attempt.setFailureCode(null);
 			attempt.setFailureMessageKey(null);
 			CommercePaymentAttempt saved = paymentAttemptRepository.save(attempt);
-			orderFinalizationService.finalizeSuccessfulPayment(saved);
-			return config.successReturnUrl();
+			CommerceOrder order = orderFinalizationService.finalizeSuccessfulPayment(saved);
+			return redirectUrlForStatus(saved, config, order);
 		}
 		attempt.setStatus(CommercePaymentAttemptStatus.FAILED);
 		attempt.setFailureCode(result.failureCode());
@@ -207,7 +210,7 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 				result.failureMessageKey(),
 				"commerce.payment.provider.failed"));
 		paymentAttemptRepository.save(attempt);
-		return config.failureReturnUrl();
+		return redirectUrlForStatus(attempt, config, null);
 	}
 
 	private CommercePaymentAttempt loadAttempt(CommerceCustomerPrincipal principal, InitializePaymentAttemptCommand command) {
@@ -550,10 +553,34 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 				attempt.getFailureMessageKey());
 	}
 
-	private String redirectUrlForStatus(CommercePaymentAttempt attempt, ProviderConfig config) {
-		return attempt.getStatus() == CommercePaymentAttemptStatus.SUCCEEDED
+	private String redirectUrlForStatus(CommercePaymentAttempt attempt, ProviderConfig config, CommerceOrder order) {
+		String baseUrl = attempt.getStatus() == CommercePaymentAttemptStatus.SUCCEEDED
 				? config.successReturnUrl()
 				: config.failureReturnUrl();
+		return appendReturnParams(baseUrl, attempt.getStatus(), attempt.getUid(), orderUid(order));
+	}
+
+	private String appendReturnParams(
+			String baseUrl,
+			CommercePaymentAttemptStatus paymentStatus,
+			String attemptUid,
+			String orderUid) {
+		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(baseUrl)
+				.queryParam("paymentStatus", paymentStatus.name());
+		if (attemptUid != null && !attemptUid.isBlank()) {
+			builder.queryParam("attemptUid", attemptUid);
+		}
+		if (orderUid != null && !orderUid.isBlank()) {
+			builder.queryParam("orderUid", orderUid);
+		}
+		return builder.build().toUriString();
+	}
+
+	private String orderUid(CommerceOrder order) {
+		if (order == null || order.getUid() == null || order.getUid().isBlank()) {
+			return null;
+		}
+		return order.getUid();
 	}
 
 	private String country(String countryIso) {

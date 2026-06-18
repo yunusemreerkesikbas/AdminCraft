@@ -23,6 +23,8 @@ import {
 } from "@/lib/commerce/customer/customer-token-memory";
 import type {
   CommerceCustomer,
+  CommerceCustomerAddress,
+  CommerceCustomerAddressRequest,
   CommerceCustomerAuthResponse,
   CommerceCustomerLoginRequest,
   CommerceCustomerRegisterRequest,
@@ -30,6 +32,7 @@ import type {
 
 type CustomerSessionContextValue = {
   customer: CommerceCustomer | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
   isRestoring: boolean;
   isMutating: boolean;
@@ -38,6 +41,21 @@ type CustomerSessionContextValue = {
   register: (request: CommerceCustomerRegisterRequest) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
+  listAddresses: () => Promise<CommerceCustomerAddress[]>;
+  createAddress: (
+    request: CommerceCustomerAddressRequest,
+  ) => Promise<CommerceCustomerAddress | null>;
+  updateAddress: (
+    addressUid: string,
+    request: CommerceCustomerAddressRequest,
+  ) => Promise<CommerceCustomerAddress | null>;
+  deleteAddress: (addressUid: string) => Promise<boolean>;
+  setDefaultDelivery: (
+    addressUid: string,
+  ) => Promise<CommerceCustomerAddress | null>;
+  setDefaultBilling: (
+    addressUid: string,
+  ) => Promise<CommerceCustomerAddress | null>;
 };
 
 type CustomerSessionProviderProps = {
@@ -163,6 +181,104 @@ export function CustomerSessionProvider({
     }
   }, [clearSession, client, replaceCart]);
 
+  const requireAccessToken = useCallback((): string => {
+    const currentAccessToken = accessToken;
+    if (!currentAccessToken) {
+      throw new Error("");
+    }
+    return currentAccessToken;
+  }, [accessToken]);
+
+  const listAddresses = useCallback(
+    () => client.listAddresses(requireAccessToken()),
+    [client, requireAccessToken],
+  );
+
+  const createAddress = useCallback(
+    async (request: CommerceCustomerAddressRequest) => {
+      setIsMutating(true);
+      setError(null);
+      try {
+        return await client.createAddress(requireAccessToken(), request);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "");
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [client, requireAccessToken],
+  );
+
+  const updateAddress = useCallback(
+    async (addressUid: string, request: CommerceCustomerAddressRequest) => {
+      setIsMutating(true);
+      setError(null);
+      try {
+        return await client.updateAddress(
+          requireAccessToken(),
+          addressUid,
+          request,
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "");
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [client, requireAccessToken],
+  );
+
+  const deleteAddress = useCallback(
+    async (addressUid: string) => {
+      setIsMutating(true);
+      setError(null);
+      try {
+        await client.deleteAddress(requireAccessToken(), addressUid);
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "");
+        return false;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [client, requireAccessToken],
+  );
+
+  const setDefaultDelivery = useCallback(
+    async (addressUid: string) => {
+      setIsMutating(true);
+      setError(null);
+      try {
+        return await client.setDefaultDelivery(requireAccessToken(), addressUid);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "");
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [client, requireAccessToken],
+  );
+
+  const setDefaultBilling = useCallback(
+    async (addressUid: string) => {
+      setIsMutating(true);
+      setError(null);
+      try {
+        return await client.setDefaultBilling(requireAccessToken(), addressUid);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "");
+        return null;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [client, requireAccessToken],
+  );
+
   useEffect(() => {
     if (didRestore.current) {
       return;
@@ -178,6 +294,7 @@ export function CustomerSessionProvider({
   const value = useMemo<CustomerSessionContextValue>(
     () => ({
       customer,
+      accessToken,
       isAuthenticated: Boolean(accessToken && customer),
       isRestoring,
       isMutating,
@@ -186,6 +303,12 @@ export function CustomerSessionProvider({
       register,
       logout,
       refreshSession,
+      listAddresses,
+      createAddress,
+      updateAddress,
+      deleteAddress,
+      setDefaultDelivery,
+      setDefaultBilling,
     }),
     [
       customer,
@@ -197,6 +320,12 @@ export function CustomerSessionProvider({
       register,
       logout,
       refreshSession,
+      listAddresses,
+      createAddress,
+      updateAddress,
+      deleteAddress,
+      setDefaultDelivery,
+      setDefaultBilling,
     ],
   );
 

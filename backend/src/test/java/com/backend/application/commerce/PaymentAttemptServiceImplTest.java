@@ -34,6 +34,7 @@ import com.backend.domain.commerce.CommerceCheckout;
 import com.backend.domain.commerce.CommerceCheckoutItem;
 import com.backend.domain.commerce.CommerceCheckoutStatus;
 import com.backend.domain.commerce.CommerceCustomer;
+import com.backend.domain.commerce.CommerceOrder;
 import com.backend.domain.commerce.CommercePaymentAttempt;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 import com.backend.domain.commerce.exception.CommerceDomainException;
@@ -352,11 +353,34 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
 
-		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success");
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success?paymentStatus=SUCCEEDED&attemptUid=attempt-uid");
 		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.SUCCEEDED);
 		assertThat(attempt.getProviderTransactionId()).isEqualTo("payment-123");
 		verify(paymentAttemptRepository).save(attempt);
 		verify(orderFinalizationService).finalizeSuccessfulPayment(attempt);
+	}
+
+	@Test
+	void callback_ShouldAppendReturnQueryParamsAndPreserveExistingSuccessQuery() {
+		stubPaymentEnabled();
+		stubProviderConfig();
+		when(configPropertyService.findRaw(1L, "tenant_1", "commerce.payment.return_success_url"))
+				.thenReturn(Optional.of("https://storefront.example.com/payment/success?locale=tr"));
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setProviderReference("provider-token");
+		CommerceOrder order = new CommerceOrder();
+		order.setUid("order-uid");
+		when(paymentAttemptRepository.findFirstByProviderAndProviderReference("iyzico", "provider-token"))
+				.thenReturn(Optional.of(attempt));
+		when(paymentProvider.retrieveCheckoutForm(any()))
+				.thenReturn(new CheckoutFormResult(true, "payment-123", null, null));
+		when(paymentAttemptRepository.save(any(CommercePaymentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(orderFinalizationService.finalizeSuccessfulPayment(any())).thenReturn(order);
+
+		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
+
+		assertThat(redirectUrl)
+				.isEqualTo("https://storefront.example.com/payment/success?locale=tr&paymentStatus=SUCCEEDED&attemptUid=attempt-uid&orderUid=order-uid");
 	}
 
 	@Test
@@ -375,7 +399,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
 
-		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success");
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success?paymentStatus=SUCCEEDED&attemptUid=attempt-uid");
 		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.SUCCEEDED);
 		verify(paymentProvider).retrieveCheckoutForm(any());
 		verify(orderFinalizationService).finalizeSuccessfulPayment(attempt);
@@ -395,7 +419,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
 
-		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure?paymentStatus=FAILED&attemptUid=attempt-uid");
 		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.FAILED);
 		assertThat(attempt.getFailureCode()).isEqualTo("NOT_SUFFICIENT_FUNDS");
 		assertThat(attempt.getFailureMessageKey()).isEqualTo("commerce.payment.provider.failed");
@@ -415,7 +439,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
 
-		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure?paymentStatus=FAILED&attemptUid=attempt-uid");
 		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.FAILED);
 		assertThat(attempt.getFailureCode()).isEqualTo("PROVIDER_RETRIEVE_FAILED");
 		assertThat(attempt.getFailureMessageKey()).isEqualTo("commerce.payment.provider.retrieve.failed");
@@ -434,7 +458,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback("provider-token");
 
-		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success");
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/success?paymentStatus=SUCCEEDED&attemptUid=attempt-uid");
 		verify(paymentProvider, never()).retrieveCheckoutForm(any());
 		verify(paymentAttemptRepository, never()).save(any());
 		verify(orderFinalizationService).finalizeSuccessfulPayment(attempt);
@@ -449,7 +473,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback("unknown-token");
 
-		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure?paymentStatus=FAILED");
 		verify(paymentProvider, never()).retrieveCheckoutForm(any());
 	}
 
@@ -460,7 +484,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback(null);
 
-		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure?paymentStatus=FAILED");
 		verify(paymentProvider, never()).retrieveCheckoutForm(any());
 	}
 
@@ -471,7 +495,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 
 		String redirectUrl = service.handleIyzicoCheckoutFormCallback(" ");
 
-		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure");
+		assertThat(redirectUrl).isEqualTo("https://storefront.example.com/payment/failure?paymentStatus=FAILED");
 		verify(paymentProvider, never()).retrieveCheckoutForm(any());
 	}
 

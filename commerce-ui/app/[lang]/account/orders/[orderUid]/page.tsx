@@ -1,10 +1,9 @@
 import { getTranslations } from "next-intl/server";
-import { PageShell } from "@/components/ui/PageShell";
+import { OrderDetailView, type OrdersCopy } from "@/components/orders/OrdersView";
 import {
-  ActionLink,
-  ReceiptFrame,
-} from "@/components/ui/StorefrontPrimitives";
-import { withLocalePath } from "@/lib/core/i18n/locale";
+  getCommerceBaseUrl,
+  getTenantHeadersAsync,
+} from "@/lib/core/config/runtime-env";
 
 export default async function OrderDetailPage({
   params,
@@ -13,30 +12,58 @@ export default async function OrderDetailPage({
 }) {
   const { lang, orderUid } = await params;
   const translate = await getTranslations("Orders");
+  const account = await getTranslations("Account");
+  const copy: OrdersCopy = {
+    eyebrow: translate("eyebrow"),
+    title: translate("title"),
+    description: translate("description"),
+    detailTitle: translate("detailTitle"),
+    listTitle: translate("listTitle"),
+    emptyTitle: translate("emptyTitle"),
+    emptyDescription: translate("emptyDescription"),
+    loadingLabel: translate("loadingLabel"),
+    errorFallback: translate("errorFallback"),
+    rowOrderUid: translate("rowOrderUid"),
+    rowItems: translate("rowItems"),
+    rowStatus: translate("rowStatus"),
+    rowCreatedAt: translate("rowCreatedAt"),
+    rowShipping: translate("rowShipping"),
+    rowDelivery: translate("rowDelivery"),
+    rowBilling: translate("rowBilling"),
+    rowLegal: translate("rowLegal"),
+    rowTotal: translate("rowTotal"),
+    attentionLabel: translate("attentionLabel"),
+    detailsAction: translate("detailsAction"),
+    primaryAction: translate("primaryAction"),
+    secondaryAction: translate("secondaryAction"),
+    itemFallback: translate("itemFallback"),
+    auth: {
+      title: translate("authTitle"),
+      description: translate("authDescription"),
+      loginTab: account("loginTab"),
+      registerTab: account("registerTab"),
+      emailLabel: account("emailLabel"),
+      passwordLabel: account("passwordLabel"),
+      firstNameLabel: account("firstNameLabel"),
+      lastNameLabel: account("lastNameLabel"),
+      phoneLabel: account("phoneLabel"),
+      rememberMeLabel: account("rememberMeLabel"),
+      termsAcceptedLabel: account("termsAcceptedLabel"),
+      privacyAcceptedLabel: account("privacyAcceptedLabel"),
+      loginAction: account("loginAction"),
+      registerAction: account("registerAction"),
+      submittingLabel: account("submittingLabel"),
+      errorFallback: account("errorFallback"),
+    },
+  };
 
   return (
-    <PageShell
-      eyebrow={translate("eyebrow")}
-      title={translate("detailTitle")}
-      description={translate("description")}
-      actions={
-        <ActionLink
-          href={withLocalePath(lang, "account/orders")}
-          label={translate("primaryAction")}
-          variant="secondary"
-        />
-      }
-      visual={
-        <ReceiptFrame
-          title={translate("detailFrameTitle")}
-          rows={[
-            { label: translate("rowOrderUid"), value: orderUid },
-            { label: translate("rowItems"), value: translate("rowItemsValue") },
-            { label: translate("rowPayment"), value: translate("rowPaymentValue") },
-            { label: translate("rowLegal"), value: translate("rowLegalValue") },
-          ]}
-        />
-      }
+    <OrderDetailView
+      copy={copy}
+      apiBaseUrl={getCommerceBaseUrl()}
+      lang={lang}
+      tenantHeaders={await getTenantHeadersAsync()}
+      orderUid={orderUid}
     />
   );
 }

@@ -15,6 +15,7 @@ export type CartPageCopy = {
   title: string;
   description: string;
   checkoutDisabled: string;
+  checkoutAction: string;
   secondaryAction: string;
   summaryTitle: string;
   summaryNote: string;
@@ -47,6 +48,7 @@ type CartPageViewProps = {
   copy: CartPageCopy;
   lang: string;
   storeHref: string;
+  checkoutHref: string;
 };
 
 const toNumber = (value: number | string | null | undefined): number => {
@@ -75,7 +77,12 @@ const formatMoney = (
 const displayName = (item: CartItemResponse, fallback: string): string =>
   item.productSku || item.variantSku || item.productUid || fallback;
 
-export function CartPageView({ copy, lang, storeHref }: CartPageViewProps) {
+export function CartPageView({
+  copy,
+  lang,
+  storeHref,
+  checkoutHref,
+}: CartPageViewProps) {
   const {
     cart,
     isLoading,
@@ -118,7 +125,11 @@ export function CartPageView({ copy, lang, storeHref }: CartPageViewProps) {
       description={copy.description}
       actions={
         <>
-          <DisabledAction label={copy.checkoutDisabled} />
+          {hasItems && !isLoading && !error ? (
+            <ActionLink href={checkoutHref} label={copy.checkoutAction} />
+          ) : (
+            <DisabledAction label={copy.checkoutDisabled} />
+          )}
           <ActionLink href={storeHref} label={copy.secondaryAction} variant="secondary" />
         </>
       }

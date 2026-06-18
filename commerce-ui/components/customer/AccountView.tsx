@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { PageShell } from "@/components/ui/PageShell";
 import type { CommerceCustomer } from "@/lib/commerce/customer/types";
+import { AddressBookPanel, type AddressBookCopy } from "./AddressBookPanel";
 import { useCustomerSession } from "./CustomerSessionProvider";
 
 type AuthMode = "login" | "register";
@@ -42,10 +43,13 @@ export type AccountCopy = {
   ordersTitle: string;
   ordersDescription: string;
   teaserLabel: string;
+  primaryAction: string;
+  addressBook: AddressBookCopy;
 };
 
 type AccountViewProps = {
   copy: AccountCopy;
+  ordersHref: string;
 };
 
 const defaultLoginState = {
@@ -65,7 +69,7 @@ const defaultRegisterState = {
   rememberMe: false,
 };
 
-export function AccountView({ copy }: AccountViewProps) {
+export function AccountView({ copy, ordersHref }: AccountViewProps) {
   const {
     customer,
     isAuthenticated,
@@ -140,6 +144,7 @@ export function AccountView({ copy }: AccountViewProps) {
           copy={copy}
           customer={customer}
           isMutating={isMutating}
+          ordersHref={ordersHref}
           onLogout={logout}
         />
       ) : (
@@ -369,11 +374,13 @@ function AuthenticatedAccount({
   copy,
   customer,
   isMutating,
+  ordersHref,
   onLogout,
 }: {
   copy: AccountCopy;
   customer: CommerceCustomer;
   isMutating: boolean;
+  ordersHref: string;
   onLogout: () => Promise<void>;
 }) {
   const displayName = `${customer.firstName} ${customer.lastName}`;
@@ -426,16 +433,15 @@ function AuthenticatedAccount({
 
       <div className="account-teaser-grid">
         <AccountTeaser
-          title={copy.addressesTitle}
-          description={copy.addressesDescription}
-          label={copy.teaserLabel}
-        />
-        <AccountTeaser
           title={copy.ordersTitle}
           description={copy.ordersDescription}
           label={copy.teaserLabel}
+          href={ordersHref}
+          action={copy.primaryAction}
         />
       </div>
+
+      <AddressBookPanel copy={copy.addressBook} />
     </section>
   );
 }
@@ -444,16 +450,23 @@ function AccountTeaser({
   title,
   description,
   label,
+  href,
+  action,
 }: {
   title: string;
   description: string;
   label: string;
+  href: string;
+  action: string;
 }) {
   return (
     <article className="surface-panel account-teaser">
       <span className="quiet-chip">{label}</span>
       <h3 className="row-title">{title}</h3>
       <p className="row-description">{description}</p>
+      <a className="commerce-action commerce-action--secondary" href={href}>
+        {action}
+      </a>
     </article>
   );
 }
