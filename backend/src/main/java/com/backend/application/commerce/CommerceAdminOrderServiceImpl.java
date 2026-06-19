@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
 
 import com.backend.application.commerce.dto.CheckoutAddressSnapshotResponse;
 import com.backend.application.commerce.dto.ChangeCommerceOrderStatusCommand;
@@ -33,9 +34,11 @@ import com.backend.shared.common.SecurityUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 
@@ -111,7 +114,7 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 
 	@Override
 	@Transactional
-	public CommerceAdminOrderDetailResponse changeStatus(String orderUid, ChangeCommerceOrderStatusCommand command) {
+	public CommerceAdminOrderDetailResponse changeStatus(String orderUid, @Valid ChangeCommerceOrderStatusCommand command) {
 		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
 		CommerceOrder order = orderRepository.findAdminByUidForUpdate(orderUid)
 				.orElseThrow(() -> new EntityNotFoundException(ORDER_NOT_FOUND));

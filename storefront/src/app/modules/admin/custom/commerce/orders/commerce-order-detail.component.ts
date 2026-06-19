@@ -9,14 +9,14 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
+import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
+import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { EMPTY, Subject, switchMap, takeUntil } from 'rxjs';
 import {
@@ -35,13 +35,13 @@ import { CommerceAdminOrderService } from '../services/commerce-admin.service';
         TranslocoModule,
         RouterLink,
         MatButtonModule,
-        MatFormFieldModule,
         MatIconModule,
-        MatInputModule,
         MatProgressSpinnerModule,
         ReactiveFormsModule,
         AdminPageHeaderComponent,
+        SpaInputComponent,
         SpaStatusBadgeComponent,
+        SpaTextareaComponent,
     ],
     templateUrl: './commerce-order-detail.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,

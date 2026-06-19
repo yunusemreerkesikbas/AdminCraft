@@ -129,49 +129,31 @@
                         @if (nextStatus(detail.summary.status); as next) {
                             @if (requiresShipment(detail.summary.status)) {
                                 <form [formGroup]="operationForm" class="mb-4 flex flex-col gap-3">
-                                    <mat-form-field appearance="outline">
-                                        <mat-label>{{ 'admin.commerce.orderDetail.carrierName' | transloco }}</mat-label>
-                                        <input matInput formControlName="carrierName" />
-                                        @if (operationForm.controls.carrierName.hasError('required')) {
-                                            <mat-error>{{ 'validation.required' | transloco }}</mat-error>
-                                        }
-                                        @if (operationForm.controls.carrierName.hasError('maxlength')) {
-                                            <mat-error>{{ 'validation.max.length' | transloco: { count: 100 } }}</mat-error>
-                                        }
-                                    </mat-form-field>
-                                    <mat-form-field appearance="outline">
-                                        <mat-label>{{ 'admin.commerce.orderDetail.trackingNumber' | transloco }}</mat-label>
-                                        <input matInput formControlName="trackingNumber" />
-                                        @if (operationForm.controls.trackingNumber.hasError('required')) {
-                                            <mat-error>{{ 'validation.required' | transloco }}</mat-error>
-                                        }
-                                        @if (operationForm.controls.trackingNumber.hasError('maxlength')) {
-                                            <mat-error>{{ 'validation.max.length' | transloco: { count: 100 } }}</mat-error>
-                                        }
-                                    </mat-form-field>
-                                    <mat-form-field appearance="outline">
-                                        <mat-label>{{ 'admin.commerce.orderDetail.trackingUrl' | transloco }}</mat-label>
-                                        <input matInput formControlName="trackingUrl" />
-                                        @if (operationForm.controls.trackingUrl.hasError('maxlength')) {
-                                            <mat-error>{{ 'validation.max.length' | transloco: { count: 500 } }}</mat-error>
-                                        }
-                                    </mat-form-field>
-                                    <mat-form-field appearance="outline">
-                                        <mat-label>{{ 'admin.commerce.orderDetail.internalNote' | transloco }}</mat-label>
-                                        <textarea matInput formControlName="internalNote" rows="3"></textarea>
-                                        @if (operationForm.controls.internalNote.hasError('maxlength')) {
-                                            <mat-error>{{ 'validation.max.length' | transloco: { count: 1000 } }}</mat-error>
-                                        }
-                                    </mat-form-field>
+                                    <spa-input
+                                        formControlName="carrierName"
+                                        [label]="'admin.commerce.orderDetail.carrierName' | transloco"
+                                    ></spa-input>
+                                    <spa-input
+                                        formControlName="trackingNumber"
+                                        [label]="'admin.commerce.orderDetail.trackingNumber' | transloco"
+                                    ></spa-input>
+                                    <spa-input
+                                        formControlName="trackingUrl"
+                                        [label]="'admin.commerce.orderDetail.trackingUrl' | transloco"
+                                    ></spa-input>
+                                    <spa-textarea
+                                        formControlName="internalNote"
+                                        [label]="'admin.commerce.orderDetail.internalNote' | transloco"
+                                        [rows]="3"
+                                    ></spa-textarea>
                                 </form>
                             } @else {
-                                <mat-form-field appearance="outline" class="mb-4 w-full">
-                                    <mat-label>{{ 'admin.commerce.orderDetail.internalNote' | transloco }}</mat-label>
-                                    <textarea matInput [formControl]="operationForm.controls.internalNote" rows="3"></textarea>
-                                    @if (operationForm.controls.internalNote.hasError('maxlength')) {
-                                        <mat-error>{{ 'validation.max.length' | transloco: { count: 1000 } }}</mat-error>
-                                    }
-                                </mat-form-field>
+                                <spa-textarea
+                                    class="mb-4 block"
+                                    [formControl]="operationForm.controls.internalNote"
+                                    [label]="'admin.commerce.orderDetail.internalNote' | transloco"
+                                    [rows]="3"
+                                ></spa-textarea>
                             }
 
                             <button

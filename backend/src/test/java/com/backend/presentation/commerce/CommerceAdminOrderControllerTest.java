@@ -111,6 +111,9 @@ class CommerceAdminOrderControllerTest {
 		verify(adminOrderService).changeStatus(org.mockito.ArgumentMatchers.eq("order-uid"), commandCaptor.capture());
 		assertThat(commandCaptor.getValue().status()).isEqualTo(CommerceOrderStatus.SHIPPED);
 		assertThat(commandCaptor.getValue().carrierName()).isEqualTo("Carrier");
+		assertThat(commandCaptor.getValue().trackingNumber()).isEqualTo("TRK-1");
+		assertThat(commandCaptor.getValue().trackingUrl()).isEqualTo("https://tracking.example/TRK-1");
+		assertThat(commandCaptor.getValue().internalNote()).isEqualTo("Packed");
 	}
 
 	private CommerceAdminOrderSummaryResponse orderSummary() {

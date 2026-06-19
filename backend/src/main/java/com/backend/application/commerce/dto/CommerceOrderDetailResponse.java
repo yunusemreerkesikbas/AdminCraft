@@ -13,8 +13,6 @@ public record CommerceOrderDetailResponse(
 		String currencyIso,
 		CheckoutTotalsResponse totals,
 		int itemCount,
-		Boolean requiresAttention,
-		String attentionReasonKey,
 		List<CommerceOrderItemResponse> items,
 		CheckoutShippingResponse shipping,
 		CommerceOrderFulfillmentResponse fulfillment,
@@ -42,8 +40,6 @@ public record CommerceOrderDetailResponse(
 						order.getShippingTotal(),
 						order.getTotal()),
 				items.size(),
-				order.isRequiresAttention(),
-				order.getAttentionReasonKey(),
 				items,
 				new CheckoutShippingResponse(
 						order.getShippingMethodCode(),

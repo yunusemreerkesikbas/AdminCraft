@@ -31,8 +31,6 @@ export type CommerceOrderSummaryResponse = {
   currencyIso: string;
   totals: CheckoutTotalsResponse;
   itemCount: number;
-  requiresAttention: boolean | null;
-  attentionReasonKey: string | null;
 };
 
 export type CommerceOrderFulfillmentResponse = {
@@ -51,4 +49,27 @@ export type CommerceOrderDetailResponse = CommerceOrderSummaryResponse & {
   deliveryAddress: CheckoutAddressSnapshot | null;
   billingAddress: CheckoutAddressSnapshot | null;
   legalSnapshotStatus: string;
+};
+
+export type CommerceOrderResolutionRequestType = "CANCELLATION" | "RETURN";
+
+export type CommerceOrderResolutionRequestResponse = {
+  requestUid: string;
+  orderUid: string;
+  orderNumber: string;
+  type: CommerceOrderResolutionRequestType;
+  status: string;
+  reason: string;
+  description: string;
+  requestedOrderStatus: string;
+  refundStatus: string;
+  createdAt: string;
+  decidedAt: string | null;
+  refundedAt: string | null;
+};
+
+export type CreateCommerceOrderResolutionRequestPayload = {
+  requestType: CommerceOrderResolutionRequestType;
+  reason: string;
+  description: string;
 };

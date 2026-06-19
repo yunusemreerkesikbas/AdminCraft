@@ -342,7 +342,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        log.warn("Invalid request body: {}", ex.getMessage());
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Invalid request body", correlationId);
         String message = getMessage("error.invalid.data");
         return new ResponseEntity<>(ApiResponse.error(400, message), HttpStatus.BAD_REQUEST);
     }

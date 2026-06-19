@@ -11,6 +11,8 @@ import com.backend.application.commerce.dto.ChangeCommerceOrderStatusCommand;
 import com.backend.domain.commerce.CommerceOrderStatus;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 
+import jakarta.validation.Valid;
+
 public interface CommerceAdminOrderService {
 
 	CommerceAdminDashboardResponse dashboard();
@@ -23,7 +25,7 @@ public interface CommerceAdminOrderService {
 
 	CommerceAdminOrderDetailResponse getOrder(String orderUid);
 
-	CommerceAdminOrderDetailResponse changeStatus(String orderUid, ChangeCommerceOrderStatusCommand command);
+	CommerceAdminOrderDetailResponse changeStatus(String orderUid, @Valid ChangeCommerceOrderStatusCommand command);
 
 	Page<CommerceAdminPaymentAttemptResponse> listPaymentAttempts(
 			Pageable pageable,
