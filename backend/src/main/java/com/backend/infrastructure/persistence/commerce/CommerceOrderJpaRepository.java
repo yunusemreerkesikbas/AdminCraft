@@ -31,6 +31,11 @@ interface CommerceOrderJpaRepository extends JpaRepository<CommerceOrder, Long> 
 	@EntityGraph(attributePaths = { "items" })
 	Optional<CommerceOrder> findByCustomerIdAndUid(Long customerId, String uid);
 
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@EntityGraph(attributePaths = { "items", "customer" })
+	@Query("select o from CommerceOrder o where o.customer.id = :customerId and o.uid = :uid")
+	Optional<CommerceOrder> findByCustomerIdAndUidForUpdate(@Param("customerId") Long customerId, @Param("uid") String uid);
+
 	@EntityGraph(attributePaths = { "customer" })
 	@Query("""
 			select o from CommerceOrder o

@@ -21,6 +21,7 @@ export const COMMERCE_ENDPOINTS = {
   paymentInitialize: "commerce/payments/attempts/${attemptUid}/initialize",
   orders: "commerce/orders",
   orderByUid: "commerce/orders/${orderUid}",
+  orderRequests: "commerce/orders/${orderUid}/requests",
 } as const;
 
 export type CommerceEndpointKey = keyof typeof COMMERCE_ENDPOINTS;

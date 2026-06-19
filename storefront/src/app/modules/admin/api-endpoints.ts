@@ -321,6 +321,9 @@ export const SPA_ENDPOINTS_CONFIG = {
     commerceAdminOrderByUid: 'commerce/admin/orders/${orderUid}',
     commerceAdminOrderStatus: 'commerce/admin/orders/${orderUid}/status',
     commerceAdminPaymentAttempts: 'commerce/admin/payment-attempts',
+    commerceAdminOrderRequests: 'commerce/admin/order-requests',
+    commerceAdminOrderRequestByUid: 'commerce/admin/order-requests/${requestUid}',
+    commerceAdminOrderRequestDecision: 'commerce/admin/order-requests/${requestUid}/decision',
 
     // ----- IMPEX -----
     impexExecute: 'impex/execute',

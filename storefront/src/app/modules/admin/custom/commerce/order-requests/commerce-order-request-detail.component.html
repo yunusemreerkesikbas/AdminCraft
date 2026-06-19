@@ -1,0 +1,126 @@
+<div class="bg-card flex min-w-0 flex-auto flex-col overflow-hidden sm:absolute sm:inset-0 dark:bg-transparent">
+    <admin-page-header
+        [title]="requestSig()?.orderNumber || ('admin.commerce.orderRequests.detailTitle' | transloco)"
+        [subtitle]="'admin.commerce.orderRequests.detailSubtitle' | transloco"
+        [showCreateButton]="false"
+        [showSearch]="false"
+        [isLoading]="isLoadingSig()"
+    >
+        <ng-container actions>
+            <a mat-stroked-button routerLink="../">
+                <span>{{ 'admin.common.actions.back' | transloco }}</span>
+            </a>
+        </ng-container>
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-y-auto p-6 md:p-8">
+        @if (isLoadingSig() && !requestSig()) {
+            <div class="flex flex-auto items-center justify-center py-16">
+                <mat-progress-spinner mode="indeterminate" diameter="48" />
+            </div>
+        } @else {
+            @if (requestSig(); as request) {
+                <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
+                    <section class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="mb-5 flex flex-wrap items-center gap-3">
+                            <spa-status-badge [status]="request.status" size="sm" />
+                            <span class="rounded bg-slate-100 px-2 py-1 text-xs font-semibold dark:bg-slate-800">
+                                {{ request.type }}
+                            </span>
+                        </div>
+                        <dl class="grid gap-4 text-sm md:grid-cols-2">
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.orderRequests.fields.orderNumber' | transloco }}</dt>
+                                <dd class="font-medium">{{ request.orderNumber }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.orderRequests.fields.customer' | transloco }}</dt>
+                                <dd class="font-medium">{{ request.customerEmail }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.orderRequests.fields.previousStatus' | transloco }}</dt>
+                                <dd>{{ request.previousOrderStatus }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.orderRequests.fields.requestedStatus' | transloco }}</dt>
+                                <dd>{{ request.requestedOrderStatus }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.orderRequests.fields.total' | transloco }}</dt>
+                                <dd>{{ request.orderTotal | number: '1.2-2' }} {{ request.currencyIso }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.orderRequests.fields.createdAt' | transloco }}</dt>
+                                <dd>{{ request.createdAt | date: 'medium' }}</dd>
+                            </div>
+                        </dl>
+
+                        <div class="mt-6 border-t pt-5">
+                            <h2 class="mb-2 text-base font-semibold">{{ request.reason }}</h2>
+                            <p class="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">{{ request.description }}</p>
+                        </div>
+                    </section>
+
+                    <aside class="flex flex-col gap-6">
+                        <section class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                            <h2 class="mb-4 text-lg font-semibold">{{ 'admin.commerce.orderRequests.refund' | transloco }}</h2>
+                            <dl class="space-y-3 text-sm">
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.orderRequests.fields.refundStatus' | transloco }}</dt>
+                                    <dd>{{ request.refundStatus }}</dd>
+                                </div>
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.orderRequests.fields.refundReference' | transloco }}</dt>
+                                    <dd class="truncate text-right">{{ request.refundReference || '-' }}</dd>
+                                </div>
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.orderRequests.fields.refundFailureCode' | transloco }}</dt>
+                                    <dd>{{ request.refundFailureCode || '-' }}</dd>
+                                </div>
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.orderRequests.fields.stockRestored' | transloco }}</dt>
+                                    <dd>{{ request.stockRestored ? 'Yes' : 'No' }}</dd>
+                                </div>
+                            </dl>
+                        </section>
+
+                        <section class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                            <h2 class="mb-4 text-lg font-semibold">{{ 'admin.commerce.orderRequests.decision' | transloco }}</h2>
+                            @if (request.status === 'PENDING') {
+                                <form [formGroup]="decisionForm" class="flex flex-col gap-4">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ 'admin.commerce.orderRequests.fields.decisionNote' | transloco }}</mat-label>
+                                        <textarea matInput formControlName="decisionNote" rows="4"></textarea>
+                                        @if (decisionForm.controls.decisionNote.hasError('maxlength')) {
+                                            <mat-error>{{ 'validation.max.length' | transloco: { count: 1000 } }}</mat-error>
+                                        }
+                                    </mat-form-field>
+                                    <div class="grid gap-3 sm:grid-cols-2">
+                                        <button mat-flat-button color="primary" type="button" [disabled]="isUpdatingSig()" (click)="decide('APPROVE')">
+                                            {{ 'admin.commerce.orderRequests.actions.approve' | transloco }}
+                                        </button>
+                                        <button mat-stroked-button type="button" [disabled]="isUpdatingSig()" (click)="decide('REJECT')">
+                                            {{ 'admin.commerce.orderRequests.actions.reject' | transloco }}
+                                        </button>
+                                    </div>
+                                </form>
+                            } @else {
+                                <dl class="space-y-3 text-sm">
+                                    <div class="flex justify-between gap-4">
+                                        <dt>{{ 'admin.commerce.orderRequests.fields.decidedBy' | transloco }}</dt>
+                                        <dd class="text-right">{{ request.decidedByEmail || '-' }}</dd>
+                                    </div>
+                                    <div class="flex justify-between gap-4">
+                                        <dt>{{ 'admin.commerce.orderRequests.fields.decidedAt' | transloco }}</dt>
+                                        <dd class="text-right">{{ request.decidedAt ? (request.decidedAt | date: 'medium') : '-' }}</dd>
+                                    </div>
+                                </dl>
+                                <p class="mt-4 text-sm text-slate-500">{{ request.decisionNote || ('admin.commerce.orderRequests.noDecisionNote' | transloco) }}</p>
+                            }
+                        </section>
+                    </aside>
+                </div>
+            }
+        }
+    </div>
+</div>

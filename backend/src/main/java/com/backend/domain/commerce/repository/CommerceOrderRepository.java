@@ -26,6 +26,8 @@ public interface CommerceOrderRepository {
 
 	Optional<CommerceOrder> findByCustomerIdAndUid(Long customerId, String uid);
 
+	Optional<CommerceOrder> findByCustomerIdAndUidForUpdate(Long customerId, String uid);
+
 	Page<CommerceOrder> findAdminOrders(
 			String search,
 			CommerceOrderStatus status,

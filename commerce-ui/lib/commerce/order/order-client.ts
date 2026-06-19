@@ -3,6 +3,8 @@ import { resolveCommerceEndpoint } from "@/lib/core/http/endpoints";
 import { createRequestTimeoutSignal } from "@/lib/core/http/request-timeout";
 import type {
   CommerceOrderDetailResponse,
+  CommerceOrderResolutionRequestResponse,
+  CreateCommerceOrderResolutionRequestPayload,
   CommerceOrderSummaryResponse,
   PageableResponse,
 } from "./types";
@@ -27,6 +29,15 @@ export type CommerceOrderClient = {
     accessToken: string,
     orderUid: string,
   ) => Promise<CommerceOrderDetailResponse>;
+  listOrderRequests: (
+    accessToken: string,
+    orderUid: string,
+  ) => Promise<CommerceOrderResolutionRequestResponse[]>;
+  createOrderRequest: (
+    accessToken: string,
+    orderUid: string,
+    payload: CreateCommerceOrderResolutionRequestPayload,
+  ) => Promise<CommerceOrderResolutionRequestResponse>;
 };
 
 const buildOrderUrl = (
@@ -79,6 +90,34 @@ export const createCommerceOrderClient = ({
     return payload.data;
   };
 
+  const mutateOrder = async <T>(
+    path: string,
+    accessToken: string,
+    body: unknown,
+  ): Promise<T> => {
+    const response = await fetch(buildOrderUrl(apiBaseUrl, path), {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Accept-Language": lang,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        ...tenantHeaders,
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+      signal: createRequestTimeoutSignal(),
+    });
+
+    const payload = await readApiResponse<T>(response, "");
+
+    if (payload.result === "ERROR" || !payload.data) {
+      throw new Error(payload.message ?? "");
+    }
+
+    return payload.data;
+  };
+
   return {
     listOrders: (accessToken, params) =>
       requestOrder<PageableResponse<CommerceOrderSummaryResponse>>(
@@ -89,6 +128,17 @@ export const createCommerceOrderClient = ({
       requestOrder<CommerceOrderDetailResponse>(
         resolveCommerceEndpoint("orderByUid", { orderUid }),
         { accessToken },
+      ),
+    listOrderRequests: (accessToken, orderUid) =>
+      requestOrder<CommerceOrderResolutionRequestResponse[]>(
+        resolveCommerceEndpoint("orderRequests", { orderUid }),
+        { accessToken },
+      ),
+    createOrderRequest: (accessToken, orderUid, payload) =>
+      mutateOrder<CommerceOrderResolutionRequestResponse>(
+        resolveCommerceEndpoint("orderRequests", { orderUid }),
+        accessToken,
+        payload,
       ),
   };
 };

@@ -3,6 +3,8 @@ import { SpaCommerceDashboardComponent } from './dashboard/commerce-dashboard.co
 import { SpaCommerceOrderDetailComponent } from './orders/commerce-order-detail.component';
 import { SpaCommerceOrderListComponent } from './orders/commerce-order-list.component';
 import { SpaCommercePaymentAttemptListComponent } from './payment-attempts/commerce-payment-attempt-list.component';
+import { SpaCommerceOrderRequestListComponent } from './order-requests/commerce-order-request-list.component';
+import { SpaCommerceOrderRequestDetailComponent } from './order-requests/commerce-order-request-detail.component';
 
 export default [
     {
@@ -25,5 +27,13 @@ export default [
     {
         path: 'payment-attempts',
         component: SpaCommercePaymentAttemptListComponent,
+    },
+    {
+        path: 'order-requests',
+        component: SpaCommerceOrderRequestListComponent,
+    },
+    {
+        path: 'order-requests/:requestUid',
+        component: SpaCommerceOrderRequestDetailComponent,
     },
 ] as Routes;

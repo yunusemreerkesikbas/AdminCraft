@@ -151,6 +151,15 @@ export const DEFAULT_NAVIGATION_ITEMS: NavigationItem[] = [
                 requiredModule: NAVIGATION_MODULES.COMMERCE,
                 requiredRole: 'TENANT_ADMIN',
             },
+            {
+                id: 'commerce.orderRequests',
+                title: 'admin.nav.commerceOrderRequests',
+                type: 'basic',
+                icon: 'heroicons_outline:receipt-refund',
+                link: 'commerce/order-requests',
+                requiredModule: NAVIGATION_MODULES.COMMERCE,
+                requiredRole: 'TENANT_ADMIN',
+            },
         ],
     },
     {

@@ -11,6 +11,8 @@ public interface CommercePaymentProviderPort {
 
 	CheckoutFormResult retrieveCheckoutForm(CheckoutFormRetrieveCommand command);
 
+	RefundPaymentResult refundPayment(RefundPaymentCommand command);
+
 	record Credentials(
 			String apiKey,
 			String secretKey,
@@ -75,6 +77,24 @@ public interface CommercePaymentProviderPort {
 	record CheckoutFormResult(
 			boolean successful,
 			String providerTransactionId,
+			String failureCode,
+			String failureMessageKey) {
+	}
+
+	record RefundPaymentCommand(
+			Credentials credentials,
+			String conversationId,
+			String paymentId,
+			BigDecimal price,
+			String currencyIso,
+			String clientIp,
+			String reason,
+			String description) {
+	}
+
+	record RefundPaymentResult(
+			boolean successful,
+			String refundReference,
 			String failureCode,
 			String failureMessageKey) {
 	}
