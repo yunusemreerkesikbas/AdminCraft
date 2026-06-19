@@ -17,6 +17,7 @@ public record CommerceOrderDetailResponse(
 		String attentionReasonKey,
 		List<CommerceOrderItemResponse> items,
 		CheckoutShippingResponse shipping,
+		CommerceOrderFulfillmentResponse fulfillment,
 		CheckoutAddressSnapshotResponse deliveryAddress,
 		CheckoutAddressSnapshotResponse billingAddress,
 		String legalSnapshotStatus) {
@@ -48,6 +49,7 @@ public record CommerceOrderDetailResponse(
 						order.getShippingMethodCode(),
 						order.getShippingMethodName(),
 						order.getShippingTotal()),
+				CommerceOrderFulfillmentResponse.from(order),
 				deliveryAddress,
 				billingAddress,
 				order.getLegalSnapshotStatus().name());

@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, read-only tenant admin commerce operations, and a standalone `commerce-ui` Next.js storefront shell with minimal design, cart foundation integration, product listing/search, product detail delivery, real variant add-to-cart wiring, and customer auth/account foundation. It does not implement fulfillment, transactional notifications, mutable admin order operations, or full storefront commerce flows yet.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, tenant admin commerce visibility, manual admin order status transitions, single-shipment manual fulfillment tracking, and a standalone `commerce-ui` Next.js storefront shell with minimal design, cart foundation integration, product listing/search, product detail delivery, real variant add-to-cart wiring, customer auth/account foundation, address book, checkout, payment return, and order history UI foundations. It does not implement cancellation/return/refund workflows, transactional notifications, or full legal snapshot rendering yet.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -23,15 +23,13 @@ Implemented foundations:
 - Internal payment attempt lifecycle with checkout totals snapshot, pending expiry, owner checks, and i18n response messages.
 - Hosted iyzico CheckoutForm sandbox initialization and callback handling through a payment provider port.
 - Customer-facing paid order creation after successful payment, daily order number counters, idempotent callback finalization, cart clear, checkout completion, stock decrement, and legal snapshot placeholders.
-- Tenant admin read-only commerce operations: dashboard summary, order list/detail, payment attempt history, and commerce sidebar navigation.
-- Standalone `commerce-ui` Next.js app shell, minimal storefront design skeleton, typed cart API client, localStorage cart token foundation, cart provider, cart page read/mutation wiring, header cart badge, product listing/search route, product detail delivery client, variant selector, real add-to-cart action, and customer auth/account foundation with refresh-cookie restore and memory-only access token state.
+- Tenant admin commerce operations: dashboard summary, order list/detail, payment attempt history, commerce sidebar navigation, strictly forward order status transitions, fulfillment capture, and status history timeline.
+- Standalone `commerce-ui` Next.js app shell, minimal storefront design skeleton, typed cart API client, localStorage cart token foundation, cart provider, cart page read/mutation wiring, header cart badge, product listing/search route, product detail delivery client, variant selector, real add-to-cart action, customer auth/account foundation with refresh-cookie restore and memory-only access token state, address book, checkout, payment return, and order history UI foundations.
 
 Not implemented yet:
 
-- Mutable admin order operations such as status transitions, fulfillment, shipment tracking, cancellation/return decisions, refunds, and internal notes.
-- Storefront address book/order history UI integration, checkout UI integration, and payment return interpretation.
+- Cancellation/return decisions, refund workflows, and transactional notifications.
 - Full legal template rendering and rendered legal snapshot capture.
-- Cancellation/return requests, manual fulfillment, shipping tracking, refunds, and transactional email/SMS.
 - Guest checkout, coupons/promotions, advanced analytics, multi-currency, and additional payment providers.
 
 ## Database
@@ -51,6 +49,7 @@ Current tenant migrations:
 - `V1.0.5__payment_attempt_foundation.sql` creates internal payment attempt snapshot tables.
 - `V1.0.6__order_foundation.sql` creates paid order snapshot tables and daily order number counters.
 - `V1.0.7__commerce_admin_read_indexes.sql` adds read indexes for admin order and payment attempt operations.
+- `V1.0.8__order_operations_foundation.sql` adds manual fulfillment fields and order status history.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -173,7 +172,7 @@ Base path: `/api/commerce/orders`
 Customer order reads are customer-only and require a commerce customer JWT. The API only returns orders owned by the authenticated customer; cross-customer order UIDs behave as not found. Raw payment provider fields such as provider transaction IDs are not exposed through customer-facing responses.
 
 - `GET /api/commerce/orders`: returns a paginated order summary list with `page`, `size`, and whitelisted `sort` support. Default sort is `createdAt,desc`; allowed sort fields are `createdAt`, `total`, `orderNumber`, and `status`.
-- `GET /api/commerce/orders/{orderUid}`: returns order detail with items, shipping, delivery/billing address snapshots, legal snapshot status, totals, and attention flags.
+- `GET /api/commerce/orders/{orderUid}`: returns order detail with items, shipping, fulfillment tracking, delivery/billing address snapshots, legal snapshot status, totals, and attention flags.
 
 Customer-cart bridge rules:
 
@@ -188,11 +187,12 @@ Customer-cart bridge rules:
 
 Base path: `/api/commerce/admin`
 
-Commerce admin APIs are tenant-scoped, require tenant admin authentication, and expose read-only operational visibility. They do not accept commerce customer JWTs and do not mutate order/payment state.
+Commerce admin APIs are tenant-scoped and require tenant admin authentication. They expose operational visibility plus the first narrow write workflow for manual order fulfillment. They do not accept commerce customer JWTs.
 
 - `GET /api/commerce/admin/dashboard`: returns today and last-7-days order count/revenue, attention order count, and failed payment attempt count.
 - `GET /api/commerce/admin/orders`: returns a paginated order list with `page`, `size`, whitelisted `sort`, optional `search`, optional `status`, and optional `requiresAttention`.
-- `GET /api/commerce/admin/orders/{orderUid}`: returns admin order detail with customer, totals, items, address snapshots, payment attempt summary, provider transaction id, legal snapshot status, and attention flags.
+- `GET /api/commerce/admin/orders/{orderUid}`: returns admin order detail with customer, totals, items, address snapshots, fulfillment tracking, status history, payment attempt summary, provider transaction id, legal snapshot status, and attention flags.
+- `PATCH /api/commerce/admin/orders/{orderUid}/status`: moves a paid order exactly one step forward through `PAID -> PREPARING -> SHIPPED -> DELIVERED`. `SHIPPED` requires `carrierName` and `trackingNumber`; `trackingUrl` and `internalNote` are optional. Each transition writes an order status history row.
 - `GET /api/commerce/admin/payment-attempts`: returns a paginated payment attempt history with `page`, `size`, whitelisted `sort`, optional `search`, and optional `status`.
 
 Provisioning is handled by the platform provisioning API:
@@ -210,7 +210,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart, customer account, customer-cart bridge, checkout, payment attempt, backend order finalization, customer order read APIs, and read-only operational admin APIs are the first commerce APIs/workflows. The standalone `commerce-ui` shell now has minimal design, cart foundation wiring, product listing/search, product detail delivery, real variant add-to-cart, and customer auth/account foundation; address book, checkout, payment return, order history, and mutable operational admin workflows remain backlog work.
+Anonymous cart, customer account, customer-cart bridge, checkout, payment attempt, backend order finalization, customer order read APIs, operational admin reads, and manual fulfillment status transitions are the first commerce APIs/workflows. The standalone `commerce-ui` shell now has minimal design, cart foundation wiring, product listing/search, product detail delivery, real variant add-to-cart, customer auth/account foundation, address book, checkout, payment return, and order history foundations; cancellation/return/refund flows and transactional notifications remain backlog work.
 
 ## Frontend integration
 
@@ -221,7 +221,7 @@ Admin shell paths:
 - Module constants: [`../../storefront/src/app/core/navigation/navigation-modules.constants.ts`](../../storefront/src/app/core/navigation/navigation-modules.constants.ts)
 - Provisioning dialog dependency behavior: [`../../storefront/src/app/shared/components/module-provision-dialog/module-provision-dialog.component.ts`](../../storefront/src/app/shared/components/module-provision-dialog/module-provision-dialog.component.ts)
 
-The `/commerce` admin route is guarded by `requiredModule: 'commerce'` and exposes read-only tenant admin pages:
+The `/commerce` admin route is guarded by `requiredModule: 'commerce'` and exposes tenant admin pages:
 
 - `/commerce/dashboard`
 - `/commerce/orders`
@@ -233,8 +233,8 @@ Sidebar navigation is registered for tenant admins with the commerce module enab
 Standalone storefront app:
 
 - App root: [`../../commerce-ui`](../../commerce-ui)
-- Status: Next.js app shell, locale routing, tenant-aware request foundation, minimal Quiet Retail skeleton, typed cart API client, localStorage cart token handling, cart provider, `/[lang]/cart` read/mutation wiring, header cart badge, `/[lang]/products` listing/search, `/[lang]/products/[productUid]` product delivery, variant selection, quantity selection, add-to-cart from real variants, and `/[lang]/account` customer auth/account foundation are in place.
-- Remaining storefront work: address book, checkout, payment return, order history, and final tenant/theme redesign.
+- Status: Next.js app shell, locale routing, tenant-aware request foundation, minimal Quiet Retail skeleton, typed cart API client, localStorage cart token handling, cart provider, `/[lang]/cart` read/mutation wiring, header cart badge, `/[lang]/products` listing/search, `/[lang]/products/[productUid]` product delivery, variant selection, quantity selection, add-to-cart from real variants, `/[lang]/account` customer auth/account foundation, address book, checkout, payment return, and order history foundations are in place.
+- Remaining storefront work: final tenant/theme redesign and production hardening around the completed foundation flows.
 
 Commerce UI model convention:
 

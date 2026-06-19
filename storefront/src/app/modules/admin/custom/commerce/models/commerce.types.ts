@@ -79,6 +79,28 @@ export interface CommerceShipping {
     total: number;
 }
 
+export interface CommerceOrderFulfillment {
+    carrierName?: string | null;
+    trackingNumber?: string | null;
+    trackingUrl?: string | null;
+    shippedAt?: string | null;
+    deliveredAt?: string | null;
+    statusChangedAt?: string | null;
+}
+
+export interface CommerceOrderStatusHistory {
+    uid: string;
+    fromStatus: string;
+    toStatus: string;
+    carrierName?: string | null;
+    trackingNumber?: string | null;
+    trackingUrl?: string | null;
+    internalNote?: string | null;
+    changedByUserId?: number | null;
+    changedByEmail?: string | null;
+    createdAt: string;
+}
+
 export interface CommerceAdminOrderPayment {
     attemptUid: string;
     status: string;
@@ -99,9 +121,19 @@ export interface CommerceAdminOrderDetail {
     stockDeducted: boolean;
     items: CommerceOrderItem[];
     shipping: CommerceShipping;
+    fulfillment: CommerceOrderFulfillment;
     deliveryAddress: CommerceAddressSnapshot;
     billingAddress: CommerceAddressSnapshot;
     paymentAttempt: CommerceAdminOrderPayment;
+    statusHistory: CommerceOrderStatusHistory[];
+}
+
+export interface ChangeCommerceOrderStatusRequest {
+    status: 'PREPARING' | 'SHIPPED' | 'DELIVERED';
+    carrierName?: string | null;
+    trackingNumber?: string | null;
+    trackingUrl?: string | null;
+    internalNote?: string | null;
 }
 
 export interface CommerceAdminPaymentAttemptRow {

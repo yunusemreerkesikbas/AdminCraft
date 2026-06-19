@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.backend.application.commerce.dto.CheckoutAddressSnapshotResponse;
+import com.backend.application.commerce.dto.ChangeCommerceOrderStatusCommand;
 import com.backend.application.commerce.dto.CommerceAdminDashboardResponse;
 import com.backend.application.commerce.dto.CommerceAdminMetricResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderDetailResponse;
@@ -21,11 +22,14 @@ import com.backend.application.commerce.dto.CommerceAdminOrderSummaryResponse;
 import com.backend.application.commerce.dto.CommerceAdminPaymentAttemptResponse;
 import com.backend.domain.commerce.CommerceOrder;
 import com.backend.domain.commerce.CommerceOrderStatus;
+import com.backend.domain.commerce.CommerceOrderStatusHistory;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
+import com.backend.domain.commerce.exception.CommerceDomainException;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.commerce.repository.CommercePaymentAttemptRepository;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.shared.common.SecurityUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,6 +41,8 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 
 	private static final String ORDER_NOT_FOUND = "commerce.order.not.found";
 	private static final String ADDRESS_SNAPSHOT_INVALID = "commerce.checkout.address.snapshot.invalid";
+	private static final String INVALID_TRANSITION = "commerce.admin.order.status.transition.invalid";
+	private static final String SHIPMENT_REQUIRED = "commerce.admin.order.status.shipment.required";
 	private static final String DEFAULT_CURRENCY = "TRY";
 
 	private final CommerceOrderRepository orderRepository;
@@ -104,6 +110,57 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 	}
 
 	@Override
+	@Transactional
+	public CommerceAdminOrderDetailResponse changeStatus(String orderUid, ChangeCommerceOrderStatusCommand command) {
+		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
+		CommerceOrder order = orderRepository.findAdminByUidForUpdate(orderUid)
+				.orElseThrow(() -> new EntityNotFoundException(ORDER_NOT_FOUND));
+		CommerceOrderStatus fromStatus = order.getStatus();
+		CommerceOrderStatus toStatus = command.status();
+		assertValidTransition(fromStatus, toStatus);
+
+		String carrierName = normalizeOptional(command.carrierName());
+		String trackingNumber = normalizeOptional(command.trackingNumber());
+		String trackingUrl = normalizeOptional(command.trackingUrl());
+		String internalNote = normalizeOptional(command.internalNote());
+		if (toStatus == CommerceOrderStatus.SHIPPED && (!StringUtils.hasText(carrierName)
+				|| !StringUtils.hasText(trackingNumber))) {
+			throw new CommerceDomainException(SHIPMENT_REQUIRED);
+		}
+
+		LocalDateTime now = LocalDateTime.now();
+		order.setStatus(toStatus);
+		order.setStatusChangedAt(now);
+		if (toStatus == CommerceOrderStatus.SHIPPED) {
+			order.setShippingCarrierName(carrierName);
+			order.setShippingTrackingNumber(trackingNumber);
+			order.setShippingTrackingUrl(trackingUrl);
+			order.setShippedAt(now);
+		}
+		if (toStatus == CommerceOrderStatus.DELIVERED) {
+			order.setDeliveredAt(now);
+		}
+
+		CommerceOrderStatusHistory history = new CommerceOrderStatusHistory();
+		history.setFromStatus(fromStatus);
+		history.setToStatus(toStatus);
+		history.setShippingCarrierName(toStatus == CommerceOrderStatus.SHIPPED ? carrierName : order.getShippingCarrierName());
+		history.setShippingTrackingNumber(toStatus == CommerceOrderStatus.SHIPPED ? trackingNumber : order.getShippingTrackingNumber());
+		history.setShippingTrackingUrl(toStatus == CommerceOrderStatus.SHIPPED ? trackingUrl : order.getShippingTrackingUrl());
+		history.setInternalNote(internalNote);
+		history.setChangedByUserId(SecurityUtil.getCurrentUserId());
+		history.setChangedByEmail(SecurityUtil.getCurrentUserEmail());
+		order.addStatusHistory(history);
+
+		CommerceOrder saved = orderRepository.save(order);
+		orderRepository.flush();
+		return CommerceAdminOrderDetailResponse.from(
+				saved,
+				addressSnapshot(saved.getDeliveryAddressSnapshot()),
+				addressSnapshot(saved.getBillingAddressSnapshot()));
+	}
+
+	@Override
 	@Transactional(readOnly = true)
 	public Page<CommerceAdminPaymentAttemptResponse> listPaymentAttempts(
 			Pageable pageable,
@@ -125,6 +182,23 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 			return null;
 		}
 		return search.trim().toLowerCase(Locale.ROOT);
+	}
+
+	private String normalizeOptional(String value) {
+		return StringUtils.hasText(value) ? value.trim() : null;
+	}
+
+	private void assertValidTransition(CommerceOrderStatus fromStatus, CommerceOrderStatus toStatus) {
+		if (fromStatus == CommerceOrderStatus.PAID && toStatus == CommerceOrderStatus.PREPARING) {
+			return;
+		}
+		if (fromStatus == CommerceOrderStatus.PREPARING && toStatus == CommerceOrderStatus.SHIPPED) {
+			return;
+		}
+		if (fromStatus == CommerceOrderStatus.SHIPPED && toStatus == CommerceOrderStatus.DELIVERED) {
+			return;
+		}
+		throw new CommerceDomainException(INVALID_TRANSITION);
 	}
 
 	private String defaultCurrencyIso() {

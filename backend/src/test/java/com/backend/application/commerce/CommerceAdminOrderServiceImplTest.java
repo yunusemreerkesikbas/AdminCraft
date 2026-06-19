@@ -22,12 +22,15 @@ import com.backend.application.commerce.dto.CommerceAdminDashboardResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderDetailResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderSummaryResponse;
 import com.backend.application.commerce.dto.CommerceAdminPaymentAttemptResponse;
+import com.backend.application.commerce.dto.ChangeCommerceOrderStatusCommand;
 import com.backend.domain.commerce.CommerceCheckout;
 import com.backend.domain.commerce.CommerceCustomer;
 import com.backend.domain.commerce.CommerceOrder;
 import com.backend.domain.commerce.CommerceOrderItem;
 import com.backend.domain.commerce.CommerceOrderLegalSnapshotStatus;
 import com.backend.domain.commerce.CommerceOrderStatus;
+import com.backend.domain.commerce.CommerceOrderStatusHistory;
+import com.backend.domain.commerce.exception.CommerceDomainException;
 import com.backend.domain.commerce.CommercePaymentAttempt;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
@@ -181,6 +184,123 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		when(orderRepository.findAdminByUid("missing")).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> service.getOrder("missing"))
+				.isInstanceOf(EntityNotFoundException.class)
+				.hasMessage("commerce.order.not.found");
+	}
+
+	@Test
+	void changeStatus_ShouldMovePaidToPreparingAndWriteHistory() {
+		CommerceOrder order = order(1L, "order-uid");
+		when(orderRepository.findAdminByUidForUpdate("order-uid")).thenReturn(Optional.of(order));
+		when(orderRepository.save(order)).thenReturn(order);
+
+		CommerceAdminOrderDetailResponse response = service.changeStatus(
+				"order-uid",
+				new ChangeCommerceOrderStatusCommand(CommerceOrderStatus.PREPARING, null, null, null, "Pack carefully"));
+
+		assertThat(response.summary().status()).isEqualTo("PREPARING");
+		assertThat(order.getStatus()).isEqualTo(CommerceOrderStatus.PREPARING);
+		assertThat(order.getStatusChangedAt()).isNotNull();
+		assertThat(order.getStatusHistory()).hasSize(1);
+		assertThat(order.getStatusHistory().getFirst().getFromStatus()).isEqualTo(CommerceOrderStatus.PAID);
+		assertThat(order.getStatusHistory().getFirst().getToStatus()).isEqualTo(CommerceOrderStatus.PREPARING);
+		assertThat(order.getStatusHistory().getFirst().getInternalNote()).isEqualTo("Pack carefully");
+		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
+		verify(orderRepository).flush();
+	}
+
+	@Test
+	void changeStatus_ShouldRequireShipmentFields_WhenMovingToShipped() {
+		CommerceOrder order = order(1L, "order-uid");
+		order.setStatus(CommerceOrderStatus.PREPARING);
+		when(orderRepository.findAdminByUidForUpdate("order-uid")).thenReturn(Optional.of(order));
+
+		assertThatThrownBy(() -> service.changeStatus(
+				"order-uid",
+				new ChangeCommerceOrderStatusCommand(CommerceOrderStatus.SHIPPED, " ", "TRK-1", null, null)))
+				.isInstanceOf(CommerceDomainException.class)
+				.hasMessage("commerce.admin.order.status.shipment.required");
+	}
+
+	@Test
+	void changeStatus_ShouldMovePreparingToShippedAndCaptureFulfillment() {
+		CommerceOrder order = order(1L, "order-uid");
+		order.setStatus(CommerceOrderStatus.PREPARING);
+		when(orderRepository.findAdminByUidForUpdate("order-uid")).thenReturn(Optional.of(order));
+		when(orderRepository.save(order)).thenReturn(order);
+
+		CommerceAdminOrderDetailResponse response = service.changeStatus(
+				"order-uid",
+				new ChangeCommerceOrderStatusCommand(
+						CommerceOrderStatus.SHIPPED,
+						" Yurtiçi ",
+						" TRK-1 ",
+						"https://tracking.example/TRK-1",
+						null));
+
+		assertThat(response.summary().status()).isEqualTo("SHIPPED");
+		assertThat(response.fulfillment().carrierName()).isEqualTo("Yurtiçi");
+		assertThat(response.fulfillment().trackingNumber()).isEqualTo("TRK-1");
+		assertThat(order.getShippedAt()).isNotNull();
+		assertThat(order.getStatusHistory()).hasSize(1);
+		assertThat(order.getStatusHistory().getFirst().getShippingCarrierName()).isEqualTo("Yurtiçi");
+		verify(orderRepository).flush();
+	}
+
+	@Test
+	void changeStatus_ShouldMoveShippedToDeliveredAndSetDeliveredAt() {
+		CommerceOrder order = order(1L, "order-uid");
+		order.setStatus(CommerceOrderStatus.SHIPPED);
+		CommerceOrderStatusHistory shippedHistory = new CommerceOrderStatusHistory();
+		shippedHistory.setFromStatus(CommerceOrderStatus.PREPARING);
+		shippedHistory.setToStatus(CommerceOrderStatus.SHIPPED);
+		shippedHistory.setCreatedAt(LocalDateTime.now().minusHours(1));
+		order.addStatusHistory(shippedHistory);
+		when(orderRepository.findAdminByUidForUpdate("order-uid")).thenReturn(Optional.of(order));
+		when(orderRepository.save(order)).thenReturn(order);
+
+		CommerceAdminOrderDetailResponse response = service.changeStatus(
+				"order-uid",
+				new ChangeCommerceOrderStatusCommand(CommerceOrderStatus.DELIVERED, null, null, null, null));
+
+		assertThat(response.summary().status()).isEqualTo("DELIVERED");
+		assertThat(response.fulfillment().deliveredAt()).isNotNull();
+		assertThat(response.statusHistory().getFirst().toStatus()).isEqualTo("DELIVERED");
+		verify(orderRepository).flush();
+	}
+
+	@Test
+	void changeStatus_ShouldRejectSkipTransition() {
+		CommerceOrder order = order(1L, "order-uid");
+		when(orderRepository.findAdminByUidForUpdate("order-uid")).thenReturn(Optional.of(order));
+
+		assertThatThrownBy(() -> service.changeStatus(
+				"order-uid",
+				new ChangeCommerceOrderStatusCommand(CommerceOrderStatus.SHIPPED, "Carrier", "TRK", null, null)))
+				.isInstanceOf(CommerceDomainException.class)
+				.hasMessage("commerce.admin.order.status.transition.invalid");
+	}
+
+	@Test
+	void changeStatus_ShouldRejectBackwardTransition() {
+		CommerceOrder order = order(1L, "order-uid");
+		order.setStatus(CommerceOrderStatus.SHIPPED);
+		when(orderRepository.findAdminByUidForUpdate("order-uid")).thenReturn(Optional.of(order));
+
+		assertThatThrownBy(() -> service.changeStatus(
+				"order-uid",
+				new ChangeCommerceOrderStatusCommand(CommerceOrderStatus.PREPARING, null, null, null, null)))
+				.isInstanceOf(CommerceDomainException.class)
+				.hasMessage("commerce.admin.order.status.transition.invalid");
+	}
+
+	@Test
+	void changeStatus_ShouldThrowNotFound_WhenOrderMissing() {
+		when(orderRepository.findAdminByUidForUpdate("missing")).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.changeStatus(
+				"missing",
+				new ChangeCommerceOrderStatusCommand(CommerceOrderStatus.PREPARING, null, null, null, null)))
 				.isInstanceOf(EntityNotFoundException.class)
 				.hasMessage("commerce.order.not.found");
 	}

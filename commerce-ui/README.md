@@ -16,12 +16,13 @@ Implemented in this slice:
 - product detail delivery client, real product detail rendering, variant/quantity selection, and add-to-cart from real variants
 - product listing/search route with paginated public delivery integration and detail links
 - customer auth/account foundation with memory-only access token state, refresh-cookie restore, login/register/logout, read-only profile summary, and cart merge state update
+- address book, checkout, payment return, and order history UI foundations
 
 Not implemented yet:
 
-- checkout, payment, address book, and order history state
 - final commerce visual design
 - legal snapshot rendering
+- cancellation/return/refund workflows and transactional notifications
 
 ## UI model convention
 

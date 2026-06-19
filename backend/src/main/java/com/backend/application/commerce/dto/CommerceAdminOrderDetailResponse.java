@@ -12,9 +12,11 @@ public record CommerceAdminOrderDetailResponse(
 		Boolean stockDeducted,
 		List<CommerceOrderItemResponse> items,
 		CheckoutShippingResponse shipping,
+		CommerceOrderFulfillmentResponse fulfillment,
 		CheckoutAddressSnapshotResponse deliveryAddress,
 		CheckoutAddressSnapshotResponse billingAddress,
-		CommerceAdminOrderPaymentResponse paymentAttempt) {
+		CommerceAdminOrderPaymentResponse paymentAttempt,
+		List<CommerceOrderStatusHistoryResponse> statusHistory) {
 
 	public static CommerceAdminOrderDetailResponse from(
 			CommerceOrder order,
@@ -22,6 +24,9 @@ public record CommerceAdminOrderDetailResponse(
 			CheckoutAddressSnapshotResponse billingAddress) {
 		List<CommerceOrderItemResponse> items = order.getItems().stream()
 				.map(CommerceOrderItemResponse::from)
+				.toList();
+		List<CommerceOrderStatusHistoryResponse> history = order.getStatusHistory().stream()
+				.map(CommerceOrderStatusHistoryResponse::from)
 				.toList();
 		return new CommerceAdminOrderDetailResponse(
 				CommerceAdminOrderSummaryResponse.from(order, items.size()),
@@ -34,8 +39,10 @@ public record CommerceAdminOrderDetailResponse(
 						order.getShippingMethodCode(),
 						order.getShippingMethodName(),
 						order.getShippingTotal()),
+				CommerceOrderFulfillmentResponse.from(order),
 				deliveryAddress,
 				billingAddress,
-				CommerceAdminOrderPaymentResponse.from(order.getPaymentAttempt()));
+				CommerceAdminOrderPaymentResponse.from(order.getPaymentAttempt()),
+				history);
 	}
 }

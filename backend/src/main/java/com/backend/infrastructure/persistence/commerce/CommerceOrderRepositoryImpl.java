@@ -31,6 +31,11 @@ class CommerceOrderRepositoryImpl implements CommerceOrderRepository {
 	}
 
 	@Override
+	public void flush() {
+		jpaRepository.flush();
+	}
+
+	@Override
 	public Optional<CommerceOrder> findByPaymentAttemptId(Long paymentAttemptId) {
 		return jpaRepository.findByPaymentAttemptId(paymentAttemptId);
 	}
@@ -62,6 +67,11 @@ class CommerceOrderRepositoryImpl implements CommerceOrderRepository {
 	@Override
 	public Optional<CommerceOrder> findAdminByUid(String uid) {
 		return jpaRepository.findAdminByUid(uid);
+	}
+
+	@Override
+	public Optional<CommerceOrder> findAdminByUidForUpdate(String uid) {
+		return jpaRepository.findAdminByUidForUpdate(uid);
 	}
 
 	@Override

@@ -1,5 +1,8 @@
 package com.backend.domain.commerce;
 
 public enum CommerceOrderStatus {
-	PAID
+	PAID,
+	PREPARING,
+	SHIPPED,
+	DELIVERED
 }

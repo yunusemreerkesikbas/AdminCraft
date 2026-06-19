@@ -2,6 +2,8 @@ package com.backend.presentation.commerce;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -15,6 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
 
 import com.backend.application.commerce.CommerceAdminOrderService;
 import com.backend.application.commerce.dto.CommerceAdminDashboardResponse;
@@ -68,6 +71,44 @@ class CommerceAdminOrderControllerSecurityTest {
 	void dashboard_ShouldRejectCommerceCustomer() throws Exception {
 		mockMvc.perform(get("/commerce/admin/dashboard"))
 				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@DisplayName("PATCH /commerce/admin/orders/{orderUid}/status should allow TENANT_ADMIN")
+	@WithMockUser(roles = "TENANT_ADMIN")
+	void changeOrderStatus_ShouldAllowTenantAdmin() throws Exception {
+		mockMvc.perform(patch("/commerce/admin/orders/order-uid/status")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"status":"PREPARING"}
+						"""))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	@DisplayName("PATCH /commerce/admin/orders/{orderUid}/status should reject VIEWER")
+	@WithMockUser(roles = "VIEWER")
+	void changeOrderStatus_ShouldRejectViewer() throws Exception {
+		mockMvc.perform(patch("/commerce/admin/orders/order-uid/status")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"status":"PREPARING"}
+						"""))
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@DisplayName("PATCH /commerce/admin/orders/{orderUid}/status should return 400 for unknown status")
+	@WithMockUser(roles = "TENANT_ADMIN")
+	void changeOrderStatus_ShouldReturnBadRequest_WhenStatusIsUnknown() throws Exception {
+		mockMvc.perform(patch("/commerce/admin/orders/order-uid/status")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"status":"CANCELLED"}
+						"""))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.result").value("ERROR"))
+				.andExpect(jsonPath("$.code").value(400));
 	}
 
 	private CommerceAdminDashboardResponse dashboard() {

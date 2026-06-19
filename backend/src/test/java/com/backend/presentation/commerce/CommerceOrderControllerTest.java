@@ -26,6 +26,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import com.backend.application.commerce.CommerceCustomerPrincipal;
 import com.backend.application.commerce.CommerceOrderReadService;
 import com.backend.application.commerce.dto.CheckoutTotalsResponse;
+import com.backend.application.commerce.dto.CommerceOrderFulfillmentResponse;
 import com.backend.application.commerce.dto.CommerceOrderDetailResponse;
 import com.backend.application.commerce.dto.CommerceOrderSummaryResponse;
 
@@ -119,6 +120,7 @@ class CommerceOrderControllerTest {
 				null,
 				List.of(),
 				null,
+				new CommerceOrderFulfillmentResponse(null, null, null, null, null, null),
 				null,
 				null,
 				"NOT_CAPTURED");

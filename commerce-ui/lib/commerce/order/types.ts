@@ -35,9 +35,19 @@ export type CommerceOrderSummaryResponse = {
   attentionReasonKey: string | null;
 };
 
+export type CommerceOrderFulfillmentResponse = {
+  carrierName: string | null;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  statusChangedAt: string | null;
+};
+
 export type CommerceOrderDetailResponse = CommerceOrderSummaryResponse & {
   items: CheckoutItemResponse[];
   shipping: CheckoutShippingResponse;
+  fulfillment: CommerceOrderFulfillmentResponse;
   deliveryAddress: CheckoutAddressSnapshot | null;
   billingAddress: CheckoutAddressSnapshot | null;
   legalSnapshotStatus: string;
