@@ -57,8 +57,6 @@ class CommerceOrderReadServiceImplTest extends BaseServiceTest {
 		CommerceOrderSummaryResponse response = result.getContent().getFirst();
 		assertThat(response.orderUid()).isEqualTo("order-uid");
 		assertThat(response.itemCount()).isEqualTo(2);
-		assertThat(response.requiresAttention()).isTrue();
-		assertThat(response.attentionReasonKey()).isEqualTo("commerce.order.attention.stock_not_deducted");
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
 	}
 
@@ -79,8 +77,6 @@ class CommerceOrderReadServiceImplTest extends BaseServiceTest {
 		assertThat(response.deliveryAddress().city()).isEqualTo("Istanbul");
 		assertThat(response.billingAddress().district()).isEqualTo("Kadikoy");
 		assertThat(response.legalSnapshotStatus()).isEqualTo("NOT_CAPTURED");
-		assertThat(response.requiresAttention()).isTrue();
-		assertThat(response.attentionReasonKey()).isEqualTo("commerce.order.attention.stock_not_deducted");
 	}
 
 	@Test
@@ -102,8 +98,16 @@ class CommerceOrderReadServiceImplTest extends BaseServiceTest {
 				.map(RecordComponent::getName)
 				.toList();
 
-		assertThat(summaryFields).doesNotContain("provider", "providerTransactionId");
-		assertThat(detailFields).doesNotContain("provider", "providerTransactionId");
+		assertThat(summaryFields).doesNotContain(
+				"provider",
+				"providerTransactionId",
+				"requiresAttention",
+				"attentionReasonKey");
+		assertThat(detailFields).doesNotContain(
+				"provider",
+				"providerTransactionId",
+				"requiresAttention",
+				"attentionReasonKey");
 	}
 
 	private CommerceCustomerPrincipal principal(Long customerId) {

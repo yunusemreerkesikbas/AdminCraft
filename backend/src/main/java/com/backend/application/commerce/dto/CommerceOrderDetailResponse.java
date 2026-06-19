@@ -13,10 +13,9 @@ public record CommerceOrderDetailResponse(
 		String currencyIso,
 		CheckoutTotalsResponse totals,
 		int itemCount,
-		Boolean requiresAttention,
-		String attentionReasonKey,
 		List<CommerceOrderItemResponse> items,
 		CheckoutShippingResponse shipping,
+		CommerceOrderFulfillmentResponse fulfillment,
 		CheckoutAddressSnapshotResponse deliveryAddress,
 		CheckoutAddressSnapshotResponse billingAddress,
 		String legalSnapshotStatus) {
@@ -41,13 +40,12 @@ public record CommerceOrderDetailResponse(
 						order.getShippingTotal(),
 						order.getTotal()),
 				items.size(),
-				order.isRequiresAttention(),
-				order.getAttentionReasonKey(),
 				items,
 				new CheckoutShippingResponse(
 						order.getShippingMethodCode(),
 						order.getShippingMethodName(),
 						order.getShippingTotal()),
+				CommerceOrderFulfillmentResponse.from(order),
 				deliveryAddress,
 				billingAddress,
 				order.getLegalSnapshotStatus().name());

@@ -22,10 +22,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.backend.application.commerce.CommerceAdminOrderService;
+import com.backend.application.commerce.dto.ChangeCommerceOrderStatusCommand;
 import com.backend.application.commerce.dto.CheckoutTotalsResponse;
 import com.backend.application.commerce.dto.CommerceAdminDashboardResponse;
 import com.backend.application.commerce.dto.CommerceAdminMetricResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderSummaryResponse;
+import com.backend.domain.commerce.CommerceOrderStatus;
 
 @ExtendWith(MockitoExtension.class)
 class CommerceAdminOrderControllerTest {
@@ -85,6 +87,33 @@ class CommerceAdminOrderControllerTest {
 		assertThatThrownBy(() -> controller.listPaymentAttempts(0, 20, "providerReference,asc", null, null))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("Invalid sort field");
+	}
+
+	@Test
+	void changeOrderStatus_ShouldPassCommandToServiceAndReturnMessage() {
+		CommerceAdminOrderController controller = new CommerceAdminOrderController(adminOrderService, messageSource);
+		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
+				.thenAnswer(invocation -> "Status updated");
+
+		var result = controller.changeOrderStatus(
+				"order-uid",
+				new ChangeCommerceOrderStatusRequest(
+						CommerceOrderStatus.SHIPPED,
+						"Carrier",
+						"TRK-1",
+						"https://tracking.example/TRK-1",
+						"Packed"));
+
+		assertThat(result.getBody()).isNotNull();
+		assertThat(result.getBody().getMessage()).isEqualTo("Status updated");
+		ArgumentCaptor<ChangeCommerceOrderStatusCommand> commandCaptor =
+				ArgumentCaptor.forClass(ChangeCommerceOrderStatusCommand.class);
+		verify(adminOrderService).changeStatus(org.mockito.ArgumentMatchers.eq("order-uid"), commandCaptor.capture());
+		assertThat(commandCaptor.getValue().status()).isEqualTo(CommerceOrderStatus.SHIPPED);
+		assertThat(commandCaptor.getValue().carrierName()).isEqualTo("Carrier");
+		assertThat(commandCaptor.getValue().trackingNumber()).isEqualTo("TRK-1");
+		assertThat(commandCaptor.getValue().trackingUrl()).isEqualTo("https://tracking.example/TRK-1");
+		assertThat(commandCaptor.getValue().internalNote()).isEqualTo("Packed");
 	}
 
 	private CommerceAdminOrderSummaryResponse orderSummary() {

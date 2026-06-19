@@ -26,6 +26,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import com.backend.application.commerce.CommerceCustomerPrincipal;
 import com.backend.application.commerce.CommerceOrderReadService;
 import com.backend.application.commerce.dto.CheckoutTotalsResponse;
+import com.backend.application.commerce.dto.CommerceOrderFulfillmentResponse;
 import com.backend.application.commerce.dto.CommerceOrderDetailResponse;
 import com.backend.application.commerce.dto.CommerceOrderSummaryResponse;
 
@@ -101,9 +102,7 @@ class CommerceOrderControllerTest {
 				LocalDateTime.of(2026, 6, 15, 12, 0),
 				"TRY",
 				new CheckoutTotalsResponse("TRY", BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ZERO, BigDecimal.TEN),
-				1,
-				false,
-				null);
+				1);
 	}
 
 	private CommerceOrderDetailResponse detail() {
@@ -115,10 +114,9 @@ class CommerceOrderControllerTest {
 				"TRY",
 				new CheckoutTotalsResponse("TRY", BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ZERO, BigDecimal.TEN),
 				0,
-				false,
-				null,
 				List.of(),
 				null,
+				new CommerceOrderFulfillmentResponse(null, null, null, null, null, null),
 				null,
 				null,
 				"NOT_CAPTURED");

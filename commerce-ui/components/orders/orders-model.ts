@@ -20,11 +20,18 @@ export type OrdersModel = {
   rowBilling: string;
   rowLegal: string;
   rowTotal: string;
-  attentionLabel: string;
   detailsAction: string;
   primaryAction: string;
   secondaryAction: string;
   itemFallback: string;
+  requestTitle: string;
+  requestReasonLabel: string;
+  requestDescriptionLabel: string;
+  requestCancellationAction: string;
+  requestReturnAction: string;
+  requestSubmitAction: string;
+  requestStatusTitle: string;
+  requestSuccessLabel: string;
   auth: InlineCustomerAuthModel;
 };
 
@@ -56,10 +63,17 @@ export const createOrdersModel = (
   rowBilling: translate("rowBilling"),
   rowLegal: translate("rowLegal"),
   rowTotal: translate("rowTotal"),
-  attentionLabel: translate("attentionLabel"),
   detailsAction: translate("detailsAction"),
   primaryAction: translate("primaryAction"),
   secondaryAction: translate("secondaryAction"),
   itemFallback: translate("itemFallback"),
+  requestTitle: translate("requestTitle"),
+  requestReasonLabel: translate("requestReasonLabel"),
+  requestDescriptionLabel: translate("requestDescriptionLabel"),
+  requestCancellationAction: translate("requestCancellationAction"),
+  requestReturnAction: translate("requestReturnAction"),
+  requestSubmitAction: translate("requestSubmitAction"),
+  requestStatusTitle: translate("requestStatusTitle"),
+  requestSuccessLabel: translate("requestSuccessLabel"),
   auth: createInlineCustomerAuthModel(translate, account),
 });

@@ -5,6 +5,7 @@ import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { map, Observable, throwError } from 'rxjs';
 import {
     COMMERCE_MODULE_CODE,
+    ChangeCommerceOrderStatusRequest,
     CommerceAdminDashboard,
     CommerceAdminOrderDetail,
     CommerceAdminOrderRow,
@@ -48,6 +49,19 @@ export class CommerceAdminOrderService extends CrudHttpService<
         return this.api
             .get<ApiResponse<CommerceAdminOrderDetail>>(
                 'commerceAdminOrderByUid',
+                { orderUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    updateOrderStatus(
+        orderUid: string,
+        request: ChangeCommerceOrderStatusRequest
+    ): Observable<CommerceAdminOrderDetail> {
+        return this.api
+            .patch<ApiResponse<CommerceAdminOrderDetail>>(
+                'commerceAdminOrderStatus',
+                request,
                 { orderUid }
             )
             .pipe(map((response) => response.data));

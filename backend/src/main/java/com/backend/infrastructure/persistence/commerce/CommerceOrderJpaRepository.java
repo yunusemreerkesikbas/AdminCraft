@@ -9,11 +9,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.backend.domain.commerce.CommerceOrder;
 import com.backend.domain.commerce.CommerceOrderStatus;
+
+import jakarta.persistence.LockModeType;
 
 interface CommerceOrderJpaRepository extends JpaRepository<CommerceOrder, Long> {
 
@@ -53,6 +56,11 @@ interface CommerceOrderJpaRepository extends JpaRepository<CommerceOrder, Long> 
 	@EntityGraph(attributePaths = { "customer", "items", "paymentAttempt" })
 	@Query("select o from CommerceOrder o where o.uid = :uid")
 	Optional<CommerceOrder> findAdminByUid(@Param("uid") String uid);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@EntityGraph(attributePaths = { "customer", "items", "paymentAttempt" })
+	@Query("select o from CommerceOrder o where o.uid = :uid")
+	Optional<CommerceOrder> findAdminByUidForUpdate(@Param("uid") String uid);
 
 	@Query("""
 			select item.order.id as orderId, count(item.id) as itemCount

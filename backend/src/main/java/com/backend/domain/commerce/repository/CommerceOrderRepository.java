@@ -16,6 +16,8 @@ public interface CommerceOrderRepository {
 
 	CommerceOrder save(CommerceOrder order);
 
+	void flush();
+
 	Optional<CommerceOrder> findByPaymentAttemptId(Long paymentAttemptId);
 
 	Optional<CommerceOrder> findByCheckoutId(Long checkoutId);
@@ -31,6 +33,8 @@ public interface CommerceOrderRepository {
 			Pageable pageable);
 
 	Optional<CommerceOrder> findAdminByUid(String uid);
+
+	Optional<CommerceOrder> findAdminByUidForUpdate(String uid);
 
 	Map<Long, Integer> countItemsByOrderIds(List<Long> orderIds);
 

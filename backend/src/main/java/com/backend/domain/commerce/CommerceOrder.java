@@ -3,6 +3,7 @@ package com.backend.domain.commerce;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 import com.backend.domain.entity.BaseEntity;
 
@@ -38,7 +39,7 @@ import lombok.ToString;
 		@Index(columnList = "requires_attention", name = "idx_commerce_order_requires_attention")
 })
 @Data
-@EqualsAndHashCode(callSuper = true, exclude = { "customer", "checkout", "paymentAttempt", "items" })
+@EqualsAndHashCode(callSuper = true, exclude = { "customer", "checkout", "paymentAttempt", "items", "statusHistory" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommerceOrder extends BaseEntity {
@@ -86,6 +87,24 @@ public class CommerceOrder extends BaseEntity {
 	@Column(name = "shipping_method_name", nullable = false, length = 100)
 	private String shippingMethodName;
 
+	@Column(name = "shipping_carrier_name", length = 100)
+	private String shippingCarrierName;
+
+	@Column(name = "shipping_tracking_number", length = 100)
+	private String shippingTrackingNumber;
+
+	@Column(name = "shipping_tracking_url", length = 500)
+	private String shippingTrackingUrl;
+
+	@Column(name = "shipped_at")
+	private LocalDateTime shippedAt;
+
+	@Column(name = "delivered_at")
+	private LocalDateTime deliveredAt;
+
+	@Column(name = "status_changed_at")
+	private LocalDateTime statusChangedAt;
+
 	@Column(name = "delivery_address_uid", nullable = false, length = 50)
 	private String deliveryAddressUid;
 
@@ -125,8 +144,18 @@ public class CommerceOrder extends BaseEntity {
 	@OrderBy("id ASC")
 	private List<CommerceOrderItem> items = new ArrayList<>();
 
+	@ToString.Exclude
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OrderBy("createdAt DESC, id DESC")
+	private List<CommerceOrderStatusHistory> statusHistory = new ArrayList<>();
+
 	public void addItem(CommerceOrderItem item) {
 		items.add(item);
 		item.setOrder(this);
+	}
+
+	public void addStatusHistory(CommerceOrderStatusHistory history) {
+		statusHistory.add(0, history);
+		history.setOrder(this);
 	}
 }

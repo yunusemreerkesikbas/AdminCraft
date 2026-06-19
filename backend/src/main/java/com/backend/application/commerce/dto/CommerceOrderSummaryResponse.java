@@ -11,9 +11,7 @@ public record CommerceOrderSummaryResponse(
 		LocalDateTime createdAt,
 		String currencyIso,
 		CheckoutTotalsResponse totals,
-		int itemCount,
-		Boolean requiresAttention,
-		String attentionReasonKey) {
+		int itemCount) {
 
 	public static CommerceOrderSummaryResponse from(CommerceOrder order) {
 		return from(order, order.getItems() == null ? 0 : order.getItems().size());
@@ -32,8 +30,6 @@ public record CommerceOrderSummaryResponse(
 						order.getVatTotal(),
 						order.getShippingTotal(),
 						order.getTotal()),
-				itemCount,
-				order.isRequiresAttention(),
-				order.getAttentionReasonKey());
+				itemCount);
 	}
 }

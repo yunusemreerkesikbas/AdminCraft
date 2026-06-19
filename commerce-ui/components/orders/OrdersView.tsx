@@ -9,6 +9,8 @@ import { ActionLink, ReceiptFrame } from "@/components/ui/StorefrontPrimitives";
 import { createCommerceOrderClient } from "@/lib/commerce/order/order-client";
 import type {
   CommerceOrderDetailResponse,
+  CommerceOrderResolutionRequestResponse,
+  CommerceOrderResolutionRequestType,
   CommerceOrderSummaryResponse,
 } from "@/lib/commerce/order/types";
 import { withLocalePath } from "@/lib/core/i18n/locale";
@@ -65,6 +67,18 @@ const addressSummary = (
     return fallback;
   }
   return `${address.firstName} ${address.lastName} - ${address.district}, ${address.city}`;
+};
+
+const eligibleRequestType = (
+  status: string,
+): CommerceOrderResolutionRequestType | null => {
+  if (status === "PAID" || status === "PREPARING") {
+    return "CANCELLATION";
+  }
+  if (status === "DELIVERED") {
+    return "RETURN";
+  }
+  return null;
 };
 
 export function OrdersView({
@@ -169,11 +183,6 @@ export function OrdersView({
             <article key={order.orderUid} className="surface-panel order-card">
               <div>
                 <span className="quiet-chip">{order.status}</span>
-                {order.requiresAttention ? (
-                  <span className="quiet-chip quiet-chip--attention">
-                    {model.attentionLabel}
-                  </span>
-                ) : null}
               </div>
               <div>
                 <h2 className="frame-title">{order.orderNumber}</h2>
@@ -214,7 +223,13 @@ export function OrderDetailView({
 }: OrderDetailViewProps) {
   const { accessToken, isAuthenticated, isRestoring } = useCustomerSession();
   const [order, setOrder] = useState<CommerceOrderDetailResponse | null>(null);
+  const [requests, setRequests] = useState<CommerceOrderResolutionRequestResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [requestSuccess, setRequestSuccess] = useState<string | null>(null);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [requestReason, setRequestReason] = useState("");
+  const [requestDescription, setRequestDescription] = useState("");
   const [loadState, setLoadState] = useState<LoadState>({
     key: null,
     status: "idle",
@@ -231,12 +246,16 @@ export function OrderDetailView({
 
     const requestKey = `${accessToken}:${orderUid}`;
     let cancelled = false;
-    orderClient
-      .getOrder(accessToken, orderUid)
-      .then((nextOrder) => {
+    Promise.all([
+      orderClient.getOrder(accessToken, orderUid),
+      orderClient.listOrderRequests(accessToken, orderUid),
+    ])
+      .then(([nextOrder, nextRequests]) => {
         if (!cancelled) {
           setOrder(nextOrder);
+          setRequests(nextRequests);
           setError(null);
+          setRequestError(null);
           setLoadState({ key: requestKey, status: "loaded" });
         }
       })
@@ -256,10 +275,50 @@ export function OrderDetailView({
     loadState.key === requestKey && loadState.status === "error" ? error : null;
   const visibleOrder =
     loadState.key === requestKey && loadState.status === "loaded" ? order : null;
+  const visibleRequests =
+    loadState.key === requestKey && loadState.status === "loaded" ? requests : [];
+  const pendingRequest = visibleRequests.find((request) => request.status === "PENDING");
+  const allowedRequestType = visibleOrder ? eligibleRequestType(visibleOrder.status) : null;
   const isLoading =
     !isRestoring &&
     Boolean(isAuthenticated && accessToken) &&
     loadState.key !== requestKey;
+
+  const submitResolutionRequest = async () => {
+    if (!accessToken || !visibleOrder || !allowedRequestType || isSubmittingRequest) {
+      return;
+    }
+    setIsSubmittingRequest(true);
+    setRequestError(null);
+    setRequestSuccess(null);
+    try {
+      const created = await orderClient.createOrderRequest(
+        accessToken,
+        visibleOrder.orderUid,
+        {
+          requestType: allowedRequestType,
+          reason: requestReason,
+          description: requestDescription,
+        },
+      );
+      setRequests((current) => [created, ...current]);
+      setOrder((current) =>
+        current
+          ? {
+              ...current,
+              status: created.requestedOrderStatus,
+            }
+          : current,
+      );
+      setRequestReason("");
+      setRequestDescription("");
+      setRequestSuccess(model.requestSuccessLabel);
+    } catch (err) {
+      setRequestError(err instanceof Error ? err.message : model.errorFallback);
+    } finally {
+      setIsSubmittingRequest(false);
+    }
+  };
 
   return (
     <PageShell
@@ -366,6 +425,69 @@ export function OrderDetailView({
                     </dd>
                   </div>
                 </dl>
+              </section>
+              <section className="surface-panel order-detail-panel">
+                <h2 className="frame-title">{model.requestStatusTitle}</h2>
+                {visibleRequests.length > 0 ? (
+                  <div className="checkout-items">
+                    {visibleRequests.map((request) => (
+                      <article key={request.requestUid} className="checkout-item-row">
+                        <span>
+                          {request.type} / {request.status}
+                        </span>
+                        <strong>{request.refundStatus}</strong>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+                {requestSuccess ? (
+                  <p className="account-form-success">{requestSuccess}</p>
+                ) : null}
+                {requestError ? (
+                  <p className="account-form-error" role="alert">
+                    {requestError}
+                  </p>
+                ) : null}
+                {pendingRequest ? null : allowedRequestType ? (
+                  <form
+                    className="account-form"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void submitResolutionRequest();
+                    }}
+                  >
+                    <label className="account-form-label">
+                      <span>{model.requestReasonLabel}</span>
+                      <input
+                        value={requestReason}
+                        maxLength={100}
+                        required
+                        onChange={(event) => setRequestReason(event.target.value)}
+                      />
+                    </label>
+                    <label className="account-form-label">
+                      <span>{model.requestDescriptionLabel}</span>
+                      <textarea
+                        value={requestDescription}
+                        maxLength={1000}
+                        required
+                        rows={4}
+                        onChange={(event) =>
+                          setRequestDescription(event.target.value)
+                        }
+                      />
+                    </label>
+                    <button
+                      className="commerce-action"
+                      type="submit"
+                      disabled={isSubmittingRequest}
+                    >
+                      {allowedRequestType === "CANCELLATION"
+                        ? model.requestCancellationAction
+                        : model.requestReturnAction}
+                    </button>
+                  </form>
+                ) : null}
               </section>
             </>
           ) : null}

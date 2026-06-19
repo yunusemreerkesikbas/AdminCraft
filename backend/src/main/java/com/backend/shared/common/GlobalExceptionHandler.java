@@ -16,6 +16,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -337,6 +338,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(
                 ApiResponse.error(message),
                 HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Invalid request body", correlationId);
+        String message = getMessage("error.invalid.data");
+        return new ResponseEntity<>(ApiResponse.error(400, message), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(RequestNotPermitted.class)

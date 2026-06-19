@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, read-only commerce admin operasyon görünürlüğü ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account foundation hazırlandı. Full storefront commerce akışları, mutable commerce admin operasyonları, full legal snapshot rendering, iptal/iade, fulfillment ve transactional bildirimler henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history foundation hazırlandı. Full legal snapshot rendering, iptal/iade/refund karar akışları ve transactional bildirimler henüz yapılmadı.
 
 ## 1. Konumlandırma
 
@@ -219,7 +219,7 @@ Kapsam:
 - Default prefix: `ORD`
 - Prefix'in tenant config ile değiştirilebilmesi
 - Admin sipariş detay ekranı
-- İç notlar
+- Status history satırına bağlı opsiyonel iç notlar
 - Başarısız ödeme denemelerinin normal sipariş listesine karışmaması
 
 MVP dışında:
@@ -259,9 +259,16 @@ Kapsam:
 
 - Admin siparişi Preparing durumuna alabilir
 - Admin siparişi Shipped durumuna alabilir
+- Admin siparişi Delivered durumuna alabilir
+- Sipariş status transition akışı yalnızca tek adım ileri gider: `PAID -> PREPARING -> SHIPPED -> DELIVERED`
 - Kargo firması manuel seçilir/girilir
 - Kargo takip numarası manuel girilir
-- Sipariş Shipped olduğunda müşteriye bildirim gönderilir
+- Kargo takip URL'i opsiyonel tutulur
+- Status history üzerinde aktör, fulfillment bilgisi ve opsiyonel iç not saklanır
+
+Kalan:
+
+- Sipariş Shipped olduğunda müşteriye bildirim gönderimi
 
 MVP dışında:
 
@@ -344,14 +351,15 @@ Kapsam:
 Hazır:
 
 - Read-only dashboard: bugünkü sipariş/ciro, son 7 gün sipariş/ciro, attention order count, başarısız ödeme denemesi count
-- Read-only sipariş listesi ve detayı
+- Sipariş listesi ve detay görünümü
+- Sipariş status transition aksiyonları: Preparing, Shipped, Delivered
+- Manuel fulfillment bilgisi: kargo firması, takip numarası, opsiyonel takip URL'i
+- Status history timeline ve history satırına bağlı opsiyonel iç notlar
 - Read-only payment attempt history
 - Commerce sidebar navigation
 
 Kalan:
 
-- Status transition ve fulfillment aksiyonları
-- İç notlar
 - İptal/iade talepleri listesi ve karar akışı
 - Düşük stok uyarıları
 
@@ -415,12 +423,12 @@ Hazır:
 - Typed cart API client, `localStorage` cart token handling, cart provider, header item count badge ve `/[lang]/cart` read/mutation wiring
 - Product listing/search route, Product detail delivery client, `/[lang]/products/[productUid]` real product render, variant/quantity selection ve real variant add-to-cart
 - Customer auth/account foundation: login/register/logout, refresh-cookie restore, memory-only access token state, read-only profile summary ve cart merge state update
+- Address book, checkout, payment return ve order history UI foundation
 
 Kalan:
 
-- Address book UI entegrasyonu
-- Checkout, payment return ve sipariş geçmişi UI entegrasyonu
 - Tenant/theme final redesign
+- Production hardening ve uçtan uca UX polish
 
 MVP storefront kapsamı:
 
