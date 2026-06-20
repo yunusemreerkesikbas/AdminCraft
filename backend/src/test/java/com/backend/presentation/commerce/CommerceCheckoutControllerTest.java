@@ -20,6 +20,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import com.backend.application.commerce.CheckoutService;
 import com.backend.application.commerce.CommerceCustomerPrincipal;
 import com.backend.application.commerce.dto.CheckoutResponse;
+import com.backend.application.commerce.dto.CheckoutLegalResponse;
 import com.backend.application.commerce.dto.CheckoutShippingResponse;
 import com.backend.application.commerce.dto.CheckoutTotalsResponse;
 import com.backend.application.commerce.dto.CheckoutValidationResponse;
@@ -59,6 +60,7 @@ class CommerceCheckoutControllerTest {
 				List.of(),
 				new CheckoutTotalsResponse("TRY", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
 				new CheckoutShippingResponse("STANDARD", "commerce.shipping.method.standard", BigDecimal.ZERO),
-				new CheckoutValidationResponse(true, false, false, false, List.of()));
+				new CheckoutValidationResponse(true, false, false, false, List.of()),
+				new CheckoutLegalResponse(true, "EN", List.of(), List.of()));
 	}
 }

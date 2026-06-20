@@ -27,6 +27,13 @@ export type PaymentInitializeResponse = {
   paymentPageUrl: string;
 };
 
+export type LegalAcceptanceRequest = {
+  templateUid: string;
+  version: number;
+  accepted: boolean;
+};
+
 export type CreatePaymentAttemptRequest = {
   checkoutUid: string;
+  legalAcceptances: LegalAcceptanceRequest[];
 };

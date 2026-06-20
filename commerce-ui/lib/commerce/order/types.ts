@@ -49,6 +49,23 @@ export type CommerceOrderDetailResponse = CommerceOrderSummaryResponse & {
   deliveryAddress: CheckoutAddressSnapshot | null;
   billingAddress: CheckoutAddressSnapshot | null;
   legalSnapshotStatus: string;
+  legalSnapshotJson: string | null;
+};
+
+export type CommerceOrderLegalSnapshotDocument = {
+  templateUid: string;
+  type: string;
+  version: number;
+  title: string;
+  contentText: string;
+  contentHash: string;
+  acceptedAt: string;
+};
+
+export type CommerceOrderLegalSnapshot = {
+  language: string;
+  capturedAt: string;
+  documents: CommerceOrderLegalSnapshotDocument[];
 };
 
 export type CommerceOrderResolutionRequestType = "CANCELLATION" | "RETURN";

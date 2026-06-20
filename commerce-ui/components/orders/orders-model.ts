@@ -19,6 +19,9 @@ export type OrdersModel = {
   rowDelivery: string;
   rowBilling: string;
   rowLegal: string;
+  rowLegalDocuments: string;
+  rowLegalUnavailable: string;
+  rowLegalVersion: string;
   rowTotal: string;
   detailsAction: string;
   primaryAction: string;
@@ -62,6 +65,9 @@ export const createOrdersModel = (
   rowDelivery: translate("rowDelivery"),
   rowBilling: translate("rowBilling"),
   rowLegal: translate("rowLegal"),
+  rowLegalDocuments: translate("rowLegalDocuments"),
+  rowLegalUnavailable: translate("rowLegalUnavailable"),
+  rowLegalVersion: translate("rowLegalVersion"),
   rowTotal: translate("rowTotal"),
   detailsAction: translate("detailsAction"),
   primaryAction: translate("primaryAction"),

@@ -9,6 +9,8 @@ import { ActionLink, ReceiptFrame } from "@/components/ui/StorefrontPrimitives";
 import { createCommerceOrderClient } from "@/lib/commerce/order/order-client";
 import type {
   CommerceOrderDetailResponse,
+  CommerceOrderLegalSnapshot,
+  CommerceOrderLegalSnapshotDocument,
   CommerceOrderResolutionRequestResponse,
   CommerceOrderResolutionRequestType,
   CommerceOrderSummaryResponse,
@@ -79,6 +81,21 @@ const eligibleRequestType = (
     return "RETURN";
   }
   return null;
+};
+
+const legalSnapshotDocuments = (
+  order: CommerceOrderDetailResponse | null,
+): CommerceOrderLegalSnapshotDocument[] => {
+  if (!order?.legalSnapshotJson) {
+    return [];
+  }
+
+  try {
+    const snapshot = JSON.parse(order.legalSnapshotJson) as Partial<CommerceOrderLegalSnapshot>;
+    return Array.isArray(snapshot.documents) ? snapshot.documents : [];
+  } catch {
+    return [];
+  }
 };
 
 export function OrdersView({
@@ -279,6 +296,7 @@ export function OrderDetailView({
     loadState.key === requestKey && loadState.status === "loaded" ? requests : [];
   const pendingRequest = visibleRequests.find((request) => request.status === "PENDING");
   const allowedRequestType = visibleOrder ? eligibleRequestType(visibleOrder.status) : null;
+  const visibleLegalDocuments = legalSnapshotDocuments(visibleOrder);
   const isLoading =
     !isRestoring &&
     Boolean(isAuthenticated && accessToken) &&
@@ -425,6 +443,37 @@ export function OrderDetailView({
                     </dd>
                   </div>
                 </dl>
+              </section>
+              <section className="surface-panel order-detail-panel">
+                <h2 className="frame-title">{model.rowLegalDocuments}</h2>
+                {visibleLegalDocuments.length > 0 ? (
+                  <div className="checkout-legal__documents">
+                    {visibleLegalDocuments.map((document) => (
+                      <article
+                        key={`${document.templateUid}:${document.version}`}
+                        className="checkout-legal__document"
+                      >
+                        <div className="checkout-legal__header">
+                          <div>
+                            <h3 className="row-title">{document.title}</h3>
+                            <p className="frame-note">
+                              {document.type} / {model.rowLegalVersion}{" "}
+                              {document.version}
+                            </p>
+                          </div>
+                          <span className="quiet-chip">
+                            {document.contentHash.slice(0, 12)}
+                          </span>
+                        </div>
+                        <pre className="checkout-legal__content">
+                          {document.contentText}
+                        </pre>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="frame-note">{model.rowLegalUnavailable}</p>
+                )}
               </section>
               <section className="surface-panel order-detail-panel">
                 <h2 className="frame-title">{model.requestStatusTitle}</h2>

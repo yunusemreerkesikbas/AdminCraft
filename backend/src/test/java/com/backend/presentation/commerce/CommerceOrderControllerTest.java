@@ -119,6 +119,7 @@ class CommerceOrderControllerTest {
 				new CommerceOrderFulfillmentResponse(null, null, null, null, null, null),
 				null,
 				null,
-				"NOT_CAPTURED");
+				"NOT_CAPTURED",
+				null);
 	}
 }

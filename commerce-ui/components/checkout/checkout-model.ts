@@ -44,6 +44,13 @@ export type CheckoutModel = {
   paymentPreparingLabel: string;
   itemSummaryTitle: string;
   itemFallback: string;
+  legalTitle: string;
+  legalDescription: string;
+  legalReadyLabel: string;
+  legalBlockedLabel: string;
+  legalMissingLabel: string;
+  legalAcceptLabel: string;
+  legalVersionLabel: string;
   auth: CustomerAuthModel;
   addressBook: AddressBookModel;
 };
@@ -96,6 +103,13 @@ export const createCheckoutModel = (
   paymentPreparingLabel: translate("paymentPreparingLabel"),
   itemSummaryTitle: translate("itemSummaryTitle"),
   itemFallback: translate("itemFallback"),
+  legalTitle: translate("legalTitle"),
+  legalDescription: translate("legalDescription"),
+  legalReadyLabel: translate("legalReadyLabel"),
+  legalBlockedLabel: translate("legalBlockedLabel"),
+  legalMissingLabel: translate("legalMissingLabel"),
+  legalAcceptLabel: translate("legalAcceptLabel"),
+  legalVersionLabel: translate("legalVersionLabel"),
   auth: createCheckoutAuthModel(translate, account),
   addressBook: createAddressBookModel(addressBook),
 });

@@ -1,0 +1,161 @@
+<div class="bg-card flex min-w-0 flex-auto flex-col overflow-hidden sm:absolute sm:inset-0 dark:bg-transparent">
+    <admin-page-header
+        [title]="'admin.commerce.legalTemplates.title' | transloco"
+        [subtitle]="'admin.commerce.legalTemplates.subtitle' | transloco"
+        [showCreateButton]="false"
+        [showSearch]="false"
+        [isLoading]="isLoadingSig()"
+    >
+        <ng-container actions>
+            <button mat-stroked-button type="button" (click)="newTemplate()">
+                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                <span>{{ 'admin.common.actions.create' | transloco }}</span>
+            </button>
+            <button mat-stroked-button type="button" (click)="loadTemplates()">
+                <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
+                <span>{{ 'admin.common.actions.refresh' | transloco }}</span>
+            </button>
+        </ng-container>
+    </admin-page-header>
+
+    <div class="grid flex-auto gap-6 overflow-y-auto p-6 lg:grid-cols-[minmax(0,1fr)_460px] md:p-8">
+        <section class="flex min-w-0 flex-col gap-4">
+            <form [formGroup]="filterForm" class="grid gap-3 rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:grid-cols-4">
+                <label class="flex flex-col gap-1 text-sm">
+                    <span class="text-slate-500">{{ 'admin.commerce.legalTemplates.type' | transloco }}</span>
+                    <select class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="type">
+                        <option value="">{{ 'admin.commerce.common.all' | transloco }}</option>
+                        @for (type of typeOptions; track type) {
+                            <option [value]="type">{{ typeLabel(type) }}</option>
+                        }
+                    </select>
+                </label>
+                <label class="flex flex-col gap-1 text-sm">
+                    <span class="text-slate-500">{{ 'admin.commerce.legalTemplates.language' | transloco }}</span>
+                    <input class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="language" placeholder="TR" />
+                </label>
+                <label class="flex flex-col gap-1 text-sm">
+                    <span class="text-slate-500">{{ 'admin.commerce.legalTemplates.status' | transloco }}</span>
+                    <select class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="status">
+                        <option value="">{{ 'admin.commerce.common.all' | transloco }}</option>
+                        @for (status of statusOptions; track status) {
+                            <option [value]="status">{{ status }}</option>
+                        }
+                    </select>
+                </label>
+                <div class="flex items-end">
+                    <button mat-flat-button color="primary" type="button" class="w-full" (click)="loadTemplates()">
+                        {{ 'admin.common.actions.filter' | transloco }}
+                    </button>
+                </div>
+            </form>
+
+            <div class="overflow-hidden rounded border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                @if (isLoadingSig()) {
+                    <div class="flex items-center justify-center py-16">
+                        <mat-progress-spinner mode="indeterminate" diameter="42" />
+                    </div>
+                } @else if (templatesSig().length) {
+                    <div class="divide-y divide-slate-200 dark:divide-slate-700">
+                        @for (template of templatesSig(); track template.templateUid) {
+                            <article class="grid gap-3 p-4 xl:grid-cols-[1fr_auto]">
+                                <button type="button" class="min-w-0 text-left" (click)="selectTemplate(template)">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h2 class="truncate text-base font-semibold">{{ template.title }}</h2>
+                                        <spa-status-badge [status]="template.status" size="sm" />
+                                    </div>
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        {{ typeLabel(template.type) }} / {{ template.language }} / v{{ template.version }}
+                                    </p>
+                                    <p class="mt-1 text-xs text-slate-400">
+                                        {{ template.updatedAt | date: 'medium' }}
+                                    </p>
+                                </button>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button mat-stroked-button type="button" (click)="preview(template)">
+                                        {{ 'admin.commerce.legalTemplates.preview' | transloco }}
+                                    </button>
+                                    @if (template.status !== 'PUBLISHED') {
+                                        <button mat-flat-button color="primary" type="button" [disabled]="isSavingSig()" (click)="publish(template)">
+                                            {{ 'admin.commerce.legalTemplates.publish' | transloco }}
+                                        </button>
+                                    }
+                                    @if (template.status !== 'ARCHIVED') {
+                                        <button mat-stroked-button type="button" [disabled]="isSavingSig()" (click)="archive(template)">
+                                            {{ 'admin.commerce.legalTemplates.archive' | transloco }}
+                                        </button>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                } @else {
+                    <p class="p-6 text-sm text-slate-500">{{ 'admin.commerce.legalTemplates.empty' | transloco }}</p>
+                }
+            </div>
+        </section>
+
+        <aside class="flex min-w-0 flex-col gap-4">
+            <form [formGroup]="templateForm" class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold">
+                        {{ selectedSig() ? ('admin.commerce.legalTemplates.editTitle' | transloco) : ('admin.commerce.legalTemplates.createTitle' | transloco) }}
+                    </h2>
+                    @if (selectedSig(); as selected) {
+                        <p class="text-sm text-slate-500">{{ selected.templateUid }} / v{{ selected.version }}</p>
+                    }
+                </div>
+
+                <div class="grid gap-3">
+                    <label class="flex flex-col gap-1 text-sm">
+                        <span class="text-slate-500">{{ 'admin.commerce.legalTemplates.type' | transloco }}</span>
+                        <select class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="type">
+                            @for (type of typeOptions; track type) {
+                                <option [value]="type">{{ typeLabel(type) }}</option>
+                            }
+                        </select>
+                    </label>
+                    <label class="flex flex-col gap-1 text-sm">
+                        <span class="text-slate-500">{{ 'admin.commerce.legalTemplates.language' | transloco }}</span>
+                        <input class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="language" />
+                    </label>
+                    <label class="flex flex-col gap-1 text-sm">
+                        <span class="text-slate-500">{{ 'admin.commerce.legalTemplates.formTitle' | transloco }}</span>
+                        <input class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="title" />
+                    </label>
+                    <label class="flex flex-col gap-1 text-sm">
+                        <span class="text-slate-500">{{ 'admin.commerce.legalTemplates.content' | transloco }}</span>
+                        <textarea class="min-h-80 rounded border border-slate-300 px-3 py-2 font-mono text-sm dark:border-slate-700 dark:bg-slate-950" formControlName="contentText"></textarea>
+                    </label>
+                </div>
+
+                @if (selectedSig()?.status === 'PUBLISHED') {
+                    <p class="mt-4 rounded bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-200">
+                        {{ 'admin.commerce.legalTemplates.publishedLocked' | transloco }}
+                    </p>
+                }
+
+                <button
+                    mat-flat-button
+                    color="primary"
+                    type="button"
+                    class="mt-5 w-full"
+                    [disabled]="isSavingSig() || selectedSig()?.status === 'PUBLISHED'"
+                    (click)="saveTemplate()"
+                >
+                    @if (isSavingSig()) {
+                        <mat-progress-spinner mode="indeterminate" diameter="18" />
+                    }
+                    <span>{{ 'admin.common.actions.save' | transloco }}</span>
+                </button>
+            </form>
+
+            @if (previewSig(); as preview) {
+                <section class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h2 class="mb-3 text-lg font-semibold">{{ 'admin.commerce.legalTemplates.preview' | transloco }}</h2>
+                    <pre class="max-h-96 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-4 text-sm dark:bg-slate-950">{{ preview }}</pre>
+                </section>
+            }
+        </aside>
+    </div>
+</div>

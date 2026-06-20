@@ -1,0 +1,103 @@
+CREATE TABLE commerce_legal_templates (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL,
+    uid VARCHAR(50) NOT NULL,
+    template_type VARCHAR(60) NOT NULL,
+    language VARCHAR(10) NOT NULL,
+    version INT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    title VARCHAR(191) NOT NULL,
+    content_text TEXT NOT NULL,
+    published_at DATETIME NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    created_by BIGINT NULL,
+    updated_by BIGINT NULL,
+    CONSTRAINT uk_commerce_legal_template_uuid UNIQUE (uuid),
+    CONSTRAINT uk_commerce_legal_template_uid UNIQUE (uid),
+    CONSTRAINT uk_commerce_legal_template_type_lang_version UNIQUE (template_type, language, version),
+    CONSTRAINT chk_commerce_legal_template_type CHECK (template_type IN ('DISTANCE_SALES_AGREEMENT', 'PRE_INFORMATION_FORM')),
+    CONSTRAINT chk_commerce_legal_template_status CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED')),
+    INDEX idx_commerce_legal_template_type_lang_status (template_type, language, status),
+    INDEX idx_commerce_legal_template_status_updated (status, updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE commerce_payment_attempts
+    ADD COLUMN legal_acceptance_json JSON NULL AFTER failure_message_key,
+    ADD COLUMN legal_acceptance_captured_at DATETIME NULL AFTER legal_acceptance_json;
+
+INSERT INTO commerce_legal_templates (
+    uuid,
+    uid,
+    template_type,
+    language,
+    version,
+    status,
+    title,
+    content_text,
+    published_at,
+    created_at,
+    updated_at,
+    created_by,
+    updated_by
+) VALUES
+(
+    'c1e90001-0000-4000-8000-000000000001',
+    'commerce-legal-distance-tr-v1',
+    'DISTANCE_SALES_AGREEMENT',
+    'TR',
+    1,
+    'DRAFT',
+    'Mesafeli Satis Sozlesmesi',
+    'Bu taslak mesafeli satis sozlesmesi ornek metindir. Tenant tarafindan hukuki onayli metinle degistirilip publish edilmelidir.\n\nSatici: {{seller.name}}\nAdres: {{seller.address}}\nE-posta: {{seller.email}}\nTelefon: {{seller.phone}}\nMusteri: {{customer.firstName}} {{customer.lastName}}\nSiparis toplam: {{order.total}} {{order.currencyIso}}',
+    NULL,
+    NOW(),
+    NOW(),
+    NULL,
+    NULL
+),
+(
+    'c1e90001-0000-4000-8000-000000000002',
+    'commerce-legal-preinfo-tr-v1',
+    'PRE_INFORMATION_FORM',
+    'TR',
+    1,
+    'DRAFT',
+    'On Bilgilendirme Formu',
+    'Bu taslak on bilgilendirme formu ornek metindir. Tenant tarafindan hukuki onayli metinle degistirilip publish edilmelidir.\n\nSatici: {{seller.name}}\nAdres: {{seller.address}}\nUrun adedi: {{order.itemCount}}\nAra toplam: {{order.subtotal}} {{order.currencyIso}}\nKargo: {{order.shippingTotal}} {{order.currencyIso}}\nToplam: {{order.total}} {{order.currencyIso}}',
+    NULL,
+    NOW(),
+    NOW(),
+    NULL,
+    NULL
+),
+(
+    'c1e90001-0000-4000-8000-000000000003',
+    'commerce-legal-distance-en-v1',
+    'DISTANCE_SALES_AGREEMENT',
+    'EN',
+    1,
+    'DRAFT',
+    'Distance Sales Agreement',
+    'This draft distance sales agreement is sample content. The tenant must replace it with legally approved text and publish it.\n\nSeller: {{seller.name}}\nAddress: {{seller.address}}\nEmail: {{seller.email}}\nPhone: {{seller.phone}}\nCustomer: {{customer.firstName}} {{customer.lastName}}\nOrder total: {{order.total}} {{order.currencyIso}}',
+    NULL,
+    NOW(),
+    NOW(),
+    NULL,
+    NULL
+),
+(
+    'c1e90001-0000-4000-8000-000000000004',
+    'commerce-legal-preinfo-en-v1',
+    'PRE_INFORMATION_FORM',
+    'EN',
+    1,
+    'DRAFT',
+    'Pre-Information Form',
+    'This draft pre-information form is sample content. The tenant must replace it with legally approved text and publish it.\n\nSeller: {{seller.name}}\nAddress: {{seller.address}}\nItem count: {{order.itemCount}}\nSubtotal: {{order.subtotal}} {{order.currencyIso}}\nShipping: {{order.shippingTotal}} {{order.currencyIso}}\nTotal: {{order.total}} {{order.currencyIso}}',
+    NULL,
+    NOW(),
+    NOW(),
+    NULL,
+    NULL
+);

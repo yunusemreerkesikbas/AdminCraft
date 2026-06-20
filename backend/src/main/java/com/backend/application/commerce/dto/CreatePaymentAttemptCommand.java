@@ -1,4 +1,12 @@
 package com.backend.application.commerce.dto;
 
-public record CreatePaymentAttemptCommand(String checkoutUid) {
+import java.util.List;
+
+public record CreatePaymentAttemptCommand(
+		String checkoutUid,
+		List<CommerceLegalAcceptanceCommand> legalAcceptances) {
+
+	public CreatePaymentAttemptCommand(String checkoutUid) {
+		this(checkoutUid, List.of());
+	}
 }

@@ -118,6 +118,7 @@ export interface CommerceAdminOrderDetail {
     customerPhone: string;
     providerTransactionId?: string | null;
     legalSnapshotStatus: string;
+    legalSnapshotJson?: string | null;
     stockDeducted: boolean;
     items: CommerceOrderItem[];
     shipping: CommerceShipping;
@@ -187,4 +188,52 @@ export interface CommerceOrderResolutionRequestRow {
 export interface CommerceOrderResolutionDecisionRequest {
     decision: 'APPROVE' | 'REJECT';
     decisionNote?: string | null;
+}
+
+export type CommerceLegalTemplateType =
+    | 'DISTANCE_SALES_AGREEMENT'
+    | 'PRE_INFORMATION_FORM';
+
+export type CommerceLegalTemplateStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+
+export interface CommerceLegalTemplate {
+    templateUid: string;
+    type: CommerceLegalTemplateType;
+    language: string;
+    version: number;
+    status: CommerceLegalTemplateStatus;
+    title: string;
+    contentText: string;
+    publishedAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CommerceLegalTemplateRequest {
+    type: CommerceLegalTemplateType;
+    language: string;
+    title: string;
+    contentText: string;
+}
+
+export interface CommerceLegalTemplatePreview {
+    templateUid: string;
+    content: string;
+}
+
+export interface CommerceLegalSnapshotDocument {
+    templateUid: string;
+    type: CommerceLegalTemplateType;
+    language: string;
+    version: number;
+    title: string;
+    content: string;
+    contentHash: string;
+}
+
+export interface CommerceLegalSnapshot {
+    language: string;
+    capturedAt: string;
+    acceptedAt: string;
+    documents: CommerceLegalSnapshotDocument[];
 }

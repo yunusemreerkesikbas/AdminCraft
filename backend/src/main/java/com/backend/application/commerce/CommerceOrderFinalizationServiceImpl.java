@@ -30,6 +30,9 @@ import com.backend.domain.commerce.repository.CommerceCheckoutRepository;
 import com.backend.domain.commerce.repository.CommerceOrderNumberCounterRepository;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.port.TenantContextPort;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,6 +45,7 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 	private static final String ORDER_PREFIX_PATTERN = "[A-Z0-9]{1,20}";
 	private static final DateTimeFormatter ORDER_DATE_FORMAT = DateTimeFormatter.BASIC_ISO_DATE;
 	private static final String STOCK_ATTENTION_KEY = "commerce.order.attention.stock_not_deducted";
+	private static final String LEGAL_ATTENTION_KEY = "commerce.order.attention.legal_snapshot_not_captured";
 
 	private final CommerceOrderRepository orderRepository;
 	private final CommerceCheckoutRepository checkoutRepository;
@@ -49,6 +53,7 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 	private final CommerceProductVariantStockPort stockPort;
 	private final ConfigPropertyService configPropertyService;
 	private final TenantContextPort tenantContext;
+	private final ObjectMapper objectMapper;
 
 	@Override
 	@Transactional
@@ -107,14 +112,47 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 		order.setBillingAddressSnapshot(checkout.getBillingAddressSnapshot());
 		order.setProvider(attempt.getProvider());
 		order.setProviderTransactionId(attempt.getProviderTransactionId());
-		order.setLegalSnapshotStatus(CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
+		boolean legalCaptured = attempt.getLegalAcceptanceJson() != null && !attempt.getLegalAcceptanceJson().isBlank();
+		order.setLegalSnapshotStatus(legalCaptured
+				? CommerceOrderLegalSnapshotStatus.CAPTURED
+				: CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
+		order.setLegalSnapshotJson(legalCaptured ? orderLegalSnapshotJson(attempt, order) : null);
 		order.setStockDeducted(stockResult.success());
-		order.setRequiresAttention(!stockResult.success());
-		order.setAttentionReasonKey(stockResult.success()
-				? null
-				: Optional.ofNullable(stockResult.reasonMessageKey()).orElse(STOCK_ATTENTION_KEY));
+		order.setRequiresAttention(!stockResult.success() || !legalCaptured);
+		order.setAttentionReasonKey(attentionReason(stockResult, legalCaptured));
 		checkout.getItems().forEach(item -> order.addItem(orderItem(item)));
 		return order;
+	}
+
+	private String attentionReason(
+			CommerceProductVariantStockPort.StockDeductionResult stockResult,
+			boolean legalCaptured) {
+		if (!stockResult.success()) {
+			return Optional.ofNullable(stockResult.reasonMessageKey()).orElse(STOCK_ATTENTION_KEY);
+		}
+		if (!legalCaptured) {
+			return LEGAL_ATTENTION_KEY;
+		}
+		return null;
+	}
+
+	private String orderLegalSnapshotJson(CommercePaymentAttempt attempt, CommerceOrder order) {
+		try {
+			ObjectNode snapshot = (ObjectNode) objectMapper.readTree(attempt.getLegalAcceptanceJson());
+			ObjectNode orderNode = snapshot.putObject("order");
+			orderNode.put("orderNumber", order.getOrderNumber());
+			orderNode.put("status", order.getStatus().name());
+			ObjectNode paymentNode = snapshot.putObject("payment");
+			paymentNode.put("attemptUid", attempt.getUid());
+			paymentNode.put("provider", attempt.getProvider());
+			paymentNode.put("providerTransactionId", attempt.getProviderTransactionId());
+			if (attempt.getLegalAcceptanceCapturedAt() != null) {
+				paymentNode.put("legalAcceptanceCapturedAt", attempt.getLegalAcceptanceCapturedAt().toString());
+			}
+			return objectMapper.writeValueAsString(snapshot);
+		} catch (JsonProcessingException | ClassCastException ex) {
+			throw new IllegalStateException("commerce.legal.snapshot.invalid", ex);
+		}
 	}
 
 	private CommerceOrderItem orderItem(CommerceCheckoutItem checkoutItem) {

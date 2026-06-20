@@ -24,6 +24,7 @@ import com.backend.application.commerce.CommerceCustomerPrincipal;
 import com.backend.application.commerce.CommercePaymentProperties;
 import com.backend.application.commerce.PaymentAttemptService;
 import com.backend.application.commerce.dto.CreatePaymentAttemptCommand;
+import com.backend.application.commerce.dto.CommerceLegalAcceptanceCommand;
 import com.backend.application.commerce.dto.InitializePaymentAttemptCommand;
 import com.backend.application.commerce.dto.PaymentAttemptResponse;
 import com.backend.application.commerce.dto.PaymentInitializeResponse;
@@ -64,7 +65,16 @@ public class CommercePaymentController {
 			@Valid @RequestBody CreatePaymentAttemptRequest request) {
 		PaymentAttemptResponse response = paymentAttemptService.create(
 				principal(authentication),
-				new CreatePaymentAttemptCommand(request.checkoutUid()));
+				new CreatePaymentAttemptCommand(
+						request.checkoutUid(),
+						request.legalAcceptances() == null
+								? List.of()
+								: request.legalAcceptances().stream()
+										.map(acceptance -> new CommerceLegalAcceptanceCommand(
+												acceptance.templateUid(),
+												acceptance.version(),
+												acceptance.accepted()))
+										.toList()));
 		return ResponseEntity.ok(ApiResponse.success(message("commerce.payment.attempt.created"), response));
 	}
 

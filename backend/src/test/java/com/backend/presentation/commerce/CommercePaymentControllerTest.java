@@ -53,7 +53,9 @@ class CommercePaymentControllerTest {
 		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
 				.thenAnswer(invocation -> "Payment attempt created");
 
-		var result = controller.createAttempt(authentication, new CreatePaymentAttemptRequest("checkout-uid"));
+		var result = controller.createAttempt(authentication, new CreatePaymentAttemptRequest(
+				"checkout-uid",
+				List.of(new CreatePaymentAttemptRequest.LegalAcceptanceRequest("template-uid", 1, true))));
 
 		assertThat(result.getBody()).isNotNull();
 		assertThat(result.getBody().getMessage()).isEqualTo("Payment attempt created");

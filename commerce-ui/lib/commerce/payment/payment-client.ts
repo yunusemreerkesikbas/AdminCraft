@@ -3,6 +3,7 @@ import { resolveCommerceEndpoint } from "@/lib/core/http/endpoints";
 import { createRequestTimeoutSignal } from "@/lib/core/http/request-timeout";
 import type {
   CreatePaymentAttemptRequest,
+  LegalAcceptanceRequest,
   PaymentAttemptResponse,
   PaymentInitializeResponse,
 } from "./types";
@@ -23,6 +24,7 @@ export type CommercePaymentClient = {
   createPaymentAttempt: (
     accessToken: string,
     checkoutUid: string,
+    legalAcceptances: LegalAcceptanceRequest[],
   ) => Promise<PaymentAttemptResponse>;
   getPaymentAttempt: (
     accessToken: string,
@@ -79,12 +81,15 @@ export const createCommercePaymentClient = ({
   };
 
   return {
-    createPaymentAttempt: (accessToken, checkoutUid) =>
+    createPaymentAttempt: (accessToken, checkoutUid, legalAcceptances) =>
       requestPayment<PaymentAttemptResponse>(
         resolveCommerceEndpoint("paymentAttempts"),
         {
           method: "POST",
-          body: { checkoutUid } satisfies CreatePaymentAttemptRequest,
+          body: {
+            checkoutUid,
+            legalAcceptances,
+          } satisfies CreatePaymentAttemptRequest,
           accessToken,
         },
       ),

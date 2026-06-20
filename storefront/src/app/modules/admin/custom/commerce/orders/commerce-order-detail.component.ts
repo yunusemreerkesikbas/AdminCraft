@@ -23,6 +23,8 @@ import {
     ChangeCommerceOrderStatusRequest,
     CommerceAddressSnapshot,
     CommerceAdminOrderDetail,
+    CommerceLegalSnapshot,
+    CommerceLegalSnapshotDocument,
 } from '../models/commerce.types';
 import { CommerceAdminOrderService } from '../services/commerce-admin.service';
 
@@ -110,6 +112,18 @@ export class SpaCommerceOrderDetailComponent implements OnInit, OnDestroy {
         ]
             .filter(Boolean)
             .join(', ');
+    }
+
+    protected legalDocuments(detail: CommerceAdminOrderDetail): CommerceLegalSnapshotDocument[] {
+        if (!detail.legalSnapshotJson) {
+            return [];
+        }
+        try {
+            const snapshot = JSON.parse(detail.legalSnapshotJson) as CommerceLegalSnapshot;
+            return Array.isArray(snapshot.documents) ? snapshot.documents : [];
+        } catch {
+            return [];
+        }
     }
 
     protected nextStatus(status: string): ChangeCommerceOrderStatusRequest['status'] | null {
