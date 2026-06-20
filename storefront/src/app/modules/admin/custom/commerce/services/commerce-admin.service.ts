@@ -10,6 +10,8 @@ import {
     CommerceAdminOrderDetail,
     CommerceAdminOrderRow,
     CommerceAdminPaymentAttemptRow,
+    CommerceOrderResolutionDecisionRequest,
+    CommerceOrderResolutionRequestRow,
 } from '../models/commerce.types';
 
 @Injectable({ providedIn: 'root' })
@@ -114,6 +116,67 @@ export class CommerceAdminPaymentAttemptService extends CrudHttpService<
         _id: number,
         _dto: Partial<CommerceAdminPaymentAttemptRow>
     ): Observable<CommerceAdminPaymentAttemptRow> {
+        return readOnlyOperation();
+    }
+
+    override delete(_id: number): Observable<void> {
+        return readOnlyOperation();
+    }
+}
+
+@Injectable({ providedIn: 'root' })
+export class CommerceAdminOrderRequestService extends CrudHttpService<
+    CommerceOrderResolutionRequestRow,
+    Partial<CommerceOrderResolutionRequestRow>,
+    Partial<CommerceOrderResolutionRequestRow>
+> {
+    protected endpoints: CrudEndpoints = {
+        list: 'commerceAdminOrderRequests',
+        getById: 'commerceAdminOrderRequests',
+        create: 'commerceAdminOrderRequests',
+        update: 'commerceAdminOrderRequests',
+        delete: 'commerceAdminOrderRequests',
+    };
+
+    override getById(
+        _id: number,
+        _params?: Record<string, string | number>
+    ): Observable<CommerceOrderResolutionRequestRow> {
+        return readOnlyOperation();
+    }
+
+    getRequest(requestUid: string): Observable<CommerceOrderResolutionRequestRow> {
+        return this.api
+            .get<ApiResponse<CommerceOrderResolutionRequestRow>>(
+                'commerceAdminOrderRequestByUid',
+                { requestUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    decide(
+        requestUid: string,
+        request: CommerceOrderResolutionDecisionRequest
+    ): Observable<CommerceOrderResolutionRequestRow> {
+        return this.api
+            .patch<ApiResponse<CommerceOrderResolutionRequestRow>>(
+                'commerceAdminOrderRequestDecision',
+                request,
+                { requestUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    override create(
+        _dto: Partial<CommerceOrderResolutionRequestRow>
+    ): Observable<CommerceOrderResolutionRequestRow> {
+        return readOnlyOperation();
+    }
+
+    override update(
+        _id: number,
+        _dto: Partial<CommerceOrderResolutionRequestRow>
+    ): Observable<CommerceOrderResolutionRequestRow> {
         return readOnlyOperation();
     }
 

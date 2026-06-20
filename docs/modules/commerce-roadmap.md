@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history foundation hazırlandı. Full legal snapshot rendering, iptal/iade/refund karar akışları ve transactional bildirimler henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. Full legal snapshot rendering ve transactional bildirimler henüz yapılmadı.
 
 ## 1. Konumlandırma
 
@@ -356,11 +356,12 @@ Hazır:
 - Manuel fulfillment bilgisi: kargo firması, takip numarası, opsiyonel takip URL'i
 - Status history timeline ve history satırına bağlı opsiyonel iç notlar
 - Read-only payment attempt history
+- İptal/iade talepleri listesi, detay ekranı ve approve/reject karar akışı
+- Admin onayında iyzico üzerinden tam refund denemesi
 - Commerce sidebar navigation
 
 Kalan:
 
-- İptal/iade talepleri listesi ve karar akışı
 - Düşük stok uyarıları
 
 MVP dışında:

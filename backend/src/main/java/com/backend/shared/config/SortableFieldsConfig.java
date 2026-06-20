@@ -216,6 +216,19 @@ public final class SortableFieldsConfig {
 			SortOptionDto.of("status,desc", "admin.commerce.sort.statusDesc"),
 			SortOptionDto.of("provider,asc", "admin.commerce.sort.providerAsc"));
 
+	public static final Set<String> COMMERCE_ADMIN_ORDER_REQUEST_ALLOWED_FIELDS = Set.of(
+			"createdAt", "status", "type", "refundStatus");
+
+	public static final String COMMERCE_ADMIN_ORDER_REQUEST_DEFAULT_SORT = "createdAt,desc";
+
+	public static final List<SortOptionDto> COMMERCE_ADMIN_ORDER_REQUEST_SORT_OPTIONS = List.of(
+			SortOptionDto.defaultOption("createdAt,desc", "admin.commerce.sort.newest"),
+			SortOptionDto.of("createdAt,asc", "admin.commerce.sort.oldest"),
+			SortOptionDto.of("status,asc", "admin.commerce.sort.statusAsc"),
+			SortOptionDto.of("status,desc", "admin.commerce.sort.statusDesc"),
+			SortOptionDto.of("type,asc", "admin.commerce.sort.typeAsc"),
+			SortOptionDto.of("refundStatus,asc", "admin.commerce.sort.refundStatusAsc"));
+
         // ========== Tenant Entity ==========
         public static final Set<String> TENANT_ALLOWED_FIELDS = Set.of(
                         "createdAt", "companyName", "subdomain", "status");

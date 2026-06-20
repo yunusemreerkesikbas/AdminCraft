@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import com.backend.application.commerce.CommercePaymentProviderException;
 import com.iyzipay.model.CheckoutFormInitialize;
+import com.iyzipay.model.Refund;
+import com.iyzipay.model.Status;
 
 class IyzicoCheckoutFormPaymentProviderAdapterTest {
 
@@ -46,5 +48,17 @@ class IyzicoCheckoutFormPaymentProviderAdapterTest {
 
 		assertThat(result.token()).isEqualTo("provider-token");
 		assertThat(result.paymentPageUrl()).isEqualTo("https://pay.example.com");
+	}
+
+	@Test
+	void toRefundResult_ShouldReturnReference_WhenProviderSucceeds() {
+		Refund refund = mock(Refund.class);
+		when(refund.getStatus()).thenReturn(Status.SUCCESS.getValue());
+		when(refund.getRefundHostReference()).thenReturn(" refund-host-reference ");
+
+		var result = adapter.toRefundResult(refund);
+
+		assertThat(result.successful()).isTrue();
+		assertThat(result.refundReference()).isEqualTo("refund-host-reference");
 	}
 }

@@ -154,3 +154,37 @@ export interface CommerceAdminPaymentAttemptRow {
     failureCode?: string | null;
     failureMessageKey?: string | null;
 }
+
+export interface CommerceOrderResolutionRequestRow {
+    id: number;
+    requestUid: string;
+    orderUid: string;
+    orderNumber: string;
+    customerEmail: string;
+    type: string;
+    status: string;
+    reason: string;
+    description: string;
+    previousOrderStatus: string;
+    requestedOrderStatus: string;
+    decisionNote?: string | null;
+    decidedByUserId?: number | null;
+    decidedByEmail?: string | null;
+    refundStatus: string;
+    refundProvider?: string | null;
+    refundReference?: string | null;
+    refundFailureCode?: string | null;
+    refundFailureMessageKey?: string | null;
+    stockRestored: boolean;
+    orderTotal: number;
+    currencyIso: string;
+    createdAt: string;
+    decidedAt?: string | null;
+    refundAttemptedAt?: string | null;
+    refundedAt?: string | null;
+}
+
+export interface CommerceOrderResolutionDecisionRequest {
+    decision: 'APPROVE' | 'REJECT';
+    decisionNote?: string | null;
+}

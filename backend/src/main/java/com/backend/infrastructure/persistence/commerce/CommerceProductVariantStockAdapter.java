@@ -40,6 +40,27 @@ class CommerceProductVariantStockAdapter implements CommerceProductVariantStockP
 		return new StockDeductionResult(true, null);
 	}
 
+	@Override
+	public StockAdjustmentResult restore(Map<String, Integer> variantQuantities) {
+		if (variantQuantities == null || variantQuantities.isEmpty()) {
+			return new StockAdjustmentResult(false, STOCK_ATTENTION_KEY);
+		}
+		Map<String, ProductVariant> variants = repository.findByUidInForUpdate(variantQuantities.keySet()).stream()
+				.collect(Collectors.toMap(ProductVariant::getUid, Function.identity()));
+		boolean canRestore = variantQuantities.entrySet().stream()
+				.allMatch(entry -> variants.containsKey(entry.getKey())
+						&& entry.getValue() != null
+						&& entry.getValue() > 0);
+		if (!canRestore) {
+			return new StockAdjustmentResult(false, STOCK_ATTENTION_KEY);
+		}
+		variantQuantities.forEach((variantUid, quantity) -> {
+			ProductVariant variant = variants.get(variantUid);
+			variant.setStockQuantity(Objects.requireNonNullElse(variant.getStockQuantity(), 0) + quantity);
+		});
+		return new StockAdjustmentResult(true, null);
+	}
+
 	private boolean canDeduct(ProductVariant variant, Integer requestedQuantity) {
 		if (variant == null || requestedQuantity == null || requestedQuantity <= 0) {
 			return false;

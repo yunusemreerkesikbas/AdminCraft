@@ -15,8 +15,10 @@ import com.iyzipay.model.CheckoutFormInitialize;
 import com.iyzipay.model.Currency;
 import com.iyzipay.model.Locale;
 import com.iyzipay.model.PaymentGroup;
+import com.iyzipay.model.Refund;
 import com.iyzipay.model.Status;
 import com.iyzipay.request.CreateCheckoutFormInitializeRequest;
+import com.iyzipay.request.CreateRefundV2Request;
 import com.iyzipay.request.RetrieveCheckoutFormRequest;
 
 @Component
@@ -71,6 +73,38 @@ class IyzicoCheckoutFormPaymentProviderAdapter implements CommercePaymentProvide
 		} catch (RuntimeException ex) {
 			throw new CommercePaymentProviderException("commerce.payment.provider.retrieve.failed", ex);
 		}
+	}
+
+	@Override
+	public RefundPaymentResult refundPayment(RefundPaymentCommand command) {
+		try {
+			CreateRefundV2Request request = new CreateRefundV2Request();
+			request.setLocale(Locale.TR.getValue());
+			request.setConversationId(command.conversationId());
+			request.setPaymentId(command.paymentId());
+			request.setPrice(command.price());
+			request.setIp(command.clientIp());
+			Refund refund = Refund.createV2(request, options(command.credentials()));
+			if (!refund.verifySignature(command.credentials().secretKey())) {
+				return new RefundPaymentResult(
+						false,
+						null,
+						"INVALID_SIGNATURE",
+						"commerce.payment.provider.signature.invalid");
+			}
+			return toRefundResult(refund);
+		} catch (RuntimeException ex) {
+			throw new CommercePaymentProviderException("commerce.payment.refund.failed", ex);
+		}
+	}
+
+	RefundPaymentResult toRefundResult(Refund refund) {
+		boolean success = Status.SUCCESS.getValue().equals(refund.getStatus());
+		return new RefundPaymentResult(
+				success,
+				success ? reference(refund) : null,
+				refund.getErrorCode(),
+				success ? null : "commerce.payment.refund.failed");
 	}
 
 	private CreateCheckoutFormInitializeRequest toRequest(CheckoutFormInitializeCommand command) {
@@ -151,5 +185,15 @@ class IyzicoCheckoutFormPaymentProviderAdapter implements CommercePaymentProvide
 		return Currency.TRY.name().equalsIgnoreCase(currencyIso)
 				? Currency.TRY.name()
 				: currencyIso;
+	}
+
+	private String reference(Refund refund) {
+		if (StringUtils.hasText(refund.getRefundHostReference())) {
+			return refund.getRefundHostReference().trim();
+		}
+		if (StringUtils.hasText(refund.getPaymentId())) {
+			return refund.getPaymentId().trim();
+		}
+		return null;
 	}
 }
