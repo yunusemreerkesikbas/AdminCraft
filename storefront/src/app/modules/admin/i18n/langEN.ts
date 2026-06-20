@@ -2349,6 +2349,10 @@ export const langEN = {
                 formTitle: 'Title',
                 content: 'Content',
                 publishedLocked: 'Published templates are immutable. Create a new draft for changes.',
+                types: {
+                    DISTANCE_SALES_AGREEMENT: 'Distance Sales Agreement',
+                    PRE_INFORMATION_FORM: 'Pre-Information Form',
+                },
             },
             paymentAttempts: {
                 title: 'Payment Attempts',

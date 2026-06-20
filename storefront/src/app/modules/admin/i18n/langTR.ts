@@ -2329,6 +2329,10 @@ export const langTR = {
                 formTitle: 'Başlık',
                 content: 'İçerik',
                 publishedLocked: 'Yayınlanmış şablonlar değiştirilemez. Değişiklik için yeni taslak oluşturun.',
+                types: {
+                    DISTANCE_SALES_AGREEMENT: 'Mesafeli Satış Sözleşmesi',
+                    PRE_INFORMATION_FORM: 'Ön Bilgilendirme Formu',
+                },
             },
             paymentAttempts: {
                 title: 'Ödeme Denemeleri',

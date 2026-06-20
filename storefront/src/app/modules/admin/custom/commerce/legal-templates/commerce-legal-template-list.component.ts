@@ -131,7 +131,7 @@ export class SpaCommerceLegalTemplateListComponent implements OnInit, OnDestroy 
             return;
         }
         const selected = this.selectedSig();
-        if (selected?.status === 'PUBLISHED') {
+        if (selected && this.isTemplateImmutable(selected)) {
             return;
         }
         const request: CommerceLegalTemplateRequest = this.templateForm.getRawValue();
@@ -176,10 +176,17 @@ export class SpaCommerceLegalTemplateListComponent implements OnInit, OnDestroy 
             });
     }
 
-    protected typeLabel(type: string): string {
-        return type === 'DISTANCE_SALES_AGREEMENT'
-            ? 'Distance Sales Agreement'
-            : 'Pre-Information Form';
+    protected typeLabelKey(type: CommerceLegalTemplateType): string {
+        return `admin.commerce.legalTemplates.types.${type}`;
+    }
+
+    protected isTemplateImmutable(template: CommerceLegalTemplate): boolean {
+        return template.status !== 'DRAFT';
+    }
+
+    protected selectedTemplateImmutable(): boolean {
+        const selected = this.selectedSig();
+        return selected ? this.isTemplateImmutable(selected) : false;
     }
 
     private mutate(

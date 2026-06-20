@@ -135,6 +135,46 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	}
 
 	@Test
+	void finalizeSuccessfulPayment_ShouldCreateAttentionOrder_WhenLegalSnapshotJsonIsMalformed() {
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setLegalAcceptanceCapturedAt(LocalDateTime.of(2026, 6, 20, 12, 0));
+		attempt.setLegalAcceptanceJson("{malformed-json");
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
+		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
+		when(orderRepository.findByCheckoutId(30L)).thenReturn(Optional.empty());
+		when(orderNumberCounterRepository.nextSequence(any(String.class), any(LocalDate.class))).thenReturn(1);
+		when(stockPort.deductIfAvailable(Map.of("variant-uid", 2))).thenReturn(new StockDeductionResult(true, null));
+		when(orderRepository.save(any(CommerceOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		CommerceOrder order = service.finalizeSuccessfulPayment(attempt);
+
+		assertThat(order.getLegalSnapshotStatus()).isEqualTo(CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
+		assertThat(order.getLegalSnapshotJson()).isNull();
+		assertThat(order.isRequiresAttention()).isTrue();
+		assertThat(order.getAttentionReasonKey()).isEqualTo("commerce.order.attention.legal_snapshot_not_captured");
+		assertThat(order.getStatus()).isEqualTo(CommerceOrderStatus.PAID);
+	}
+
+	@Test
+	void finalizeSuccessfulPayment_ShouldCreateAttentionOrder_WhenLegalSnapshotJsonIsNotObject() {
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setLegalAcceptanceJson("[]");
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
+		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
+		when(orderRepository.findByCheckoutId(30L)).thenReturn(Optional.empty());
+		when(orderNumberCounterRepository.nextSequence(any(String.class), any(LocalDate.class))).thenReturn(1);
+		when(stockPort.deductIfAvailable(Map.of("variant-uid", 2))).thenReturn(new StockDeductionResult(true, null));
+		when(orderRepository.save(any(CommerceOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		CommerceOrder order = service.finalizeSuccessfulPayment(attempt);
+
+		assertThat(order.getLegalSnapshotStatus()).isEqualTo(CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
+		assertThat(order.getLegalSnapshotJson()).isNull();
+		assertThat(order.isRequiresAttention()).isTrue();
+		assertThat(order.getAttentionReasonKey()).isEqualTo("commerce.order.attention.legal_snapshot_not_captured");
+	}
+
+	@Test
 	void finalizeSuccessfulPayment_ShouldLockCheckoutBeforeStockDeduction() {
 		CommercePaymentAttempt attempt = attempt();
 		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));

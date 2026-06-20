@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -17,6 +18,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 
 import com.backend.application.commerce.dto.CommerceLegalAcceptanceCommand;
+import com.backend.application.commerce.dto.CommerceLegalTemplateCommand;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.mail.TemplateVariableRenderer;
 import com.backend.domain.commerce.CommerceCart;
@@ -55,6 +57,115 @@ class CommerceLegalServiceImplTest extends BaseServiceTest {
 				objectMapper);
 		lenient().when(tenantContext.getTenantId()).thenReturn("1");
 		lenient().when(tenantContext.getTenantDbName()).thenReturn("tenant_1");
+	}
+
+	@Test
+	void createTemplate_ShouldAllocateVersionUnderTemplateVersionLock() {
+		CommerceLegalTemplate existing = template(
+				1L,
+				"distance-tr-v1",
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR",
+				1,
+				"Distance v1",
+				"Content v1");
+		when(templateRepository.acquireTemplateVersionLock(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR"))
+				.thenReturn(true);
+		when(templateRepository.findByTypeAndLanguageForUpdate(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR"))
+				.thenReturn(List.of(existing));
+		when(templateRepository.save(org.mockito.ArgumentMatchers.any(CommerceLegalTemplate.class)))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+
+		var response = service.createTemplate(new CommerceLegalTemplateCommand(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"tr-TR",
+				"Distance v2",
+				"Content v2"));
+
+		assertThat(response.version()).isEqualTo(2);
+		InOrder inOrder = inOrder(templateRepository);
+		inOrder.verify(templateRepository).acquireTemplateVersionLock(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR");
+		inOrder.verify(templateRepository).findByTypeAndLanguageForUpdate(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR");
+		inOrder.verify(templateRepository).save(org.mockito.ArgumentMatchers.any(CommerceLegalTemplate.class));
+		inOrder.verify(templateRepository).releaseTemplateVersionLock(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR");
+	}
+
+	@Test
+	void createTemplate_ShouldReleaseTemplateVersionLock_WhenSaveFails() {
+		when(templateRepository.acquireTemplateVersionLock(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR"))
+				.thenReturn(true);
+		when(templateRepository.findByTypeAndLanguageForUpdate(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR"))
+				.thenReturn(List.of());
+		when(templateRepository.save(org.mockito.ArgumentMatchers.any(CommerceLegalTemplate.class)))
+				.thenThrow(new IllegalStateException("save failed"));
+
+		assertThatThrownBy(() -> service.createTemplate(new CommerceLegalTemplateCommand(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR",
+				"Distance",
+				"Content")))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("save failed");
+
+		verify(templateRepository).releaseTemplateVersionLock(
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR");
+	}
+
+	@Test
+	void updateTemplate_ShouldRejectArchivedTemplate() {
+		CommerceLegalTemplate archived = template(
+				1L,
+				"distance-tr-v1",
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR",
+				1,
+				"Distance",
+				"Content");
+		archived.setStatus(CommerceLegalTemplateStatus.ARCHIVED);
+		when(templateRepository.findByUid("distance-tr-v1")).thenReturn(Optional.of(archived));
+
+		assertThatThrownBy(() -> service.updateTemplate(
+				"distance-tr-v1",
+				new CommerceLegalTemplateCommand(
+						CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+						"TR",
+						"Distance Updated",
+						"Content Updated")))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("commerce.legal.template.immutable");
+	}
+
+	@Test
+	void publishTemplate_ShouldRejectArchivedTemplate() {
+		CommerceLegalTemplate archived = template(
+				1L,
+				"distance-tr-v1",
+				CommerceLegalTemplateType.DISTANCE_SALES_AGREEMENT,
+				"TR",
+				1,
+				"Distance",
+				"Content");
+		archived.setStatus(CommerceLegalTemplateStatus.ARCHIVED);
+		when(templateRepository.findByUid("distance-tr-v1")).thenReturn(Optional.of(archived));
+
+		assertThatThrownBy(() -> service.publishTemplate("distance-tr-v1"))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("commerce.legal.template.immutable");
 	}
 
 	@Test

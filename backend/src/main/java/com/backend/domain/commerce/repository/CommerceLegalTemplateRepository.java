@@ -24,5 +24,11 @@ public interface CommerceLegalTemplateRepository {
 			CommerceLegalTemplateType type,
 			String language);
 
-	int nextVersion(CommerceLegalTemplateType type, String language);
+	boolean acquireTemplateVersionLock(
+			CommerceLegalTemplateType type,
+			String language);
+
+	void releaseTemplateVersionLock(
+			CommerceLegalTemplateType type,
+			String language);
 }

@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.backend.application.commerce.dto.CheckoutAddressSnapshotResponse;
 import com.backend.application.commerce.dto.CheckoutLegalResponse;
@@ -93,14 +95,37 @@ class CommerceLegalServiceImpl implements CommerceLegalService {
 	public CommerceLegalTemplateResponse createTemplate(CommerceLegalTemplateCommand command) {
 		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
 		ValidatedTemplateInput input = validateCommand(command);
-		CommerceLegalTemplate template = new CommerceLegalTemplate();
-		template.setType(input.type());
-		template.setLanguage(input.language());
-		template.setVersion(templateRepository.nextVersion(input.type(), input.language()));
-		template.setStatus(CommerceLegalTemplateStatus.DRAFT);
-		template.setTitle(input.title());
-		template.setContentText(input.contentText());
-		return CommerceLegalTemplateResponse.from(templateRepository.save(template));
+		if (!templateRepository.acquireTemplateVersionLock(input.type(), input.language())) {
+			throw new IllegalStateException("commerce.legal.template.version.lock.failed");
+		}
+		boolean releaseImmediately = !TransactionSynchronizationManager.isSynchronizationActive();
+		if (!releaseImmediately) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCompletion(int status) {
+					templateRepository.releaseTemplateVersionLock(input.type(), input.language());
+				}
+			});
+		}
+		try {
+			int nextVersion = templateRepository.findByTypeAndLanguageForUpdate(input.type(), input.language()).stream()
+					.map(CommerceLegalTemplate::getVersion)
+					.filter(Objects::nonNull)
+					.max(Integer::compareTo)
+					.orElse(0) + 1;
+			CommerceLegalTemplate template = new CommerceLegalTemplate();
+			template.setType(input.type());
+			template.setLanguage(input.language());
+			template.setVersion(nextVersion);
+			template.setStatus(CommerceLegalTemplateStatus.DRAFT);
+			template.setTitle(input.title());
+			template.setContentText(input.contentText());
+			return CommerceLegalTemplateResponse.from(templateRepository.save(template));
+		} finally {
+			if (releaseImmediately) {
+				templateRepository.releaseTemplateVersionLock(input.type(), input.language());
+			}
+		}
 	}
 
 	@Override
@@ -347,8 +372,8 @@ class CommerceLegalServiceImpl implements CommerceLegalService {
 	private CommerceLegalTemplate mutableTemplate(String templateUid) {
 		CommerceLegalTemplate template = templateRepository.findByUid(requiredUid(templateUid))
 				.orElseThrow(() -> new EntityNotFoundException(TEMPLATE_NOT_FOUND));
-		if (template.getStatus() == CommerceLegalTemplateStatus.PUBLISHED) {
-			throw new IllegalStateException("commerce.legal.template.published.immutable");
+		if (template.getStatus() != CommerceLegalTemplateStatus.DRAFT) {
+			throw new IllegalStateException("commerce.legal.template.immutable");
 		}
 		return template;
 	}

@@ -54,7 +54,20 @@ class CommerceLegalTemplateRepositoryImpl implements CommerceLegalTemplateReposi
 	}
 
 	@Override
-	public int nextVersion(CommerceLegalTemplateType type, String language) {
-		return jpaRepository.maxVersion(type, language) + 1;
+	public boolean acquireTemplateVersionLock(
+			CommerceLegalTemplateType type,
+			String language) {
+		return Integer.valueOf(1).equals(jpaRepository.acquireNamedLock(templateVersionLockName(type, language)));
+	}
+
+	@Override
+	public void releaseTemplateVersionLock(
+			CommerceLegalTemplateType type,
+			String language) {
+		jpaRepository.releaseNamedLock(templateVersionLockName(type, language));
+	}
+
+	private String templateVersionLockName(CommerceLegalTemplateType type, String language) {
+		return "clt_version:" + type.name() + ":" + language;
 	}
 }

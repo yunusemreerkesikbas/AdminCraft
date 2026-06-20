@@ -44,11 +44,9 @@ interface CommerceLegalTemplateJpaRepository extends JpaRepository<CommerceLegal
 			@Param("type") CommerceLegalTemplateType type,
 			@Param("language") String language);
 
-	@Query("""
-			select coalesce(max(template.version), 0) from CommerceLegalTemplate template
-			where template.type = :type and template.language = :language
-			""")
-	int maxVersion(
-			@Param("type") CommerceLegalTemplateType type,
-			@Param("language") String language);
+	@Query(value = "select GET_LOCK(:lockName, 10)", nativeQuery = true)
+	Integer acquireNamedLock(@Param("lockName") String lockName);
+
+	@Query(value = "select RELEASE_LOCK(:lockName)", nativeQuery = true)
+	Integer releaseNamedLock(@Param("lockName") String lockName);
 }

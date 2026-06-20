@@ -55,11 +55,11 @@ export type CommerceOrderDetailResponse = CommerceOrderSummaryResponse & {
 export type CommerceOrderLegalSnapshotDocument = {
   templateUid: string;
   type: string;
+  language: string;
   version: number;
   title: string;
   contentText: string;
   contentHash: string;
-  acceptedAt: string;
 };
 
 export type CommerceOrderLegalSnapshot = {

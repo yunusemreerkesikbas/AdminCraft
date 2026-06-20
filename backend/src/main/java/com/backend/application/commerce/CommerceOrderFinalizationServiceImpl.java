@@ -31,6 +31,7 @@ import com.backend.domain.commerce.repository.CommerceOrderNumberCounterReposito
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.port.TenantContextPort;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -112,11 +113,12 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 		order.setBillingAddressSnapshot(checkout.getBillingAddressSnapshot());
 		order.setProvider(attempt.getProvider());
 		order.setProviderTransactionId(attempt.getProviderTransactionId());
-		boolean legalCaptured = attempt.getLegalAcceptanceJson() != null && !attempt.getLegalAcceptanceJson().isBlank();
+		String legalSnapshotJson = orderLegalSnapshotJson(attempt, order);
+		boolean legalCaptured = legalSnapshotJson != null;
 		order.setLegalSnapshotStatus(legalCaptured
 				? CommerceOrderLegalSnapshotStatus.CAPTURED
 				: CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
-		order.setLegalSnapshotJson(legalCaptured ? orderLegalSnapshotJson(attempt, order) : null);
+		order.setLegalSnapshotJson(legalSnapshotJson);
 		order.setStockDeducted(stockResult.success());
 		order.setRequiresAttention(!stockResult.success() || !legalCaptured);
 		order.setAttentionReasonKey(attentionReason(stockResult, legalCaptured));
@@ -137,8 +139,14 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 	}
 
 	private String orderLegalSnapshotJson(CommercePaymentAttempt attempt, CommerceOrder order) {
+		if (attempt.getLegalAcceptanceJson() == null || attempt.getLegalAcceptanceJson().isBlank()) {
+			return null;
+		}
 		try {
-			ObjectNode snapshot = (ObjectNode) objectMapper.readTree(attempt.getLegalAcceptanceJson());
+			JsonNode rawSnapshot = objectMapper.readTree(attempt.getLegalAcceptanceJson());
+			if (!(rawSnapshot instanceof ObjectNode snapshot)) {
+				return null;
+			}
 			ObjectNode orderNode = snapshot.putObject("order");
 			orderNode.put("orderNumber", order.getOrderNumber());
 			orderNode.put("status", order.getStatus().name());
@@ -151,7 +159,7 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 			}
 			return objectMapper.writeValueAsString(snapshot);
 		} catch (JsonProcessingException | ClassCastException ex) {
-			throw new IllegalStateException("commerce.legal.snapshot.invalid", ex);
+			return null;
 		}
 	}
 

@@ -26,7 +26,7 @@
                     <select class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="type">
                         <option value="">{{ 'admin.commerce.common.all' | transloco }}</option>
                         @for (type of typeOptions; track type) {
-                            <option [value]="type">{{ typeLabel(type) }}</option>
+                            <option [value]="type">{{ typeLabelKey(type) | transloco }}</option>
                         }
                     </select>
                 </label>
@@ -65,7 +65,7 @@
                                         <spa-status-badge [status]="template.status" size="sm" />
                                     </div>
                                     <p class="mt-1 text-sm text-slate-500">
-                                        {{ typeLabel(template.type) }} / {{ template.language }} / v{{ template.version }}
+                                        {{ typeLabelKey(template.type) | transloco }} / {{ template.language }} / v{{ template.version }}
                                     </p>
                                     <p class="mt-1 text-xs text-slate-400">
                                         {{ template.updatedAt | date: 'medium' }}
@@ -111,7 +111,7 @@
                         <span class="text-slate-500">{{ 'admin.commerce.legalTemplates.type' | transloco }}</span>
                         <select class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="type">
                             @for (type of typeOptions; track type) {
-                                <option [value]="type">{{ typeLabel(type) }}</option>
+                                <option [value]="type">{{ typeLabelKey(type) | transloco }}</option>
                             }
                         </select>
                     </label>
@@ -129,7 +129,7 @@
                     </label>
                 </div>
 
-                @if (selectedSig()?.status === 'PUBLISHED') {
+                @if (selectedTemplateImmutable()) {
                     <p class="mt-4 rounded bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-200">
                         {{ 'admin.commerce.legalTemplates.publishedLocked' | transloco }}
                     </p>
@@ -140,7 +140,7 @@
                     color="primary"
                     type="button"
                     class="mt-5 w-full"
-                    [disabled]="isSavingSig() || selectedSig()?.status === 'PUBLISHED'"
+                    [disabled]="isSavingSig() || selectedTemplateImmutable()"
                     (click)="saveTemplate()"
                 >
                     @if (isSavingSig()) {

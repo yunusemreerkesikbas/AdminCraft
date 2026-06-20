@@ -83,6 +83,24 @@ const eligibleRequestType = (
   return null;
 };
 
+const isLegalSnapshotDocument = (
+  value: unknown,
+): value is CommerceOrderLegalSnapshotDocument => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const document = value as Record<string, unknown>;
+  return (
+    typeof document.templateUid === "string" &&
+    typeof document.type === "string" &&
+    typeof document.language === "string" &&
+    typeof document.version === "number" &&
+    typeof document.title === "string" &&
+    typeof document.contentText === "string" &&
+    typeof document.contentHash === "string"
+  );
+};
+
 const legalSnapshotDocuments = (
   order: CommerceOrderDetailResponse | null,
 ): CommerceOrderLegalSnapshotDocument[] => {
@@ -92,7 +110,10 @@ const legalSnapshotDocuments = (
 
   try {
     const snapshot = JSON.parse(order.legalSnapshotJson) as Partial<CommerceOrderLegalSnapshot>;
-    return Array.isArray(snapshot.documents) ? snapshot.documents : [];
+    if (!Array.isArray(snapshot.documents)) {
+      return [];
+    }
+    return snapshot.documents.filter(isLegalSnapshotDocument);
   } catch {
     return [];
   }
