@@ -53,6 +53,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 	@Mock private CommercePaymentAttemptRepository paymentAttemptRepository;
 	@Mock private CommerceOrderFinalizationService orderFinalizationService;
 	@Mock private CommerceProductVariantLookupPort productVariantLookupPort;
+	@Mock private CommerceLegalService commerceLegalService;
 	@Mock private ConfigPropertyService configPropertyService;
 	@Mock private TenantContextPort tenantContext;
 	@Mock private EncryptionServicePort encryptionService;
@@ -69,6 +70,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 				paymentAttemptRepository,
 				orderFinalizationService,
 				productVariantLookupPort,
+				commerceLegalService,
 				configPropertyService,
 				tenantContext,
 				encryptionService,
@@ -76,6 +78,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 				List.of(paymentProvider));
 		lenient().when(tenantContext.getTenantId()).thenReturn("1");
 		lenient().when(tenantContext.getTenantDbName()).thenReturn("tenant_1");
+		lenient().when(commerceLegalService.captureAcceptanceJson(any(), any(), any())).thenReturn("{}");
 	}
 
 	@Test

@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. Full legal snapshot rendering ve transactional bildirimler henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. Transactional bildirimler henüz yapılmadı.
 
 ## 1. Konumlandırma
 
@@ -398,12 +398,15 @@ Config panel kısa runtime property'ler için kullanılır: boolean flag, number
 Legal yönetimi:
 
 - Statik policy sayfaları CMS ile yönetilir.
-- Checkout legal dokümanları Commerce admin tarafında versioning'li template olarak yönetilir.
+- Checkout legal dokümanları Commerce admin tarafında versioning'li template olarak yönetilir. Hazır: list/detail/create/update/publish/archive/preview.
 - Mesafeli satış sözleşmesi ve ön bilgilendirme formu template olarak tutulur.
 - Template status: Draft, Published, Archived
-- Placeholder desteği olur.
-- Checkout'ta sipariş verisiyle render edilmiş metin gösterilir.
-- Sipariş anında rendered legal snapshot saklanır.
+- Published template immutable kabul edilir; yeni içerik için yeni draft/version publish edilir.
+- Checkout exact language davranır; checkout dilinde published template veya zorunlu seller config yoksa ödeme bloklanır.
+- Placeholder desteği `TemplateVariableRenderer` ile customer, adres snapshot, checkout items/totals, shipping ve seller config kaynaklarından beslenir.
+- Checkout'ta sipariş verisiyle render edilmiş plain text metin gösterilir ve her doküman için müşteri onayı alınır.
+- Payment attempt create isteği template UID/version/accepted payload'ını doğrular; eksik, stale veya false acceptance ödeme denemesi oluşturmaz.
+- Sipariş finalization anında rendered legal snapshot, content hash ve acceptance metadata order üzerinde saklanır.
 - Hukuki metin içeriği Craftive tarafından otomatik üretilmez; tenant/proje bazlı onaylı şablon girilir.
 
 ### 3.13 Storefront
@@ -425,6 +428,7 @@ Hazır:
 - Product listing/search route, Product detail delivery client, `/[lang]/products/[productUid]` real product render, variant/quantity selection ve real variant add-to-cart
 - Customer auth/account foundation: login/register/logout, refresh-cookie restore, memory-only access token state, read-only profile summary ve cart merge state update
 - Address book, checkout, payment return ve order history UI foundation
+- Checkout legal document görüntüleme/onay akışı ve order detail legal snapshot görüntüleme
 
 Kalan:
 

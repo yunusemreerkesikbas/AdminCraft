@@ -18,7 +18,8 @@ public record CommerceOrderDetailResponse(
 		CommerceOrderFulfillmentResponse fulfillment,
 		CheckoutAddressSnapshotResponse deliveryAddress,
 		CheckoutAddressSnapshotResponse billingAddress,
-		String legalSnapshotStatus) {
+		String legalSnapshotStatus,
+		String legalSnapshotJson) {
 
 	public static CommerceOrderDetailResponse from(
 			CommerceOrder order,
@@ -48,6 +49,7 @@ public record CommerceOrderDetailResponse(
 				CommerceOrderFulfillmentResponse.from(order),
 				deliveryAddress,
 				billingAddress,
-				order.getLegalSnapshotStatus().name());
+				order.getLegalSnapshotStatus().name(),
+				order.getLegalSnapshotJson());
 	}
 }

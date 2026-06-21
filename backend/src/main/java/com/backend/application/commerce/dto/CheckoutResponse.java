@@ -12,5 +12,6 @@ public record CheckoutResponse(
 		List<CheckoutItemResponse> items,
 		CheckoutTotalsResponse totals,
 		CheckoutShippingResponse shipping,
-		CheckoutValidationResponse validation) {
+		CheckoutValidationResponse validation,
+		CheckoutLegalResponse legal) {
 }

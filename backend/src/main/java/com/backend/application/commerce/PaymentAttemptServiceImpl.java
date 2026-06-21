@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.backend.application.commerce.CommercePaymentProviderPort.Address;
@@ -80,6 +81,7 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 	private final CommercePaymentAttemptRepository paymentAttemptRepository;
 	private final CommerceOrderFinalizationService orderFinalizationService;
 	private final CommerceProductVariantLookupPort productVariantLookupPort;
+	private final CommerceLegalService commerceLegalService;
 	private final ConfigPropertyService configPropertyService;
 	private final TenantContextPort tenantContext;
 	private final EncryptionServicePort encryptionService;
@@ -95,6 +97,10 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 		CommerceCheckout checkout = loadCheckout(principal, command);
 		validateCheckoutReady(checkout);
 		validateCheckoutStillPayable(checkout);
+		String legalAcceptanceJson = commerceLegalService.captureAcceptanceJson(
+				checkout,
+				LocaleContextHolder.getLocale().getLanguage(),
+				command.legalAcceptances());
 
 		paymentAttemptRepository.expirePendingAttemptsForCheckout(
 				principal.customerId(),
@@ -111,6 +117,8 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 		attempt.setShippingTotal(money(checkout.getShippingTotal()));
 		attempt.setTotal(money(checkout.getTotal()));
 		attempt.setExpiresAt(LocalDateTime.now().plusMinutes(ATTEMPT_TTL_MINUTES));
+		attempt.setLegalAcceptanceJson(legalAcceptanceJson);
+		attempt.setLegalAcceptanceCapturedAt(LocalDateTime.now());
 		return toResponse(paymentAttemptRepository.save(attempt));
 	}
 

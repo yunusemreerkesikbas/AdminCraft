@@ -5,6 +5,7 @@ import { SpaCommerceOrderListComponent } from './orders/commerce-order-list.comp
 import { SpaCommercePaymentAttemptListComponent } from './payment-attempts/commerce-payment-attempt-list.component';
 import { SpaCommerceOrderRequestListComponent } from './order-requests/commerce-order-request-list.component';
 import { SpaCommerceOrderRequestDetailComponent } from './order-requests/commerce-order-request-detail.component';
+import { SpaCommerceLegalTemplateListComponent } from './legal-templates/commerce-legal-template-list.component';
 
 export default [
     {
@@ -35,5 +36,9 @@ export default [
     {
         path: 'order-requests/:requestUid',
         component: SpaCommerceOrderRequestDetailComponent,
+    },
+    {
+        path: 'legal-templates',
+        component: SpaCommerceLegalTemplateListComponent,
     },
 ] as Routes;

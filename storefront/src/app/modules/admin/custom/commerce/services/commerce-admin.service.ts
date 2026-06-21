@@ -10,6 +10,9 @@ import {
     CommerceAdminOrderDetail,
     CommerceAdminOrderRow,
     CommerceAdminPaymentAttemptRow,
+    CommerceLegalTemplate,
+    CommerceLegalTemplatePreview,
+    CommerceLegalTemplateRequest,
     CommerceOrderResolutionDecisionRequest,
     CommerceOrderResolutionRequestRow,
 } from '../models/commerce.types';
@@ -182,6 +185,81 @@ export class CommerceAdminOrderRequestService extends CrudHttpService<
 
     override delete(_id: number): Observable<void> {
         return readOnlyOperation();
+    }
+}
+
+@Injectable({ providedIn: 'root' })
+export class CommerceAdminLegalTemplateService {
+    readonly #api = inject(ApiClientService);
+
+    list(filters: {
+        type?: string;
+        language?: string;
+        status?: string;
+    } = {}): Observable<CommerceLegalTemplate[]> {
+        const queryParams = {
+            type: filters.type || null,
+            language: filters.language || null,
+            status: filters.status || null,
+        };
+        return this.#api
+            .get<ApiResponse<CommerceLegalTemplate[]>>(
+                'commerceAdminLegalTemplates',
+                undefined,
+                queryParams
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    create(request: CommerceLegalTemplateRequest): Observable<CommerceLegalTemplate> {
+        return this.#api
+            .post<ApiResponse<CommerceLegalTemplate>>(
+                'commerceAdminLegalTemplates',
+                request
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    update(
+        templateUid: string,
+        request: CommerceLegalTemplateRequest
+    ): Observable<CommerceLegalTemplate> {
+        return this.#api
+            .put<ApiResponse<CommerceLegalTemplate>>(
+                'commerceAdminLegalTemplateByUid',
+                request,
+                { templateUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    publish(templateUid: string): Observable<CommerceLegalTemplate> {
+        return this.#api
+            .patch<ApiResponse<CommerceLegalTemplate>>(
+                'commerceAdminLegalTemplatePublish',
+                {},
+                { templateUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    archive(templateUid: string): Observable<CommerceLegalTemplate> {
+        return this.#api
+            .patch<ApiResponse<CommerceLegalTemplate>>(
+                'commerceAdminLegalTemplateArchive',
+                {},
+                { templateUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    preview(templateUid: string): Observable<CommerceLegalTemplatePreview> {
+        return this.#api
+            .get<ApiResponse<CommerceLegalTemplatePreview>>(
+                'commerceAdminLegalTemplatePreview',
+                { templateUid }
+            )
+            .pipe(map((response) => response.data));
     }
 }
 

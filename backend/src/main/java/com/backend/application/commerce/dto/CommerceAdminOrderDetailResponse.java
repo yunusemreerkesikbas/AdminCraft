@@ -9,6 +9,7 @@ public record CommerceAdminOrderDetailResponse(
 		String customerPhone,
 		String providerTransactionId,
 		String legalSnapshotStatus,
+		String legalSnapshotJson,
 		Boolean stockDeducted,
 		List<CommerceOrderItemResponse> items,
 		CheckoutShippingResponse shipping,
@@ -33,6 +34,7 @@ public record CommerceAdminOrderDetailResponse(
 				order.getCustomer().getPhone(),
 				order.getProviderTransactionId(),
 				order.getLegalSnapshotStatus().name(),
+				order.getLegalSnapshotJson(),
 				order.isStockDeducted(),
 				items,
 				new CheckoutShippingResponse(

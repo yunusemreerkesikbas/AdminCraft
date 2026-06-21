@@ -39,6 +39,8 @@ import com.backend.domain.commerce.repository.CommerceOrderNumberCounterReposito
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.testutil.BaseServiceTest;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 
@@ -49,6 +51,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	@Mock private ConfigPropertyService configPropertyService;
 	@Mock private TenantContextPort tenantContext;
 
+	private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 	private CommerceOrderFinalizationServiceImpl service;
 
 	@BeforeEach
@@ -59,7 +62,8 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 				orderNumberCounterRepository,
 				stockPort,
 				configPropertyService,
-				tenantContext);
+				tenantContext,
+				objectMapper);
 		lenient().when(tenantContext.getTenantId()).thenReturn("1");
 		lenient().when(tenantContext.getTenantDbName()).thenReturn("tenant_1");
 		lenient().when(configPropertyService.findRaw(1L, "tenant_1", "commerce.order.number_prefix"))
@@ -86,13 +90,88 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		assertThat(order.getProviderTransactionId()).isEqualTo("payment-123");
 		assertThat(order.getLegalSnapshotStatus()).isEqualTo(CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
 		assertThat(order.isStockDeducted()).isTrue();
-		assertThat(order.isRequiresAttention()).isFalse();
+		assertThat(order.isRequiresAttention()).isTrue();
+		assertThat(order.getAttentionReasonKey()).isEqualTo("commerce.order.attention.legal_snapshot_not_captured");
 		assertThat(order.getItems()).hasSize(1);
 		assertThat(order.getItems().getFirst().getVariantUid()).isEqualTo("variant-uid");
 		assertThat(order.getItems().getFirst().getLineTotal()).isEqualByComparingTo("200.00");
 		assertThat(attempt.getCheckout().getCart().getStatus()).isEqualTo(CommerceCartStatus.CLEARED);
 		assertThat(attempt.getCheckout().getStatus()).isEqualTo(CommerceCheckoutStatus.COMPLETED);
 		verify(stockPort).deductIfAvailable(Map.of("variant-uid", 2));
+	}
+
+	@Test
+	void finalizeSuccessfulPayment_ShouldEnrichCapturedLegalSnapshotWithOrderAndPaymentMetadata() throws Exception {
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setLegalAcceptanceCapturedAt(LocalDateTime.of(2026, 6, 20, 12, 0));
+		attempt.setLegalAcceptanceJson("""
+				{
+				  "language": "TR",
+				  "capturedAt": "2026-06-20T12:00:00",
+				  "acceptedAt": "2026-06-20T12:00:00",
+				  "documents": [],
+				  "checkout": { "checkoutUid": "checkout-uid" }
+				}
+				""");
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
+		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
+		when(orderRepository.findByCheckoutId(30L)).thenReturn(Optional.empty());
+		when(orderNumberCounterRepository.nextSequence(any(String.class), any(LocalDate.class))).thenReturn(1);
+		when(stockPort.deductIfAvailable(Map.of("variant-uid", 2))).thenReturn(new StockDeductionResult(true, null));
+		when(orderRepository.save(any(CommerceOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		CommerceOrder order = service.finalizeSuccessfulPayment(attempt);
+
+		JsonNode snapshot = objectMapper.readTree(order.getLegalSnapshotJson());
+		assertThat(order.getLegalSnapshotStatus()).isEqualTo(CommerceOrderLegalSnapshotStatus.CAPTURED);
+		assertThat(order.isRequiresAttention()).isFalse();
+		assertThat(snapshot.at("/order/orderNumber").asText()).isEqualTo(order.getOrderNumber());
+		assertThat(snapshot.at("/order/status").asText()).isEqualTo("PAID");
+		assertThat(snapshot.at("/payment/attemptUid").asText()).isEqualTo("attempt-uid");
+		assertThat(snapshot.at("/payment/provider").asText()).isEqualTo("iyzico");
+		assertThat(snapshot.at("/payment/providerTransactionId").asText()).isEqualTo("payment-123");
+		assertThat(snapshot.at("/payment/legalAcceptanceCapturedAt").asText()).isEqualTo("2026-06-20T12:00");
+		assertThat(snapshot.at("/checkout/checkoutUid").asText()).isEqualTo("checkout-uid");
+	}
+
+	@Test
+	void finalizeSuccessfulPayment_ShouldCreateAttentionOrder_WhenLegalSnapshotJsonIsMalformed() {
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setLegalAcceptanceCapturedAt(LocalDateTime.of(2026, 6, 20, 12, 0));
+		attempt.setLegalAcceptanceJson("{malformed-json");
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
+		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
+		when(orderRepository.findByCheckoutId(30L)).thenReturn(Optional.empty());
+		when(orderNumberCounterRepository.nextSequence(any(String.class), any(LocalDate.class))).thenReturn(1);
+		when(stockPort.deductIfAvailable(Map.of("variant-uid", 2))).thenReturn(new StockDeductionResult(true, null));
+		when(orderRepository.save(any(CommerceOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		CommerceOrder order = service.finalizeSuccessfulPayment(attempt);
+
+		assertThat(order.getLegalSnapshotStatus()).isEqualTo(CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
+		assertThat(order.getLegalSnapshotJson()).isNull();
+		assertThat(order.isRequiresAttention()).isTrue();
+		assertThat(order.getAttentionReasonKey()).isEqualTo("commerce.order.attention.legal_snapshot_not_captured");
+		assertThat(order.getStatus()).isEqualTo(CommerceOrderStatus.PAID);
+	}
+
+	@Test
+	void finalizeSuccessfulPayment_ShouldCreateAttentionOrder_WhenLegalSnapshotJsonIsNotObject() {
+		CommercePaymentAttempt attempt = attempt();
+		attempt.setLegalAcceptanceJson("[]");
+		when(checkoutRepository.findByIdForUpdate(30L)).thenReturn(Optional.of(attempt.getCheckout()));
+		when(orderRepository.findByPaymentAttemptId(40L)).thenReturn(Optional.empty());
+		when(orderRepository.findByCheckoutId(30L)).thenReturn(Optional.empty());
+		when(orderNumberCounterRepository.nextSequence(any(String.class), any(LocalDate.class))).thenReturn(1);
+		when(stockPort.deductIfAvailable(Map.of("variant-uid", 2))).thenReturn(new StockDeductionResult(true, null));
+		when(orderRepository.save(any(CommerceOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		CommerceOrder order = service.finalizeSuccessfulPayment(attempt);
+
+		assertThat(order.getLegalSnapshotStatus()).isEqualTo(CommerceOrderLegalSnapshotStatus.NOT_CAPTURED);
+		assertThat(order.getLegalSnapshotJson()).isNull();
+		assertThat(order.isRequiresAttention()).isTrue();
+		assertThat(order.getAttentionReasonKey()).isEqualTo("commerce.order.attention.legal_snapshot_not_captured");
 	}
 
 	@Test

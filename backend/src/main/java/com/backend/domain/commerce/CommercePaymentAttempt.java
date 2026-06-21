@@ -83,4 +83,10 @@ public class CommercePaymentAttempt extends BaseEntity {
 
 	@Column(name = "failure_message_key", length = 191)
 	private String failureMessageKey;
+
+	@Column(name = "legal_acceptance_json", columnDefinition = "JSON")
+	private String legalAcceptanceJson;
+
+	@Column(name = "legal_acceptance_captured_at")
+	private LocalDateTime legalAcceptanceCapturedAt;
 }

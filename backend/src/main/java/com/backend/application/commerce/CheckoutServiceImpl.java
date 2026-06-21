@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import com.backend.application.commerce.CommerceProductVariantLookupPort.CommerceVariantSnapshot;
 import com.backend.application.commerce.dto.CheckoutAddressSelectionCommand;
@@ -67,6 +68,7 @@ class CheckoutServiceImpl implements CheckoutService {
 	private final CommerceCustomerRepository customerRepository;
 	private final CommerceCustomerAddressRepository addressRepository;
 	private final CommerceProductVariantLookupPort productVariantLookupPort;
+	private final CommerceLegalService commerceLegalService;
 	private final ConfigPropertyService configPropertyService;
 	private final TenantContextPort tenantContext;
 	private final ObjectMapper objectMapper;
@@ -367,7 +369,12 @@ class CheckoutServiceImpl implements CheckoutService {
 						checkout.getShippingMethodCode(),
 						checkout.getShippingMethodName(),
 						checkout.getShippingTotal()),
-				validation);
+				validation,
+				commerceLegalService.legalForCheckout(checkout, checkoutLanguage()));
+	}
+
+	private String checkoutLanguage() {
+		return LocaleContextHolder.getLocale().getLanguage();
 	}
 
 	private CheckoutAddressSnapshotResponse toAddressSnapshot(CommerceCustomerAddress address) {

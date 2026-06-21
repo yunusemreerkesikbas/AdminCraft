@@ -22,6 +22,7 @@ import org.mockito.Mock;
 
 import com.backend.application.commerce.CommerceProductVariantLookupPort.CommerceVariantSnapshot;
 import com.backend.application.commerce.dto.CheckoutAddressSelectionCommand;
+import com.backend.application.commerce.dto.CheckoutLegalResponse;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.domain.commerce.CommerceCart;
 import com.backend.domain.commerce.CommerceCartItem;
@@ -50,6 +51,7 @@ class CheckoutServiceImplTest extends BaseServiceTest {
 	@Mock private CommerceCustomerRepository customerRepository;
 	@Mock private CommerceCustomerAddressRepository addressRepository;
 	@Mock private CommerceProductVariantLookupPort productVariantLookupPort;
+	@Mock private CommerceLegalService commerceLegalService;
 	@Mock private ConfigPropertyService configPropertyService;
 	@Mock private TenantContextPort tenantContext;
 
@@ -64,6 +66,7 @@ class CheckoutServiceImplTest extends BaseServiceTest {
 				customerRepository,
 				addressRepository,
 				productVariantLookupPort,
+				commerceLegalService,
 				configPropertyService,
 				tenantContext,
 				new ObjectMapper());
@@ -75,6 +78,8 @@ class CheckoutServiceImplTest extends BaseServiceTest {
 				.thenReturn(BigDecimal.ZERO);
 		lenient().when(configPropertyService.findRaw(1L, "tenant_1", "commerce.shipping.free_shipping_threshold"))
 				.thenReturn(Optional.empty());
+		lenient().when(commerceLegalService.legalForCheckout(any(), any()))
+				.thenReturn(new CheckoutLegalResponse(true, "EN", java.util.List.of(), java.util.List.of()));
 	}
 
 	@Test

@@ -9,6 +9,8 @@ import { ActionLink, ReceiptFrame } from "@/components/ui/StorefrontPrimitives";
 import { createCommerceOrderClient } from "@/lib/commerce/order/order-client";
 import type {
   CommerceOrderDetailResponse,
+  CommerceOrderLegalSnapshot,
+  CommerceOrderLegalSnapshotDocument,
   CommerceOrderResolutionRequestResponse,
   CommerceOrderResolutionRequestType,
   CommerceOrderSummaryResponse,
@@ -79,6 +81,42 @@ const eligibleRequestType = (
     return "RETURN";
   }
   return null;
+};
+
+const isLegalSnapshotDocument = (
+  value: unknown,
+): value is CommerceOrderLegalSnapshotDocument => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const document = value as Record<string, unknown>;
+  return (
+    typeof document.templateUid === "string" &&
+    typeof document.type === "string" &&
+    typeof document.language === "string" &&
+    typeof document.version === "number" &&
+    typeof document.title === "string" &&
+    typeof document.contentText === "string" &&
+    typeof document.contentHash === "string"
+  );
+};
+
+const legalSnapshotDocuments = (
+  order: CommerceOrderDetailResponse | null,
+): CommerceOrderLegalSnapshotDocument[] => {
+  if (!order?.legalSnapshotJson) {
+    return [];
+  }
+
+  try {
+    const snapshot = JSON.parse(order.legalSnapshotJson) as Partial<CommerceOrderLegalSnapshot>;
+    if (!Array.isArray(snapshot.documents)) {
+      return [];
+    }
+    return snapshot.documents.filter(isLegalSnapshotDocument);
+  } catch {
+    return [];
+  }
 };
 
 export function OrdersView({
@@ -279,6 +317,7 @@ export function OrderDetailView({
     loadState.key === requestKey && loadState.status === "loaded" ? requests : [];
   const pendingRequest = visibleRequests.find((request) => request.status === "PENDING");
   const allowedRequestType = visibleOrder ? eligibleRequestType(visibleOrder.status) : null;
+  const visibleLegalDocuments = legalSnapshotDocuments(visibleOrder);
   const isLoading =
     !isRestoring &&
     Boolean(isAuthenticated && accessToken) &&
@@ -425,6 +464,37 @@ export function OrderDetailView({
                     </dd>
                   </div>
                 </dl>
+              </section>
+              <section className="surface-panel order-detail-panel">
+                <h2 className="frame-title">{model.rowLegalDocuments}</h2>
+                {visibleLegalDocuments.length > 0 ? (
+                  <div className="checkout-legal__documents">
+                    {visibleLegalDocuments.map((document) => (
+                      <article
+                        key={`${document.templateUid}:${document.version}`}
+                        className="checkout-legal__document"
+                      >
+                        <div className="checkout-legal__header">
+                          <div>
+                            <h3 className="row-title">{document.title}</h3>
+                            <p className="frame-note">
+                              {document.type} / {model.rowLegalVersion}{" "}
+                              {document.version}
+                            </p>
+                          </div>
+                          <span className="quiet-chip">
+                            {document.contentHash.slice(0, 12)}
+                          </span>
+                        </div>
+                        <pre className="checkout-legal__content">
+                          {document.contentText}
+                        </pre>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="frame-note">{model.rowLegalUnavailable}</p>
+                )}
               </section>
               <section className="surface-panel order-detail-panel">
                 <h2 className="frame-title">{model.requestStatusTitle}</h2>

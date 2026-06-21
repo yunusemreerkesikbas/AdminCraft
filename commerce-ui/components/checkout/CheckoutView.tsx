@@ -8,6 +8,7 @@ import { createCommerceCheckoutClient } from "@/lib/commerce/checkout/checkout-c
 import type { CheckoutResponse } from "@/lib/commerce/checkout/types";
 import type { CommerceCustomerAddress } from "@/lib/commerce/customer/types";
 import { createCommercePaymentClient } from "@/lib/commerce/payment/payment-client";
+import type { LegalAcceptanceRequest } from "@/lib/commerce/payment/types";
 import { useCustomerSession } from "@/components/customer/CustomerSessionProvider";
 import type { CheckoutModel } from "./checkout-model";
 
@@ -113,6 +114,9 @@ export function CheckoutView({
   const [isPaymentMutating, setIsPaymentMutating] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [acceptedLegalTemplates, setAcceptedLegalTemplates] = useState<
+    Record<string, boolean>
+  >({});
 
   const checkoutClient = useMemo(
     () => createCommerceCheckoutClient({ apiBaseUrl, lang, tenantHeaders }),
@@ -127,6 +131,7 @@ export function CheckoutView({
     setCheckout(null);
     setCheckoutError(null);
     setPaymentError(null);
+    setAcceptedLegalTemplates({});
   }, []);
 
   const syncAddresses = useCallback((nextAddresses: CommerceCustomerAddress[]) => {
@@ -170,6 +175,7 @@ export function CheckoutView({
           )
         : await checkoutClient.startCheckout(accessToken, request);
       setCheckout(nextCheckout);
+      setAcceptedLegalTemplates({});
     } catch (err) {
       setCheckoutError(normalizeCheckoutError(err, model.errorFallback));
     } finally {
@@ -178,16 +184,24 @@ export function CheckoutView({
   };
 
   const startPayment = async () => {
-    if (!accessToken || !checkout?.validation.valid) {
+    if (!accessToken || !checkout?.validation.valid || !checkout.legal.ready) {
       return;
     }
 
     setIsPaymentMutating(true);
     setPaymentError(null);
     try {
+      const legalAcceptances: LegalAcceptanceRequest[] = checkout.legal.documents.map(
+        (document) => ({
+          templateUid: document.templateUid,
+          version: document.version,
+          accepted: Boolean(acceptedLegalTemplates[document.templateUid]),
+        }),
+      );
       const attempt = await paymentClient.createPaymentAttempt(
         accessToken,
         checkout.checkoutUid,
+        legalAcceptances,
       );
       window.sessionStorage.setItem(
         LAST_PAYMENT_ATTEMPT_KEY,
@@ -248,8 +262,19 @@ export function CheckoutView({
   const checkoutMatchesSelection =
     checkout?.deliveryAddress?.uid === deliveryAddressUid &&
     checkoutBillingAddressUid === expectedBillingAddressUid;
+  const legalDocuments = checkout?.legal.documents ?? [];
+  const legalReady = Boolean(checkout?.legal.ready);
+  const allLegalAccepted =
+    legalDocuments.length > 0 &&
+    legalDocuments.every((document) => acceptedLegalTemplates[document.templateUid]);
   const canStartPayment =
-    Boolean(accessToken && checkout?.validation.valid && checkoutMatchesSelection) &&
+    Boolean(
+      accessToken &&
+        checkout?.validation.valid &&
+        checkoutMatchesSelection &&
+        legalReady &&
+        allLegalAccepted,
+    ) &&
     !isMutating &&
     !isCheckoutMutating &&
     !isPaymentMutating;
@@ -390,6 +415,18 @@ export function CheckoutView({
               </button>
             </section>
 
+            <CheckoutLegalDocuments
+              model={model}
+              checkout={checkout}
+              acceptedLegalTemplates={acceptedLegalTemplates}
+              onAcceptedChange={(templateUid, accepted) =>
+                setAcceptedLegalTemplates((current) => ({
+                  ...current,
+                  [templateUid]: accepted,
+                }))
+              }
+            />
+
             <AddressBookPanel
               model={model.addressBook}
               onAddressesChange={syncAddresses}
@@ -400,6 +437,68 @@ export function CheckoutView({
         </section>
       )}
     </PageShell>
+  );
+}
+
+function CheckoutLegalDocuments({
+  model,
+  checkout,
+  acceptedLegalTemplates,
+  onAcceptedChange,
+}: {
+  model: CheckoutModel;
+  checkout: CheckoutResponse | null;
+  acceptedLegalTemplates: Record<string, boolean>;
+  onAcceptedChange: (templateUid: string, accepted: boolean) => void;
+}) {
+  if (!checkout) {
+    return null;
+  }
+
+  return (
+    <section className="surface-panel checkout-panel checkout-legal">
+      <div>
+        <h2 className="frame-title">{model.legalTitle}</h2>
+        <p className="frame-note">{model.legalDescription}</p>
+      </div>
+      <div className="checkout-validation">
+        <span className="quiet-chip">
+          {checkout.legal.ready ? model.legalReadyLabel : model.legalBlockedLabel}
+        </span>
+        <span className="quiet-chip">{checkout.legal.language.toUpperCase()}</span>
+      </div>
+      {checkout.legal.missingReasons.length > 0 ? (
+        <p className="account-form-error" role="alert">
+          {model.legalMissingLabel}: {checkout.legal.missingReasons.join(", ")}
+        </p>
+      ) : null}
+      <div className="checkout-legal__documents">
+        {checkout.legal.documents.map((document) => (
+          <article key={document.templateUid} className="checkout-legal__document">
+            <div className="checkout-legal__header">
+              <div>
+                <h3 className="row-title">{document.title}</h3>
+                <p className="frame-note">
+                  {document.type} / {model.legalVersionLabel} {document.version}
+                </p>
+              </div>
+              <span className="quiet-chip">{document.contentHash.slice(0, 12)}</span>
+            </div>
+            <pre className="checkout-legal__content">{document.contentText}</pre>
+            <label className="account-checkbox">
+              <input
+                type="checkbox"
+                checked={Boolean(acceptedLegalTemplates[document.templateUid])}
+                onChange={(event) =>
+                  onAcceptedChange(document.templateUid, event.target.checked)
+                }
+              />
+              <span>{model.legalAcceptLabel}</span>
+            </label>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -612,6 +711,9 @@ function CheckoutSnapshot({
         {checkout.validation.stockChanged ? (
           <span className="quiet-chip">{model.stockChangedLabel}</span>
         ) : null}
+        <span className="quiet-chip">
+          {checkout.legal.ready ? model.legalReadyLabel : model.legalBlockedLabel}
+        </span>
       </div>
       {checkout.validation.warningMessageKeys.length > 0 ? (
         <p className="frame-note">

@@ -37,12 +37,28 @@ import com.backend.application.commerce.dto.PaymentInitializeResponse;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.infrastructure.config.AppSecurityProperties;
 
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+
 @ExtendWith(MockitoExtension.class)
 class CommercePaymentControllerTest {
 
 	@Mock private PaymentAttemptService paymentAttemptService;
 	@Mock private MessageSource messageSource;
 	@Mock private TenantContextPort tenantContext;
+
+	@Test
+	void createAttemptRequest_ShouldRejectNullLegalAcceptanceItems() {
+		Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+		var violations = validator.validate(new CreatePaymentAttemptRequest(
+				"checkout-uid",
+				java.util.Collections.singletonList(null)));
+
+		assertThat(violations)
+				.anySatisfy(violation -> assertThat(violation.getMessage())
+						.isEqualTo("{commerce.legal.acceptance.required}"));
+	}
 
 	@Test
 	void createAttempt_ShouldReturnLocalizedApiMessage() {
@@ -53,7 +69,9 @@ class CommercePaymentControllerTest {
 		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
 				.thenAnswer(invocation -> "Payment attempt created");
 
-		var result = controller.createAttempt(authentication, new CreatePaymentAttemptRequest("checkout-uid"));
+		var result = controller.createAttempt(authentication, new CreatePaymentAttemptRequest(
+				"checkout-uid",
+				List.of(new CreatePaymentAttemptRequest.LegalAcceptanceRequest("template-uid", 1, true))));
 
 		assertThat(result.getBody()).isNotNull();
 		assertThat(result.getBody().getMessage()).isEqualTo("Payment attempt created");

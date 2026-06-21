@@ -324,6 +324,11 @@ export const SPA_ENDPOINTS_CONFIG = {
     commerceAdminOrderRequests: 'commerce/admin/order-requests',
     commerceAdminOrderRequestByUid: 'commerce/admin/order-requests/${requestUid}',
     commerceAdminOrderRequestDecision: 'commerce/admin/order-requests/${requestUid}/decision',
+    commerceAdminLegalTemplates: 'commerce/admin/legal-templates',
+    commerceAdminLegalTemplateByUid: 'commerce/admin/legal-templates/${templateUid}',
+    commerceAdminLegalTemplatePublish: 'commerce/admin/legal-templates/${templateUid}/publish',
+    commerceAdminLegalTemplateArchive: 'commerce/admin/legal-templates/${templateUid}/archive',
+    commerceAdminLegalTemplatePreview: 'commerce/admin/legal-templates/${templateUid}/preview',
 
     // ----- IMPEX -----
     impexExecute: 'impex/execute',

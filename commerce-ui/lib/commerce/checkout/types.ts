@@ -58,6 +58,23 @@ export type CheckoutValidationResponse = {
   warningMessageKeys: string[];
 };
 
+export type CheckoutLegalDocumentResponse = {
+  templateUid: string;
+  type: string;
+  language: string;
+  version: number;
+  title: string;
+  contentText: string;
+  contentHash: string;
+};
+
+export type CheckoutLegalResponse = {
+  ready: boolean;
+  language: string;
+  documents: CheckoutLegalDocumentResponse[];
+  missingReasons: string[];
+};
+
 export type CheckoutResponse = {
   checkoutUid: string;
   status: string;
@@ -68,4 +85,5 @@ export type CheckoutResponse = {
   totals: CheckoutTotalsResponse;
   shipping: CheckoutShippingResponse;
   validation: CheckoutValidationResponse;
+  legal: CheckoutLegalResponse;
 };
