@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.commerce;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -18,10 +19,37 @@ class CommerceNotificationTemplateRepositoryImpl implements CommerceNotification
 	private final CommerceNotificationTemplateJpaRepository jpaRepository;
 
 	@Override
+	public List<CommerceNotificationTemplate> findAll(
+			CommerceNotificationEventType templateKey,
+			CommerceNotificationChannel channel,
+			String language,
+			Boolean active) {
+		return jpaRepository.findAdminTemplates(templateKey, channel, language, active);
+	}
+
+	@Override
+	public Optional<CommerceNotificationTemplate> findByUid(String uid) {
+		return jpaRepository.findByUid(uid);
+	}
+
+	@Override
+	public Optional<CommerceNotificationTemplate> findExact(
+			CommerceNotificationEventType templateKey,
+			CommerceNotificationChannel channel,
+			String language) {
+		return jpaRepository.findFirstByTemplateKeyAndChannelAndLanguage(templateKey, channel, language);
+	}
+
+	@Override
 	public Optional<CommerceNotificationTemplate> findActive(
 			CommerceNotificationEventType templateKey,
 			CommerceNotificationChannel channel,
 			String language) {
 		return jpaRepository.findFirstByTemplateKeyAndChannelAndLanguageAndActiveTrue(templateKey, channel, language);
+	}
+
+	@Override
+	public CommerceNotificationTemplate save(CommerceNotificationTemplate template) {
+		return jpaRepository.save(template);
 	}
 }

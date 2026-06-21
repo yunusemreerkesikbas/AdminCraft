@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, customer cancellation/return requests, tenant admin commerce visibility, manual admin order status transitions, single-shipment manual fulfillment tracking, admin cancellation/return decision workflow, full iyzico refund on approval, versioned legal template management, checkout legal readiness and customer acceptance, rendered order legal snapshot capture, customer transactional email v1, notification outbox admin visibility with manual/automatic retry, and a standalone `commerce-ui` Next.js storefront shell with minimal design, cart foundation integration, product listing/search, product detail delivery, real variant add-to-cart wiring, customer auth/account foundation, address book, checkout, legal document acceptance, payment return, order history, legal snapshot detail, and cancellation/return request UI foundations.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, customer cancellation/return requests, tenant admin commerce visibility, manual admin order status transitions, single-shipment manual fulfillment tracking, admin cancellation/return decision workflow, full iyzico refund on approval, versioned legal template management, checkout legal readiness and customer acceptance, rendered order legal snapshot capture, customer transactional email v1, notification outbox admin visibility with manual/automatic retry, notification template management UI/API, and a standalone `commerce-ui` Next.js storefront shell with minimal design, cart foundation integration, product listing/search, product detail delivery, real variant add-to-cart wiring, customer auth/account foundation, address book, checkout, legal document acceptance, payment return, order history, legal snapshot detail, and cancellation/return request UI foundations.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -23,13 +23,13 @@ Implemented foundations:
 - Internal payment attempt lifecycle with checkout totals snapshot, pending expiry, owner checks, and i18n response messages.
 - Hosted iyzico CheckoutForm sandbox initialization and callback handling through a payment provider port.
 - Customer-facing paid order creation after successful payment, daily order number counters, idempotent callback finalization, cart clear, checkout completion, stock decrement, rendered legal snapshot capture, and customer order-paid transactional email.
-- Tenant admin commerce operations: dashboard summary, order list/detail, payment attempt history, order request list/detail, legal template list/detail/create/update/publish/archive/preview, commerce sidebar navigation, strictly forward order status transitions, fulfillment capture, cancellation/return approval or rejection, full refund trigger, and status history timeline.
+- Tenant admin commerce operations: dashboard summary, order list/detail, payment attempt history, order request list/detail, legal template list/detail/create/update/publish/archive/preview, notification template list/detail/update/preview, commerce sidebar navigation, strictly forward order status transitions, fulfillment capture, cancellation/return approval or rejection, full refund trigger, and status history timeline.
 - Commerce-owned customer transactional email v1 with TR/EN seed templates, config toggles, outbox status capture, platform-managed provider delivery for order paid, order shipped, request created, request approved, and request rejected events, plus admin outbox visibility and retry operations.
 - Standalone `commerce-ui` Next.js app shell, minimal storefront design skeleton, typed cart API client, localStorage cart token foundation, cart provider, cart page read/mutation wiring, header cart badge, product listing/search route, product detail delivery client, variant selector, real add-to-cart action, customer auth/account foundation with refresh-cookie restore and memory-only access token state, address book, checkout, checkout legal document acceptance, payment return, order history, order legal snapshot display, and cancellation/return request UI foundations.
 
 Not implemented yet:
 
-- Transactional SMS, admin notification alerts, and notification template management UI/API.
+- Transactional SMS and admin notification alerts.
 - Guest checkout, coupons/promotions, advanced analytics, multi-currency, and additional payment providers.
 
 ## Database
@@ -223,6 +223,10 @@ Commerce admin APIs are tenant-scoped and require tenant admin authentication. T
 - `PATCH /api/commerce/admin/legal-templates/{templateUid}/publish`: publishes a draft and archives any previous published template for the same type and language.
 - `PATCH /api/commerce/admin/legal-templates/{templateUid}/archive`: archives a template.
 - `GET /api/commerce/admin/legal-templates/{templateUid}/preview`: renders a template with sample variables for admin preview.
+- `GET /api/commerce/admin/notifications/templates`: lists email notification templates with optional `eventType`, `language`, and `active` filters.
+- `GET /api/commerce/admin/notifications/templates/{templateUid}`: returns one email notification template.
+- `PUT /api/commerce/admin/notifications/templates/{templateUid}`: updates subject, content, and active state in place.
+- `GET /api/commerce/admin/notifications/templates/{templateUid}/preview`: renders subject and content with sample variables for admin preview.
 
 Admin order request rules:
 
@@ -244,6 +248,7 @@ Email v1 behavior:
 - Event overrides use `commerce.notifications.email.<event>.enabled` such as `commerce.notifications.email.order_shipped.enabled`; missing event keys inherit the global email toggle.
 - Email is sent after the surrounding commerce transaction commits. Delivery failure marks the outbox row `FAILED` and does not roll back order, fulfillment, or request decision workflows.
 - Failed email rows can be viewed by tenant admins under `/commerce/notification-outbox`, retried manually, and retried automatically by the scheduled retry job when `app.commerce.notifications.retry-job-enabled=true`.
+- Email templates can be viewed and updated by tenant admins under `/commerce/notification-templates`; inactive exact-language templates intentionally skip outbox creation instead of falling back to `EN`.
 - Language resolves from the captured legal snapshot when available, otherwise tenant default language, with `EN` fallback. Request-created notifications prefer the current request locale and then fall back to order language.
 - Links use `app.frontend.base-url` through `FrontendConfigPort`; the generated order link follows `/{lang}/account/orders/{orderUid}`.
 
@@ -251,7 +256,6 @@ Remaining notification work:
 
 - Transactional SMS through İleti Merkezi.
 - Admin email alerts for new order, new cancellation/return request, and payment/refund operational failures.
-- Tenant admin template management UI/API.
 
 Provisioning is handled by the platform provisioning API:
 
@@ -268,7 +272,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart, customer account, customer-cart bridge, checkout, legal template management, payment attempt, backend order finalization, customer order read APIs, customer cancellation/return request APIs, operational admin reads, manual fulfillment status transitions, admin request decisions, full refund trigger, customer transactional email v1, and notification outbox operations are the first commerce APIs/workflows. The standalone `commerce-ui` shell now has minimal design, cart foundation wiring, product listing/search, product detail delivery, real variant add-to-cart, customer auth/account foundation, address book, checkout legal acceptance, payment return, order history, order legal snapshot display, and order request foundations; SMS, admin notification alerts, and notification template UI remain backlog work.
+Anonymous cart, customer account, customer-cart bridge, checkout, legal template management, payment attempt, backend order finalization, customer order read APIs, customer cancellation/return request APIs, operational admin reads, manual fulfillment status transitions, admin request decisions, full refund trigger, customer transactional email v1, notification outbox operations, and notification template management are the first commerce APIs/workflows. The standalone `commerce-ui` shell now has minimal design, cart foundation wiring, product listing/search, product detail delivery, real variant add-to-cart, customer auth/account foundation, address book, checkout legal acceptance, payment return, order history, order legal snapshot display, and order request foundations; SMS and admin notification alerts remain backlog work.
 
 ## Frontend integration
 
@@ -287,6 +291,9 @@ The `/commerce` admin route is guarded by `requiredModule: 'commerce'` and expos
 - `/commerce/order-requests`
 - `/commerce/order-requests/:requestUid`
 - `/commerce/payment-attempts`
+- `/commerce/notification-outbox`
+- `/commerce/notification-outbox/:outboxUid`
+- `/commerce/notification-templates`
 - `/commerce/legal-templates`
 
 Sidebar navigation is registered for tenant admins with the commerce module enabled.

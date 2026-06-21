@@ -8,6 +8,7 @@ import { SpaCommerceOrderRequestDetailComponent } from './order-requests/commerc
 import { SpaCommerceLegalTemplateListComponent } from './legal-templates/commerce-legal-template-list.component';
 import { SpaCommerceNotificationOutboxListComponent } from './notification-outbox/commerce-notification-outbox-list.component';
 import { SpaCommerceNotificationOutboxDetailComponent } from './notification-outbox/commerce-notification-outbox-detail.component';
+import { SpaCommerceNotificationTemplateListComponent } from './notification-templates/commerce-notification-template-list.component';
 
 export default [
     {
@@ -46,6 +47,10 @@ export default [
     {
         path: 'notification-outbox/:outboxUid',
         component: SpaCommerceNotificationOutboxDetailComponent,
+    },
+    {
+        path: 'notification-templates',
+        component: SpaCommerceNotificationTemplateListComponent,
     },
     {
         path: 'legal-templates',

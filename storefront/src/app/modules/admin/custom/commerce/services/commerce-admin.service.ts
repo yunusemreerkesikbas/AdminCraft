@@ -14,6 +14,9 @@ import {
     CommerceLegalTemplatePreview,
     CommerceLegalTemplateRequest,
     CommerceNotificationOutboxRow,
+    CommerceNotificationTemplate,
+    CommerceNotificationTemplatePreview,
+    CommerceNotificationTemplateRequest,
     CommerceOrderResolutionDecisionRequest,
     CommerceOrderResolutionRequestRow,
 } from '../models/commerce.types';
@@ -277,6 +280,61 @@ export class CommerceAdminNotificationOutboxService extends CrudHttpService<
 
     override delete(_id: number): Observable<void> {
         return readOnlyOperation();
+    }
+}
+
+@Injectable({ providedIn: 'root' })
+export class CommerceAdminNotificationTemplateService {
+    readonly #api = inject(ApiClientService);
+
+    list(filters: {
+        eventType?: string;
+        language?: string;
+        active?: boolean | null;
+    } = {}): Observable<CommerceNotificationTemplate[]> {
+        const queryParams: Record<string, string | boolean | null> = {
+            eventType: filters.eventType || null,
+            language: filters.language || null,
+            active: filters.active ?? null,
+        };
+        return this.#api
+            .get<ApiResponse<CommerceNotificationTemplate[]>>(
+                'commerceAdminNotificationTemplates',
+                undefined,
+                queryParams
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    getTemplate(templateUid: string): Observable<CommerceNotificationTemplate> {
+        return this.#api
+            .get<ApiResponse<CommerceNotificationTemplate>>(
+                'commerceAdminNotificationTemplateByUid',
+                { templateUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    update(
+        templateUid: string,
+        request: CommerceNotificationTemplateRequest
+    ): Observable<CommerceNotificationTemplate> {
+        return this.#api
+            .put<ApiResponse<CommerceNotificationTemplate>>(
+                'commerceAdminNotificationTemplateByUid',
+                request,
+                { templateUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    preview(templateUid: string): Observable<CommerceNotificationTemplatePreview> {
+        return this.#api
+            .get<ApiResponse<CommerceNotificationTemplatePreview>>(
+                'commerceAdminNotificationTemplatePreview',
+                { templateUid }
+            )
+            .pipe(map((response) => response.data));
     }
 }
 
