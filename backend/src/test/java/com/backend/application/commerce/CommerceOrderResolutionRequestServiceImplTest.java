@@ -46,6 +46,7 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 	@Mock private CommercePaymentProviderPort paymentProvider;
 	@Mock private CommercePaymentConfigResolver paymentConfigResolver;
 	@Mock private TransactionTemplate transactionTemplate;
+	@Mock private CommerceNotificationService notificationService;
 
 	private CommerceOrderResolutionRequestServiceImpl service;
 
@@ -58,7 +59,8 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 				commerceModuleAccessGuard,
 				List.of(paymentProvider),
 				paymentConfigResolver,
-				transactionTemplate);
+				transactionTemplate,
+				notificationService);
 		lenient().when(paymentProvider.providerCode()).thenReturn("iyzico");
 		lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
 			TransactionCallback<?> callback = invocation.getArgument(0);
@@ -86,6 +88,7 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 		assertThat(response.type()).isEqualTo("CANCELLATION");
 		assertThat(response.status()).isEqualTo("PENDING");
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
+		verify(notificationService).notifyOrderRequestCreated(any(CommerceOrderResolutionRequest.class));
 	}
 
 	@Test
@@ -141,6 +144,7 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 		assertThat(request.isStockRestored()).isTrue();
 		assertThat(response.refundReference()).isEqualTo("refund-123");
 		verify(stockPort).restore(any());
+		verify(notificationService).notifyOrderRequestDecided(request);
 	}
 
 	@Test
@@ -179,6 +183,7 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 		assertThat(request.getRefundStatus()).isEqualTo(CommerceOrderResolutionRefundStatus.FAILED);
 		assertThat(request.getRefundFailureCode()).isEqualTo("REFUND_FAILED");
 		verify(stockPort, never()).restore(any());
+		verify(notificationService, never()).notifyOrderRequestDecided(any());
 	}
 
 	@Test
@@ -213,6 +218,7 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 		assertThat(order.getStatus()).isEqualTo(CommerceOrderStatus.DELIVERED);
 		assertThat(request.getStatus()).isEqualTo(CommerceOrderResolutionRequestStatus.REJECTED);
 		verify(paymentProvider, never()).refundPayment(any());
+		verify(notificationService).notifyOrderRequestDecided(request);
 	}
 
 	private CommerceCustomerPrincipal principal() {

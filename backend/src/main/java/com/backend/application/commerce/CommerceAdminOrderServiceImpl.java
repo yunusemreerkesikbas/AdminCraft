@@ -53,6 +53,7 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 	private final CommerceModuleAccessGuard commerceModuleAccessGuard;
 	private final TenantContextPort tenantContext;
 	private final ObjectMapper objectMapper;
+	private final CommerceNotificationService notificationService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -157,6 +158,9 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 
 		CommerceOrder saved = orderRepository.save(order);
 		orderRepository.flush();
+		if (toStatus == CommerceOrderStatus.SHIPPED) {
+			notificationService.notifyOrderShipped(saved);
+		}
 		return CommerceAdminOrderDetailResponse.from(
 				saved,
 				addressSnapshot(saved.getDeliveryAddressSnapshot()),

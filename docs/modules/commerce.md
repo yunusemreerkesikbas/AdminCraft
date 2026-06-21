@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, customer cancellation/return requests, tenant admin commerce visibility, manual admin order status transitions, single-shipment manual fulfillment tracking, admin cancellation/return decision workflow, full iyzico refund on approval, versioned legal template management, checkout legal readiness and customer acceptance, rendered order legal snapshot capture, and a standalone `commerce-ui` Next.js storefront shell with minimal design, cart foundation integration, product listing/search, product detail delivery, real variant add-to-cart wiring, customer auth/account foundation, address book, checkout, legal document acceptance, payment return, order history, legal snapshot detail, and cancellation/return request UI foundations. It does not implement transactional notifications yet.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, customer cancellation/return requests, tenant admin commerce visibility, manual admin order status transitions, single-shipment manual fulfillment tracking, admin cancellation/return decision workflow, full iyzico refund on approval, versioned legal template management, checkout legal readiness and customer acceptance, rendered order legal snapshot capture, customer transactional email v1, and a standalone `commerce-ui` Next.js storefront shell with minimal design, cart foundation integration, product listing/search, product detail delivery, real variant add-to-cart wiring, customer auth/account foundation, address book, checkout, legal document acceptance, payment return, order history, legal snapshot detail, and cancellation/return request UI foundations.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -22,13 +22,14 @@ Implemented foundations:
 - Customer-only checkout draft/ready snapshot, address snapshots, shipping totals, and live revalidation.
 - Internal payment attempt lifecycle with checkout totals snapshot, pending expiry, owner checks, and i18n response messages.
 - Hosted iyzico CheckoutForm sandbox initialization and callback handling through a payment provider port.
-- Customer-facing paid order creation after successful payment, daily order number counters, idempotent callback finalization, cart clear, checkout completion, stock decrement, and rendered legal snapshot capture.
+- Customer-facing paid order creation after successful payment, daily order number counters, idempotent callback finalization, cart clear, checkout completion, stock decrement, rendered legal snapshot capture, and customer order-paid transactional email.
 - Tenant admin commerce operations: dashboard summary, order list/detail, payment attempt history, order request list/detail, legal template list/detail/create/update/publish/archive/preview, commerce sidebar navigation, strictly forward order status transitions, fulfillment capture, cancellation/return approval or rejection, full refund trigger, and status history timeline.
+- Commerce-owned customer transactional email v1 with TR/EN seed templates, config toggles, outbox status capture, and platform-managed provider delivery for order paid, order shipped, request created, request approved, and request rejected events.
 - Standalone `commerce-ui` Next.js app shell, minimal storefront design skeleton, typed cart API client, localStorage cart token foundation, cart provider, cart page read/mutation wiring, header cart badge, product listing/search route, product detail delivery client, variant selector, real add-to-cart action, customer auth/account foundation with refresh-cookie restore and memory-only access token state, address book, checkout, checkout legal document acceptance, payment return, order history, order legal snapshot display, and cancellation/return request UI foundations.
 
 Not implemented yet:
 
-- Transactional notifications.
+- Transactional SMS, admin notification alerts, notification template management UI/API, notification outbox admin UI/API, and automatic retry jobs.
 - Guest checkout, coupons/promotions, advanced analytics, multi-currency, and additional payment providers.
 
 ## Database
@@ -51,6 +52,7 @@ Current tenant migrations:
 - `V1.0.8__order_operations_foundation.sql` adds manual fulfillment fields and order status history.
 - `V1.0.9__order_resolution_request_foundation.sql` creates customer cancellation/return request records, decision audit fields, refund status/provider fields, and list/detail indexes.
 - `V1.0.10__legal_template_foundation.sql` creates versioned legal templates, adds payment attempt legal acceptance capture fields, and seeds TR/EN draft examples.
+- `V1.0.11__transactional_notification_foundation.sql` creates commerce-owned customer email notification templates and outbox tables, and seeds TR/EN templates for order paid, shipped, request created, request approved, and request rejected events.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -169,6 +171,7 @@ Payment attempt rules:
 - Order numbers use `commerce.order.number_prefix` when configured, default to `ORD`, and follow `ORD-YYYYMMDD-000001` with a tenant-local daily counter.
 - If stock can no longer be deducted after provider success, the paid order is still created with `requiresAttention=true` and no negative stock is written. Refund/reversal remains an operational follow-up slice.
 - Orders finalized from legacy successful attempts without legal acceptance JSON keep `legalSnapshotStatus=NOT_CAPTURED` and are marked `requiresAttention=true`.
+- When `commerce.notifications.email.enabled=true`, newly finalized paid orders enqueue and send a customer `ORDER_PAID` email after commit. Idempotent callbacks that return an existing order do not enqueue duplicate notifications.
 
 ## Customer order API
 
@@ -228,6 +231,27 @@ Admin order request rules:
 - Refund attempts are marked `PROCESSING` before the provider call. Refund failure is operational: the request remains `PENDING`, refund status becomes `FAILED`, the order stays in request status, and admin can retry the decision.
 - Cancellation approval restores deducted stock once; return approval does not automatically restore stock.
 
+## Transactional notifications
+
+Commerce owns its customer transactional notification model. It does not depend on the `mail_marketing` tenant module or tenant mail provider configuration in this v1 slice.
+
+Email v1 behavior:
+
+- `commerce_notification_templates` stores TR/EN seed templates for `ORDER_PAID`, `ORDER_SHIPPED`, `ORDER_REQUEST_CREATED`, `ORDER_REQUEST_APPROVED`, and `ORDER_REQUEST_REJECTED`.
+- `commerce_notification_outbox` stores subject/content snapshots, recipient, language, status (`PENDING`, `SENT`, `FAILED`), provider message id, error message, and sent timestamp.
+- `commerce.notifications.email.enabled` defaults to `false`.
+- Event overrides use `commerce.notifications.email.<event>.enabled` such as `commerce.notifications.email.order_shipped.enabled`; missing event keys inherit the global email toggle.
+- Email is sent after the surrounding commerce transaction commits. Delivery failure marks the outbox row `FAILED` and does not roll back order, fulfillment, or request decision workflows.
+- Language resolves from the captured legal snapshot when available, otherwise tenant default language, with `EN` fallback. Request-created notifications prefer the current request locale and then fall back to order language.
+- Links use `app.frontend.base-url` through `FrontendConfigPort`; the generated order link follows `/{lang}/account/orders/{orderUid}`.
+
+Remaining notification work:
+
+- Transactional SMS through İleti Merkezi.
+- Admin email alerts for new order, new cancellation/return request, and payment/refund operational failures.
+- Tenant admin template management UI/API.
+- Notification outbox admin visibility and retry jobs.
+
 Provisioning is handled by the platform provisioning API:
 
 - `GET /api/provisioning/modules/catalog`
@@ -243,7 +267,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart, customer account, customer-cart bridge, checkout, legal template management, payment attempt, backend order finalization, customer order read APIs, customer cancellation/return request APIs, operational admin reads, manual fulfillment status transitions, admin request decisions, and full refund trigger are the first commerce APIs/workflows. The standalone `commerce-ui` shell now has minimal design, cart foundation wiring, product listing/search, product detail delivery, real variant add-to-cart, customer auth/account foundation, address book, checkout legal acceptance, payment return, order history, order legal snapshot display, and order request foundations; transactional notifications remain backlog work.
+Anonymous cart, customer account, customer-cart bridge, checkout, legal template management, payment attempt, backend order finalization, customer order read APIs, customer cancellation/return request APIs, operational admin reads, manual fulfillment status transitions, admin request decisions, full refund trigger, and customer transactional email v1 are the first commerce APIs/workflows. The standalone `commerce-ui` shell now has minimal design, cart foundation wiring, product listing/search, product detail delivery, real variant add-to-cart, customer auth/account foundation, address book, checkout legal acceptance, payment return, order history, order legal snapshot display, and order request foundations; SMS, admin notification alerts, notification template UI, outbox visibility, and retry jobs remain backlog work.
 
 ## Frontend integration
 

@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. Transactional bildirimler henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture, customer transactional email v1 ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. Transactional SMS, admin notification alerts, notification template UI/API, outbox visibility ve retry job henüz yapılmadı.
 
 ## 1. Konumlandırma
 
@@ -266,9 +266,9 @@ Kapsam:
 - Kargo takip URL'i opsiyonel tutulur
 - Status history üzerinde aktör, fulfillment bilgisi ve opsiyonel iç not saklanır
 
-Kalan:
+Hazır:
 
-- Sipariş Shipped olduğunda müşteriye bildirim gönderimi
+- Sipariş Shipped olduğunda müşteriye transactional email gönderimi
 
 MVP dışında:
 
@@ -286,7 +286,7 @@ Provider yaklaşımı:
 - SMS provider: İleti Merkezi
 - Provider'lar platform-managed olacak
 - SMS provider adapter yapısı korunacak
-- Tenant event bazlı bildirim açık/kapalı ayarlarını ve şablonları yönetebilir
+- Tenant event bazlı bildirim açık/kapalı ayarlarını config panel üzerinden yönetebilir; şablon yönetim UI/API sonraki slice'tır
 - Marketing e-posta/SMS transactional bildirimlerden ayrı ele alınır
 
 Müşteri e-posta event'leri:
@@ -295,6 +295,21 @@ Müşteri e-posta event'leri:
 - Sipariş kargoya verildi
 - İptal/iade talebi alındı
 - İptal/iade talebi onaylandı veya reddedildi
+
+Hazır:
+
+- Commerce-owned customer email v1: `ORDER_PAID`, `ORDER_SHIPPED`, `ORDER_REQUEST_CREATED`, `ORDER_REQUEST_APPROVED`, `ORDER_REQUEST_REJECTED`
+- TR/EN seed template'ler ve `commerce_notification_outbox`
+- Platform-managed email provider ile commit sonrası immediate send
+- `commerce.notifications.email.enabled` global toggle ve `commerce.notifications.email.<event>.enabled` event override davranışı
+
+Kalan:
+
+- Transactional SMS
+- Admin email alerts
+- Tenant admin template management UI/API
+- Notification outbox admin visibility
+- Automatic retry job
 
 Müşteri SMS event'leri:
 

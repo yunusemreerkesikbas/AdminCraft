@@ -2,6 +2,7 @@ package com.backend.application.commerce;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +47,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 	@Mock private CommercePaymentAttemptRepository paymentAttemptRepository;
 	@Mock private CommerceModuleAccessGuard commerceModuleAccessGuard;
 	@Mock private TenantContextPort tenantContext;
+	@Mock private CommerceNotificationService notificationService;
 
 	private CommerceAdminOrderServiceImpl service;
 
@@ -56,7 +58,8 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 				paymentAttemptRepository,
 				commerceModuleAccessGuard,
 				tenantContext,
-				new ObjectMapper());
+				new ObjectMapper(),
+				notificationService);
 	}
 
 	@Test
@@ -207,6 +210,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(order.getStatusHistory().getFirst().getInternalNote()).isEqualTo("Pack carefully");
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
 		verify(orderRepository).flush();
+		verify(notificationService, org.mockito.Mockito.never()).notifyOrderShipped(any());
 	}
 
 	@Test
@@ -245,6 +249,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(order.getStatusHistory()).hasSize(1);
 		assertThat(order.getStatusHistory().getFirst().getShippingCarrierName()).isEqualTo("Yurtiçi");
 		verify(orderRepository).flush();
+		verify(notificationService).notifyOrderShipped(order);
 	}
 
 	@Test
@@ -267,6 +272,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(response.fulfillment().deliveredAt()).isNotNull();
 		assertThat(response.statusHistory().getFirst().toStatus()).isEqualTo("DELIVERED");
 		verify(orderRepository).flush();
+		verify(notificationService, org.mockito.Mockito.never()).notifyOrderShipped(any());
 	}
 
 	@Test
