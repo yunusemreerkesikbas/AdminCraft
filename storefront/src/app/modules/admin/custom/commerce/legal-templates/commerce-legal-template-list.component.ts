@@ -2,7 +2,6 @@ import { DatePipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
-    OnDestroy,
     OnInit,
     inject,
     signal,
@@ -15,7 +14,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { Subject, takeUntil } from 'rxjs';
+import { take } from 'rxjs';
 import {
     CommerceLegalTemplate,
     CommerceLegalTemplateRequest,
@@ -40,11 +39,10 @@ import { CommerceAdminLegalTemplateService } from '../services/commerce-admin.se
     templateUrl: './commerce-legal-template-list.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SpaCommerceLegalTemplateListComponent implements OnInit, OnDestroy {
+export class SpaCommerceLegalTemplateListComponent implements OnInit {
     readonly #service = inject(CommerceAdminLegalTemplateService);
     readonly #notification = inject(NotificationService);
     readonly #fb = inject(FormBuilder);
-    readonly #destroy$ = new Subject<void>();
 
     protected readonly templatesSig = signal<CommerceLegalTemplate[]>([]);
     protected readonly selectedSig = signal<CommerceLegalTemplate | null>(null);
@@ -78,17 +76,12 @@ export class SpaCommerceLegalTemplateListComponent implements OnInit, OnDestroy 
         this.loadTemplates();
     }
 
-    ngOnDestroy(): void {
-        this.#destroy$.next();
-        this.#destroy$.complete();
-    }
-
     protected loadTemplates(): void {
         this.isLoadingSig.set(true);
         const filters = this.filterForm.getRawValue();
         this.#service
             .list(filters)
-            .pipe(takeUntil(this.#destroy$))
+            .pipe(take(1))
             .subscribe({
                 next: (templates) => {
                     this.templatesSig.set(templates);
@@ -139,7 +132,7 @@ export class SpaCommerceLegalTemplateListComponent implements OnInit, OnDestroy 
         const operation = selected
             ? this.#service.update(selected.templateUid, request)
             : this.#service.create(request);
-        operation.pipe(takeUntil(this.#destroy$)).subscribe({
+        operation.pipe(take(1)).subscribe({
             next: (template) => {
                 this.isSavingSig.set(false);
                 this.selectTemplate(template);
@@ -166,7 +159,7 @@ export class SpaCommerceLegalTemplateListComponent implements OnInit, OnDestroy 
     protected preview(template: CommerceLegalTemplate): void {
         this.#service
             .preview(template.templateUid)
-            .pipe(takeUntil(this.#destroy$))
+            .pipe(take(1))
             .subscribe({
                 next: (preview) => this.previewSig.set(preview.content),
                 error: (error) =>
@@ -198,7 +191,7 @@ export class SpaCommerceLegalTemplateListComponent implements OnInit, OnDestroy 
             action === 'publish'
                 ? this.#service.publish(template.templateUid)
                 : this.#service.archive(template.templateUid);
-        operation.pipe(takeUntil(this.#destroy$)).subscribe({
+        operation.pipe(take(1)).subscribe({
             next: (updated) => {
                 this.isSavingSig.set(false);
                 this.selectTemplate(updated);

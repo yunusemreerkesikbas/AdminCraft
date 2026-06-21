@@ -10,6 +10,7 @@ import com.backend.domain.commerce.CommerceLegalTemplate;
 import com.backend.domain.commerce.CommerceLegalTemplateStatus;
 import com.backend.domain.commerce.CommerceLegalTemplateType;
 import com.backend.domain.commerce.repository.CommerceLegalTemplateRepository;
+import com.backend.domain.port.TenantContextPort;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 class CommerceLegalTemplateRepositoryImpl implements CommerceLegalTemplateRepository {
 
 	private final CommerceLegalTemplateJpaRepository jpaRepository;
+	private final TenantContextPort tenantContext;
 
 	@Override
 	@Transactional
@@ -64,10 +66,17 @@ class CommerceLegalTemplateRepositoryImpl implements CommerceLegalTemplateReposi
 	public void releaseTemplateVersionLock(
 			CommerceLegalTemplateType type,
 			String language) {
-		jpaRepository.releaseNamedLock(templateVersionLockName(type, language));
+		Integer released = jpaRepository.releaseNamedLock(templateVersionLockName(type, language));
+		if (!Integer.valueOf(1).equals(released)) {
+			throw new IllegalStateException("commerce.legal.template.version.lock.release.failed");
+		}
 	}
 
 	private String templateVersionLockName(CommerceLegalTemplateType type, String language) {
-		return "clt_version:" + type.name() + ":" + language;
+		String tenantId = tenantContext.getTenantId();
+		if (tenantId == null || tenantId.isBlank()) {
+			throw new IllegalStateException("commerce.tenant.context.required");
+		}
+		return "clt_version:" + tenantId.trim() + ":" + type.name() + ":" + language;
 	}
 }
