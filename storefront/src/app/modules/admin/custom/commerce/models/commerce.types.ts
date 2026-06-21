@@ -262,3 +262,27 @@ export interface CommerceNotificationOutboxRow {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface CommerceNotificationTemplate {
+    templateUid: string;
+    eventType: string;
+    channel: string;
+    language: string;
+    subject: string;
+    content: string;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CommerceNotificationTemplateRequest {
+    subject: string;
+    content: string;
+    active: boolean;
+}
+
+export interface CommerceNotificationTemplatePreview {
+    templateUid: string;
+    subject: string;
+    content: string;
+}

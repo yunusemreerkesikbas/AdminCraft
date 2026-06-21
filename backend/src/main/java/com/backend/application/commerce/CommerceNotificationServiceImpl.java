@@ -174,12 +174,17 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 	private Optional<CommerceNotificationTemplate> activeTemplate(
 			CommerceNotificationEventType eventType,
 			String language) {
-		Optional<CommerceNotificationTemplate> template = templateRepository.findActive(
+		Optional<CommerceNotificationTemplate> exactTemplate = templateRepository.findExact(
 				eventType,
 				CommerceNotificationChannel.EMAIL,
 				language);
-		if (template.isPresent() || LANGUAGE_EN.equals(language)) {
-			return template;
+		if (exactTemplate.isPresent()) {
+			return Boolean.TRUE.equals(exactTemplate.get().getActive())
+					? exactTemplate
+					: Optional.empty();
+		}
+		if (LANGUAGE_EN.equals(language)) {
+			return Optional.empty();
 		}
 		return templateRepository.findActive(eventType, CommerceNotificationChannel.EMAIL, LANGUAGE_EN);
 	}

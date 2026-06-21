@@ -132,7 +132,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 				"commerce.notifications.email.order_paid.enabled",
 				true))
 				.thenReturn(true);
-		when(templateRepository.findActive(
+		when(templateRepository.findExact(
 				CommerceNotificationEventType.ORDER_PAID,
 				CommerceNotificationChannel.EMAIL,
 				"TR"))
@@ -173,7 +173,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 				"commerce.notifications.email.order_paid.enabled",
 				true))
 				.thenReturn(true);
-		when(templateRepository.findActive(
+		when(templateRepository.findExact(
 				CommerceNotificationEventType.ORDER_PAID,
 				CommerceNotificationChannel.EMAIL,
 				"EN"))
@@ -189,6 +189,34 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 		assertThat(outbox.getNextRetryAt()).isNotNull();
 		assertThat(outbox.getErrorMessage()).isEqualTo("provider down");
 		assertThat(outbox.getProviderMessageId()).isNull();
+	}
+
+	@Test
+	void notifyOrderPaid_ShouldSkip_WhenExactLanguageTemplateIsInactive() {
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.email.enabled", false))
+				.thenReturn(true);
+		when(configPropertyService.getBoolean(
+				1L,
+				"tenant_1",
+				"commerce.notifications.email.order_paid.enabled",
+				true))
+				.thenReturn(true);
+		CommerceNotificationTemplate inactive = template("TR");
+		inactive.setActive(false);
+		when(templateRepository.findExact(
+				CommerceNotificationEventType.ORDER_PAID,
+				CommerceNotificationChannel.EMAIL,
+				"TR"))
+				.thenReturn(Optional.of(inactive));
+
+		service.notifyOrderPaid(orderWithLegalLanguage("TR"));
+
+		verify(templateRepository, never()).findActive(
+				CommerceNotificationEventType.ORDER_PAID,
+				CommerceNotificationChannel.EMAIL,
+				"EN");
+		verify(outboxRepository, never()).save(any());
+		verify(mailSender, never()).send(any(), any(), any());
 	}
 
 	@Test

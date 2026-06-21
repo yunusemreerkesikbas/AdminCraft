@@ -23,7 +23,7 @@ Not implemented yet:
 
 - final commerce visual design
 - production hardening around completed foundation flows
-- transactional notification management UI in the Angular tenant admin shell
+- transactional SMS and admin notification alerts
 
 ## UI model convention
 
