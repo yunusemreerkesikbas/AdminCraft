@@ -17,18 +17,21 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import com.backend.application.dto.email.EmailResult;
+import com.backend.application.dto.sms.SmsResult;
 import com.backend.domain.commerce.CommerceNotificationChannel;
 import com.backend.domain.commerce.CommerceNotificationEventType;
 import com.backend.domain.commerce.CommerceNotificationOutbox;
 import com.backend.domain.commerce.CommerceNotificationStatus;
 import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
 import com.backend.domain.port.MailSenderPort;
+import com.backend.domain.port.SmsSenderPort;
 import com.backend.testutil.BaseServiceTest;
 
 class CommerceNotificationDispatchServiceTest extends BaseServiceTest {
 
 	@Mock private CommerceNotificationOutboxRepository outboxRepository;
 	@Mock private MailSenderPort mailSender;
+	@Mock private SmsSenderPort smsSender;
 	@Mock private PlatformTransactionManager transactionManager;
 
 	private final AtomicReference<CommerceNotificationOutbox> savedOutbox = new AtomicReference<>();
@@ -37,7 +40,7 @@ class CommerceNotificationDispatchServiceTest extends BaseServiceTest {
 	@BeforeEach
 	void setUp() {
 		CommerceNotificationProperties properties = new CommerceNotificationProperties();
-		service = new CommerceNotificationDispatchService(outboxRepository, mailSender, properties, transactionManager);
+		service = new CommerceNotificationDispatchService(outboxRepository, mailSender, smsSender, properties, transactionManager);
 		lenient().when(transactionManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
 		lenient().doNothing().when(transactionManager).commit(any());
 		lenient().doNothing().when(transactionManager).rollback(any());
@@ -47,6 +50,39 @@ class CommerceNotificationDispatchServiceTest extends BaseServiceTest {
 			savedOutbox.set(outbox);
 			return outbox;
 		});
+	}
+
+	@Test
+	void dispatch_ShouldUseSmsSender_WhenChannelIsSms() {
+		CommerceNotificationOutbox outbox = outbox(CommerceNotificationStatus.PENDING, 0);
+		outbox.setChannel(CommerceNotificationChannel.SMS);
+		outbox.setRecipientEmail(null);
+		outbox.setRecipientPhone("905551112233");
+		savedOutbox.set(outbox);
+		when(smsSender.send("905551112233", "Content")).thenReturn(SmsResult.success("sms-1"));
+
+		CommerceNotificationOutbox result = service.dispatch(99L);
+
+		assertThat(result.getStatus()).isEqualTo(CommerceNotificationStatus.SENT);
+		assertThat(result.getProviderMessageId()).isEqualTo("sms-1");
+		verify(mailSender, never()).send(any(), any(), any());
+	}
+
+	@Test
+	void dispatch_ShouldMarkSmsFailedAndScheduleRetry_WhenSmsProviderFails() {
+		CommerceNotificationOutbox outbox = outbox(CommerceNotificationStatus.PENDING, 0);
+		outbox.setChannel(CommerceNotificationChannel.SMS);
+		outbox.setRecipientEmail(null);
+		outbox.setRecipientPhone("905551112233");
+		savedOutbox.set(outbox);
+		when(smsSender.send("905551112233", "Content")).thenReturn(SmsResult.failure("sms provider down"));
+
+		CommerceNotificationOutbox result = service.dispatch(99L);
+
+		assertThat(result.getStatus()).isEqualTo(CommerceNotificationStatus.FAILED);
+		assertThat(result.getAttemptCount()).isEqualTo(1);
+		assertThat(result.getNextRetryAt()).isNotNull();
+		assertThat(result.getErrorMessage()).isEqualTo("sms provider down");
 	}
 
 	@Test

@@ -22,6 +22,7 @@ import {
 import { CommerceAdminNotificationTemplateService } from '../services/commerce-admin.service';
 
 type ActiveFilter = '' | 'true' | 'false';
+type ChannelFilter = 'EMAIL' | 'SMS';
 
 @Component({
     selector: 'spa-commerce-notification-template-list',
@@ -56,9 +57,11 @@ export class SpaCommerceNotificationTemplateListComponent implements OnInit {
         'ORDER_REQUEST_APPROVED',
         'ORDER_REQUEST_REJECTED',
     ];
+    protected readonly channelOptions: ChannelFilter[] = ['EMAIL', 'SMS'];
 
     protected readonly filterForm = this.#fb.nonNullable.group({
         eventType: [''],
+        channel: ['EMAIL' as ChannelFilter],
         language: [''],
         active: ['' as ActiveFilter],
     });
@@ -79,6 +82,7 @@ export class SpaCommerceNotificationTemplateListComponent implements OnInit {
         this.#service
             .list({
                 eventType: filters.eventType,
+                channel: filters.channel,
                 language: filters.language,
                 active: this.activeFilterValue(filters.active),
             })

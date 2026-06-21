@@ -41,7 +41,13 @@
                             </div>
                             <div>
                                 <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.recipient' | transloco }}</dt>
-                                <dd class="font-medium">{{ outbox.recipientEmail }}</dd>
+                                <dd class="font-medium">
+                                    {{ (outbox.channel === 'SMS' ? outbox.recipientPhone : outbox.recipientEmail) || '-' }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.channel' | transloco }}</dt>
+                                <dd>{{ outbox.channel }}</dd>
                             </div>
                             <div>
                                 <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.aggregate' | transloco }}</dt>

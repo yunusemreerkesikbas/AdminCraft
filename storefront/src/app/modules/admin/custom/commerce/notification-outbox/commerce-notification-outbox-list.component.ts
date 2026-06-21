@@ -90,13 +90,14 @@ export class SpaCommerceNotificationOutboxListComponent extends BasePaginatedLis
                 key: 'eventType',
                 label: 'admin.commerce.notificationOutbox.fields.eventType',
                 type: 'text',
-                getSecondaryValue: (item) => item.outboxUid,
+                getSecondaryValue: (item) => `${item.channel} / ${item.outboxUid}`,
                 width: '220px',
             },
             {
                 key: 'recipientEmail',
                 label: 'admin.commerce.notificationOutbox.fields.recipient',
                 type: 'text',
+                getValue: (item) => this.recipientValue(item),
                 getSecondaryValue: (item) => item.subject,
                 width: '1fr',
             },
@@ -213,5 +214,11 @@ export class SpaCommerceNotificationOutboxListComponent extends BasePaginatedLis
     private reloadFromFirstPage(): void {
         this.pageIndexSig.set(0);
         this.loadItems();
+    }
+
+    private recipientValue(item: CommerceNotificationOutboxRow): string {
+        return item.channel === 'SMS'
+            ? item.recipientPhone || '-'
+            : item.recipientEmail || '-';
     }
 }

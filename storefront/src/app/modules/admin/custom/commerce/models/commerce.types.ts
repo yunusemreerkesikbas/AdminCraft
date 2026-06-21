@@ -246,7 +246,8 @@ export interface CommerceNotificationOutboxRow {
     channel: string;
     aggregateType: string;
     aggregateUid: string;
-    recipientEmail: string;
+    recipientEmail?: string | null;
+    recipientPhone?: string | null;
     language: string;
     subject: string;
     content: string;

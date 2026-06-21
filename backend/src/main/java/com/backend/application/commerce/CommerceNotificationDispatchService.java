@@ -11,10 +11,13 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.email.EmailResult;
+import com.backend.application.dto.sms.SmsResult;
+import com.backend.domain.commerce.CommerceNotificationChannel;
 import com.backend.domain.commerce.CommerceNotificationOutbox;
 import com.backend.domain.commerce.CommerceNotificationStatus;
 import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
 import com.backend.domain.port.MailSenderPort;
+import com.backend.domain.port.SmsSenderPort;
 import com.backend.shared.common.LogSanitizer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,16 +28,19 @@ public class CommerceNotificationDispatchService {
 
 	private final CommerceNotificationOutboxRepository outboxRepository;
 	private final MailSenderPort mailSender;
+	private final SmsSenderPort smsSender;
 	private final CommerceNotificationProperties properties;
 	private final PlatformTransactionManager tenantTransactionManager;
 
 	public CommerceNotificationDispatchService(
 			CommerceNotificationOutboxRepository outboxRepository,
 			MailSenderPort mailSender,
+			SmsSenderPort smsSender,
 			CommerceNotificationProperties properties,
 			@Qualifier("tenantTransactionManager") PlatformTransactionManager tenantTransactionManager) {
 		this.outboxRepository = outboxRepository;
 		this.mailSender = mailSender;
+		this.smsSender = smsSender;
 		this.properties = properties;
 		this.tenantTransactionManager = tenantTransactionManager;
 	}
@@ -68,12 +74,7 @@ public class CommerceNotificationDispatchService {
 			if (!isDispatchable(outbox)) {
 				return outbox;
 			}
-			EmailResult result;
-			try {
-				result = mailSender.send(outbox.getRecipientEmail(), outbox.getSubject(), outbox.getContent());
-			} catch (RuntimeException ex) {
-				result = EmailResult.failure(LogSanitizer.sanitizeForLog(ex.getMessage()));
-			}
+			DeliveryResult result = dispatchByChannel(outbox);
 			return applyResult(outbox, result);
 		});
 	}
@@ -86,20 +87,33 @@ public class CommerceNotificationDispatchService {
 				|| outbox.getAttemptCount() <= properties.getMaxRetryAttempts();
 	}
 
-	private CommerceNotificationOutbox applyResult(CommerceNotificationOutbox outbox, EmailResult result) {
+	private DeliveryResult dispatchByChannel(CommerceNotificationOutbox outbox) {
+		try {
+			if (outbox.getChannel() == CommerceNotificationChannel.SMS) {
+				SmsResult result = smsSender.send(outbox.getRecipientPhone(), outbox.getContent());
+				return new DeliveryResult(result.isSuccess(), result.getMessageId(), result.getErrorMessage());
+			}
+			EmailResult result = mailSender.send(outbox.getRecipientEmail(), outbox.getSubject(), outbox.getContent());
+			return new DeliveryResult(result.isSuccess(), result.getMessageId(), result.getErrorMessage());
+		} catch (RuntimeException ex) {
+			return new DeliveryResult(false, null, LogSanitizer.sanitizeForLog(ex.getMessage()));
+		}
+	}
+
+	private CommerceNotificationOutbox applyResult(CommerceNotificationOutbox outbox, DeliveryResult result) {
 		LocalDateTime now = LocalDateTime.now();
 		outbox.setAttemptCount(outbox.getAttemptCount() + 1);
 		outbox.setLastAttemptedAt(now);
-		if (result.isSuccess()) {
+		if (result.success()) {
 			outbox.setStatus(CommerceNotificationStatus.SENT);
-			outbox.setProviderMessageId(result.getMessageId());
+			outbox.setProviderMessageId(result.messageId());
 			outbox.setErrorMessage(null);
 			outbox.setNextRetryAt(null);
 			outbox.setSentAt(now);
 		} else {
 			outbox.setStatus(CommerceNotificationStatus.FAILED);
 			outbox.setProviderMessageId(null);
-			outbox.setErrorMessage(LogSanitizer.sanitizeForLog(result.getErrorMessage()));
+			outbox.setErrorMessage(LogSanitizer.sanitizeForLog(result.errorMessage()));
 			outbox.setNextRetryAt(outbox.getAttemptCount() <= properties.getMaxRetryAttempts()
 					? now.plus(properties.getRetryDelay())
 					: null);
@@ -111,5 +125,11 @@ public class CommerceNotificationDispatchService {
 		TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
 		transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 		return transactionTemplate;
+	}
+
+	private record DeliveryResult(
+			boolean success,
+			String messageId,
+			String errorMessage) {
 	}
 }

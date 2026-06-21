@@ -2391,7 +2391,7 @@ export const langTR = {
             },
             notificationOutbox: {
                 title: 'Bildirim Outbox',
-                subtitle: 'Transactional e-posta gönderimlerini ve tekrar denemeleri izleyin',
+                subtitle: 'Transactional e-posta ve SMS gönderimlerini ve tekrar denemeleri izleyin',
                 detailTitle: 'Bildirim Detayı',
                 detailSubtitle: 'Gönderim durumu, provider yanıtı ve retry kontrolü',
                 searchPlaceholder: 'Alıcı, konu, UID, aggregate veya hata ara',
@@ -2422,6 +2422,7 @@ export const langTR = {
                 fields: {
                     outboxUid: 'Outbox UID',
                     eventType: 'Olay türü',
+                    channel: 'Kanal',
                     recipient: 'Alıcı',
                     status: 'Durum',
                     attempts: 'Deneme',
@@ -2441,8 +2442,9 @@ export const langTR = {
             },
             notificationTemplates: {
                 title: 'Bildirim Şablonları',
-                subtitle: 'Transactional e-posta konu ve içeriklerini yönetin',
+                subtitle: 'Transactional e-posta ve SMS içeriklerini yönetin',
                 eventType: 'Olay türü',
+                channel: 'Kanal',
                 language: 'Dil',
                 active: 'Aktif',
                 activeOnly: 'Sadece aktif',

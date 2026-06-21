@@ -41,7 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 class CommerceNotificationServiceImpl implements CommerceNotificationService {
 
 	private static final String EMAIL_ENABLED_KEY = "commerce.notifications.email.enabled";
-	private static final String EVENT_ENABLED_PREFIX = "commerce.notifications.email.";
+	private static final String SMS_ENABLED_KEY = "commerce.notifications.sms.enabled";
+	private static final String EMAIL_EVENT_ENABLED_PREFIX = "commerce.notifications.email.";
+	private static final String SMS_EVENT_ENABLED_PREFIX = "commerce.notifications.sms.";
 	private static final String EVENT_ENABLED_SUFFIX = ".enabled";
 	private static final String LANGUAGE_TR = "TR";
 	private static final String LANGUAGE_EN = "EN";
@@ -97,7 +99,8 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 		if (order == null) {
 			return;
 		}
-		queue(eventType, AGGREGATE_ORDER, order.getUid(), order, null, language);
+		queueEmail(eventType, AGGREGATE_ORDER, order.getUid(), order, null, language);
+		queueSms(eventType, AGGREGATE_ORDER, order.getUid(), order, null, language);
 	}
 
 	private void notifyRequestEvent(
@@ -107,10 +110,35 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 		if (request == null || request.getOrder() == null) {
 			return;
 		}
-		queue(eventType, AGGREGATE_ORDER_REQUEST, request.getUid(), request.getOrder(), request, language);
+		queueEmail(eventType, AGGREGATE_ORDER_REQUEST, request.getUid(), request.getOrder(), request, language);
+		queueSms(eventType, AGGREGATE_ORDER_REQUEST, request.getUid(), request.getOrder(), request, language);
+	}
+
+	private void queueEmail(
+			CommerceNotificationEventType eventType,
+			String aggregateType,
+			String aggregateUid,
+			CommerceOrder order,
+			CommerceOrderResolutionRequest request,
+			String language) {
+		queue(CommerceNotificationChannel.EMAIL, eventType, aggregateType, aggregateUid, order, request, language);
+	}
+
+	private void queueSms(
+			CommerceNotificationEventType eventType,
+			String aggregateType,
+			String aggregateUid,
+			CommerceOrder order,
+			CommerceOrderResolutionRequest request,
+			String language) {
+		if (eventType == CommerceNotificationEventType.ORDER_REQUEST_CREATED) {
+			return;
+		}
+		queue(CommerceNotificationChannel.SMS, eventType, aggregateType, aggregateUid, order, request, language);
 	}
 
 	private void queue(
+			CommerceNotificationChannel channel,
 			CommerceNotificationEventType eventType,
 			String aggregateType,
 			String aggregateUid,
@@ -119,17 +147,17 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 			String language) {
 		try {
 			commerceModuleAccessGuard.assertEnabledForCurrentTenant();
-			if (!notificationEnabled(eventType)) {
+			if (!notificationEnabled(channel, eventType)) {
 				return;
 			}
 			CommerceCustomer customer = order.getCustomer();
-			if (customer == null || !StringUtils.hasText(customer.getEmail())) {
+			if (!hasRecipient(channel, customer)) {
 				return;
 			}
 			String normalizedLanguage = normalizeLanguage(language, defaultLanguage());
-			Optional<CommerceNotificationTemplate> template = activeTemplate(eventType, normalizedLanguage);
+			Optional<CommerceNotificationTemplate> template = activeTemplate(channel, eventType, normalizedLanguage);
 			if (template.isEmpty()) {
-				log.warn("Commerce notification template missing event={} language={}", eventType, normalizedLanguage);
+				log.warn("Commerce notification template missing channel={} event={} language={}", channel, eventType, normalizedLanguage);
 				return;
 			}
 
@@ -137,10 +165,14 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 			Map<String, String> variables = variables(order, request, deliveryLanguage);
 			CommerceNotificationOutbox outbox = new CommerceNotificationOutbox();
 			outbox.setEventType(eventType);
-			outbox.setChannel(CommerceNotificationChannel.EMAIL);
+			outbox.setChannel(channel);
 			outbox.setAggregateType(aggregateType);
 			outbox.setAggregateUid(aggregateUid);
-			outbox.setRecipientEmail(customer.getEmail().trim().toLowerCase(Locale.ROOT));
+			if (channel == CommerceNotificationChannel.SMS) {
+				outbox.setRecipientPhone(normalizePhone(customer.getPhone()));
+			} else {
+				outbox.setRecipientEmail(customer.getEmail().trim().toLowerCase(Locale.ROOT));
+			}
 			outbox.setLanguage(deliveryLanguage);
 			outbox.setSubject(templateVariableRenderer.render(template.get().getSubject(), variables));
 			outbox.setContent(templateVariableRenderer.render(template.get().getContent(), variables));
@@ -158,25 +190,28 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 		}
 	}
 
-	private boolean notificationEnabled(CommerceNotificationEventType eventType) {
+	private boolean notificationEnabled(CommerceNotificationChannel channel, CommerceNotificationEventType eventType) {
+		String globalKey = channel == CommerceNotificationChannel.SMS ? SMS_ENABLED_KEY : EMAIL_ENABLED_KEY;
+		String eventPrefix = channel == CommerceNotificationChannel.SMS ? SMS_EVENT_ENABLED_PREFIX : EMAIL_EVENT_ENABLED_PREFIX;
 		boolean globalEnabled = configPropertyService.getBoolean(
 				currentTenantId(),
 				tenantContext.getTenantDbName(),
-				EMAIL_ENABLED_KEY,
+				globalKey,
 				false);
 		return configPropertyService.getBoolean(
 				currentTenantId(),
 				tenantContext.getTenantDbName(),
-				EVENT_ENABLED_PREFIX + eventType.name().toLowerCase(Locale.ROOT) + EVENT_ENABLED_SUFFIX,
+				eventPrefix + eventType.name().toLowerCase(Locale.ROOT) + EVENT_ENABLED_SUFFIX,
 				globalEnabled);
 	}
 
 	private Optional<CommerceNotificationTemplate> activeTemplate(
+			CommerceNotificationChannel channel,
 			CommerceNotificationEventType eventType,
 			String language) {
 		Optional<CommerceNotificationTemplate> exactTemplate = templateRepository.findExact(
 				eventType,
-				CommerceNotificationChannel.EMAIL,
+				channel,
 				language);
 		if (exactTemplate.isPresent()) {
 			return Boolean.TRUE.equals(exactTemplate.get().getActive())
@@ -186,7 +221,25 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 		if (LANGUAGE_EN.equals(language)) {
 			return Optional.empty();
 		}
-		return templateRepository.findActive(eventType, CommerceNotificationChannel.EMAIL, LANGUAGE_EN);
+		return templateRepository.findActive(eventType, channel, LANGUAGE_EN);
+	}
+
+	private boolean hasRecipient(CommerceNotificationChannel channel, CommerceCustomer customer) {
+		if (customer == null) {
+			return false;
+		}
+		if (channel == CommerceNotificationChannel.SMS) {
+			return normalizePhone(customer.getPhone()).length() >= 10;
+		}
+		return StringUtils.hasText(customer.getEmail());
+	}
+
+	private String normalizePhone(String phone) {
+		if (!StringUtils.hasText(phone)) {
+			return "";
+		}
+		String digits = phone.replaceAll("\\D", "");
+		return StringUtils.hasText(digits) ? digits : phone.trim();
 	}
 
 	private Map<String, String> variables(

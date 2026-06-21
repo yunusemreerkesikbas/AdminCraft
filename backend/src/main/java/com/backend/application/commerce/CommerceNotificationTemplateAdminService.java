@@ -5,12 +5,14 @@ import java.util.List;
 import com.backend.application.commerce.dto.CommerceNotificationTemplateCommand;
 import com.backend.application.commerce.dto.CommerceNotificationTemplatePreviewResponse;
 import com.backend.application.commerce.dto.CommerceNotificationTemplateResponse;
+import com.backend.domain.commerce.CommerceNotificationChannel;
 import com.backend.domain.commerce.CommerceNotificationEventType;
 
 public interface CommerceNotificationTemplateAdminService {
 
 	List<CommerceNotificationTemplateResponse> listTemplates(
 			CommerceNotificationEventType eventType,
+			CommerceNotificationChannel channel,
 			String language,
 			Boolean active);
 

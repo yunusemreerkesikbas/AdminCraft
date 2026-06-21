@@ -289,11 +289,13 @@ export class CommerceAdminNotificationTemplateService {
 
     list(filters: {
         eventType?: string;
+        channel?: string;
         language?: string;
         active?: boolean | null;
     } = {}): Observable<CommerceNotificationTemplate[]> {
         const queryParams: Record<string, string | boolean | null> = {
             eventType: filters.eventType || null,
+            channel: filters.channel || null,
             language: filters.language || null,
             active: filters.active ?? null,
         };

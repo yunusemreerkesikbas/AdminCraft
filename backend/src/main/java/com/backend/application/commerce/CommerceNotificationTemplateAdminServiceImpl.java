@@ -39,12 +39,13 @@ class CommerceNotificationTemplateAdminServiceImpl implements CommerceNotificati
 	@Transactional(readOnly = true)
 	public List<CommerceNotificationTemplateResponse> listTemplates(
 			CommerceNotificationEventType eventType,
+			CommerceNotificationChannel channel,
 			String language,
 			Boolean active) {
 		commerceModuleAccessGuard.assertEnabledForCurrentTenant();
 		return templateRepository.findAll(
 						eventType,
-						CommerceNotificationChannel.EMAIL,
+						Objects.requireNonNullElse(channel, CommerceNotificationChannel.EMAIL),
 						normalizeOptionalLanguage(language),
 						active)
 				.stream()

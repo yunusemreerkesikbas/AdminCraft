@@ -41,17 +41,32 @@ class CommerceNotificationTemplateAdminServiceImplTest extends BaseServiceTest {
 	void listTemplates_ShouldFilterByEventLanguageAndActive() {
 		when(templateRepository.findAll(
 				CommerceNotificationEventType.ORDER_PAID,
-				CommerceNotificationChannel.EMAIL,
+				CommerceNotificationChannel.SMS,
 				"TR",
 				true))
 				.thenReturn(List.of(template("tpl-uid", "TR", true)));
 
-		var result = service.listTemplates(CommerceNotificationEventType.ORDER_PAID, "tr-TR", true);
+		var result = service.listTemplates(CommerceNotificationEventType.ORDER_PAID, CommerceNotificationChannel.SMS, "tr-TR", true);
 
 		assertThat(result).hasSize(1);
 		assertThat(result.get(0).templateUid()).isEqualTo("tpl-uid");
 		assertThat(result.get(0).eventType()).isEqualTo("ORDER_PAID");
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
+	}
+
+	@Test
+	void listTemplates_ShouldDefaultToEmailChannel() {
+		when(templateRepository.findAll(
+				CommerceNotificationEventType.ORDER_PAID,
+				CommerceNotificationChannel.EMAIL,
+				null,
+				null))
+				.thenReturn(List.of(template("tpl-uid", "EN", true)));
+
+		var result = service.listTemplates(CommerceNotificationEventType.ORDER_PAID, null, null, null);
+
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).channel()).isEqualTo("EMAIL");
 	}
 
 	@Test

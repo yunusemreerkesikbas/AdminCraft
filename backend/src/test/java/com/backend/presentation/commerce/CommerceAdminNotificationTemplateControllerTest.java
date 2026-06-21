@@ -21,6 +21,7 @@ import com.backend.application.commerce.CommerceNotificationTemplateAdminService
 import com.backend.application.commerce.dto.CommerceNotificationTemplateCommand;
 import com.backend.application.commerce.dto.CommerceNotificationTemplatePreviewResponse;
 import com.backend.application.commerce.dto.CommerceNotificationTemplateResponse;
+import com.backend.domain.commerce.CommerceNotificationChannel;
 import com.backend.domain.commerce.CommerceNotificationEventType;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,12 +34,12 @@ class CommerceAdminNotificationTemplateControllerTest {
 	void list_ShouldReturnTemplates() {
 		CommerceAdminNotificationTemplateController controller =
 				new CommerceAdminNotificationTemplateController(templateAdminService, messageSource);
-		when(templateAdminService.listTemplates(CommerceNotificationEventType.ORDER_PAID, "TR", true))
+		when(templateAdminService.listTemplates(CommerceNotificationEventType.ORDER_PAID, CommerceNotificationChannel.SMS, "TR", true))
 				.thenReturn(List.of(template()));
 		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
 				.thenAnswer(invocation -> "Templates retrieved");
 
-		var result = controller.list(CommerceNotificationEventType.ORDER_PAID, "TR", true);
+		var result = controller.list(CommerceNotificationEventType.ORDER_PAID, CommerceNotificationChannel.SMS, "TR", true);
 
 		assertThat(result.getBody()).isNotNull();
 		assertThat(result.getBody().getMessage()).isEqualTo("Templates retrieved");

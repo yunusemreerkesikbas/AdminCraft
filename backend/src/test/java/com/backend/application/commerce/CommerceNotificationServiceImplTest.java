@@ -2,6 +2,9 @@ package com.backend.application.commerce;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -22,6 +25,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import com.backend.application.dto.email.EmailResult;
+import com.backend.application.dto.sms.SmsResult;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.mail.TemplateVariableRenderer;
 import com.backend.domain.commerce.CommerceCustomer;
@@ -39,6 +43,7 @@ import com.backend.domain.commerce.repository.CommerceNotificationTemplateReposi
 import com.backend.domain.enums.Language;
 import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.port.MailSenderPort;
+import com.backend.domain.port.SmsSenderPort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.testutil.BaseServiceTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,6 +57,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 	@Mock private TenantContextPort tenantContext;
 	@Mock private FrontendConfigPort frontendConfig;
 	@Mock private MailSenderPort mailSender;
+	@Mock private SmsSenderPort smsSender;
 	@Mock private PlatformTransactionManager transactionManager;
 
 	private final AtomicReference<CommerceNotificationOutbox> savedOutbox = new AtomicReference<>();
@@ -65,6 +71,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 		CommerceNotificationDispatchService dispatchService = new CommerceNotificationDispatchService(
 				outboxRepository,
 				mailSender,
+				smsSender,
 				properties,
 				transactionManager);
 		service = new CommerceNotificationServiceImpl(
@@ -82,6 +89,8 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 		lenient().when(tenantContext.getSubdomain()).thenReturn("demo");
 		lenient().when(tenantContext.getDefaultLanguage()).thenReturn(Language.EN);
 		lenient().when(frontendConfig.getBaseUrl()).thenReturn("https://%s.example.com");
+		lenient().when(configPropertyService.getBoolean(anyLong(), anyString(), anyString(), anyBoolean()))
+				.thenAnswer(invocation -> invocation.getArgument(3));
 		lenient().when(transactionManager.getTransaction(any())).thenAnswer(invocation -> {
 			tenantTransactionActive.set(true);
 			return new SimpleTransactionStatus();
@@ -120,6 +129,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 
 		verify(outboxRepository, never()).save(any());
 		verify(mailSender, never()).send(any(), any(), any());
+		verify(smsSender, never()).send(any(), any());
 	}
 
 	@Test
@@ -155,12 +165,102 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 		assertThat(outbox.getSubject()).isEqualTo("Order ORD-1");
 		assertThat(outbox.getContent()).isEqualTo("Hello Jane Doe: 200.00 TRY https://demo.example.com/en/account/orders/order-uid");
 		assertThat(outbox.getStatus()).isEqualTo(CommerceNotificationStatus.SENT);
+		assertThat(outbox.getChannel()).isEqualTo(CommerceNotificationChannel.EMAIL);
 		assertThat(outbox.getProviderMessageId()).isEqualTo("message-1");
 		assertThat(outbox.getSentAt()).isNotNull();
 		ArgumentCaptor<TransactionDefinition> definitionCaptor = ArgumentCaptor.forClass(TransactionDefinition.class);
 		verify(transactionManager).getTransaction(definitionCaptor.capture());
 		assertThat(definitionCaptor.getAllValues())
 				.allMatch(definition -> definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+	}
+
+	@Test
+	void notifyOrderPaid_ShouldQueueSms_WhenSmsEnabled() {
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.email.enabled", false))
+				.thenReturn(false);
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.sms.enabled", false))
+				.thenReturn(true);
+		when(configPropertyService.getBoolean(
+				1L,
+				"tenant_1",
+				"commerce.notifications.sms.order_paid.enabled",
+				true))
+				.thenReturn(true);
+		when(templateRepository.findExact(
+				CommerceNotificationEventType.ORDER_PAID,
+				CommerceNotificationChannel.SMS,
+				"TR"))
+				.thenReturn(Optional.of(smsTemplate("TR")));
+		when(smsSender.send("905551112233", "SMS ORD-1 200.00 TRY")).thenReturn(SmsResult.success("sms-1"));
+
+		service.notifyOrderPaid(orderWithLegalLanguage("TR"));
+
+		CommerceNotificationOutbox outbox = savedOutbox.get();
+		assertThat(outbox.getChannel()).isEqualTo(CommerceNotificationChannel.SMS);
+		assertThat(outbox.getRecipientEmail()).isNull();
+		assertThat(outbox.getRecipientPhone()).isEqualTo("905551112233");
+		assertThat(outbox.getContent()).isEqualTo("SMS ORD-1 200.00 TRY");
+		assertThat(outbox.getStatus()).isEqualTo(CommerceNotificationStatus.SENT);
+		assertThat(outbox.getProviderMessageId()).isEqualTo("sms-1");
+		verify(mailSender, never()).send(any(), any(), any());
+	}
+
+	@Test
+	void notifyOrderPaid_ShouldSkipSms_WhenEventOverrideDisabled() {
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.email.enabled", false))
+				.thenReturn(false);
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.sms.enabled", false))
+				.thenReturn(true);
+		when(configPropertyService.getBoolean(
+				1L,
+				"tenant_1",
+				"commerce.notifications.sms.order_paid.enabled",
+				true))
+				.thenReturn(false);
+
+		service.notifyOrderPaid(orderWithLegalLanguage("TR"));
+
+		verify(outboxRepository, never()).save(any());
+		verify(smsSender, never()).send(any(), any());
+	}
+
+	@Test
+	void notifyOrderPaid_ShouldSkipSms_WhenCustomerPhoneMissing() {
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.email.enabled", false))
+				.thenReturn(false);
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.sms.enabled", false))
+				.thenReturn(true);
+		when(configPropertyService.getBoolean(
+				1L,
+				"tenant_1",
+				"commerce.notifications.sms.order_paid.enabled",
+				true))
+				.thenReturn(true);
+		CommerceOrder order = orderWithLegalLanguage("TR");
+		order.getCustomer().setPhone("123");
+
+		service.notifyOrderPaid(order);
+
+		verify(templateRepository, never()).findExact(
+				CommerceNotificationEventType.ORDER_PAID,
+				CommerceNotificationChannel.SMS,
+				"TR");
+		verify(outboxRepository, never()).save(any());
+		verify(smsSender, never()).send(any(), any());
+	}
+
+	@Test
+	void notifyOrderRequestCreated_ShouldNotQueueSms() {
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.email.enabled", false))
+				.thenReturn(false);
+		CommerceOrderResolutionRequest request = new CommerceOrderResolutionRequest();
+		request.setUid("request-uid");
+		request.setOrder(orderWithLegalLanguage("TR"));
+
+		service.notifyOrderRequestCreated(request);
+
+		verify(outboxRepository, never()).save(any());
+		verify(smsSender, never()).send(any(), any());
 	}
 
 	@Test
@@ -217,6 +317,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 				"EN");
 		verify(outboxRepository, never()).save(any());
 		verify(mailSender, never()).send(any(), any(), any());
+		verify(smsSender, never()).send(any(), any());
 	}
 
 	@Test
@@ -248,6 +349,17 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 		return template;
 	}
 
+	private CommerceNotificationTemplate smsTemplate(String language) {
+		CommerceNotificationTemplate template = new CommerceNotificationTemplate();
+		template.setTemplateKey(CommerceNotificationEventType.ORDER_PAID);
+		template.setChannel(CommerceNotificationChannel.SMS);
+		template.setLanguage(language);
+		template.setSubject("ORDER_PAID");
+		template.setContent("SMS {{orderNumber}} {{orderTotal}} {{currencyIso}}");
+		template.setActive(true);
+		return template;
+	}
+
 	private CommerceOrder orderWithLegalLanguage(String language) {
 		CommerceOrder order = new CommerceOrder();
 		order.setId(1L);
@@ -273,6 +385,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 		customer.setEmail("jane@example.com");
 		customer.setFirstName("Jane");
 		customer.setLastName("Doe");
+		customer.setPhone("+90 555 111 22 33");
 		return customer;
 	}
 }
