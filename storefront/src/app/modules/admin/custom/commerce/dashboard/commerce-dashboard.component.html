@@ -21,7 +21,7 @@
             </div>
         } @else {
             @if (dashboardSig(); as dashboard) {
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                 <a
                     class="rounded border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary dark:border-slate-700 dark:bg-slate-900"
                     routerLink="../orders"
@@ -80,6 +80,20 @@
                         <mat-icon svgIcon="heroicons_outline:credit-card" class="text-rose-500"></mat-icon>
                     </div>
                     <p class="mt-4 text-sm text-slate-500">{{ 'admin.commerce.dashboard.failedAttemptsHint' | transloco }}</p>
+                </a>
+
+                <a
+                    class="rounded border border-slate-200 bg-white p-5 shadow-sm transition hover:border-primary dark:border-slate-700 dark:bg-slate-900"
+                    routerLink="../notification-outbox"
+                >
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm text-slate-500">{{ 'admin.commerce.dashboard.failedNotifications' | transloco }}</p>
+                            <p class="mt-2 text-3xl font-semibold">{{ dashboard.failedNotificationCount }}</p>
+                        </div>
+                        <mat-icon svgIcon="heroicons_outline:bell-alert" class="text-orange-500"></mat-icon>
+                    </div>
+                    <p class="mt-4 text-sm text-slate-500">{{ 'admin.commerce.dashboard.failedNotificationsHint' | transloco }}</p>
                 </a>
                 </div>
             }

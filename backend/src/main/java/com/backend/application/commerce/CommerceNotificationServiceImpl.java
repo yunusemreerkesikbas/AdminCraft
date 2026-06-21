@@ -2,24 +2,16 @@ package com.backend.application.commerce;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
-import com.backend.application.dto.email.EmailResult;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.mail.TemplateVariableRenderer;
 import com.backend.domain.commerce.CommerceCustomer;
@@ -35,7 +27,6 @@ import com.backend.domain.commerce.repository.CommerceNotificationOutboxReposito
 import com.backend.domain.commerce.repository.CommerceNotificationTemplateRepository;
 import com.backend.domain.enums.Language;
 import com.backend.domain.port.FrontendConfigPort;
-import com.backend.domain.port.MailSenderPort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.shared.common.LogSanitizer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -64,11 +55,8 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 	private final TenantContextPort tenantContext;
 	private final FrontendConfigPort frontendConfig;
 	private final TemplateVariableRenderer templateVariableRenderer;
-	private final MailSenderPort mailSender;
 	private final ObjectMapper objectMapper;
-
-	@Qualifier("tenantTransactionManager")
-	private final PlatformTransactionManager tenantTransactionManager;
+	private final CommerceNotificationDispatchService dispatchService;
 
 	@Override
 	public void notifyOrderPaid(CommerceOrder order) {
@@ -158,7 +146,7 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 			outbox.setContent(templateVariableRenderer.render(template.get().getContent(), variables));
 			outbox.setStatus(CommerceNotificationStatus.PENDING);
 			CommerceNotificationOutbox saved = outboxRepository.save(outbox);
-			dispatchAfterCommit(saved.getId());
+			dispatchService.dispatchAfterCommit(saved.getId());
 		} catch (RuntimeException ex) {
 			log.warn(
 					"Commerce notification queue failed event={} aggregateType={} aggregateUid={} reason={}",
@@ -223,80 +211,6 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 		variables.put("requestStatus", request.getStatus() == null ? "" : request.getStatus().name());
 		variables.put("decisionNote", value(request.getDecisionNote()));
 		return variables;
-	}
-
-	private void dispatchAfterCommit(Long outboxId) {
-		if (TransactionSynchronizationManager.isSynchronizationActive()) {
-			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-				@Override
-				public void afterCommit() {
-					try {
-						dispatch(outboxId);
-					} catch (RuntimeException ex) {
-						log.warn(
-								"Commerce notification dispatch failed outboxId={} reason={}",
-								outboxId,
-								LogSanitizer.sanitizeForLog(ex.getMessage()));
-					}
-				}
-			});
-			return;
-		}
-		dispatch(outboxId);
-	}
-
-	private void dispatch(Long outboxId) {
-		PendingEmail pendingEmail = findPendingEmail(outboxId);
-		if (pendingEmail == null) {
-			return;
-		}
-		EmailResult result;
-		try {
-			result = mailSender.send(pendingEmail.recipientEmail(), pendingEmail.subject(), pendingEmail.content());
-		} catch (RuntimeException ex) {
-			result = EmailResult.failure(LogSanitizer.sanitizeForLog(ex.getMessage()));
-		}
-		updateOutboxResult(outboxId, result);
-	}
-
-	private PendingEmail findPendingEmail(Long outboxId) {
-		return newRequiresNewTransactionTemplate().execute(status -> {
-			CommerceNotificationOutbox outbox = outboxRepository.findById(outboxId).orElse(null);
-			if (outbox == null || outbox.getStatus() != CommerceNotificationStatus.PENDING) {
-				return null;
-			}
-			return new PendingEmail(outbox.getRecipientEmail(), outbox.getSubject(), outbox.getContent());
-		});
-	}
-
-	private void updateOutboxResult(Long outboxId, EmailResult result) {
-		newRequiresNewTransactionTemplate().execute(status -> {
-			CommerceNotificationOutbox outbox = outboxRepository.findById(outboxId).orElse(null);
-			if (outbox == null || outbox.getStatus() != CommerceNotificationStatus.PENDING) {
-				return null;
-			}
-			if (result.isSuccess()) {
-				outbox.setStatus(CommerceNotificationStatus.SENT);
-				outbox.setProviderMessageId(result.getMessageId());
-				outbox.setErrorMessage(null);
-				outbox.setSentAt(LocalDateTime.now());
-			} else {
-				outbox.setStatus(CommerceNotificationStatus.FAILED);
-				outbox.setProviderMessageId(null);
-				outbox.setErrorMessage(LogSanitizer.sanitizeForLog(result.getErrorMessage()));
-			}
-			outboxRepository.save(outbox);
-			return null;
-		});
-	}
-
-	private TransactionTemplate newRequiresNewTransactionTemplate() {
-		TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
-		transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-		return transactionTemplate;
-	}
-
-	private record PendingEmail(String recipientEmail, String subject, String content) {
 	}
 
 	private String paidLanguage(CommerceOrder order) {

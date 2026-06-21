@@ -104,7 +104,7 @@ class CommerceOrderResolutionRequestControllerTest {
 
 	@Test
 	void listAdminRequests_ShouldReturnPageableResponseWithFilters() {
-		CommerceAdminOrderController controller = new CommerceAdminOrderController(null, requestService, messageSource);
+		CommerceAdminOrderController controller = new CommerceAdminOrderController(null, requestService, null, messageSource);
 		when(requestService.listAdminRequests(any(), anyString(), any(), any()))
 				.thenReturn(new PageImpl<>(List.of(response())));
 		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
@@ -131,7 +131,7 @@ class CommerceOrderResolutionRequestControllerTest {
 
 	@Test
 	void getAdminRequest_ShouldExposeDecisionAuditFields() throws Exception {
-		CommerceAdminOrderController controller = new CommerceAdminOrderController(null, requestService, messageSource);
+		CommerceAdminOrderController controller = new CommerceAdminOrderController(null, requestService, null, messageSource);
 		when(requestService.getAdminRequest("request-uid")).thenReturn(response());
 		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
 				.thenAnswer(invocation -> "Request retrieved");
@@ -145,7 +145,7 @@ class CommerceOrderResolutionRequestControllerTest {
 
 	@Test
 	void decideOrderRequest_ShouldMapApproveFlag() {
-		CommerceAdminOrderController controller = new CommerceAdminOrderController(null, requestService, messageSource);
+		CommerceAdminOrderController controller = new CommerceAdminOrderController(null, requestService, null, messageSource);
 		when(requestService.decide(anyString(), any())).thenReturn(response());
 		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
 				.thenAnswer(invocation -> "Request decided");

@@ -21,6 +21,7 @@ export interface CommerceAdminDashboard {
     lastSevenDays: CommerceAdminMetric;
     attentionOrderCount: number;
     failedPaymentAttemptCount: number;
+    failedNotificationCount: number;
     currencyIso: string;
 }
 
@@ -236,4 +237,28 @@ export interface CommerceLegalSnapshot {
     capturedAt: string;
     acceptedAt: string;
     documents: CommerceLegalSnapshotDocument[];
+}
+
+export interface CommerceNotificationOutboxRow {
+    id: number;
+    outboxUid: string;
+    eventType: string;
+    channel: string;
+    aggregateType: string;
+    aggregateUid: string;
+    recipientEmail: string;
+    language: string;
+    subject: string;
+    content: string;
+    status: string;
+    attemptCount: number;
+    maxRetryAttempts: number;
+    retryAllowed: boolean;
+    providerMessageId?: string | null;
+    errorMessage?: string | null;
+    lastAttemptedAt?: string | null;
+    nextRetryAt?: string | null;
+    sentAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
 }

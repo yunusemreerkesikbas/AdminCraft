@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,9 +57,16 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 	private final AtomicReference<CommerceNotificationOutbox> savedOutbox = new AtomicReference<>();
 	private final AtomicBoolean tenantTransactionActive = new AtomicBoolean();
 	private CommerceNotificationServiceImpl service;
+	private CommerceNotificationProperties properties;
 
 	@BeforeEach
 	void setUp() {
+		properties = new CommerceNotificationProperties();
+		CommerceNotificationDispatchService dispatchService = new CommerceNotificationDispatchService(
+				outboxRepository,
+				mailSender,
+				properties,
+				transactionManager);
 		service = new CommerceNotificationServiceImpl(
 				templateRepository,
 				outboxRepository,
@@ -69,9 +75,8 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 				tenantContext,
 				frontendConfig,
 				new TemplateVariableRenderer(),
-				mailSender,
 				new ObjectMapper(),
-				transactionManager);
+				dispatchService);
 		lenient().when(tenantContext.getTenantId()).thenReturn("1");
 		lenient().when(tenantContext.getTenantDbName()).thenReturn("tenant_1");
 		lenient().when(tenantContext.getSubdomain()).thenReturn("demo");
@@ -97,7 +102,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 			savedOutbox.set(outbox);
 			return outbox;
 		});
-		lenient().when(outboxRepository.findById(99L)).thenAnswer(invocation -> Optional.of(savedOutbox.get()));
+		lenient().when(outboxRepository.findByIdForUpdate(99L)).thenAnswer(invocation -> Optional.of(savedOutbox.get()));
 	}
 
 	@Test
@@ -139,7 +144,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 				.thenReturn(Optional.of(template("EN")));
 		when(mailSender.send("jane@example.com", "Order ORD-1", "Hello Jane Doe: 200.00 TRY https://demo.example.com/en/account/orders/order-uid"))
 				.thenAnswer(invocation -> {
-					assertThat(tenantTransactionActive).isFalse();
+					assertThat(tenantTransactionActive).isTrue();
 					return EmailResult.success("message-1");
 				});
 
@@ -153,7 +158,7 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 		assertThat(outbox.getProviderMessageId()).isEqualTo("message-1");
 		assertThat(outbox.getSentAt()).isNotNull();
 		ArgumentCaptor<TransactionDefinition> definitionCaptor = ArgumentCaptor.forClass(TransactionDefinition.class);
-		verify(transactionManager, times(2)).getTransaction(definitionCaptor.capture());
+		verify(transactionManager).getTransaction(definitionCaptor.capture());
 		assertThat(definitionCaptor.getAllValues())
 				.allMatch(definition -> definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 	}
@@ -179,6 +184,9 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 
 		CommerceNotificationOutbox outbox = savedOutbox.get();
 		assertThat(outbox.getStatus()).isEqualTo(CommerceNotificationStatus.FAILED);
+		assertThat(outbox.getAttemptCount()).isEqualTo(1);
+		assertThat(outbox.getLastAttemptedAt()).isNotNull();
+		assertThat(outbox.getNextRetryAt()).isNotNull();
 		assertThat(outbox.getErrorMessage()).isEqualTo("provider down");
 		assertThat(outbox.getProviderMessageId()).isNull();
 	}

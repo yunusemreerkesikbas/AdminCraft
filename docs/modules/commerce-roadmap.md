@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture, customer transactional email v1 ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. Transactional SMS, admin notification alerts, notification template UI/API, outbox visibility ve retry job henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture, customer transactional email v1, notification outbox admin görünürlüğü + manual/automatic retry ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. Transactional SMS, admin notification alerts ve notification template UI/API henüz yapılmadı.
 
 ## 1. Konumlandırma
 
@@ -302,14 +302,13 @@ Hazır:
 - TR/EN seed template'ler ve `commerce_notification_outbox`
 - Platform-managed email provider ile commit sonrası immediate send
 - `commerce.notifications.email.enabled` global toggle ve `commerce.notifications.email.<event>.enabled` event override davranışı
+- Tenant admin notification outbox liste/detay ekranı, tekil manual retry ve 15 dakikalık automatic retry job
 
 Kalan:
 
 - Transactional SMS
 - Admin email alerts
 - Tenant admin template management UI/API
-- Notification outbox admin visibility
-- Automatic retry job
 
 Müşteri SMS event'leri:
 

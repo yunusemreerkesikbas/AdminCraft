@@ -56,6 +56,9 @@ app:
   commerce:
     payment:
       callback-base-url: ${APP_COMMERCE_PAYMENT_CALLBACK_BASE_URL:http://localhost:8080/api}
+    notifications:
+      retry-job-enabled: ${APP_COMMERCE_NOTIFICATIONS_RETRY_JOB_ENABLED:true}
+      retry-cron: "${APP_COMMERCE_NOTIFICATIONS_RETRY_CRON:0 */15 * * * *}"
   security:
     trust-cf-connecting-ip: ${APP_SECURITY_TRUST_CF_CONNECTING_IP:false}
     trusted-proxy-cidrs: []

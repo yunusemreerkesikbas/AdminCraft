@@ -17,12 +17,13 @@ Implemented in this slice:
 - product listing/search route with paginated public delivery integration and detail links
 - customer auth/account foundation with memory-only access token state, refresh-cookie restore, login/register/logout, read-only profile summary, and cart merge state update
 - address book, checkout, payment return, and order history UI foundations
+- legal snapshot detail rendering and cancellation/return request UI foundations
 
 Not implemented yet:
 
 - final commerce visual design
-- legal snapshot rendering
-- cancellation/return/refund workflows and transactional notifications
+- production hardening around completed foundation flows
+- transactional notification management UI in the Angular tenant admin shell
 
 ## UI model convention
 

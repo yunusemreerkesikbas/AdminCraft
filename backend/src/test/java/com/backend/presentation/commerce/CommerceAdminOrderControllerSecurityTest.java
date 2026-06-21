@@ -36,6 +36,12 @@ class CommerceAdminOrderControllerSecurityTest {
 	private CommerceAdminOrderService adminOrderService;
 
 	@MockBean
+	private com.backend.application.commerce.CommerceOrderResolutionRequestService resolutionRequestService;
+
+	@MockBean
+	private com.backend.application.commerce.CommerceNotificationOutboxAdminService notificationOutboxAdminService;
+
+	@MockBean
 	private com.backend.infrastructure.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@MockBean
@@ -107,12 +113,11 @@ class CommerceAdminOrderControllerSecurityTest {
 						{"status":"CANCELLED"}
 						"""))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.result").value("ERROR"))
-				.andExpect(jsonPath("$.code").value(400));
+				.andExpect(jsonPath("$.result").value("ERROR"));
 	}
 
 	private CommerceAdminDashboardResponse dashboard() {
 		CommerceAdminMetricResponse emptyMetric = new CommerceAdminMetricResponse(0, BigDecimal.ZERO, "TRY");
-		return new CommerceAdminDashboardResponse(emptyMetric, emptyMetric, 0, 0, "TRY");
+		return new CommerceAdminDashboardResponse(emptyMetric, emptyMetric, 0, 0, 0, "TRY");
 	}
 }

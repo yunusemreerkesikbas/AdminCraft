@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
-import { ApiResponse } from '@core/crud/api.types';
+import { ApiResponse, Page, SearchRequest } from '@core/crud/api.types';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { map, Observable, throwError } from 'rxjs';
 import {
@@ -13,6 +13,7 @@ import {
     CommerceLegalTemplate,
     CommerceLegalTemplatePreview,
     CommerceLegalTemplateRequest,
+    CommerceNotificationOutboxRow,
     CommerceOrderResolutionDecisionRequest,
     CommerceOrderResolutionRequestRow,
 } from '../models/commerce.types';
@@ -180,6 +181,97 @@ export class CommerceAdminOrderRequestService extends CrudHttpService<
         _id: number,
         _dto: Partial<CommerceOrderResolutionRequestRow>
     ): Observable<CommerceOrderResolutionRequestRow> {
+        return readOnlyOperation();
+    }
+
+    override delete(_id: number): Observable<void> {
+        return readOnlyOperation();
+    }
+}
+
+@Injectable({ providedIn: 'root' })
+export class CommerceAdminNotificationOutboxService extends CrudHttpService<
+    CommerceNotificationOutboxRow,
+    Partial<CommerceNotificationOutboxRow>,
+    Partial<CommerceNotificationOutboxRow>
+> {
+    protected endpoints: CrudEndpoints = {
+        list: 'commerceAdminNotificationOutbox',
+        getById: 'commerceAdminNotificationOutbox',
+        create: 'commerceAdminNotificationOutbox',
+        update: 'commerceAdminNotificationOutbox',
+        delete: 'commerceAdminNotificationOutbox',
+    };
+
+    override listPaged(
+        request: SearchRequest & {
+            status?: string | null;
+            eventType?: string | null;
+            aggregateUid?: string | null;
+        }
+    ): Observable<Page<CommerceNotificationOutboxRow>> {
+        const queryParams: Record<string, string | number> = {
+            page: request.page ?? 0,
+            size: request.size ?? 20,
+            sort: request.sort ?? 'createdAt,desc',
+        };
+        if (request.search) {
+            queryParams['search'] = request.search;
+        }
+        if (request.status) {
+            queryParams['status'] = request.status;
+        }
+        if (request.eventType) {
+            queryParams['eventType'] = request.eventType;
+        }
+        if (request.aggregateUid) {
+            queryParams['aggregateUid'] = request.aggregateUid;
+        }
+        return this.api
+            .get<ApiResponse<Page<CommerceNotificationOutboxRow>>>(
+                'commerceAdminNotificationOutbox',
+                undefined,
+                queryParams
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    override getById(
+        _id: number,
+        _params?: Record<string, string | number>
+    ): Observable<CommerceNotificationOutboxRow> {
+        return readOnlyOperation();
+    }
+
+    getOutbox(outboxUid: string): Observable<CommerceNotificationOutboxRow> {
+        return this.api
+            .get<ApiResponse<CommerceNotificationOutboxRow>>(
+                'commerceAdminNotificationOutboxByUid',
+                { outboxUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    retry(outboxUid: string): Observable<CommerceNotificationOutboxRow> {
+        return this.api
+            .post<ApiResponse<CommerceNotificationOutboxRow>>(
+                'commerceAdminNotificationOutboxRetry',
+                {},
+                { outboxUid }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    override create(
+        _dto: Partial<CommerceNotificationOutboxRow>
+    ): Observable<CommerceNotificationOutboxRow> {
+        return readOnlyOperation();
+    }
+
+    override update(
+        _id: number,
+        _dto: Partial<CommerceNotificationOutboxRow>
+    ): Observable<CommerceNotificationOutboxRow> {
         return readOnlyOperation();
     }
 

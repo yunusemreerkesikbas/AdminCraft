@@ -60,6 +60,15 @@ public class CommerceNotificationOutbox extends BaseEntity {
 	@Column(nullable = false, length = 20)
 	private CommerceNotificationStatus status = CommerceNotificationStatus.PENDING;
 
+	@Column(name = "attempt_count", nullable = false)
+	private int attemptCount;
+
+	@Column(name = "last_attempted_at")
+	private LocalDateTime lastAttemptedAt;
+
+	@Column(name = "next_retry_at")
+	private LocalDateTime nextRetryAt;
+
 	@Column(name = "provider_message_id", length = 255)
 	private String providerMessageId;
 
