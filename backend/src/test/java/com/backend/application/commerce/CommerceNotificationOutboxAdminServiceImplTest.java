@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -117,6 +118,23 @@ class CommerceNotificationOutboxAdminServiceImplTest extends BaseServiceTest {
 
 		assertThat(retried).isEqualTo(1);
 		verify(dispatchService).dispatch(99L);
+	}
+
+	@Test
+	void retryDueNotificationsForCurrentTenant_ShouldContinue_WhenOneDispatchFails() {
+		CommerceNotificationOutbox first = outbox(CommerceNotificationStatus.FAILED, 1);
+		CommerceNotificationOutbox second = outbox(CommerceNotificationStatus.FAILED, 1);
+		second.setId(100L);
+		second.setUid("outbox-uid-2");
+		when(outboxRepository.findDueRetries(anyInt(), any(), any())).thenReturn(new PageImpl<>(List.of(first, second)));
+		doThrow(new RuntimeException("provider down")).when(dispatchService).dispatch(99L);
+		when(dispatchService.dispatch(100L)).thenReturn(second);
+
+		int retried = service.retryDueNotificationsForCurrentTenant();
+
+		assertThat(retried).isEqualTo(2);
+		verify(dispatchService).dispatch(99L);
+		verify(dispatchService).dispatch(100L);
 	}
 
 	private CommerceNotificationOutbox outbox(CommerceNotificationStatus status, int attemptCount) {

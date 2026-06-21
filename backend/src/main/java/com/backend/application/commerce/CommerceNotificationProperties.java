@@ -9,6 +9,10 @@ public class CommerceNotificationProperties {
 
 	private boolean retryJobEnabled = true;
 
+	/**
+	 * Maximum retry attempts after the initial dispatch attempt.
+	 * Total dispatch attempts are 1 initial attempt plus this retry count.
+	 */
 	private int maxRetryAttempts = 3;
 
 	private int retryBatchSize = 50;

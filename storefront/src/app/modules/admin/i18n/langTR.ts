@@ -2398,8 +2398,8 @@ export const langTR = {
                 filters: {
                     status: 'Durum',
                     allStatuses: 'Tüm durumlar',
-                    eventType: 'Event',
-                    allEvents: 'Tüm eventler',
+                    eventType: 'Olay türü',
+                    allEvents: 'Tüm olaylar',
                     aggregateUid: 'Aggregate UID',
                     aggregateUidPlaceholder: 'Filtrelemek için Enter',
                     clear: 'Filtreleri temizle',
@@ -2418,7 +2418,7 @@ export const langTR = {
                 },
                 fields: {
                     outboxUid: 'Outbox UID',
-                    eventType: 'Event',
+                    eventType: 'Olay türü',
                     recipient: 'Alıcı',
                     status: 'Durum',
                     attempts: 'Deneme',

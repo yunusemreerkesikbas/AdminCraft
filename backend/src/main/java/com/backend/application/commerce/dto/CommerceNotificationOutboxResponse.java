@@ -3,6 +3,7 @@ package com.backend.application.commerce.dto;
 import java.time.LocalDateTime;
 
 import com.backend.domain.commerce.CommerceNotificationOutbox;
+import com.backend.domain.commerce.CommerceNotificationStatus;
 
 public record CommerceNotificationOutboxResponse(
 		Long id,
@@ -44,7 +45,7 @@ public record CommerceNotificationOutboxResponse(
 				outbox.getStatus().name(),
 				outbox.getAttemptCount(),
 				maxRetryAttempts,
-				outbox.getStatus().name().equals("FAILED") && outbox.getAttemptCount() <= maxRetryAttempts,
+				outbox.getStatus() == CommerceNotificationStatus.FAILED && outbox.getAttemptCount() <= maxRetryAttempts,
 				outbox.getProviderMessageId(),
 				outbox.getErrorMessage(),
 				outbox.getLastAttemptedAt(),

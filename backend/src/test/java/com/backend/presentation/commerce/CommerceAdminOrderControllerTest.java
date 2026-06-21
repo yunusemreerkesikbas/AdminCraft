@@ -154,6 +154,26 @@ class CommerceAdminOrderControllerTest {
 	}
 
 	@Test
+	void getNotificationOutbox_ShouldReturnOutbox() {
+		CommerceAdminOrderController controller = new CommerceAdminOrderController(
+				adminOrderService,
+				null,
+				notificationOutboxAdminService,
+				messageSource);
+		CommerceNotificationOutboxResponse outbox = notificationOutbox();
+		when(notificationOutboxAdminService.getOutbox("outbox-uid")).thenReturn(outbox);
+		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
+				.thenAnswer(invocation -> "Outbox detail retrieved");
+
+		var result = controller.getNotificationOutbox("outbox-uid");
+
+		assertThat(result.getBody()).isNotNull();
+		assertThat(result.getBody().getMessage()).isEqualTo("Outbox detail retrieved");
+		assertThat(result.getBody().getData()).isEqualTo(outbox);
+		verify(notificationOutboxAdminService).getOutbox("outbox-uid");
+	}
+
+	@Test
 	void changeOrderStatus_ShouldPassCommandToServiceAndReturnMessage() {
 		CommerceAdminOrderController controller = new CommerceAdminOrderController(adminOrderService, messageSource);
 		when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))

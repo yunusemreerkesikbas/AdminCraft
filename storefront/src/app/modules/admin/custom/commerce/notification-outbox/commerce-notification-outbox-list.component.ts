@@ -195,14 +195,17 @@ export class SpaCommerceNotificationOutboxListComponent extends BasePaginatedLis
         if (search.length >= this.minSearchChars) {
             params.search = search;
         }
-        if (this.statusFilterSig()) {
-            params.status = this.statusFilterSig() ?? undefined;
+        const statusFilter = this.statusFilterSig();
+        const eventTypeFilter = this.eventTypeFilterSig();
+        const aggregateUidFilter = this.aggregateUidFilterSig();
+        if (statusFilter) {
+            params.status = statusFilter;
         }
-        if (this.eventTypeFilterSig()) {
-            params.eventType = this.eventTypeFilterSig() ?? undefined;
+        if (eventTypeFilter) {
+            params.eventType = eventTypeFilter;
         }
-        if (this.aggregateUidFilterSig()) {
-            params.aggregateUid = this.aggregateUidFilterSig();
+        if (aggregateUidFilter) {
+            params.aggregateUid = aggregateUidFilter;
         }
         return this.service.listPaged(params) as Observable<PageWithSort<CommerceNotificationOutboxRow>>;
     }

@@ -18,12 +18,15 @@ import com.backend.domain.commerce.CommerceNotificationStatus;
 import com.backend.domain.commerce.exception.CommerceDomainException;
 import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
 import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.shared.common.LogSanitizer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 class CommerceNotificationOutboxAdminServiceImpl implements CommerceNotificationOutboxAdminService {
 
 	private static final String OUTBOX_NOT_FOUND = "commerce.notification.outbox.not.found";
@@ -75,7 +78,17 @@ class CommerceNotificationOutboxAdminServiceImpl implements CommerceNotification
 				properties.getMaxRetryAttempts(),
 				LocalDateTime.now(),
 				PageRequest.of(0, properties.getRetryBatchSize()));
-		dueRetries.forEach(outbox -> dispatchService.dispatch(outbox.getId()));
+		dueRetries.forEach(outbox -> {
+			try {
+				dispatchService.dispatch(outbox.getId());
+			} catch (RuntimeException ex) {
+				log.warn(
+						"Commerce notification retry failed outboxUid={} outboxId={} reason={}",
+						outbox.getUid(),
+						outbox.getId(),
+						LogSanitizer.sanitizeForLog(ex.getMessage()));
+			}
+		});
 		return dueRetries.getNumberOfElements();
 	}
 

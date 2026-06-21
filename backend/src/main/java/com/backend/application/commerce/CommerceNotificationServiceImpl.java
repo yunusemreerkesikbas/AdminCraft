@@ -148,6 +148,7 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 			CommerceNotificationOutbox saved = outboxRepository.save(outbox);
 			dispatchService.dispatchAfterCommit(saved.getId());
 		} catch (RuntimeException ex) {
+			// Notification queueing is intentionally non-blocking so order workflows can complete.
 			log.warn(
 					"Commerce notification queue failed event={} aggregateType={} aggregateUid={} reason={}",
 					eventType,
