@@ -63,6 +63,7 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 	private final List<CommercePaymentProviderPort> paymentProviders;
 	private final CommercePaymentConfigResolver paymentConfigResolver;
 	private final TransactionTemplate transactionTemplate;
+	private final CommerceNotificationService notificationService;
 
 	@Override
 	@Transactional
@@ -94,7 +95,9 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 		request.setPreviousOrderStatus(previousStatus);
 		request.setRequestedOrderStatus(requestedStatus);
 		request.setRefundStatus(CommerceOrderResolutionRefundStatus.NOT_ATTEMPTED);
-		return CustomerOrderResolutionRequestResponse.from(requestRepository.save(request));
+		CommerceOrderResolutionRequest saved = requestRepository.save(request);
+		notificationService.notifyOrderRequestCreated(saved);
+		return CustomerOrderResolutionRequestResponse.from(saved);
 	}
 
 	@Override
@@ -222,7 +225,9 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 		order.setStatusChangedAt(now);
 		order.addStatusHistory(history(fromStatus, finalStatus, request.getDecisionNote()));
 		restoreStockIfNeeded(request);
-		return CommerceOrderResolutionRequestResponse.from(requestRepository.save(request));
+		CommerceOrderResolutionRequest saved = requestRepository.save(request);
+		notificationService.notifyOrderRequestDecided(saved);
+		return CommerceOrderResolutionRequestResponse.from(saved);
 	}
 
 	private CommerceOrderResolutionRequestResponse reject(String requestUid, String note) {
@@ -240,7 +245,9 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 		request.setDecidedAt(now);
 		request.setDecidedByUserId(SecurityUtil.getCurrentUserId());
 		request.setDecidedByEmail(SecurityUtil.getCurrentUserEmail());
-		return CommerceOrderResolutionRequestResponse.from(requestRepository.save(request));
+		CommerceOrderResolutionRequest saved = requestRepository.save(request);
+		notificationService.notifyOrderRequestDecided(saved);
+		return CommerceOrderResolutionRequestResponse.from(saved);
 	}
 
 	private void assertDecidable(CommerceOrderResolutionRequest request) {

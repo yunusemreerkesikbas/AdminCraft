@@ -1,0 +1,108 @@
+<div class="bg-card flex min-w-0 flex-auto flex-col overflow-hidden sm:absolute sm:inset-0 dark:bg-transparent">
+    <admin-page-header
+        [title]="outboxSig()?.eventType || ('admin.commerce.notificationOutbox.detailTitle' | transloco)"
+        [subtitle]="'admin.commerce.notificationOutbox.detailSubtitle' | transloco"
+        [showCreateButton]="false"
+        [showSearch]="false"
+        [isLoading]="isLoadingSig()"
+    >
+        <ng-container actions>
+            <a mat-stroked-button routerLink="../">
+                <span>{{ 'admin.common.actions.back' | transloco }}</span>
+            </a>
+            @if (outboxSig()?.retryAllowed) {
+                <button mat-flat-button color="primary" type="button" [disabled]="isRetryingSig()" (click)="retry()">
+                    <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
+                    <span>{{ 'admin.commerce.notificationOutbox.actions.retry' | transloco }}</span>
+                </button>
+            }
+        </ng-container>
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-y-auto p-6 md:p-8">
+        @if (isLoadingSig() && !outboxSig()) {
+            <div class="flex flex-auto items-center justify-center py-16">
+                <mat-progress-spinner mode="indeterminate" diameter="48" />
+            </div>
+        } @else {
+            @if (outboxSig(); as outbox) {
+                <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
+                    <section class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="mb-5 flex flex-wrap items-center gap-3">
+                            <spa-status-badge [status]="outbox.status" size="sm" />
+                            <span class="rounded bg-slate-100 px-2 py-1 text-xs font-semibold dark:bg-slate-800">
+                                {{ outbox.channel }}
+                            </span>
+                        </div>
+                        <dl class="grid gap-4 text-sm md:grid-cols-2">
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.outboxUid' | transloco }}</dt>
+                                <dd class="font-medium">{{ outbox.outboxUid }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.recipient' | transloco }}</dt>
+                                <dd class="font-medium">{{ outbox.recipientEmail }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.aggregate' | transloco }}</dt>
+                                <dd>{{ outbox.aggregateType }} / {{ outbox.aggregateUid }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.language' | transloco }}</dt>
+                                <dd>{{ outbox.language }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.createdAt' | transloco }}</dt>
+                                <dd>{{ outbox.createdAt | date: 'medium' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-500">{{ 'admin.commerce.notificationOutbox.fields.updatedAt' | transloco }}</dt>
+                                <dd>{{ outbox.updatedAt | date: 'medium' }}</dd>
+                            </div>
+                        </dl>
+
+                        <div class="mt-6 border-t pt-5">
+                            <h2 class="mb-2 text-base font-semibold">{{ outbox.subject }}</h2>
+                            <p class="whitespace-pre-line break-words text-sm text-slate-600 dark:text-slate-300">{{ outbox.content }}</p>
+                        </div>
+                    </section>
+
+                    <aside class="flex flex-col gap-6">
+                        <section class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                            <h2 class="mb-4 text-lg font-semibold">{{ 'admin.commerce.notificationOutbox.delivery' | transloco }}</h2>
+                            <dl class="space-y-3 text-sm">
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.notificationOutbox.fields.attempts' | transloco }}</dt>
+                                    <dd>{{ outbox.attemptCount }} / {{ outbox.maxRetryAttempts + 1 }}</dd>
+                                </div>
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.notificationOutbox.fields.lastAttemptedAt' | transloco }}</dt>
+                                    <dd class="text-right">{{ outbox.lastAttemptedAt ? (outbox.lastAttemptedAt | date: 'medium') : '-' }}</dd>
+                                </div>
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.notificationOutbox.fields.nextRetryAt' | transloco }}</dt>
+                                    <dd class="text-right">{{ outbox.nextRetryAt ? (outbox.nextRetryAt | date: 'medium') : '-' }}</dd>
+                                </div>
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.notificationOutbox.fields.sentAt' | transloco }}</dt>
+                                    <dd class="text-right">{{ outbox.sentAt ? (outbox.sentAt | date: 'medium') : '-' }}</dd>
+                                </div>
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{ 'admin.commerce.notificationOutbox.fields.providerMessageId' | transloco }}</dt>
+                                    <dd class="truncate text-right">{{ outbox.providerMessageId || '-' }}</dd>
+                                </div>
+                            </dl>
+                        </section>
+
+                        <section class="rounded border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                            <h2 class="mb-4 text-lg font-semibold">{{ 'admin.commerce.notificationOutbox.error' | transloco }}</h2>
+                            <p class="whitespace-pre-line break-words text-sm text-slate-600 dark:text-slate-300">
+                                {{ outbox.errorMessage || ('admin.commerce.common.emptyValue' | transloco) }}
+                            </p>
+                        </section>
+                    </aside>
+                </div>
+            }
+        }
+    </div>
+</div>

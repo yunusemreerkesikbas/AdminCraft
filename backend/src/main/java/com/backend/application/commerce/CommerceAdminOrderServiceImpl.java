@@ -24,8 +24,10 @@ import com.backend.application.commerce.dto.CommerceAdminPaymentAttemptResponse;
 import com.backend.domain.commerce.CommerceOrder;
 import com.backend.domain.commerce.CommerceOrderStatus;
 import com.backend.domain.commerce.CommerceOrderStatusHistory;
+import com.backend.domain.commerce.CommerceNotificationStatus;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 import com.backend.domain.commerce.exception.CommerceDomainException;
+import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.commerce.repository.CommercePaymentAttemptRepository;
 import com.backend.domain.port.TenantContextPort;
@@ -50,9 +52,11 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 
 	private final CommerceOrderRepository orderRepository;
 	private final CommercePaymentAttemptRepository paymentAttemptRepository;
+	private final CommerceNotificationOutboxRepository notificationOutboxRepository;
 	private final CommerceModuleAccessGuard commerceModuleAccessGuard;
 	private final TenantContextPort tenantContext;
 	private final ObjectMapper objectMapper;
+	private final CommerceNotificationService notificationService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -70,11 +74,13 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 		long failedAttemptCount = paymentAttemptRepository.countByStatusAndCreatedAtGreaterThanEqual(
 				CommercePaymentAttemptStatus.FAILED,
 				sevenDaysStart);
+		long failedNotificationCount = notificationOutboxRepository.countByStatus(CommerceNotificationStatus.FAILED);
 		return new CommerceAdminDashboardResponse(
 				todayMetric,
 				lastSevenDaysMetric,
 				attentionOrderCount,
 				failedAttemptCount,
+				failedNotificationCount,
 				currencyIso);
 	}
 
@@ -157,6 +163,9 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 
 		CommerceOrder saved = orderRepository.save(order);
 		orderRepository.flush();
+		if (toStatus == CommerceOrderStatus.SHIPPED) {
+			notificationService.notifyOrderShipped(saved);
+		}
 		return CommerceAdminOrderDetailResponse.from(
 				saved,
 				addressSnapshot(saved.getDeliveryAddressSnapshot()),

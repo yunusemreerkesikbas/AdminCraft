@@ -2,6 +2,7 @@ package com.backend.application.commerce;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,9 +31,11 @@ import com.backend.domain.commerce.CommerceOrderItem;
 import com.backend.domain.commerce.CommerceOrderLegalSnapshotStatus;
 import com.backend.domain.commerce.CommerceOrderStatus;
 import com.backend.domain.commerce.CommerceOrderStatusHistory;
+import com.backend.domain.commerce.CommerceNotificationStatus;
 import com.backend.domain.commerce.exception.CommerceDomainException;
 import com.backend.domain.commerce.CommercePaymentAttempt;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
+import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.commerce.repository.CommercePaymentAttemptRepository;
 import com.backend.domain.port.TenantContextPort;
@@ -44,8 +47,10 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 
 	@Mock private CommerceOrderRepository orderRepository;
 	@Mock private CommercePaymentAttemptRepository paymentAttemptRepository;
+	@Mock private CommerceNotificationOutboxRepository notificationOutboxRepository;
 	@Mock private CommerceModuleAccessGuard commerceModuleAccessGuard;
 	@Mock private TenantContextPort tenantContext;
+	@Mock private CommerceNotificationService notificationService;
 
 	private CommerceAdminOrderServiceImpl service;
 
@@ -54,9 +59,11 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		service = new CommerceAdminOrderServiceImpl(
 				orderRepository,
 				paymentAttemptRepository,
+				notificationOutboxRepository,
 				commerceModuleAccessGuard,
 				tenantContext,
-				new ObjectMapper());
+				new ObjectMapper(),
+				notificationService);
 	}
 
 	@Test
@@ -70,6 +77,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		when(paymentAttemptRepository.countByStatusAndCreatedAtGreaterThanEqual(
 				org.mockito.ArgumentMatchers.eq(CommercePaymentAttemptStatus.FAILED),
 				org.mockito.ArgumentMatchers.any())).thenReturn(3L);
+		when(notificationOutboxRepository.countByStatus(CommerceNotificationStatus.FAILED)).thenReturn(4L);
 
 		CommerceAdminDashboardResponse response = service.dashboard();
 
@@ -78,6 +86,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(response.lastSevenDays().orderCount()).isEqualTo(5);
 		assertThat(response.attentionOrderCount()).isEqualTo(1);
 		assertThat(response.failedPaymentAttemptCount()).isEqualTo(3);
+		assertThat(response.failedNotificationCount()).isEqualTo(4);
 		assertThat(response.currencyIso()).isEqualTo("TRY");
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
 	}
@@ -207,6 +216,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(order.getStatusHistory().getFirst().getInternalNote()).isEqualTo("Pack carefully");
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
 		verify(orderRepository).flush();
+		verify(notificationService, org.mockito.Mockito.never()).notifyOrderShipped(any());
 	}
 
 	@Test
@@ -245,6 +255,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(order.getStatusHistory()).hasSize(1);
 		assertThat(order.getStatusHistory().getFirst().getShippingCarrierName()).isEqualTo("Yurtiçi");
 		verify(orderRepository).flush();
+		verify(notificationService).notifyOrderShipped(order);
 	}
 
 	@Test
@@ -267,6 +278,7 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(response.fulfillment().deliveredAt()).isNotNull();
 		assertThat(response.statusHistory().getFirst().toStatus()).isEqualTo("DELIVERED");
 		verify(orderRepository).flush();
+		verify(notificationService, org.mockito.Mockito.never()).notifyOrderShipped(any());
 	}
 
 	@Test

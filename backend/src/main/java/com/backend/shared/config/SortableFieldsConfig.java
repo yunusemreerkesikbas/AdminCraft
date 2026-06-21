@@ -229,6 +229,21 @@ public final class SortableFieldsConfig {
 			SortOptionDto.of("type,asc", "admin.commerce.sort.typeAsc"),
 			SortOptionDto.of("refundStatus,asc", "admin.commerce.sort.refundStatusAsc"));
 
+	public static final Set<String> COMMERCE_NOTIFICATION_OUTBOX_ALLOWED_FIELDS = Set.of(
+			"createdAt", "status", "eventType", "lastAttemptedAt", "nextRetryAt");
+
+	public static final String COMMERCE_NOTIFICATION_OUTBOX_DEFAULT_SORT = "createdAt,desc";
+
+	public static final List<SortOptionDto> COMMERCE_NOTIFICATION_OUTBOX_SORT_OPTIONS = List.of(
+			SortOptionDto.defaultOption("createdAt,desc", "admin.commerce.sort.newest"),
+			SortOptionDto.of("createdAt,asc", "admin.commerce.sort.oldest"),
+			SortOptionDto.of("status,asc", "admin.commerce.sort.statusAsc"),
+			SortOptionDto.of("status,desc", "admin.commerce.sort.statusDesc"),
+			SortOptionDto.of("eventType,asc", "admin.commerce.sort.eventTypeAsc"),
+			SortOptionDto.of("eventType,desc", "admin.commerce.sort.eventTypeDesc"),
+			SortOptionDto.of("lastAttemptedAt,desc", "admin.commerce.sort.lastAttemptedDesc"),
+			SortOptionDto.of("nextRetryAt,asc", "admin.commerce.sort.nextRetryAsc"));
+
         // ========== Tenant Entity ==========
         public static final Set<String> TENANT_ALLOWED_FIELDS = Set.of(
                         "createdAt", "companyName", "subdomain", "status");

@@ -14,20 +14,25 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.commerce.CommerceAdminOrderService;
+import com.backend.application.commerce.CommerceNotificationOutboxAdminService;
 import com.backend.application.commerce.CommerceOrderResolutionRequestService;
 import com.backend.application.commerce.dto.ChangeCommerceOrderStatusCommand;
+import com.backend.application.commerce.dto.CommerceNotificationOutboxResponse;
 import com.backend.application.commerce.dto.CommerceOrderResolutionDecisionCommand;
 import com.backend.application.commerce.dto.CommerceOrderResolutionRequestResponse;
 import com.backend.application.commerce.dto.CommerceAdminDashboardResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderDetailResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderSummaryResponse;
 import com.backend.application.commerce.dto.CommerceAdminPaymentAttemptResponse;
+import com.backend.domain.commerce.CommerceNotificationEventType;
+import com.backend.domain.commerce.CommerceNotificationStatus;
 import com.backend.domain.commerce.CommerceOrderStatus;
 import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 import com.backend.domain.commerce.CommerceOrderResolutionRequestStatus;
@@ -52,20 +57,23 @@ public class CommerceAdminOrderController {
 
 	private final CommerceAdminOrderService adminOrderService;
 	private final CommerceOrderResolutionRequestService resolutionRequestService;
+	private final CommerceNotificationOutboxAdminService notificationOutboxAdminService;
 	private final MessageSource messageSource;
 
 	@Autowired
 	public CommerceAdminOrderController(
 			CommerceAdminOrderService adminOrderService,
 			CommerceOrderResolutionRequestService resolutionRequestService,
+			CommerceNotificationOutboxAdminService notificationOutboxAdminService,
 			MessageSource messageSource) {
 		this.adminOrderService = adminOrderService;
 		this.resolutionRequestService = resolutionRequestService;
+		this.notificationOutboxAdminService = notificationOutboxAdminService;
 		this.messageSource = messageSource;
 	}
 
 	CommerceAdminOrderController(CommerceAdminOrderService adminOrderService, MessageSource messageSource) {
-		this(adminOrderService, null, messageSource);
+		this(adminOrderService, null, null, messageSource);
 	}
 
 	@GetMapping("/dashboard")
@@ -202,6 +210,52 @@ public class CommerceAdminOrderController {
 		return ResponseEntity.ok(ApiResponse.success(
 				message("commerce.admin.order.request.decided"),
 				response));
+	}
+
+	@GetMapping("/notifications/outbox")
+	public ResponseEntity<ApiResponse<PageableResponse<CommerceNotificationOutboxResponse>>> listNotificationOutbox(
+			@RequestParam(defaultValue = "0") @Min(0) int page,
+			@RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+			@RequestParam(required = false) String sort,
+			@RequestParam(required = false) @Size(max = 200) String search,
+			@RequestParam(required = false) CommerceNotificationStatus status,
+			@RequestParam(required = false) CommerceNotificationEventType eventType,
+			@RequestParam(required = false) @Size(max = 50) String aggregateUid) {
+		String effectiveSort = SortParseUtil.getEffectiveSortCode(
+				sort,
+				SortableFieldsConfig.COMMERCE_NOTIFICATION_OUTBOX_DEFAULT_SORT);
+		Sort sortObj = SortParseUtil.parse(
+				effectiveSort,
+				SortableFieldsConfig.COMMERCE_NOTIFICATION_OUTBOX_ALLOWED_FIELDS,
+				SortableFieldsConfig.COMMERCE_NOTIFICATION_OUTBOX_DEFAULT_SORT);
+		Page<CommerceNotificationOutboxResponse> outbox = notificationOutboxAdminService.listOutbox(
+				PageRequest.of(page, size, sortObj),
+				search,
+				status,
+				eventType,
+				aggregateUid);
+		SortConfig sortConfig = SortConfig.of(
+				effectiveSort,
+				SortableFieldsConfig.COMMERCE_NOTIFICATION_OUTBOX_SORT_OPTIONS);
+		return ResponseEntity.ok(ApiResponse.success(
+				message("commerce.admin.notification.outbox.retrieved"),
+				PageableResponse.from(outbox, sortConfig)));
+	}
+
+	@GetMapping("/notifications/outbox/{outboxUid}")
+	public ResponseEntity<ApiResponse<CommerceNotificationOutboxResponse>> getNotificationOutbox(
+			@PathVariable @Uid String outboxUid) {
+		return ResponseEntity.ok(ApiResponse.success(
+				message("commerce.admin.notification.outbox.detail.retrieved"),
+				notificationOutboxAdminService.getOutbox(outboxUid)));
+	}
+
+	@PostMapping("/notifications/outbox/{outboxUid}/retry")
+	public ResponseEntity<ApiResponse<CommerceNotificationOutboxResponse>> retryNotificationOutbox(
+			@PathVariable @Uid String outboxUid) {
+		return ResponseEntity.ok(ApiResponse.success(
+				message("commerce.admin.notification.outbox.retry.completed"),
+				notificationOutboxAdminService.retry(outboxUid)));
 	}
 
 	private String message(String key) {

@@ -5,5 +5,6 @@ public record CommerceAdminDashboardResponse(
 		CommerceAdminMetricResponse lastSevenDays,
 		long attentionOrderCount,
 		long failedPaymentAttemptCount,
+		long failedNotificationCount,
 		String currencyIso) {
 }

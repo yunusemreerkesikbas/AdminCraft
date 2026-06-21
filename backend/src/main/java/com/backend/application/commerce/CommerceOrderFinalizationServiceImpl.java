@@ -55,6 +55,7 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 	private final ConfigPropertyService configPropertyService;
 	private final TenantContextPort tenantContext;
 	private final ObjectMapper objectMapper;
+	private final CommerceNotificationService notificationService;
 
 	@Override
 	@Transactional
@@ -87,7 +88,9 @@ class CommerceOrderFinalizationServiceImpl implements CommerceOrderFinalizationS
 			cart.setStatus(CommerceCartStatus.CLEARED);
 		}
 		lockedCheckout.setStatus(CommerceCheckoutStatus.COMPLETED);
-		return orderRepository.save(order);
+		CommerceOrder saved = orderRepository.save(order);
+		notificationService.notifyOrderPaid(saved);
+		return saved;
 	}
 
 	private CommerceOrder buildOrder(

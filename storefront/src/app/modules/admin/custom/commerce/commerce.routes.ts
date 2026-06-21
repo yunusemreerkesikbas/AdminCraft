@@ -6,6 +6,8 @@ import { SpaCommercePaymentAttemptListComponent } from './payment-attempts/comme
 import { SpaCommerceOrderRequestListComponent } from './order-requests/commerce-order-request-list.component';
 import { SpaCommerceOrderRequestDetailComponent } from './order-requests/commerce-order-request-detail.component';
 import { SpaCommerceLegalTemplateListComponent } from './legal-templates/commerce-legal-template-list.component';
+import { SpaCommerceNotificationOutboxListComponent } from './notification-outbox/commerce-notification-outbox-list.component';
+import { SpaCommerceNotificationOutboxDetailComponent } from './notification-outbox/commerce-notification-outbox-detail.component';
 
 export default [
     {
@@ -36,6 +38,14 @@ export default [
     {
         path: 'order-requests/:requestUid',
         component: SpaCommerceOrderRequestDetailComponent,
+    },
+    {
+        path: 'notification-outbox',
+        component: SpaCommerceNotificationOutboxListComponent,
+    },
+    {
+        path: 'notification-outbox/:outboxUid',
+        component: SpaCommerceNotificationOutboxDetailComponent,
     },
     {
         path: 'legal-templates',

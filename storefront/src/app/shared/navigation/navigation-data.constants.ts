@@ -161,6 +161,15 @@ export const DEFAULT_NAVIGATION_ITEMS: NavigationItem[] = [
                 requiredRole: 'TENANT_ADMIN',
             },
             {
+                id: 'commerce.notificationOutbox',
+                title: 'admin.nav.commerceNotificationOutbox',
+                type: 'basic',
+                icon: 'heroicons_outline:bell-alert',
+                link: 'commerce/notification-outbox',
+                requiredModule: NAVIGATION_MODULES.COMMERCE,
+                requiredRole: 'TENANT_ADMIN',
+            },
+            {
                 id: 'commerce.legalTemplates',
                 title: 'admin.nav.commerceLegalTemplates',
                 type: 'basic',

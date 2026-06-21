@@ -50,6 +50,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	@Mock private CommerceProductVariantStockPort stockPort;
 	@Mock private ConfigPropertyService configPropertyService;
 	@Mock private TenantContextPort tenantContext;
+	@Mock private CommerceNotificationService notificationService;
 
 	private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 	private CommerceOrderFinalizationServiceImpl service;
@@ -63,7 +64,8 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 				stockPort,
 				configPropertyService,
 				tenantContext,
-				objectMapper);
+				objectMapper,
+				notificationService);
 		lenient().when(tenantContext.getTenantId()).thenReturn("1");
 		lenient().when(tenantContext.getTenantDbName()).thenReturn("tenant_1");
 		lenient().when(configPropertyService.findRaw(1L, "tenant_1", "commerce.order.number_prefix"))
@@ -98,6 +100,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		assertThat(attempt.getCheckout().getCart().getStatus()).isEqualTo(CommerceCartStatus.CLEARED);
 		assertThat(attempt.getCheckout().getStatus()).isEqualTo(CommerceCheckoutStatus.COMPLETED);
 		verify(stockPort).deductIfAvailable(Map.of("variant-uid", 2));
+		verify(notificationService).notifyOrderPaid(order);
 	}
 
 	@Test
@@ -153,6 +156,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		assertThat(order.isRequiresAttention()).isTrue();
 		assertThat(order.getAttentionReasonKey()).isEqualTo("commerce.order.attention.legal_snapshot_not_captured");
 		assertThat(order.getStatus()).isEqualTo(CommerceOrderStatus.PAID);
+		verify(notificationService).notifyOrderPaid(order);
 	}
 
 	@Test
@@ -246,6 +250,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		assertThat(order).isSameAs(existing);
 		verify(stockPort, never()).deductIfAvailable(any());
 		verify(orderRepository, never()).save(any());
+		verify(notificationService, never()).notifyOrderPaid(any());
 	}
 
 	@Test
