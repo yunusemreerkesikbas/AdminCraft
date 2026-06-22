@@ -47,6 +47,7 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 	@Mock private CommercePaymentConfigResolver paymentConfigResolver;
 	@Mock private TransactionTemplate transactionTemplate;
 	@Mock private CommerceNotificationService notificationService;
+	@Mock private CommerceAdminNotificationService adminNotificationService;
 
 	private CommerceOrderResolutionRequestServiceImpl service;
 
@@ -60,7 +61,8 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 				List.of(paymentProvider),
 				paymentConfigResolver,
 				transactionTemplate,
-				notificationService);
+				notificationService,
+				adminNotificationService);
 		lenient().when(paymentProvider.providerCode()).thenReturn("iyzico");
 		lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
 			TransactionCallback<?> callback = invocation.getArgument(0);
@@ -89,6 +91,7 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 		assertThat(response.status()).isEqualTo("PENDING");
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
 		verify(notificationService).notifyOrderRequestCreated(any(CommerceOrderResolutionRequest.class));
+		verify(adminNotificationService).notifyOrderRequestCreated(any(CommerceOrderResolutionRequest.class));
 	}
 
 	@Test
@@ -184,6 +187,7 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 		assertThat(request.getRefundFailureCode()).isEqualTo("REFUND_FAILED");
 		verify(stockPort, never()).restore(any());
 		verify(notificationService, never()).notifyOrderRequestDecided(any());
+		verify(adminNotificationService).notifyRefundOperationFailed(request);
 	}
 
 	@Test

@@ -75,6 +75,10 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 	private static final String DEFAULT_COUNTRY = "Turkey";
 	private static final String DEFAULT_CATEGORY = "Product";
 	private static final String DEFAULT_CLIENT_IP = "127.0.0.1";
+	private static final String PROVIDER_INITIALIZE_FAILED = "PROVIDER_INITIALIZE_FAILED";
+	private static final String PROVIDER_RETRIEVE_FAILED = "PROVIDER_RETRIEVE_FAILED";
+	private static final String OPERATION_PAYMENT_INITIALIZE = "PAYMENT_INITIALIZE";
+	private static final String OPERATION_PAYMENT_RETRIEVE = "PAYMENT_RETRIEVE";
 
 	private final CommerceModuleAccessGuard commerceModuleAccessGuard;
 	private final CommerceCheckoutRepository checkoutRepository;
@@ -87,6 +91,7 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 	private final EncryptionServicePort encryptionService;
 	private final ObjectMapper objectMapper;
 	private final List<CommercePaymentProviderPort> paymentProviders;
+	private final CommerceAdminNotificationService adminNotificationService;
 
 	@Override
 	@Transactional
@@ -161,10 +166,12 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 					saved.getProvider(),
 					result.paymentPageUrl());
 		} catch (CommercePaymentProviderException ex) {
-			markProviderFailure(attempt, null, "commerce.payment.provider.initialize.failed");
+			markProviderFailure(attempt, PROVIDER_INITIALIZE_FAILED, "commerce.payment.provider.initialize.failed");
+			adminNotificationService.notifyPaymentOperationFailed(attempt, OPERATION_PAYMENT_INITIALIZE);
 			throw ex;
 		} catch (RuntimeException ex) {
-			markProviderFailure(attempt, null, "commerce.payment.provider.initialize.failed");
+			markProviderFailure(attempt, PROVIDER_INITIALIZE_FAILED, "commerce.payment.provider.initialize.failed");
+			adminNotificationService.notifyPaymentOperationFailed(attempt, OPERATION_PAYMENT_INITIALIZE);
 			throw new CommercePaymentProviderException("commerce.payment.provider.initialize.failed", ex);
 		}
 	}
@@ -200,7 +207,8 @@ class PaymentAttemptServiceImpl implements PaymentAttemptService {
 							attempt.getUid(),
 							token.trim()));
 		} catch (CommercePaymentProviderException ex) {
-			markProviderFailure(attempt, "PROVIDER_RETRIEVE_FAILED", "commerce.payment.provider.retrieve.failed");
+			markProviderFailure(attempt, PROVIDER_RETRIEVE_FAILED, "commerce.payment.provider.retrieve.failed");
+			adminNotificationService.notifyPaymentOperationFailed(attempt, OPERATION_PAYMENT_RETRIEVE);
 			return redirectUrlForStatus(attempt, config, null);
 		}
 		if (result.successful()) {

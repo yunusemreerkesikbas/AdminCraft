@@ -82,6 +82,18 @@ export class SpaCommerceNotificationOutboxListComponent extends BasePaginatedLis
             value: 'ORDER_REQUEST_REJECTED',
             labelKey: 'admin.commerce.notificationOutbox.events.requestRejected',
         },
+        {
+            value: 'ADMIN_ORDER_CREATED',
+            labelKey: 'admin.commerce.notificationOutbox.events.adminOrderCreated',
+        },
+        {
+            value: 'ADMIN_ORDER_REQUEST_CREATED',
+            labelKey: 'admin.commerce.notificationOutbox.events.adminOrderRequestCreated',
+        },
+        {
+            value: 'ADMIN_PAYMENT_OPERATION_FAILED',
+            labelKey: 'admin.commerce.notificationOutbox.events.adminPaymentOperationFailed',
+        },
     ];
 
     protected override onInit(): void {

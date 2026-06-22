@@ -4,7 +4,7 @@
 
 Commerce is the tenant module foundation for customer account, cart, checkout, payment, order, fulfillment, and transactional commerce flows.
 
-The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, customer cancellation/return requests, tenant admin commerce visibility, manual admin order status transitions, single-shipment manual fulfillment tracking, admin cancellation/return decision workflow, full iyzico refund on approval, versioned legal template management, checkout legal readiness and customer acceptance, rendered order legal snapshot capture, customer transactional email v1, customer transactional SMS foundation with console delivery, notification outbox admin visibility with manual/automatic retry, notification template management UI/API, and a standalone `commerce-ui` Next.js storefront shell with minimal design, cart foundation integration, product listing/search, product detail delivery, real variant add-to-cart wiring, customer auth/account foundation, address book, checkout, legal document acceptance, payment return, order history, legal snapshot detail, and cancellation/return request UI foundations.
+The current implementation includes the module foundation, anonymous cart foundation, backend customer account foundation, customer-cart bridge, checkout foundation, payment attempt foundation, hosted iyzico CheckoutForm sandbox init/callback foundation, backend order finalization after successful payment, customer order read APIs, customer cancellation/return requests, tenant admin commerce visibility, manual admin order status transitions, single-shipment manual fulfillment tracking, admin cancellation/return decision workflow, full iyzico refund on approval, versioned legal template management, checkout legal readiness and customer acceptance, rendered order legal snapshot capture, customer transactional email v1, customer transactional SMS foundation with console delivery, admin email alerts, notification outbox admin visibility with manual/automatic retry, notification template management UI/API, and a standalone `commerce-ui` Next.js storefront shell with minimal design, cart foundation integration, product listing/search, product detail delivery, real variant add-to-cart wiring, customer auth/account foundation, address book, checkout, legal document acceptance, payment return, order history, legal snapshot detail, and cancellation/return request UI foundations.
 
 Commerce depends on Product Catalog. A tenant cannot provision or sync commerce without `product`.
 
@@ -24,12 +24,12 @@ Implemented foundations:
 - Hosted iyzico CheckoutForm sandbox initialization and callback handling through a payment provider port.
 - Customer-facing paid order creation after successful payment, daily order number counters, idempotent callback finalization, cart clear, checkout completion, stock decrement, rendered legal snapshot capture, and customer order-paid transactional email.
 - Tenant admin commerce operations: dashboard summary, order list/detail, payment attempt history, order request list/detail, legal template list/detail/create/update/publish/archive/preview, notification template list/detail/update/preview, commerce sidebar navigation, strictly forward order status transitions, fulfillment capture, cancellation/return approval or rejection, full refund trigger, and status history timeline.
-- Commerce-owned customer transactional email v1 with TR/EN seed templates, config toggles, outbox status capture, platform-managed provider delivery for order paid, order shipped, request created, request approved, and request rejected events, plus admin outbox visibility and retry operations.
+- Commerce-owned customer transactional email v1 and admin email alerts with TR/EN seed templates, config toggles, outbox status capture, platform-managed provider delivery for order paid, order shipped, request created, request approved, request rejected, new order, new cancellation/return request, and payment/refund operational failure events, plus admin outbox visibility and retry operations.
 - Standalone `commerce-ui` Next.js app shell, minimal storefront design skeleton, typed cart API client, localStorage cart token foundation, cart provider, cart page read/mutation wiring, header cart badge, product listing/search route, product detail delivery client, variant selector, real add-to-cart action, customer auth/account foundation with refresh-cookie restore and memory-only access token state, address book, checkout, checkout legal document acceptance, payment return, order history, order legal snapshot display, and cancellation/return request UI foundations.
 
 Not implemented yet:
 
-- İleti Merkezi SMS provider adapter and admin notification alerts.
+- İleti Merkezi SMS provider adapter.
 - Guest checkout, coupons/promotions, advanced analytics, multi-currency, and additional payment providers.
 
 ## Database
@@ -55,6 +55,7 @@ Current tenant migrations:
 - `V1.0.11__transactional_notification_foundation.sql` creates commerce-owned customer email notification templates and outbox tables, and seeds TR/EN templates for order paid, shipped, request created, request approved, and request rejected events.
 - `V1.0.12__commerce_notification_operations.sql` adds outbox retry tracking fields and retry lookup indexing.
 - `V1.0.13__commerce_sms_notification_foundation.sql` expands notification templates/outbox to `SMS`, adds phone recipients, and seeds TR/EN customer SMS templates.
+- `V1.0.14__commerce_admin_notification_alerts.sql` expands notification event constraints and seeds TR/EN admin email alert templates.
 
 Module execution order is documented in [`../global/migrations.md`](../global/migrations.md). Commerce runs after `product`.
 
@@ -243,13 +244,15 @@ Commerce owns its customer transactional notification model. It does not depend 
 
 Email/SMS v1 behavior:
 
-- `commerce_notification_templates` stores TR/EN seed templates for `ORDER_PAID`, `ORDER_SHIPPED`, `ORDER_REQUEST_CREATED`, `ORDER_REQUEST_APPROVED`, and `ORDER_REQUEST_REJECTED`.
+- `commerce_notification_templates` stores TR/EN seed templates for `ORDER_PAID`, `ORDER_SHIPPED`, `ORDER_REQUEST_CREATED`, `ORDER_REQUEST_APPROVED`, `ORDER_REQUEST_REJECTED`, `ADMIN_ORDER_CREATED`, `ADMIN_ORDER_REQUEST_CREATED`, and `ADMIN_PAYMENT_OPERATION_FAILED`.
 - `commerce_notification_outbox` stores channel, subject/content snapshots, recipient email or phone, language, status (`PENDING`, `SENT`, `FAILED`), attempt count, last attempt timestamp, next retry timestamp, provider message id, error message, and sent timestamp.
 - `commerce.notifications.email.enabled` defaults to `false`.
 - Event overrides use `commerce.notifications.email.<event>.enabled` such as `commerce.notifications.email.order_shipped.enabled`; missing event keys inherit the global email toggle.
+- `commerce.notifications.admin.email.enabled` defaults to `false`. Event overrides use `commerce.notifications.admin.email.<event>.enabled`; missing event keys inherit the global admin email toggle.
 - `commerce.notifications.sms.enabled` defaults to `false`. Event overrides use `commerce.notifications.sms.<event>.enabled`.
 - Email is sent after the surrounding commerce transaction commits. Delivery failure marks the outbox row `FAILED` and does not roll back order, fulfillment, or request decision workflows.
 - SMS uses the same outbox/retry lifecycle and currently routes through the console `SmsSenderPort` adapter. Customer SMS is queued for `ORDER_PAID`, `ORDER_SHIPPED`, `ORDER_REQUEST_APPROVED`, and `ORDER_REQUEST_REJECTED`; `ORDER_REQUEST_CREATED` remains email-only.
+- Admin email alerts use active tenant `TENANT_ADMIN` users as recipients and currently cover new order, new cancellation/return request, and payment/refund operational failure events.
 - Failed email rows can be viewed by tenant admins under `/commerce/notification-outbox`, retried manually, and retried automatically by the scheduled retry job when `app.commerce.notifications.retry-job-enabled=true`.
 - Email templates can be viewed and updated by tenant admins under `/commerce/notification-templates`; inactive exact-language templates intentionally skip outbox creation instead of falling back to `EN`.
 - Language resolves from the captured legal snapshot when available, otherwise tenant default language, with `EN` fallback. Request-created notifications prefer the current request locale and then fall back to order language.
@@ -258,7 +261,6 @@ Email/SMS v1 behavior:
 Remaining notification work:
 
 - Transactional SMS through İleti Merkezi provider adapter.
-- Admin email alerts for new order, new cancellation/return request, and payment/refund operational failures.
 
 Provisioning is handled by the platform provisioning API:
 
@@ -275,7 +277,7 @@ Source of truth:
 
 ## Public delivery APIs
 
-Anonymous cart, customer account, customer-cart bridge, checkout, legal template management, payment attempt, backend order finalization, customer order read APIs, customer cancellation/return request APIs, operational admin reads, manual fulfillment status transitions, admin request decisions, full refund trigger, customer transactional email v1, customer transactional SMS foundation, notification outbox operations, and notification template management are the first commerce APIs/workflows. The standalone `commerce-ui` shell now has minimal design, cart foundation wiring, product listing/search, product detail delivery, real variant add-to-cart, customer auth/account foundation, address book, checkout legal acceptance, payment return, order history, order legal snapshot display, and order request foundations; İleti Merkezi SMS adapter and admin notification alerts remain backlog work.
+Anonymous cart, customer account, customer-cart bridge, checkout, legal template management, payment attempt, backend order finalization, customer order read APIs, customer cancellation/return request APIs, operational admin reads, manual fulfillment status transitions, admin request decisions, full refund trigger, customer transactional email v1, customer transactional SMS foundation, admin email alerts, notification outbox operations, and notification template management are the first commerce APIs/workflows. The standalone `commerce-ui` shell now has minimal design, cart foundation wiring, product listing/search, product detail delivery, real variant add-to-cart, customer auth/account foundation, address book, checkout legal acceptance, payment return, order history, order legal snapshot display, and order request foundations; İleti Merkezi SMS adapter remains backlog work.
 
 ## Frontend integration
 
