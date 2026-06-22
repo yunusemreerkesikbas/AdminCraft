@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,7 +18,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import com.backend.application.dto.email.EmailResult;
-import com.backend.application.dto.sms.SmsResult;
 import com.backend.domain.commerce.CommerceNotificationChannel;
 import com.backend.domain.commerce.CommerceNotificationEventType;
 import com.backend.domain.commerce.CommerceNotificationOutbox;
@@ -25,6 +25,7 @@ import com.backend.domain.commerce.CommerceNotificationStatus;
 import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
 import com.backend.domain.port.MailSenderPort;
 import com.backend.domain.port.SmsSenderPort;
+import com.backend.domain.sms.SmsResult;
 import com.backend.testutil.BaseServiceTest;
 
 class CommerceNotificationDispatchServiceTest extends BaseServiceTest {
@@ -83,6 +84,8 @@ class CommerceNotificationDispatchServiceTest extends BaseServiceTest {
 		assertThat(result.getAttemptCount()).isEqualTo(1);
 		assertThat(result.getNextRetryAt()).isNotNull();
 		assertThat(result.getErrorMessage()).isEqualTo("sms provider down");
+		verify(smsSender, times(1)).send("905551112233", "Content");
+		verify(mailSender, never()).send(any(), any(), any());
 	}
 
 	@Test

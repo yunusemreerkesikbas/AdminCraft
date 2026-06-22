@@ -3,15 +3,17 @@ package com.backend.infrastructure.sms;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import com.backend.application.dto.sms.SmsResult;
 import com.backend.domain.port.SmsSenderPort;
+import com.backend.domain.sms.SmsResult;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@Profile({ "dev", "local", "test" })
 public class ConsoleSmsSender implements SmsSenderPort {
 
 	@Override

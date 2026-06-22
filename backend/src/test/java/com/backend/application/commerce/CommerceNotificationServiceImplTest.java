@@ -25,7 +25,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import com.backend.application.dto.email.EmailResult;
-import com.backend.application.dto.sms.SmsResult;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.mail.TemplateVariableRenderer;
 import com.backend.domain.commerce.CommerceCustomer;
@@ -45,6 +44,7 @@ import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.port.MailSenderPort;
 import com.backend.domain.port.SmsSenderPort;
 import com.backend.domain.port.TenantContextPort;
+import com.backend.domain.sms.SmsResult;
 import com.backend.testutil.BaseServiceTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -238,6 +238,31 @@ class CommerceNotificationServiceImplTest extends BaseServiceTest {
 				.thenReturn(true);
 		CommerceOrder order = orderWithLegalLanguage("TR");
 		order.getCustomer().setPhone("123");
+
+		service.notifyOrderPaid(order);
+
+		verify(templateRepository, never()).findExact(
+				CommerceNotificationEventType.ORDER_PAID,
+				CommerceNotificationChannel.SMS,
+				"TR");
+		verify(outboxRepository, never()).save(any());
+		verify(smsSender, never()).send(any(), any());
+	}
+
+	@Test
+	void notifyOrderPaid_ShouldSkipSms_WhenNormalizedPhoneIsNotNumeric() {
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.email.enabled", false))
+				.thenReturn(false);
+		when(configPropertyService.getBoolean(1L, "tenant_1", "commerce.notifications.sms.enabled", false))
+				.thenReturn(true);
+		when(configPropertyService.getBoolean(
+				1L,
+				"tenant_1",
+				"commerce.notifications.sms.order_paid.enabled",
+				true))
+				.thenReturn(true);
+		CommerceOrder order = orderWithLegalLanguage("TR");
+		order.getCustomer().setPhone("not-a-phone");
 
 		service.notifyOrderPaid(order);
 

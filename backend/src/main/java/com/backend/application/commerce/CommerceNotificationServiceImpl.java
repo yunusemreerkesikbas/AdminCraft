@@ -229,7 +229,8 @@ class CommerceNotificationServiceImpl implements CommerceNotificationService {
 			return false;
 		}
 		if (channel == CommerceNotificationChannel.SMS) {
-			return normalizePhone(customer.getPhone()).length() >= 10;
+			String normalizedPhone = normalizePhone(customer.getPhone());
+			return normalizedPhone.length() >= 10 && normalizedPhone.chars().allMatch(Character::isDigit);
 		}
 		return StringUtils.hasText(customer.getEmail());
 	}

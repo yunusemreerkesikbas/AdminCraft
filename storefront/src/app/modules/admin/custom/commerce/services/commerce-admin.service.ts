@@ -13,6 +13,7 @@ import {
     CommerceLegalTemplate,
     CommerceLegalTemplatePreview,
     CommerceLegalTemplateRequest,
+    CommerceNotificationChannel,
     CommerceNotificationOutboxRow,
     CommerceNotificationTemplate,
     CommerceNotificationTemplatePreview,
@@ -289,7 +290,7 @@ export class CommerceAdminNotificationTemplateService {
 
     list(filters: {
         eventType?: string;
-        channel?: string;
+        channel?: CommerceNotificationChannel;
         language?: string;
         active?: boolean | null;
     } = {}): Observable<CommerceNotificationTemplate[]> {

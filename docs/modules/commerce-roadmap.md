@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture, customer transactional email v1, customer transactional SMS foundation, notification outbox admin görünürlüğü + manual/automatic retry, notification template UI/API ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. İleti Merkezi SMS provider adapter ve admin notification alerts henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture, customer transactional email v1, customer transactional SMS foundation, admin email alerts, notification outbox admin görünürlüğü + manual/automatic retry, notification template UI/API ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. İleti Merkezi SMS provider adapter henüz yapılmadı.
 
 ## 1. Konumlandırma
 
@@ -299,13 +299,15 @@ Müşteri e-posta event'leri:
 Hazır:
 
 - Commerce-owned customer email v1: `ORDER_PAID`, `ORDER_SHIPPED`, `ORDER_REQUEST_CREATED`, `ORDER_REQUEST_APPROVED`, `ORDER_REQUEST_REJECTED`
+- Admin email alerts: `ADMIN_ORDER_CREATED`, `ADMIN_ORDER_REQUEST_CREATED`, `ADMIN_PAYMENT_OPERATION_FAILED`
 - TR/EN seed template'ler ve `commerce_notification_outbox`
 - Platform-managed email provider ile commit sonrası immediate send
 - `commerce.notifications.email.enabled` global toggle ve `commerce.notifications.email.<event>.enabled` event override davranışı
+- `commerce.notifications.admin.email.enabled` global toggle ve `commerce.notifications.admin.email.<event>.enabled` event override davranışı
 - Tenant admin notification outbox liste/detay ekranı, tekil manual retry ve 15 dakikalık automatic retry job
 - Tenant admin notification template list/detail/update/preview UI/API
 
-Hazır:
+Hazır (SMS):
 
 - Customer transactional SMS foundation: `ORDER_PAID`, `ORDER_SHIPPED`, `ORDER_REQUEST_APPROVED`, `ORDER_REQUEST_REJECTED`
 - Multi-channel commerce notification outbox ve template yönetimi
@@ -314,7 +316,6 @@ Hazır:
 Kalan:
 
 - İleti Merkezi gerçek SMS provider adapter
-- Admin email alerts
 
 Müşteri SMS event'leri:
 

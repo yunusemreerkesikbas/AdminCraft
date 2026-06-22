@@ -1,4 +1,4 @@
-package com.backend.application.dto.sms;
+package com.backend.domain.sms;
 
 import lombok.Builder;
 import lombok.Getter;

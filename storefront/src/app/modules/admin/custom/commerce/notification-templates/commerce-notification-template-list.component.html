@@ -26,14 +26,11 @@
                         }
                     </select>
                 </label>
-                <label class="flex flex-col gap-1 text-sm">
-                    <span class="text-slate-500">{{ 'admin.commerce.notificationTemplates.channel' | transloco }}</span>
-                    <select class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="channel">
-                        @for (channel of channelOptions; track channel) {
-                            <option [value]="channel">{{ channel }}</option>
-                        }
-                    </select>
-                </label>
+                <spa-select
+                    [label]="'admin.commerce.notificationTemplates.channel' | transloco"
+                    [options]="channelOptions"
+                    formControlName="channel"
+                />
                 <label class="flex flex-col gap-1 text-sm">
                     <span class="text-slate-500">{{ 'admin.commerce.notificationTemplates.language' | transloco }}</span>
                     <input class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950" formControlName="language" placeholder="TR" />

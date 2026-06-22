@@ -11,11 +11,11 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.email.EmailResult;
-import com.backend.application.dto.sms.SmsResult;
 import com.backend.domain.commerce.CommerceNotificationChannel;
 import com.backend.domain.commerce.CommerceNotificationOutbox;
 import com.backend.domain.commerce.CommerceNotificationStatus;
 import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
+import com.backend.domain.sms.SmsResult;
 import com.backend.domain.port.MailSenderPort;
 import com.backend.domain.port.SmsSenderPort;
 import com.backend.shared.common.LogSanitizer;
@@ -89,12 +89,17 @@ public class CommerceNotificationDispatchService {
 
 	private DeliveryResult dispatchByChannel(CommerceNotificationOutbox outbox) {
 		try {
-			if (outbox.getChannel() == CommerceNotificationChannel.SMS) {
+			switch (outbox.getChannel()) {
+			case SMS -> {
 				SmsResult result = smsSender.send(outbox.getRecipientPhone(), outbox.getContent());
 				return new DeliveryResult(result.isSuccess(), result.getMessageId(), result.getErrorMessage());
 			}
-			EmailResult result = mailSender.send(outbox.getRecipientEmail(), outbox.getSubject(), outbox.getContent());
-			return new DeliveryResult(result.isSuccess(), result.getMessageId(), result.getErrorMessage());
+			case EMAIL -> {
+				EmailResult result = mailSender.send(outbox.getRecipientEmail(), outbox.getSubject(), outbox.getContent());
+				return new DeliveryResult(result.isSuccess(), result.getMessageId(), result.getErrorMessage());
+			}
+			case null, default -> throw new IllegalArgumentException("commerce.notification.unsupported.channel");
+			}
 		} catch (RuntimeException ex) {
 			return new DeliveryResult(false, null, LogSanitizer.sanitizeForLog(ex.getMessage()));
 		}

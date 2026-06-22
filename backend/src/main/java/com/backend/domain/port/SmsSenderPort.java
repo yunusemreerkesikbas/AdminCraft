@@ -1,6 +1,6 @@
 package com.backend.domain.port;
 
-import com.backend.application.dto.sms.SmsResult;
+import com.backend.domain.sms.SmsResult;
 
 public interface SmsSenderPort {
 
