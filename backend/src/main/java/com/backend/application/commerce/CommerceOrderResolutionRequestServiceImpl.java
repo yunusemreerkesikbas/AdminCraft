@@ -64,6 +64,7 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 	private final CommercePaymentConfigResolver paymentConfigResolver;
 	private final TransactionTemplate transactionTemplate;
 	private final CommerceNotificationService notificationService;
+	private final CommerceAdminNotificationService adminNotificationService;
 
 	@Override
 	@Transactional
@@ -97,6 +98,7 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 		request.setRefundStatus(CommerceOrderResolutionRefundStatus.NOT_ATTEMPTED);
 		CommerceOrderResolutionRequest saved = requestRepository.save(request);
 		notificationService.notifyOrderRequestCreated(saved);
+		adminNotificationService.notifyOrderRequestCreated(saved);
 		return CustomerOrderResolutionRequestResponse.from(saved);
 	}
 
@@ -204,7 +206,9 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 			request.setRefundReference(null);
 			request.setRefundFailureCode(result.failureCode());
 			request.setRefundFailureMessageKey(nonBlankOrDefault(result.failureMessageKey(), REFUND_FAILED));
-			return CommerceOrderResolutionRequestResponse.from(requestRepository.save(request));
+			CommerceOrderResolutionRequest saved = requestRepository.save(request);
+			adminNotificationService.notifyRefundOperationFailed(saved);
+			return CommerceOrderResolutionRequestResponse.from(saved);
 		}
 
 		LocalDateTime now = LocalDateTime.now();

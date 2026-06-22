@@ -23,7 +23,7 @@ Not implemented yet:
 
 - final commerce visual design
 - production hardening around completed foundation flows
-- İleti Merkezi SMS provider adapter and admin notification alerts
+- İleti Merkezi SMS provider adapter
 
 ## UI model convention
 

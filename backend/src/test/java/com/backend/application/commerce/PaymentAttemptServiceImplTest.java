@@ -58,6 +58,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 	@Mock private TenantContextPort tenantContext;
 	@Mock private EncryptionServicePort encryptionService;
 	@Mock private CommercePaymentProviderPort paymentProvider;
+	@Mock private CommerceAdminNotificationService adminNotificationService;
 
 	private PaymentAttemptServiceImpl service;
 
@@ -75,7 +76,8 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 				tenantContext,
 				encryptionService,
 				new ObjectMapper(),
-				List.of(paymentProvider));
+				List.of(paymentProvider),
+				adminNotificationService);
 		lenient().when(tenantContext.getTenantId()).thenReturn("1");
 		lenient().when(tenantContext.getTenantDbName()).thenReturn("tenant_1");
 		lenient().when(commerceLegalService.captureAcceptanceJson(any(), any(), any())).thenReturn("{}");
@@ -257,8 +259,10 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 				.isInstanceOf(CommercePaymentProviderException.class)
 				.hasMessageContaining("commerce.payment.provider.initialize.failed");
 		assertThat(attempt.getStatus()).isEqualTo(CommercePaymentAttemptStatus.FAILED);
+		assertThat(attempt.getFailureCode()).isEqualTo("PROVIDER_INITIALIZE_FAILED");
 		assertThat(attempt.getFailureMessageKey()).isEqualTo("commerce.payment.provider.initialize.failed");
 		verify(paymentAttemptRepository).save(attempt);
+		verify(adminNotificationService).notifyPaymentOperationFailed(attempt, "PAYMENT_INITIALIZE");
 	}
 
 	@Test
@@ -447,6 +451,7 @@ class PaymentAttemptServiceImplTest extends BaseServiceTest {
 		assertThat(attempt.getFailureCode()).isEqualTo("PROVIDER_RETRIEVE_FAILED");
 		assertThat(attempt.getFailureMessageKey()).isEqualTo("commerce.payment.provider.retrieve.failed");
 		verify(paymentAttemptRepository).save(attempt);
+		verify(adminNotificationService).notifyPaymentOperationFailed(attempt, "PAYMENT_RETRIEVE");
 	}
 
 	@Test

@@ -51,6 +51,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 	@Mock private ConfigPropertyService configPropertyService;
 	@Mock private TenantContextPort tenantContext;
 	@Mock private CommerceNotificationService notificationService;
+	@Mock private CommerceAdminNotificationService adminNotificationService;
 
 	private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 	private CommerceOrderFinalizationServiceImpl service;
@@ -65,7 +66,8 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 				configPropertyService,
 				tenantContext,
 				objectMapper,
-				notificationService);
+				notificationService,
+				adminNotificationService);
 		lenient().when(tenantContext.getTenantId()).thenReturn("1");
 		lenient().when(tenantContext.getTenantDbName()).thenReturn("tenant_1");
 		lenient().when(configPropertyService.findRaw(1L, "tenant_1", "commerce.order.number_prefix"))
@@ -101,6 +103,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		assertThat(attempt.getCheckout().getStatus()).isEqualTo(CommerceCheckoutStatus.COMPLETED);
 		verify(stockPort).deductIfAvailable(Map.of("variant-uid", 2));
 		verify(notificationService).notifyOrderPaid(order);
+		verify(adminNotificationService).notifyOrderCreated(order);
 	}
 
 	@Test
@@ -251,6 +254,7 @@ class CommerceOrderFinalizationServiceImplTest extends BaseServiceTest {
 		verify(stockPort, never()).deductIfAvailable(any());
 		verify(orderRepository, never()).save(any());
 		verify(notificationService, never()).notifyOrderPaid(any());
+		verify(adminNotificationService, never()).notifyOrderCreated(any());
 	}
 
 	@Test
