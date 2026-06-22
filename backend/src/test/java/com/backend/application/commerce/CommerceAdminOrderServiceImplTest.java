@@ -23,6 +23,7 @@ import com.backend.application.commerce.dto.CommerceAdminDashboardResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderDetailResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderSummaryResponse;
 import com.backend.application.commerce.dto.CommerceAdminPaymentAttemptResponse;
+import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.commerce.dto.ChangeCommerceOrderStatusCommand;
 import com.backend.domain.commerce.CommerceCheckout;
 import com.backend.domain.commerce.CommerceCustomer;
@@ -38,6 +39,8 @@ import com.backend.domain.commerce.CommercePaymentAttemptStatus;
 import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.commerce.repository.CommercePaymentAttemptRepository;
+import com.backend.domain.enums.ProductStatus;
+import com.backend.domain.repository.ProductVariantRepository;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.testutil.BaseServiceTest;
@@ -48,6 +51,8 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 	@Mock private CommerceOrderRepository orderRepository;
 	@Mock private CommercePaymentAttemptRepository paymentAttemptRepository;
 	@Mock private CommerceNotificationOutboxRepository notificationOutboxRepository;
+	@Mock private ProductVariantRepository productVariantRepository;
+	@Mock private ConfigPropertyService configPropertyService;
 	@Mock private CommerceModuleAccessGuard commerceModuleAccessGuard;
 	@Mock private TenantContextPort tenantContext;
 	@Mock private CommerceNotificationService notificationService;
@@ -60,6 +65,8 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 				orderRepository,
 				paymentAttemptRepository,
 				notificationOutboxRepository,
+				productVariantRepository,
+				configPropertyService,
 				commerceModuleAccessGuard,
 				tenantContext,
 				new ObjectMapper(),
@@ -78,6 +85,12 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 				org.mockito.ArgumentMatchers.eq(CommercePaymentAttemptStatus.FAILED),
 				org.mockito.ArgumentMatchers.any())).thenReturn(3L);
 		when(notificationOutboxRepository.countByStatus(CommerceNotificationStatus.FAILED)).thenReturn(4L);
+		when(tenantContext.getTenantId()).thenReturn("10");
+		when(tenantContext.getTenantDbName()).thenReturn("ac_subdomain_10");
+		when(configPropertyService.findRaw(10L, "ac_subdomain_10", "commerce.stock.low_stock_threshold"))
+				.thenReturn(Optional.of("7"));
+		when(productVariantRepository.countLowStockPublishedVisibleActiveVariants(ProductStatus.PUBLISHED, 7))
+				.thenReturn(6L);
 
 		CommerceAdminDashboardResponse response = service.dashboard();
 
@@ -85,10 +98,30 @@ class CommerceAdminOrderServiceImplTest extends BaseServiceTest {
 		assertThat(response.today().revenue()).isEqualByComparingTo("250");
 		assertThat(response.lastSevenDays().orderCount()).isEqualTo(5);
 		assertThat(response.attentionOrderCount()).isEqualTo(1);
+		assertThat(response.lowStockVariantCount()).isEqualTo(6);
 		assertThat(response.failedPaymentAttemptCount()).isEqualTo(3);
 		assertThat(response.failedNotificationCount()).isEqualTo(4);
 		assertThat(response.currencyIso()).isEqualTo("TRY");
 		verify(commerceModuleAccessGuard).assertEnabledForCurrentTenant();
+	}
+
+	@Test
+	void dashboard_ShouldUseDefaultLowStockThreshold_WhenConfigIsInvalid() {
+		when(orderRepository.findMostRecentCurrencyIso()).thenReturn(Optional.of("TRY"));
+		when(orderRepository.countByCreatedAtBetween(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+				.thenReturn(0L, 0L);
+		when(orderRepository.sumTotalByCreatedAtBetween(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+				.thenReturn(BigDecimal.ZERO, BigDecimal.ZERO);
+		when(tenantContext.getTenantId()).thenReturn("10");
+		when(tenantContext.getTenantDbName()).thenReturn("ac_subdomain_10");
+		when(configPropertyService.findRaw(10L, "ac_subdomain_10", "commerce.stock.low_stock_threshold"))
+				.thenReturn(Optional.of("not-a-number"));
+		when(productVariantRepository.countLowStockPublishedVisibleActiveVariants(ProductStatus.PUBLISHED, 5))
+				.thenReturn(2L);
+
+		CommerceAdminDashboardResponse response = service.dashboard();
+
+		assertThat(response.lowStockVariantCount()).isEqualTo(2);
 	}
 
 	@Test

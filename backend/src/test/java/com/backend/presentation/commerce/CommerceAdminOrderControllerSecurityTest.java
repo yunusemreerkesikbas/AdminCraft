@@ -118,6 +118,6 @@ class CommerceAdminOrderControllerSecurityTest {
 
 	private CommerceAdminDashboardResponse dashboard() {
 		CommerceAdminMetricResponse emptyMetric = new CommerceAdminMetricResponse(0, BigDecimal.ZERO, "TRY");
-		return new CommerceAdminDashboardResponse(emptyMetric, emptyMetric, 0, 0, 0, "TRY");
+		return new CommerceAdminDashboardResponse(emptyMetric, emptyMetric, 0, 0, 0, 0, "TRY");
 	}
 }

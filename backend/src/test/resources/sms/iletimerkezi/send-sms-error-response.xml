@@ -1,0 +1,6 @@
+<response>
+  <status>
+    <code>401</code>
+    <message>Uyelik bilgileri hatali</message>
+  </status>
+</response>

@@ -53,7 +53,7 @@ class ConfigPropertiesAdminServiceImplTest extends BaseServiceTest {
 
         List<ConfigPropertyResult> result = service.listProperties(tenantPrincipal());
 
-        assertThat(result).hasSize(7);
+        assertThat(result).hasSize(9);
         assertThat(result).extracting(ConfigPropertyResult::key).containsExactly(
                 "security.recaptcha.enabled",
                 "security.recaptcha.site_key",
@@ -61,7 +61,9 @@ class ConfigPropertiesAdminServiceImplTest extends BaseServiceTest {
                 "analytics.ga4.enabled",
                 "analytics.ga4.property_id",
                 "seo.insights.enabled",
-                "seo.search_console.property_url");
+                "seo.search_console.property_url",
+                "security.otp.resend_cooldown_seconds",
+                "commerce.stock.low_stock_threshold");
         assertThat(result.get(0).value()).isEqualTo("false");
         assertThat(result.get(1).value()).isNull();
         assertThat(result.get(2).value()).isNull();
@@ -74,6 +76,8 @@ class ConfigPropertiesAdminServiceImplTest extends BaseServiceTest {
         assertThat(result.get(5).secret()).isFalse();
         assertThat(result.get(6).value()).isNull();
         assertThat(result.get(6).secret()).isFalse();
+        assertThat(result.get(8).value()).isEqualTo("5");
+        assertThat(result.get(8).secret()).isFalse();
     }
 
     @Test
@@ -134,6 +138,21 @@ class ConfigPropertiesAdminServiceImplTest extends BaseServiceTest {
                 "invalid test"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Search Console property URL must start with sc-domain: or http(s)://");
+    }
+
+    @Test
+    @DisplayName("upsertProperty should reject invalid commerce low-stock thresholds")
+    void upsertProperty_ShouldRejectInvalidCommerceLowStockThresholds() {
+        when(tenantRepository.findById(TEST_TENANT_ID_LONG)).thenReturn(Optional.of(tenantEntity()));
+
+        assertThatThrownBy(() -> service.upsertProperty(
+                tenantPrincipal(),
+                "commerce.stock.low_stock_threshold",
+                "0",
+                false,
+                "invalid test"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Commerce low-stock threshold must be greater than 0");
     }
 
     private ConfigPrincipal tenantPrincipal() {

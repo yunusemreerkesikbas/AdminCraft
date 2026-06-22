@@ -1,0 +1,9 @@
+<response>
+  <status>
+    <code>200</code>
+    <message>Islem Basarili</message>
+  </status>
+  <order>
+    <id>323223</id>
+  </order>
+</response>

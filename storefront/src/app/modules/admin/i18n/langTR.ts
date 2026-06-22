@@ -2255,6 +2255,8 @@ export const langTR = {
                 lastSevenDaysOrders: 'Son 7 gün siparişleri',
                 attentionOrders: 'Dikkat isteyen siparişler',
                 attentionHint: 'Stok düşümü veya operasyon kontrolü gerekebilir',
+                lowStockVariants: 'Düşük stok varyantları',
+                lowStockHint: 'Yayınlanan aktif varyantlarda eşik altı stok',
                 failedAttempts: 'Başarısız ödeme denemeleri',
                 failedAttemptsHint: 'Son 7 gündeki başarısız denemeler',
                 failedNotifications: 'Başarısız bildirimler',

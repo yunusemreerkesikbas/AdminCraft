@@ -20,6 +20,7 @@ export interface CommerceAdminDashboard {
     today: CommerceAdminMetric;
     lastSevenDays: CommerceAdminMetric;
     attentionOrderCount: number;
+    lowStockVariantCount: number;
     failedPaymentAttemptCount: number;
     failedNotificationCount: number;
     currencyIso: string;

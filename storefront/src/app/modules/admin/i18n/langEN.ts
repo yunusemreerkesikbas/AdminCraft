@@ -2275,6 +2275,8 @@ export const langEN = {
                 lastSevenDaysOrders: 'Last 7 days orders',
                 attentionOrders: 'Orders needing attention',
                 attentionHint: 'Stock deduction or operational review may be required',
+                lowStockVariants: 'Low-stock variants',
+                lowStockHint: 'Published active variants at or below the stock threshold',
                 failedAttempts: 'Failed payment attempts',
                 failedAttemptsHint: 'Failed attempts in the last 7 days',
                 failedNotifications: 'Failed notifications',

@@ -21,6 +21,7 @@ import com.backend.application.commerce.dto.CommerceAdminMetricResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderDetailResponse;
 import com.backend.application.commerce.dto.CommerceAdminOrderSummaryResponse;
 import com.backend.application.commerce.dto.CommerceAdminPaymentAttemptResponse;
+import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.domain.commerce.CommerceOrder;
 import com.backend.domain.commerce.CommerceOrderStatus;
 import com.backend.domain.commerce.CommerceOrderStatusHistory;
@@ -30,8 +31,10 @@ import com.backend.domain.commerce.exception.CommerceDomainException;
 import com.backend.domain.commerce.repository.CommerceNotificationOutboxRepository;
 import com.backend.domain.commerce.repository.CommerceOrderRepository;
 import com.backend.domain.commerce.repository.CommercePaymentAttemptRepository;
+import com.backend.domain.enums.ProductStatus;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.domain.repository.ProductVariantRepository;
 import com.backend.shared.common.SecurityUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,10 +52,14 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 	private static final String INVALID_TRANSITION = "commerce.admin.order.status.transition.invalid";
 	private static final String SHIPMENT_REQUIRED = "commerce.admin.order.status.shipment.required";
 	private static final String DEFAULT_CURRENCY = "TRY";
+	private static final String LOW_STOCK_THRESHOLD_KEY = "commerce.stock.low_stock_threshold";
+	private static final int DEFAULT_LOW_STOCK_THRESHOLD = 5;
 
 	private final CommerceOrderRepository orderRepository;
 	private final CommercePaymentAttemptRepository paymentAttemptRepository;
 	private final CommerceNotificationOutboxRepository notificationOutboxRepository;
+	private final ProductVariantRepository productVariantRepository;
+	private final ConfigPropertyService configPropertyService;
 	private final CommerceModuleAccessGuard commerceModuleAccessGuard;
 	private final TenantContextPort tenantContext;
 	private final ObjectMapper objectMapper;
@@ -71,6 +78,9 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 		CommerceAdminMetricResponse todayMetric = metric(todayStart, tomorrowStart, currencyIso);
 		CommerceAdminMetricResponse lastSevenDaysMetric = metric(sevenDaysStart, tomorrowStart, currencyIso);
 		long attentionOrderCount = orderRepository.countByRequiresAttentionTrue();
+		long lowStockVariantCount = productVariantRepository.countLowStockPublishedVisibleActiveVariants(
+				ProductStatus.PUBLISHED,
+				lowStockThreshold());
 		long failedAttemptCount = paymentAttemptRepository.countByStatusAndCreatedAtGreaterThanEqual(
 				CommercePaymentAttemptStatus.FAILED,
 				sevenDaysStart);
@@ -79,6 +89,7 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 				todayMetric,
 				lastSevenDaysMetric,
 				attentionOrderCount,
+				lowStockVariantCount,
 				failedAttemptCount,
 				failedNotificationCount,
 				currencyIso);
@@ -218,6 +229,30 @@ class CommerceAdminOrderServiceImpl implements CommerceAdminOrderService {
 			return DEFAULT_CURRENCY;
 		}
 		return tenantContext.getCurrency().getIsoCode();
+	}
+
+	private int lowStockThreshold() {
+		return configPropertyService.findRaw(currentTenantId(), tenantContext.getTenantDbName(), LOW_STOCK_THRESHOLD_KEY)
+				.map(String::trim)
+				.map(this::parsePositiveInt)
+				.orElse(DEFAULT_LOW_STOCK_THRESHOLD);
+	}
+
+	private Integer parsePositiveInt(String value) {
+		try {
+			int parsed = Integer.parseInt(value);
+			return parsed > 0 ? parsed : DEFAULT_LOW_STOCK_THRESHOLD;
+		} catch (NumberFormatException ex) {
+			return DEFAULT_LOW_STOCK_THRESHOLD;
+		}
+	}
+
+	private Long currentTenantId() {
+		try {
+			return Long.parseLong(tenantContext.getTenantId());
+		} catch (NumberFormatException ex) {
+			throw new IllegalStateException("commerce.tenant.context.required", ex);
+		}
 	}
 
 	private CheckoutAddressSnapshotResponse addressSnapshot(String json) {
