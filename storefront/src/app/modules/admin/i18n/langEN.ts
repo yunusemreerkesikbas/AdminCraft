@@ -2411,7 +2411,7 @@ export const langEN = {
             },
             notificationOutbox: {
                 title: 'Notification Outbox',
-                subtitle: 'Monitor transactional email delivery and retries',
+                subtitle: 'Monitor transactional email and SMS delivery and retries',
                 detailTitle: 'Notification Detail',
                 detailSubtitle: 'Delivery state, provider response, and retry control',
                 searchPlaceholder: 'Search recipient, subject, UID, aggregate or error',
@@ -2442,6 +2442,7 @@ export const langEN = {
                 fields: {
                     outboxUid: 'Outbox UID',
                     eventType: 'Event',
+                    channel: 'Channel',
                     recipient: 'Recipient',
                     status: 'Status',
                     attempts: 'Attempts',
@@ -2461,8 +2462,9 @@ export const langEN = {
             },
             notificationTemplates: {
                 title: 'Notification Templates',
-                subtitle: 'Manage transactional email subjects and content',
+                subtitle: 'Manage transactional email and SMS content',
                 eventType: 'Event',
+                channel: 'Channel',
                 language: 'Language',
                 active: 'Active',
                 activeOnly: 'Active only',

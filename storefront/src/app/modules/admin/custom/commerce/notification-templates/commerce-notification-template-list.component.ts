@@ -12,10 +12,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
+import {
+    SpaSelectComponent,
+    SpaSelectOption,
+} from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { take } from 'rxjs';
 import {
+    CommerceNotificationChannel,
     CommerceNotificationTemplate,
     CommerceNotificationTemplateRequest,
 } from '../models/commerce.types';
@@ -34,6 +39,7 @@ type ActiveFilter = '' | 'true' | 'false';
         MatIconModule,
         MatProgressSpinnerModule,
         AdminPageHeaderComponent,
+        SpaSelectComponent,
         SpaStatusBadgeComponent,
     ],
     templateUrl: './commerce-notification-template-list.component.html',
@@ -55,10 +61,18 @@ export class SpaCommerceNotificationTemplateListComponent implements OnInit {
         'ORDER_REQUEST_CREATED',
         'ORDER_REQUEST_APPROVED',
         'ORDER_REQUEST_REJECTED',
+        'ADMIN_ORDER_CREATED',
+        'ADMIN_ORDER_REQUEST_CREATED',
+        'ADMIN_PAYMENT_OPERATION_FAILED',
+    ];
+    protected readonly channelOptions: SpaSelectOption<CommerceNotificationChannel>[] = [
+        { value: 'EMAIL', label: 'EMAIL' },
+        { value: 'SMS', label: 'SMS' },
     ];
 
     protected readonly filterForm = this.#fb.nonNullable.group({
         eventType: [''],
+        channel: ['EMAIL' as CommerceNotificationChannel],
         language: [''],
         active: ['' as ActiveFilter],
     });
@@ -79,6 +93,7 @@ export class SpaCommerceNotificationTemplateListComponent implements OnInit {
         this.#service
             .list({
                 eventType: filters.eventType,
+                channel: filters.channel,
                 language: filters.language,
                 active: this.activeFilterValue(filters.active),
             })

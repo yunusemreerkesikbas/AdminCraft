@@ -20,6 +20,7 @@ import com.backend.application.commerce.CommerceNotificationTemplateAdminService
 import com.backend.application.commerce.dto.CommerceNotificationTemplateCommand;
 import com.backend.application.commerce.dto.CommerceNotificationTemplatePreviewResponse;
 import com.backend.application.commerce.dto.CommerceNotificationTemplateResponse;
+import com.backend.domain.commerce.CommerceNotificationChannel;
 import com.backend.domain.commerce.CommerceNotificationEventType;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.validation.Uid;
@@ -40,11 +41,12 @@ public class CommerceAdminNotificationTemplateController {
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<CommerceNotificationTemplateResponse>>> list(
 			@RequestParam(required = false) CommerceNotificationEventType eventType,
+			@RequestParam(required = false) CommerceNotificationChannel channel,
 			@RequestParam(required = false) String language,
 			@RequestParam(required = false) Boolean active) {
 		return ResponseEntity.ok(ApiResponse.success(
 				message("commerce.admin.notification.templates.retrieved"),
-				templateAdminService.listTemplates(eventType, language, active)));
+				templateAdminService.listTemplates(eventType, channel, language, active)));
 	}
 
 	@GetMapping("/{templateUid}")

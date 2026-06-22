@@ -246,7 +246,8 @@ export interface CommerceNotificationOutboxRow {
     channel: string;
     aggregateType: string;
     aggregateUid: string;
-    recipientEmail: string;
+    recipientEmail?: string | null;
+    recipientPhone?: string | null;
     language: string;
     subject: string;
     content: string;
@@ -263,10 +264,12 @@ export interface CommerceNotificationOutboxRow {
     updatedAt: string;
 }
 
+export type CommerceNotificationChannel = 'EMAIL' | 'SMS';
+
 export interface CommerceNotificationTemplate {
     templateUid: string;
     eventType: string;
-    channel: string;
+    channel: CommerceNotificationChannel;
     language: string;
     subject: string;
     content: string;

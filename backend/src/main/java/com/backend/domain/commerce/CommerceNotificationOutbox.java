@@ -44,8 +44,11 @@ public class CommerceNotificationOutbox extends BaseEntity {
 	@Column(name = "aggregate_uid", nullable = false, length = 50)
 	private String aggregateUid;
 
-	@Column(name = "recipient_email", nullable = false, length = 255)
+	@Column(name = "recipient_email", length = 255)
 	private String recipientEmail;
+
+	@Column(name = "recipient_phone", length = 30)
+	private String recipientPhone;
 
 	@Column(nullable = false, length = 10)
 	private String language;

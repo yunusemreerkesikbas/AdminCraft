@@ -227,6 +227,7 @@ class CommerceAdminOrderControllerTest {
 				"ORDER",
 				"order-uid",
 				"jane@example.com",
+				null,
 				"EN",
 				"Subject",
 				"Content",

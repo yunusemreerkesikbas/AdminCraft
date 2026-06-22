@@ -32,7 +32,8 @@ interface CommerceNotificationOutboxJpaRepository extends JpaRepository<Commerce
 				and (:search is null
 					or lower(outbox.uid) like concat('%', :search, '%')
 					or lower(outbox.aggregateUid) like concat('%', :search, '%')
-					or lower(outbox.recipientEmail) like concat('%', :search, '%')
+					or lower(coalesce(outbox.recipientEmail, '')) like concat('%', :search, '%')
+					or lower(coalesce(outbox.recipientPhone, '')) like concat('%', :search, '%')
 					or lower(outbox.subject) like concat('%', :search, '%')
 					or lower(coalesce(outbox.errorMessage, '')) like concat('%', :search, '%'))
 			""")
