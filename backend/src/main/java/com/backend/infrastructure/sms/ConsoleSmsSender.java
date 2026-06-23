@@ -3,6 +3,7 @@ package com.backend.infrastructure.sms;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @Profile({ "dev", "local", "test" })
+@ConditionalOnProperty(name = "app.commerce.sms.provider", havingValue = "console", matchIfMissing = true)
 public class ConsoleSmsSender implements SmsSenderPort {
 
 	@Override

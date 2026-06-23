@@ -59,6 +59,8 @@ app:
   commerce:
     payment:
       callback-base-url: ${APP_COMMERCE_PAYMENT_CALLBACK_BASE_URL:https://%s.craftive.io/api}
+    sms:
+      provider: ${APP_COMMERCE_SMS_PROVIDER:disabled}
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}
   email:
     from-address: ${EMAIL_FROM_ADDRESS:noreply@craftive.io}

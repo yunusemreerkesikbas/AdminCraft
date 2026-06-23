@@ -2,7 +2,7 @@
 
 > Durum: Brainstorm sonucu netleşen kapsam taslağı. Bu doküman implementasyon planı değildir; MVP kararlarını ve sonraki fazları kısa şekilde özetler.
 
-> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture, customer transactional email v1, customer transactional SMS foundation, admin email alerts, notification outbox admin görünürlüğü + manual/automatic retry, notification template UI/API ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı. İleti Merkezi SMS provider adapter henüz yapılmadı.
+> Implementasyon durumu: Commerce module foundation, Product Catalog variant foundation, customer account/address book, anonymous/customer cart, checkout foundation, internal payment attempt, iyzico sandbox CheckoutForm init/callback, başarılı ödeme sonrası backend order finalization, customer order read API, müşteri iptal/iade talebi, admin iptal/iade karar akışı, iyzico tam refund, commerce admin operasyon görünürlüğü, admin düşük stok sayacı, admin order status transition + manual fulfillment slice, versioning'li legal template yönetimi, checkout legal readiness/onay akışı, order legal snapshot capture, customer transactional email v1, customer transactional SMS foundation + İleti Merkezi provider adapter, admin email alerts, notification outbox admin görünürlüğü + manual/automatic retry, notification template UI/API ve `commerce-ui` Next.js storefront shell + minimal design + cart foundation + product listing/search + product detail add-to-cart + customer auth/account + address book + checkout + payment return + order history + iptal/iade talebi foundation hazırlandı.
 
 ## 1. Konumlandırma
 
@@ -312,10 +312,7 @@ Hazır (SMS):
 - Customer transactional SMS foundation: `ORDER_PAID`, `ORDER_SHIPPED`, `ORDER_REQUEST_APPROVED`, `ORDER_REQUEST_REJECTED`
 - Multi-channel commerce notification outbox ve template yönetimi
 - Console SMS adapter ile uçtan uca retry/status davranışı
-
-Kalan:
-
-- İleti Merkezi gerçek SMS provider adapter
+- Platform-managed İleti Merkezi SMS provider adapter
 
 Müşteri SMS event'leri:
 
@@ -371,7 +368,7 @@ Kapsam:
 
 Hazır:
 
-- Read-only dashboard: bugünkü sipariş/ciro, son 7 gün sipariş/ciro, attention order count, başarısız ödeme denemesi count
+- Read-only dashboard: bugünkü sipariş/ciro, son 7 gün sipariş/ciro, attention order count, düşük stok varyant count, başarısız ödeme denemesi count
 - Sipariş listesi ve detay görünümü
 - Sipariş status transition aksiyonları: Preparing, Shipped, Delivered
 - Manuel fulfillment bilgisi: kargo firması, takip numarası, opsiyonel takip URL'i
@@ -380,10 +377,6 @@ Hazır:
 - İptal/iade talepleri listesi, detay ekranı ve approve/reject karar akışı
 - Admin onayında iyzico üzerinden tam refund denemesi
 - Commerce sidebar navigation
-
-Kalan:
-
-- Düşük stok uyarıları
 
 MVP dışında:
 
@@ -403,6 +396,7 @@ Config panel kısa runtime property'ler için kullanılır: boolean flag, number
 - `commerce.shipping.free_shipping_threshold`
 - `commerce.order.number_prefix`
 - `commerce.cart.max_quantity_per_product`
+- `commerce.stock.low_stock_threshold`
 - `commerce.payment.provider`
 - `commerce.payment.enabled`
 - `commerce.payment.iyzico.api_key`
@@ -412,7 +406,6 @@ Config panel kısa runtime property'ler için kullanılır: boolean flag, number
 - `commerce.notifications.email.from_name`
 - `commerce.notifications.email.reply_to`
 - `commerce.notifications.sms.enabled`
-- `commerce.notifications.sms.sender_name`
 - `commerce.notifications.*.enabled`
 - `commerce.legal.seller_*`
 

@@ -46,6 +46,8 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     private static final String KEY_SEO_INSIGHTS_ENABLED = "seo.insights.enabled";
     private static final String KEY_SEARCH_CONSOLE_PROPERTY_URL = "seo.search_console.property_url";
     private static final String KEY_OTP_RESEND_COOLDOWN_SECONDS = OtpResendCooldownService.CONFIG_KEY;
+    private static final String KEY_COMMERCE_LOW_STOCK_THRESHOLD = "commerce.stock.low_stock_threshold";
+    private static final int DEFAULT_COMMERCE_LOW_STOCK_THRESHOLD = 5;
     private static final Pattern GA4_PROPERTY_ID_PATTERN = Pattern.compile("^\\d+$");
     private static final Pattern SEARCH_CONSOLE_PROPERTY_PATTERN = Pattern.compile("^(sc-domain:.+|https?://.+)$");
     private static final List<String> MANAGED_KEYS = List.of(
@@ -56,7 +58,8 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
             KEY_GA4_PROPERTY_ID,
             KEY_SEO_INSIGHTS_ENABLED,
             KEY_SEARCH_CONSOLE_PROPERTY_URL,
-            KEY_OTP_RESEND_COOLDOWN_SECONDS);
+            KEY_OTP_RESEND_COOLDOWN_SECONDS,
+            KEY_COMMERCE_LOW_STOCK_THRESHOLD);
     private static final Set<String> MANAGED_KEYS_SET = Set.copyOf(MANAGED_KEYS);
 
     private final TenantRepository tenantRepository;
@@ -252,6 +255,12 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
                     false,
                     null,
                     null);
+            case KEY_COMMERCE_LOW_STOCK_THRESHOLD -> new ConfigPropertyResult(
+                    key,
+                    String.valueOf(DEFAULT_COMMERCE_LOW_STOCK_THRESHOLD),
+                    false,
+                    null,
+                    null);
             default -> throw new IllegalArgumentException("Unsupported managed property key: " + key);
         };
     }
@@ -317,6 +326,23 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
                                 + OtpResendCooldownService.MIN_COOLDOWN_SECONDS
                                 + " and "
                                 + OtpResendCooldownService.MAX_COOLDOWN_SECONDS);
+            }
+        }
+
+        if (KEY_COMMERCE_LOW_STOCK_THRESHOLD.equals(key)) {
+            if (secret) {
+                throw new IllegalArgumentException("Commerce low-stock threshold cannot be stored as secret");
+            }
+            if (value == null || value.isBlank()) {
+                throw new IllegalArgumentException("Commerce low-stock threshold is required");
+            }
+            try {
+                int threshold = Integer.parseInt(value.trim());
+                if (threshold < 1) {
+                    throw new IllegalArgumentException("Commerce low-stock threshold must be greater than 0");
+                }
+            } catch (NumberFormatException ex) {
+                throw new IllegalArgumentException("Commerce low-stock threshold must be a number");
             }
         }
     }

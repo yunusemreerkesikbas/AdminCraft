@@ -46,6 +46,7 @@ class CommerceAdminOrderControllerTest {
 				new CommerceAdminMetricResponse(1, BigDecimal.TEN, "TRY"),
 				new CommerceAdminMetricResponse(3, BigDecimal.valueOf(30), "TRY"),
 				0,
+				4,
 				1,
 				2,
 				"TRY"));

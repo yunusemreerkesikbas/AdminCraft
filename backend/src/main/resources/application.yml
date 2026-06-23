@@ -56,6 +56,16 @@ app:
   commerce:
     payment:
       callback-base-url: ${APP_COMMERCE_PAYMENT_CALLBACK_BASE_URL:http://localhost:8080/api}
+    sms:
+      provider: ${APP_COMMERCE_SMS_PROVIDER:console}
+      timeout-seconds: ${APP_COMMERCE_SMS_TIMEOUT_SECONDS:10}
+      ileti-merkezi:
+        base-url: ${APP_COMMERCE_SMS_ILETI_BASE_URL:https://api.iletimerkezi.com/v1/send-sms}
+        key: ${APP_COMMERCE_SMS_ILETI_KEY:}
+        hash: ${APP_COMMERCE_SMS_ILETI_HASH:}
+        sender: ${APP_COMMERCE_SMS_ILETI_SENDER:}
+        iys: ${APP_COMMERCE_SMS_ILETI_IYS:0}
+        iys-list: ${APP_COMMERCE_SMS_ILETI_IYS_LIST:}
     notifications:
       retry-job-enabled: ${APP_COMMERCE_NOTIFICATIONS_RETRY_JOB_ENABLED:true}
       retry-cron: "${APP_COMMERCE_NOTIFICATIONS_RETRY_CRON:0 */15 * * * *}"

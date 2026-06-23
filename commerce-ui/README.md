@@ -23,7 +23,17 @@ Not implemented yet:
 
 - final commerce visual design
 - production hardening around completed foundation flows
-- İleti Merkezi SMS provider adapter
+
+## Production hardening acceptance checklist
+
+- Auth restore: refresh-cookie restore works after page reload, expired sessions return to login without stale account state.
+- Cart mutation: add/update/remove/clear operations refresh header count and preserve customer/anonymous cart behavior.
+- Checkout legal acceptance: required current-language legal documents render, acceptance payload is sent, missing legal readiness blocks payment.
+- Payment return: success/failure return routes display stable states and link back to order history or checkout retry.
+- Order history: empty, loaded, error, detail, legal snapshot, and cancellation/return request states are covered.
+- Request creation: cancellation/return form handles validation errors, duplicate active request errors, and success refresh.
+- Empty/error/loading states: all commerce account, cart, checkout, orders, and request screens have non-overlapping responsive states.
+- Responsive smoke pass: mobile, tablet, and desktop layouts are checked for header, product detail, cart, checkout, account, and order detail flows.
 
 ## UI model convention
 

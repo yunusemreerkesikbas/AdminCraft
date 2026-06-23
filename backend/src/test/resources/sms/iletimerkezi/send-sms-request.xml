@@ -1,0 +1,17 @@
+<request>
+  <authentication>
+    <key>api-key</key>
+    <hash>api-hash</hash>
+  </authentication>
+  <order>
+    <sender>CRAFTIVE</sender>
+    <sendDateTime></sendDateTime>
+    <iys>0</iys>
+    <message>
+      <text><![CDATA[Order paid]]></text>
+      <receipents>
+        <number>+905551112233</number>
+      </receipents>
+    </message>
+  </order>
+</request>
