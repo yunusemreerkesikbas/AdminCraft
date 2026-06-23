@@ -143,14 +143,36 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 			return inTransaction(() -> reject(requestUid, command.decisionNote()));
 		}
 		RefundAttemptContext context = inTransaction(() -> beginRefundAttempt(requestUid, command.decisionNote()));
-		RefundPaymentResult result = refund(context);
-		return inTransaction(() -> completeRefundAttempt(context.requestUid(), result));
+		if (!context.refundAlreadySucceeded()) {
+			RefundPaymentResult result = refund(context);
+			if (!result.successful()) {
+				return inTransaction(() -> recordFailedRefundAttempt(context.requestUid(), result));
+			}
+			inTransaction(() -> {
+				recordSuccessfulRefundAttempt(context.requestUid(), result);
+				return true;
+			});
+		}
+		return inTransaction(() -> completeRefundAttempt(context.requestUid()));
 	}
 
 	private RefundAttemptContext beginRefundAttempt(String requestUid, String note) {
 		CommerceOrderResolutionRequest request = requestRepository.findByUidForUpdate(requestUid)
 				.orElseThrow(() -> new EntityNotFoundException(REQUEST_NOT_FOUND));
 		assertDecidable(request);
+		if (request.getRefundStatus() == CommerceOrderResolutionRefundStatus.SUCCEEDED) {
+			request.setDecisionNote(normalizeOptional(note));
+			requestRepository.save(request);
+			return new RefundAttemptContext(
+					request.getUid(),
+					request.getRefundProvider(),
+					request.getOrder().getProviderTransactionId(),
+					money(request.getOrder().getTotal()),
+					request.getOrder().getCurrencyIso(),
+					request.getReason(),
+					request.getDescription(),
+					true);
+		}
 		CommerceOrder order = request.getOrder();
 		LocalDateTime now = LocalDateTime.now();
 		request.setDecisionNote(normalizeOptional(note));
@@ -168,7 +190,8 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 				money(order.getTotal()),
 				order.getCurrencyIso(),
 				request.getReason(),
-				request.getDescription());
+				request.getDescription(),
+				false);
 	}
 
 	private RefundPaymentResult refund(RefundAttemptContext context) {
@@ -192,7 +215,7 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 		}
 	}
 
-	private CommerceOrderResolutionRequestResponse completeRefundAttempt(String requestUid, RefundPaymentResult result) {
+	private CommerceOrderResolutionRequestResponse recordFailedRefundAttempt(String requestUid, RefundPaymentResult result) {
 		CommerceOrderResolutionRequest request = requestRepository.findByUidForUpdate(requestUid)
 				.orElseThrow(() -> new EntityNotFoundException(REQUEST_NOT_FOUND));
 		if (request.getStatus() != CommerceOrderResolutionRequestStatus.PENDING) {
@@ -201,14 +224,41 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 		if (request.getRefundStatus() != CommerceOrderResolutionRefundStatus.PROCESSING) {
 			throw new CommerceDomainException(REQUEST_REFUND_PROCESSING);
 		}
-		if (!result.successful()) {
-			request.setRefundStatus(CommerceOrderResolutionRefundStatus.FAILED);
-			request.setRefundReference(null);
-			request.setRefundFailureCode(result.failureCode());
-			request.setRefundFailureMessageKey(nonBlankOrDefault(result.failureMessageKey(), REFUND_FAILED));
-			CommerceOrderResolutionRequest saved = requestRepository.save(request);
-			adminNotificationService.notifyRefundOperationFailed(saved);
-			return CommerceOrderResolutionRequestResponse.from(saved);
+		request.setRefundStatus(CommerceOrderResolutionRefundStatus.FAILED);
+		request.setRefundReference(null);
+		request.setRefundFailureCode(result.failureCode());
+		request.setRefundFailureMessageKey(nonBlankOrDefault(result.failureMessageKey(), REFUND_FAILED));
+		CommerceOrderResolutionRequest saved = requestRepository.save(request);
+		adminNotificationService.notifyRefundOperationFailed(saved);
+		return CommerceOrderResolutionRequestResponse.from(saved);
+	}
+
+	private void recordSuccessfulRefundAttempt(String requestUid, RefundPaymentResult result) {
+		CommerceOrderResolutionRequest request = requestRepository.findByUidForUpdate(requestUid)
+				.orElseThrow(() -> new EntityNotFoundException(REQUEST_NOT_FOUND));
+		if (request.getStatus() != CommerceOrderResolutionRequestStatus.PENDING) {
+			throw new CommerceDomainException(REQUEST_NOT_PENDING);
+		}
+		if (request.getRefundStatus() != CommerceOrderResolutionRefundStatus.PROCESSING) {
+			throw new CommerceDomainException(REQUEST_REFUND_PROCESSING);
+		}
+		LocalDateTime now = LocalDateTime.now();
+		request.setRefundStatus(CommerceOrderResolutionRefundStatus.SUCCEEDED);
+		request.setRefundReference(result.refundReference());
+		request.setRefundFailureCode(null);
+		request.setRefundFailureMessageKey(null);
+		request.setRefundedAt(now);
+		requestRepository.save(request);
+	}
+
+	private CommerceOrderResolutionRequestResponse completeRefundAttempt(String requestUid) {
+		CommerceOrderResolutionRequest request = requestRepository.findByUidForUpdate(requestUid)
+				.orElseThrow(() -> new EntityNotFoundException(REQUEST_NOT_FOUND));
+		if (request.getStatus() != CommerceOrderResolutionRequestStatus.PENDING) {
+			throw new CommerceDomainException(REQUEST_NOT_PENDING);
+		}
+		if (request.getRefundStatus() != CommerceOrderResolutionRefundStatus.SUCCEEDED) {
+			throw new CommerceDomainException(REQUEST_REFUND_PROCESSING);
 		}
 
 		LocalDateTime now = LocalDateTime.now();
@@ -217,12 +267,6 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 		request.setDecidedAt(now);
 		request.setDecidedByUserId(SecurityUtil.getCurrentUserId());
 		request.setDecidedByEmail(SecurityUtil.getCurrentUserEmail());
-		request.setRefundStatus(CommerceOrderResolutionRefundStatus.SUCCEEDED);
-		request.setRefundReference(result.refundReference());
-		request.setRefundFailureCode(null);
-		request.setRefundFailureMessageKey(null);
-		request.setRefundedAt(now);
-
 		CommerceOrderStatus finalStatus = finalStatus(request.getType());
 		CommerceOrderStatus fromStatus = order.getStatus();
 		order.setStatus(finalStatus);
@@ -237,7 +281,7 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 	private CommerceOrderResolutionRequestResponse reject(String requestUid, String note) {
 		CommerceOrderResolutionRequest request = requestRepository.findByUidForUpdate(requestUid)
 				.orElseThrow(() -> new EntityNotFoundException(REQUEST_NOT_FOUND));
-		assertDecidable(request);
+		assertRejectable(request);
 		LocalDateTime now = LocalDateTime.now();
 		CommerceOrder order = request.getOrder();
 		CommerceOrderStatus fromStatus = order.getStatus();
@@ -259,6 +303,16 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 			throw new CommerceDomainException(REQUEST_NOT_PENDING);
 		}
 		if (request.getRefundStatus() == CommerceOrderResolutionRefundStatus.PROCESSING) {
+			throw new CommerceDomainException(REQUEST_REFUND_PROCESSING);
+		}
+	}
+
+	private void assertRejectable(CommerceOrderResolutionRequest request) {
+		if (request.getStatus() != CommerceOrderResolutionRequestStatus.PENDING) {
+			throw new CommerceDomainException(REQUEST_NOT_PENDING);
+		}
+		if (request.getRefundStatus() == CommerceOrderResolutionRefundStatus.PROCESSING
+				|| request.getRefundStatus() == CommerceOrderResolutionRefundStatus.SUCCEEDED) {
 			throw new CommerceDomainException(REQUEST_REFUND_PROCESSING);
 		}
 	}
@@ -367,6 +421,7 @@ class CommerceOrderResolutionRequestServiceImpl implements CommerceOrderResoluti
 			BigDecimal amount,
 			String currencyIso,
 			String reason,
-			String description) {
+			String description,
+			boolean refundAlreadySucceeded) {
 	}
 }
