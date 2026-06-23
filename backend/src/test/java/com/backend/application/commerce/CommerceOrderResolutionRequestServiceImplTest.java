@@ -3,6 +3,7 @@ package com.backend.application.commerce;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -16,6 +17,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -171,6 +173,46 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 	}
 
 	@Test
+	void decide_ShouldPersistSuccessfulRefundBeforeFinalizingOrder() {
+		CommerceOrder order = order(CommerceOrderStatus.CANCELLATION_REQUESTED);
+		CommerceOrderResolutionRequest request = request(order, CommerceOrderResolutionRequestType.CANCELLATION);
+		when(requestRepository.findByUidForUpdate("request-uid")).thenReturn(Optional.of(request));
+		when(paymentConfigResolver.credentialsForProvider("iyzico")).thenReturn(new Credentials("api", "secret", "https://sandbox-api.iyzipay.com"));
+		when(paymentProvider.refundPayment(any())).thenReturn(new RefundPaymentResult(true, "refund-123", null, null));
+		when(stockPort.restore(any())).thenReturn(new CommerceProductVariantStockPort.StockAdjustmentResult(true, null));
+		when(requestRepository.save(request)).thenReturn(request);
+
+		service.decide("request-uid", new CommerceOrderResolutionDecisionCommand(true, "Approved"));
+
+		InOrder orderVerifier = inOrder(requestRepository, paymentProvider, stockPort);
+		orderVerifier.verify(requestRepository).save(request);
+		orderVerifier.verify(paymentProvider).refundPayment(any());
+		orderVerifier.verify(requestRepository).save(request);
+		orderVerifier.verify(stockPort).restore(any());
+	}
+
+	@Test
+	void decide_ShouldFinalizePersistedSuccessfulRefundWithoutCallingProviderAgain() {
+		CommerceOrder order = order(CommerceOrderStatus.CANCELLATION_REQUESTED);
+		CommerceOrderResolutionRequest request = request(order, CommerceOrderResolutionRequestType.CANCELLATION);
+		request.setRefundStatus(CommerceOrderResolutionRefundStatus.SUCCEEDED);
+		request.setRefundReference("refund-123");
+		when(requestRepository.findByUidForUpdate("request-uid")).thenReturn(Optional.of(request));
+		when(stockPort.restore(any())).thenReturn(new CommerceProductVariantStockPort.StockAdjustmentResult(true, null));
+		when(requestRepository.save(request)).thenReturn(request);
+
+		var response = service.decide(
+				"request-uid",
+				new CommerceOrderResolutionDecisionCommand(true, "Approved"));
+
+		assertThat(order.getStatus()).isEqualTo(CommerceOrderStatus.CANCELLED);
+		assertThat(request.getStatus()).isEqualTo(CommerceOrderResolutionRequestStatus.APPROVED);
+		assertThat(request.getRefundStatus()).isEqualTo(CommerceOrderResolutionRefundStatus.SUCCEEDED);
+		assertThat(response.refundReference()).isEqualTo("refund-123");
+		verify(paymentProvider, never()).refundPayment(any());
+	}
+
+	@Test
 	void decide_ShouldLeaveRequestPendingWhenRefundFails() {
 		CommerceOrder order = order(CommerceOrderStatus.RETURN_REQUESTED);
 		CommerceOrderResolutionRequest request = request(order, CommerceOrderResolutionRequestType.RETURN);
@@ -223,6 +265,26 @@ class CommerceOrderResolutionRequestServiceImplTest extends BaseServiceTest {
 		assertThat(request.getStatus()).isEqualTo(CommerceOrderResolutionRequestStatus.REJECTED);
 		verify(paymentProvider, never()).refundPayment(any());
 		verify(notificationService).notifyOrderRequestDecided(request);
+	}
+
+	@Test
+	void decide_ShouldNotRejectRequestAfterRefundSucceeded() {
+		CommerceOrder order = order(CommerceOrderStatus.CANCELLATION_REQUESTED);
+		CommerceOrderResolutionRequest request = request(order, CommerceOrderResolutionRequestType.CANCELLATION);
+		request.setRefundStatus(CommerceOrderResolutionRefundStatus.SUCCEEDED);
+		request.setRefundReference("refund-123");
+		when(requestRepository.findByUidForUpdate("request-uid")).thenReturn(Optional.of(request));
+
+		assertThatThrownBy(() -> service.decide(
+				"request-uid",
+				new CommerceOrderResolutionDecisionCommand(false, "Reject after refund")))
+				.isInstanceOf(CommerceDomainException.class)
+				.hasMessage("commerce.order.request.refund.processing");
+
+		assertThat(request.getStatus()).isEqualTo(CommerceOrderResolutionRequestStatus.PENDING);
+		assertThat(order.getStatus()).isEqualTo(CommerceOrderStatus.CANCELLATION_REQUESTED);
+		verify(requestRepository, never()).save(any());
+		verify(notificationService, never()).notifyOrderRequestDecided(any());
 	}
 
 	private CommerceCustomerPrincipal principal() {

@@ -89,7 +89,7 @@ public class SecurityConfig {
 												.requestMatchers(HttpMethod.POST, "/commerce/payments/iyzico/checkout-form/callback").permitAll()
 												.requestMatchers("/commerce/payments", "/commerce/payments/**").hasRole("COMMERCE_CUSTOMER")
 												.requestMatchers("/commerce/orders", "/commerce/orders/**").hasRole("COMMERCE_CUSTOMER")
-												.requestMatchers("/commerce/cart/**").permitAll() // Public Commerce cart API
+												.requestMatchers("/commerce/cart", "/commerce/cart/**").permitAll() // Public Commerce cart API
 												.requestMatchers("/cms/preview/**").authenticated() // SmartEdit preview ticket issue (TENANT_ADMIN via @PreAuthorize)
                                                 .requestMatchers("/cms/**").permitAll() // CMS Delivery API (public)
                                                 .requestMatchers("/media/files/**").permitAll() // Media file downloads
