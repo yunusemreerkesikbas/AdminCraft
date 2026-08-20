@@ -19,6 +19,7 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Base services                | [`../../docker-compose.yml`](../../docker-compose.yml)                                                                                                                   |
 | Production overrides         | [`../../docker-compose.prod.yml`](../../docker-compose.prod.yml)                                                                                                         |
+| 1 GB production limits       | [`../../docker-compose.prod-small.yml`](../../docker-compose.prod-small.yml)                                                                                             |
 | Stage overrides              | [`../../docker-compose.stage.yml`](../../docker-compose.stage.yml)                                                                                                       |
 | Dev overrides                | [`../../docker-compose.dev.yml`](../../docker-compose.dev.yml)                                                                                                           |
 | Next.js SSR image            | [`../../docker/storefront/Dockerfile`](../../docker/storefront/Dockerfile)                                                                                               |
@@ -50,6 +51,7 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 - **Production requires reviewer approval.** The `production` GitHub Environment gate must not be bypassed.
 - **Ports 3306, 8080, 3000 are never externally reachable.** UFW allows only 22, 80, 443.
 - **Wildcard SSL (`*.craftive.io`) requires DNS-01.** HTTP-01 cannot issue wildcard certs; Cloudflare is the DNS provider.
+- **Custom tenant domains use HTTP-01.** This keeps certificate issuance and renewal independent from customer DNS-zone permissions in the platform Cloudflare token.
 - **Cloudflare SSL mode must be Full (strict) for prod.** Flexible mode breaks backend TLS validation. Stage DNS records use DNS-only (grey cloud) — Traefik serves Let's Encrypt certs directly.
 - **Stage subdomains use single-level `s1-*` convention.** Cloudflare Universal SSL covers `*.craftive.io` (single level only). Stage services use `s1-api`, `s1-app`, `s1-cdn` (hyphen, single-level) so Cloudflare proxy (orange cloud) works. Old two-level patterns (`s1.api`, `s1.app`) caused `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` and required DNS-only mode.
 - **Backend requires `spring-boot-starter-actuator`.** Health checks depend on `/api/actuator/health`. Without this dependency, all health checks fail and Traefik marks the backend as unhealthy.
@@ -57,6 +59,7 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 - **CORS is profile-driven, not hardcoded.** `allowedOrigins` and `allowedOriginPatterns` come from `CorsProperties` bound to `application-{env}.yml`; `SecurityConfig` must not contain hardcoded origin strings.
 - **`deploy` user has docker group only — no sudo.** Workflows SSH as `deploy`, never root.
 - **Prod images are tagged with release date** (`release-DD.MM.YYYY` + `latest`). Stage images use `stage-{sha}`.
+- **The $6 / 1 GB production Droplet uses `docker-compose.prod-small.yml`.** The platform deploy starts only MySQL, backend, frontend, and Traefik. The shared demo storefront and Alloy are omitted; tenant storefronts remain separate and default to a 256 MB limit.
 - **Tenant storefront deploy is isolated per tenant.** Every tenant storefront runs as a separate compose project (`tenant-{env}-{slug}`), with its own router labels and domains.
 - **Centralized logs flow to Grafana Cloud Loki via Alloy.** Stage and prod hosts run Alloy as part of compose; Grafana users are account seats (not tenant count).
 - **Alloy mounts Docker socket (read-only flag; accepted risk).** Required for container log discovery. The `:ro` flag does not restrict Unix socket API access. Mitigation: Alloy container is isolated to `craftive-network` with no published ports. Future option: use a socket proxy allowlist.
@@ -375,14 +378,14 @@ Stage inherits the same middleware values from `docker-compose.prod.yml` and onl
 | `PROD_DROPLET_IP`                         | `deploy-prod.yml`                                                                                              |
 | `STAGE_DROPLET_IP`                        | `deploy-stage.yml`                                                                                             |
 | `CF_API_TOKEN`                            | Traefik DNS-01 (injected via `.env.*`)                                                                         |
-| `ENV_PROD`                                | `.env.prod` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for prod bucket   |
-| `ENV_STAGE`                               | `.env.stage` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for stage bucket |
+| `ENV_PROD`                                | `.env.prod` content, base64-encoded — includes the `STORAGE_S3_*` variables for Cloudflare R2                 |
+| `ENV_STAGE`                               | `.env.stage` content, base64-encoded — includes provider-specific `STORAGE_S3_*` variables                    |
 | `CMS_PREVIEW_SECRET_PROD`                 | `deploy-prod.yml` — exported as shell env var, NOT in `ENV_PROD`                                               |
 | `CMS_PREVIEW_SECRET_STAGE`                | `deploy-stage.yml` — exported as shell env var, NOT in `ENV_STAGE`                                             |
 | `APP_ANALYTICS_GA4_JSON_BASE64_PROD`      | `deploy-prod.yml` — exported as shell env var, NOT in `ENV_PROD`                                               |
 | `APP_ANALYTICS_GA4_JSON_BASE64_STAGE`     | `deploy-stage.yml` — exported as shell env var, NOT in `ENV_STAGE`                                             |
 
-Use separate DO Spaces key pairs for stage and prod (stage key compromise cannot affect prod bucket).
+Use separate object-storage key pairs for stage and prod (a stage key must never access the prod bucket).
 
 `GITHUB_TOKEN` is auto-injected by GitHub Actions (no explicit secret needed for GHCR push).
 
@@ -528,11 +531,10 @@ bash scripts/server/deploy-files.sh prod <PROD_IP>
 Daily cron (03:00 UTC+3) on each Droplet, run by `deploy` user:
 
 ```
-mysqldump --all-databases | gzip → DO Spaces: craftive-backups/{env}/YYYY-MM-DD.sql.gz
+mysqldump --all-databases | gzip → Cloudflare R2: craftive-backups-prod/database/YYYY-MM-DD/
 ```
 
-`rclone` credentials are stored in `/home/deploy/.config/rclone/rclone.conf` so cron and manual backup runs use the same user context.
-30-day retention enforced via Spaces lifecycle policy.
+R2 credentials are stored in `/home/deploy/.config/rclone/rclone.conf`; the backup job runs the official rclone container with that config mounted read-only. Local dumps are retained for 7 days. Configure an R2 lifecycle rule separately when remote retention is required.
 
 ### Rollback pattern (platform)
 
@@ -548,11 +550,10 @@ Manual rollback (if needed):
 Daily cron (03:00 UTC+3) on each Droplet, run by `deploy` user:
 
 ```
-mysqldump --all-databases | gzip → DO Spaces: craftive-backups/{env}/YYYY-MM-DD.sql.gz
+mysqldump --all-databases | gzip → Cloudflare R2: craftive-backups-prod/database/YYYY-MM-DD/
 ```
 
-`rclone` credentials are stored in `/home/deploy/.config/rclone/rclone.conf` so cron and manual backup runs use the same user context.
-30-day retention enforced via Spaces lifecycle policy.
+R2 credentials are stored in `/home/deploy/.config/rclone/rclone.conf`; the backup job runs the official rclone container with that config mounted read-only. Local dumps are retained for 7 days. Configure an R2 lifecycle rule separately when remote retention is required.
 
 ### Rollback pattern (platform)
 
@@ -595,8 +596,8 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **DigitalOcean blocks outbound SMTP port 587 by default.** Request unblock via DO support ticket for email functionality. Until then, `management.health.mail.enabled` must be `false` to prevent health check timeouts.
 - **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1-api.*`, `s1-app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
 - **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `s1-{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax.
-- **Cloudflare Origin Rule (Host Header Override) is Enterprise-only.** Cloudflare proxy sends `Host: s1-cdn.craftive.io` to DO Spaces, which cannot resolve the bucket and returns `AccessDenied`. Origin Rules that override the Host header require Enterprise plan. Solution: use a **Cloudflare Worker** as reverse proxy — it rewrites the hostname to the DO Spaces CDN endpoint before forwarding (`craftive-media-stage.fra1.cdn.digitaloceanspaces.com`). CDN DNS records use `AAAA 100::` (dummy IPv6, Proxied) so the Worker intercepts all requests.
-- **DO Spaces CDN must be enabled (without custom domain).** Worker proxies to the DO CDN endpoint (`fra1.cdn.digitaloceanspaces.com`), so origin-level caching is active. Do not add a custom subdomain in DO Spaces CDN settings — custom subdomain requires the domain to be managed on DigitalOcean DNS.
-- **S3 objects must be uploaded with `public-read` ACL.** DO Spaces objects are private by default. Without `ObjectCannedACL.PUBLIC_READ` on `PutObjectRequest`, CDN delivery always returns `AccessDenied` regardless of DNS or proxy configuration.
+- **Prod media is served directly from Cloudflare R2.** `media.craftive.io` is the R2 custom domain for `craftive-media-prod`; no Worker route may overlap `media.craftive.io/*`. An old Spaces proxy Worker route takes precedence over R2 and makes newly uploaded R2-only objects return 403.
+- **Stage storage is provider-configured.** If a future stage environment uses a different S3-compatible provider, set all `STORAGE_S3_*` values explicitly and keep its credentials isolated from prod.
+- **Public access is provider-specific.** The S3 adapter sends the broadly compatible `public-read` canned ACL, while R2 public delivery is controlled at bucket custom-domain level. Keep `media.craftive.io` enabled on the R2 bucket.
 - **Cloudflare Cache Rule hostname must match the actual CDN subdomain exactly.** A rule matching `s1.media.craftive.io` does not apply to `s1-cdn.craftive.io`. Verify the Cache Rule expression after any CDN domain rename. When using Workers, the Worker route (`s1-cdn.craftive.io/*`) takes precedence — Cache Rules apply to Worker responses as normal.
 - **Alloy `stage.replace` replaces the capture group, not the full match.** When a regex has a capture group `(...)`, only the captured portion is substituted. Use `(?:...)` for non-capturing groups and place `(...)` only around the value to redact. Example: `"(?:password|secret)\\s*[:=]\\s*(\\S+)"` replaces only the credential value, keeping the keyword intact.

@@ -56,10 +56,14 @@ PRIMARY_DOMAIN="${4:-}"
 EXTRA_DOMAINS_CSV="${5:-}"
 CANONICAL_HOST="${6:-}"
 BASE_DOMAIN="${BASE_DOMAIN:-craftive.io}"
+TENANT_MEMORY_LIMIT="${TENANT_MEMORY_LIMIT:-256M}"
+TENANT_CPU_LIMIT="${TENANT_CPU_LIMIT:-0.50}"
 
 [[ "${ENV}" != "stage" && "${ENV}" != "prod" ]] && error "Environment must be 'stage' or 'prod'."
 [[ "${TENANT_SLUG}" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || error "Invalid tenant slug: ${TENANT_SLUG}"
 [[ "${IMAGE_REF}" =~ ^[^[:space:]]+$ ]] || error "Image reference must not contain spaces."
+[[ "${TENANT_MEMORY_LIMIT}" =~ ^[1-9][0-9]*(M|G)$ ]] || error "Invalid TENANT_MEMORY_LIMIT: ${TENANT_MEMORY_LIMIT}"
+[[ "${TENANT_CPU_LIMIT}" =~ ^[0-9]+([.][0-9]+)?$ ]] || error "Invalid TENANT_CPU_LIMIT: ${TENANT_CPU_LIMIT}"
 
 if [[ "${IMAGE_REF}" != *:* && "${IMAGE_REF}" != *@* ]]; then
   warn "Image reference has no explicit tag/digest: ${IMAGE_REF}"
@@ -73,6 +77,25 @@ if [[ -z "${PRIMARY_DOMAIN}" ]]; then
     PRIMARY_DOMAIN="s1-${TENANT_SLUG}.${BASE_DOMAIN}"
   else
     PRIMARY_DOMAIN="${TENANT_SLUG}.${BASE_DOMAIN}"
+  fi
+fi
+
+if [[ -z "${CMS_API_URL:-}" ]]; then
+  if [[ "${ENV}" == "stage" ]]; then
+    CMS_API_URL="https://s1-api.${BASE_DOMAIN}/api"
+  else
+    CMS_API_URL="https://api.${BASE_DOMAIN}/api"
+  fi
+fi
+
+# Platform-owned craftive.io hosts use the DNS-01 resolver (required for the
+# wildcard certificate). Customer-owned custom domains use HTTP-01 so Traefik
+# can issue and renew certificates without access to each customer's DNS zone.
+if [[ -z "${CERT_RESOLVER:-}" ]]; then
+  if [[ "${PRIMARY_DOMAIN}" == "${BASE_DOMAIN}" || "${PRIMARY_DOMAIN}" == *."${BASE_DOMAIN}" ]]; then
+    CERT_RESOLVER="letsencrypt"
+  else
+    CERT_RESOLVER="letsencrypt-http"
   fi
 fi
 
@@ -151,7 +174,7 @@ if [[ "${#REDIRECT_DOMAINS[@]}" -gt 0 ]]; then
   REDIRECT_LABELS+="      traefik.http.middlewares.${ROUTER_NAME}-canonical.redirectregex.permanent: \"true\"\n"
   REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.rule: \"${REDIRECT_HOST_RULE}\"\n"
   REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.entrypoints: \"websecure\"\n"
-  REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.tls.certresolver: \"letsencrypt\"\n"
+  REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.tls.certresolver: \"${CERT_RESOLVER}\"\n"
   REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.middlewares: \"${ROUTER_NAME}-canonical@docker\"\n"
   REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.priority: \"20\"\n"
   REDIRECT_LABELS+="      traefik.http.routers.${ROUTER_NAME}-redirect.service: \"${ROUTER_NAME}@docker\"\n"
@@ -164,15 +187,22 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
       TENANT_SUBDOMAIN: ${TENANT_SLUG}
       TENANT_HOSTNAME: ${PRIMARY_DOMAIN}
+      NEXT_PUBLIC_CMS_API_URL: ${CMS_API_URL}
+    deploy:
+      resources:
+        limits:
+          memory: ${TENANT_MEMORY_LIMIT}
+          cpus: "${TENANT_CPU_LIMIT}"
     networks:
       - craftive-network
     labels:
       traefik.enable: "true"
       traefik.http.routers.${ROUTER_NAME}.rule: "${MAIN_HOST_RULE}"
       traefik.http.routers.${ROUTER_NAME}.entrypoints: "websecure"
-      traefik.http.routers.${ROUTER_NAME}.tls.certresolver: "letsencrypt"
+      traefik.http.routers.${ROUTER_NAME}.tls.certresolver: "${CERT_RESOLVER}"
       traefik.http.routers.${ROUTER_NAME}.priority: "20"
       traefik.http.services.${ROUTER_NAME}.loadbalancer.server.port: "3000"
 $(printf '%b' "${REDIRECT_LABELS}")
@@ -184,9 +214,13 @@ EOF
 log "Rendered compose: ${COMPOSE_FILE}"
 log "Deploying tenant storefront (${TENANT_SLUG}) to ${ENV}..."
 
-log "Pulling image ${IMAGE_REF}..."
-if ! docker compose -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" pull; then
-  error "docker compose pull failed — leaving existing stack running."
+if [[ "${TENANT_SKIP_PULL:-false}" == "true" ]]; then
+  warn "TENANT_SKIP_PULL=true — using the image already present on the host"
+else
+  log "Pulling image ${IMAGE_REF}..."
+  if ! docker compose -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" pull; then
+    error "docker compose pull failed — leaving existing stack running."
+  fi
 fi
 
 # Tear down previous stack so recreate/up does not hit Docker container name conflicts.
@@ -212,4 +246,3 @@ echo "  Image       : ${IMAGE_REF}"
 echo "  Project     : ${PROJECT_NAME}"
 echo "  Domains     : ${DOMAINS[*]}"
 [[ -n "${CANONICAL_HOST}" ]] && echo "  Canonical   : ${CANONICAL_HOST} (301 from: ${REDIRECT_DOMAINS[*]:-none})"
-

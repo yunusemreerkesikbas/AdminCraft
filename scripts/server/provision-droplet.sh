@@ -12,6 +12,11 @@
 
 set -euo pipefail
 
+# Package operations run over non-interactive SSH during provisioning. Keep the
+# image's existing config files so upgrades cannot block waiting for input.
+export DEBIAN_FRONTEND=noninteractive
+APT_GET=(apt-get -o Dpkg::Options::=--force-confold)
+
 # -----------------------------------------------------------------------------
 # Colors & helpers
 # -----------------------------------------------------------------------------
@@ -52,9 +57,9 @@ echo -e "${BOLD}═════════════════════�
 # 1. System update
 # -----------------------------------------------------------------------------
 section "Updating system packages"
-apt-get update -qq
-apt-get upgrade -y -qq
-apt-get install -y -qq \
+"${APT_GET[@]}" update -qq
+"${APT_GET[@]}" upgrade -y -qq
+"${APT_GET[@]}" install -y -qq \
   curl wget git unzip \
   ca-certificates gnupg \
   ufw fail2ban \
@@ -97,8 +102,8 @@ else
     https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
     | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-  apt-get update -qq
-  apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  "${APT_GET[@]}" update -qq
+  "${APT_GET[@]}" install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   systemctl enable --now docker
   log "Docker CE installed: $(docker --version)"
 fi
@@ -263,7 +268,7 @@ section "Setting up backup system"
 
 cat > /opt/craftive/backup.sh <<BACKUP_EOF
 #!/usr/bin/env bash
-# Craftive — MySQL Backup to DO Spaces
+# Craftive — MySQL Backup to Cloudflare R2
 # Cron: runs daily at 03:00
 
 set -euo pipefail
@@ -291,16 +296,17 @@ docker exec "\${CONTAINER}" mysqldump \\
 
 echo "\$(date): Backup created: \${DUMP_FILE} (\$(du -sh \${DUMP_FILE} | cut -f1))"
 
-# Upload to DO Spaces (rclone must be installed/configured)
-if command -v rclone &>/dev/null; then
-  rclone copy "\${DUMP_FILE}" "spaces:craftive-backups/\${ENV}/\${DATE}/" --quiet
-  echo "\$(date): Uploaded to DO Spaces"
-  rm -f "\${DUMP_FILE}"
-else
-  echo "\$(date): WARNING: rclone is not installed, backup kept locally"
-fi
+# Upload through the rclone container. The host config is owned by deploy and
+# mounted read-only so cron does not need a native rclone installation.
+RCLONE_CONFIG_DIR="/home/${DEPLOY_USER}/.config/rclone"
+docker run --rm --memory=128m \
+  -v "\${RCLONE_CONFIG_DIR}:/config/rclone:ro" \
+  -v "\${BACKUP_DIR}:\${BACKUP_DIR}:ro" \
+  rclone/rclone:latest copy "\${DUMP_FILE}" \
+  "r2:craftive-backups-prod/database/\${DATE}/" --s3-no-check-bucket --quiet
+echo "\$(date): Uploaded to Cloudflare R2"
 
-# Delete local backups older than 7 days (Spaces handles 30-day retention)
+# Keep a seven-day local recovery window.
 find "\${BACKUP_DIR}" -name "*.sql.gz" -mtime +7 -delete
 BACKUP_EOF
 
@@ -310,7 +316,9 @@ chown "${DEPLOY_USER}:${DEPLOY_USER}" /opt/craftive/backup.sh
 # Cron job — daily at 03:00 (UTC+3 = 00:00 UTC)
 CRON_JOB="0 0 * * * /opt/craftive/backup.sh >> /opt/craftive/logs/backup.log 2>&1"
 if ! crontab -l -u "${DEPLOY_USER}" 2>/dev/null | grep -qF "backup.sh"; then
-  (crontab -l -u "${DEPLOY_USER}" 2>/dev/null; echo "${CRON_JOB}") | crontab -u "${DEPLOY_USER}" -
+  # `crontab -l` exits with 1 when the user has no crontab yet. That is an
+  # expected first-run state and must not abort provisioning under pipefail.
+  (crontab -l -u "${DEPLOY_USER}" 2>/dev/null || true; echo "${CRON_JOB}") | crontab -u "${DEPLOY_USER}" -
   log "Backup cron job added: daily at 03:00 (Istanbul)"
 else
   warn "Backup cron job already exists"
@@ -337,12 +345,12 @@ log "Log rotation: 14 days, daily compression"
 # -----------------------------------------------------------------------------
 # 12. rclone install (for DO Spaces)
 # -----------------------------------------------------------------------------
-section "Installing rclone (DO Spaces backup)"
+section "Installing rclone (Cloudflare R2 backup)"
 
 if command -v rclone &>/dev/null; then
   warn "rclone is already installed: $(rclone --version | head -1)"
 else
-  apt-get install -y -qq rclone
+  "${APT_GET[@]}" install -y -qq rclone
   log "rclone installed: $(rclone --version | head -1)"
 fi
 

@@ -42,8 +42,12 @@ services:
       PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}
       EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
-      SPACES_ACCESS_KEY: ${SPACES_ACCESS_KEY}
-      SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
+      STORAGE_S3_ACCESS_KEY: ${STORAGE_S3_ACCESS_KEY}
+      STORAGE_S3_SECRET_KEY: ${STORAGE_S3_SECRET_KEY}
+      STORAGE_S3_ENDPOINT: ${STORAGE_S3_ENDPOINT}
+      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}
+      STORAGE_S3_REGION: ${STORAGE_S3_REGION:-auto}
+      STORAGE_S3_CDN_BASE_URL: ${STORAGE_S3_CDN_BASE_URL}
       APP_SEO_CRUX_API_KEY: ${APP_SEO_CRUX_API_KEY}
       CMS_PREVIEW_SECRET: ${CMS_PREVIEW_SECRET}
       APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64: ${APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64}
@@ -177,6 +181,12 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # Custom tenant domains use HTTP-01 so their certificate lifecycle does
+      # not require the platform Cloudflare token to cover every customer zone.
+      - "--certificatesresolvers.letsencrypt-http.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt-http.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt-http.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt-http.acme.storage=/letsencrypt/acme-http.json"
     environment:
       CF_API_TOKEN: ${CF_API_TOKEN}
       CLOUDFLARE_DNS_API_TOKEN: ${CF_API_TOKEN}

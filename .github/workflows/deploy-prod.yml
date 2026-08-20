@@ -99,7 +99,7 @@ jobs:
           host: ${{ secrets.PROD_DROPLET_IP }}
           username: deploy
           key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,docker-compose.prod.yml"
+          source: "docker-compose.yml,docker-compose.prod.yml,docker-compose.prod-small.yml"
           target: /opt/craftive/prod
 
       - name: Save current version
@@ -154,11 +154,12 @@ jobs:
             export CMS_PREVIEW_SECRET="${{ secrets.CMS_PREVIEW_SECRET_PROD }}"
             export APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64="${{ secrets.APP_ANALYTICS_GA4_JSON_BASE64_PROD }}"
 
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml \
-              --env-file .env.prod pull
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.prod-small.yml \
+              --env-file .env.prod pull mysql-db backend frontend traefik
 
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml \
-              --env-file .env.prod up -d --remove-orphans --force-recreate
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.prod-small.yml \
+              --env-file .env.prod up -d --remove-orphans --force-recreate \
+              mysql-db backend frontend traefik
 
             echo "${APP_VERSION}" > .last-deployed-tag
 
@@ -223,8 +224,9 @@ jobs:
             export GHCR_ORG=${{ github.repository_owner }}
             export CMS_PREVIEW_SECRET="${{ secrets.CMS_PREVIEW_SECRET_PROD }}"
             export APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64="${{ secrets.APP_ANALYTICS_GA4_JSON_BASE64_PROD }}"
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml \
-              --env-file .env.prod up -d --remove-orphans
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.prod-small.yml \
+              --env-file .env.prod up -d --remove-orphans \
+              mysql-db backend frontend traefik
             echo "Rollback complete: $PREV_TAG"
 
       - name: Smoke test — Admin panel
