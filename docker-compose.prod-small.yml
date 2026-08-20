@@ -1,0 +1,27 @@
+# Craftive production overlay for the $6 / 1 GB DigitalOcean Droplet.
+#
+# Keep the platform stack intentionally small. The production workflow starts
+# only mysql-db, backend, frontend and traefik; the active tenant storefront is
+# deployed separately with scripts/server/deploy-tenant-storefront.sh.
+services:
+  mysql-db:
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+        reservations:
+          memory: 192M
+
+  backend:
+    environment:
+      JAVA_TOOL_OPTIONS: >-
+        -Xms128m -Xmx256m -XX:+UseSerialGC
+        -XX:+ExitOnOutOfMemoryError
+    deploy:
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M

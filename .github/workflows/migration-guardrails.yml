@@ -36,4 +36,4 @@ jobs:
         run: bash scripts/migrations/lint-migrations.sh
 
       - name: Backend compile sanity
-        run: ./mvnw -q -pl backend -DskipTests compile
+        run: ./mvnw -q -f backend/pom.xml -DskipTests compile

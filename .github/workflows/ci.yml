@@ -23,7 +23,7 @@ jobs:
           cache: 'maven'
 
       - name: Compile
-        run: ./mvnw -q -pl backend -DskipTests compile
+        run: ./mvnw -q -f backend/pom.xml -DskipTests compile
 
       - name: Migration immutability check
         run: bash scripts/migrations/check-versioned-immutability.sh
@@ -46,7 +46,7 @@ jobs:
           cache: 'maven'
 
       - name: Run tests
-        run: ./mvnw -pl backend test
+        run: ./mvnw -f backend/pom.xml test
 
   frontend-ci:
     name: Frontend — Build Check (Angular)

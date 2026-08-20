@@ -298,8 +298,12 @@ npm run build:static
 | `PLATFORM_DOMAIN`       | Platform domain                | Yes                |
 | `EMAIL_FROM_ADDRESS`    | Default sender email           | Yes                |
 | `EMAIL_FROM_NAME`       | Default sender name            | Yes                |
-| `SPACES_ACCESS_KEY`     | DO Spaces access key (S3)      | Yes (stage/prod)   |
-| `SPACES_SECRET_KEY`     | DO Spaces secret key (S3)      | Yes (stage/prod)   |
+| `STORAGE_S3_ENDPOINT`   | S3-compatible API endpoint     | Yes (stage/prod)   |
+| `STORAGE_S3_BUCKET`     | Media object bucket            | Yes (stage/prod)   |
+| `STORAGE_S3_REGION`     | S3 region (`auto` for R2)      | Yes (stage/prod)   |
+| `STORAGE_S3_ACCESS_KEY` | S3-compatible access key       | Yes (stage/prod)   |
+| `STORAGE_S3_SECRET_KEY` | S3-compatible secret key       | Yes (stage/prod)   |
+| `STORAGE_S3_CDN_BASE_URL` | Public media custom domain   | Yes (stage/prod)   |
 | `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON` | GA4 service account JSON content | Yes, if GA4 dashboard reporting is enabled |
 | `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64` | Base64 alternative for GA4 service account JSON | Optional alternative |
 | `APP_SEO_CRUX_API_KEY` | CrUX History API key | Yes, if SEO insights performance snapshot is enabled |

@@ -14,8 +14,12 @@ services:
           cpus: '0.25'
           memory: 256M
     environment:
-      SPACES_ACCESS_KEY: ${SPACES_ACCESS_KEY}
-      SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
+      STORAGE_S3_ACCESS_KEY: ${STORAGE_S3_ACCESS_KEY}
+      STORAGE_S3_SECRET_KEY: ${STORAGE_S3_SECRET_KEY}
+      STORAGE_S3_ENDPOINT: ${STORAGE_S3_ENDPOINT}
+      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}
+      STORAGE_S3_REGION: ${STORAGE_S3_REGION:-auto}
+      STORAGE_S3_CDN_BASE_URL: ${STORAGE_S3_CDN_BASE_URL}
       APP_SEO_CRUX_API_KEY: ${APP_SEO_CRUX_API_KEY}
     labels:
       traefik.http.routers.backend.rule: "Host(`s1-api.${DOMAIN}`)"

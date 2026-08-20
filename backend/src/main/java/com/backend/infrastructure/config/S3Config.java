@@ -26,16 +26,16 @@ public class S3Config {
     public S3Client s3Client() {
         StorageConfigProperties.S3 s3 = properties.getS3();
         if (s3.getAccessKey() == null || s3.getAccessKey().isBlank()) {
-            throw new IllegalStateException("SPACES_ACCESS_KEY must be set when storage provider is s3");
+            throw new IllegalStateException("STORAGE_S3_ACCESS_KEY must be set when storage provider is s3");
         }
         if (s3.getSecretKey() == null || s3.getSecretKey().isBlank()) {
-            throw new IllegalStateException("SPACES_SECRET_KEY must be set when storage provider is s3");
+            throw new IllegalStateException("STORAGE_S3_SECRET_KEY must be set when storage provider is s3");
         }
         if (s3.getEndpoint() == null || s3.getEndpoint().isBlank()) {
-            throw new IllegalStateException("SPACES_ENDPOINT must be set when storage provider is s3");
+            throw new IllegalStateException("STORAGE_S3_ENDPOINT must be set when storage provider is s3");
         }
         if (s3.getBucket() == null || s3.getBucket().isBlank()) {
-            throw new IllegalStateException("SPACES_BUCKET must be set when storage provider is s3");
+            throw new IllegalStateException("STORAGE_S3_BUCKET must be set when storage provider is s3");
         }
         return S3Client.builder()
                 .endpointOverride(URI.create(s3.getEndpoint()))

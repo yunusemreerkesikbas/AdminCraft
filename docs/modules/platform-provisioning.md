@@ -40,6 +40,14 @@ Base path: `/api/tenants`
 - `GET /api/tenants/{tenantId}/provisioning-jobs` (provisioning job history)
 - `POST /api/tenants/{id}/generate-admin` (generate tenant admin credentials)
 
+> **TODO — Safe tenant decommissioning:** The current `DELETE /api/tenants/{id}`
+> implementation removes only the platform tenant record. Before exposing a delete
+> action in the admin UI, implement an Application-layer decommission workflow that
+> validates and drops the physical tenant database, evicts its datasource pool,
+> preserves failure recovery, and documents cleanup of independently deployed tenant
+> storefronts. Add a destructive confirmation action to the tenant list only after
+> the backend lifecycle is covered by tests.
+
 `GET /api/tenants` supports list pagination/sort/search:
 
 - Query params: `page`, `size`, `sort`, `search`, `status`

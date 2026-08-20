@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
-# configure-rclone.sh — Configure DO Spaces backup
+# configure-rclone.sh — Configure Cloudflare R2 backup
 # =============================================================================
 # Usage: bash scripts/server/configure-rclone.sh
 #
 # Requirements:
-#   - DO Spaces bucket: craftive-backups (Frankfurt / FRA1)
-#   - DO Spaces Access Key + Secret Key
-#     (DigitalOcean → API → Spaces Keys → Generate New Key)
+#   - R2 bucket: craftive-backups-prod
+#   - R2 account endpoint, Access Key ID, and Secret Access Key
 # =============================================================================
 
 set -euo pipefail
@@ -20,7 +19,7 @@ NC='\033[0m'
 log()  { echo -e "${GREEN}[✓]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 
-echo -e "\n${BOLD}rclone — DO Spaces Configuration${NC}\n"
+echo -e "\n${BOLD}rclone — Cloudflare R2 Configuration${NC}\n"
 
 command -v rclone &>/dev/null || { echo "rclone is not installed. Run provision-droplet.sh first."; exit 1; }
 
@@ -41,8 +40,9 @@ DEPLOY_HOME="$(getent passwd "${DEPLOY_USER}" | cut -d: -f6)"
 RCLONE_CONFIG_DIR="${DEPLOY_HOME}/.config/rclone"
 
 # Interactive input
-read -rp "DO Spaces Access Key: " SPACES_ACCESS_KEY
-read -rsp "DO Spaces Secret Key: " SPACES_SECRET_KEY
+read -rp "Cloudflare account ID: " R2_ACCOUNT_ID
+read -rp "R2 Access Key ID: " R2_ACCESS_KEY
+read -rsp "R2 Secret Access Key: " R2_SECRET_KEY
 echo
 
 mkdir -p "${RCLONE_CONFIG_DIR}"
@@ -52,14 +52,15 @@ mkdir -p "${RCLONE_CONFIG_DIR}"
      "${RCLONE_CONFIG_DIR}/rclone.conf.bak.$(date +%Y%m%d_%H%M%S)"
 
 cat > "${RCLONE_CONFIG_DIR}/rclone.conf" <<EOF
-[spaces]
+[r2]
 type = s3
-provider = DigitalOcean
-access_key_id = ${SPACES_ACCESS_KEY}
-secret_access_key = ${SPACES_SECRET_KEY}
-endpoint = fra1.digitaloceanspaces.com
-region = fra1
+provider = Cloudflare
+access_key_id = ${R2_ACCESS_KEY}
+secret_access_key = ${R2_SECRET_KEY}
+endpoint = https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
+region = auto
 acl = private
+no_check_bucket = true
 EOF
 
 chmod 600 "${RCLONE_CONFIG_DIR}/rclone.conf"
@@ -72,25 +73,25 @@ log "rclone configuration saved"
 echo -e "\n${BOLD}Testing connection...${NC}"
 if [[ "${CURRENT_USER}" == "root" ]]; then
   if command -v runuser &>/dev/null; then
-    if runuser -u "${DEPLOY_USER}" -- rclone ls spaces:craftive-backups --max-depth 1 &>/dev/null; then
-      log "DO Spaces connection successful: craftive-backups bucket is reachable"
+    if runuser -u "${DEPLOY_USER}" -- rclone ls r2:craftive-backups-prod --max-depth 1 &>/dev/null; then
+      log "Cloudflare R2 connection successful: craftive-backups-prod is reachable"
     else
       warn "Connection failed — check Access Key, Secret Key, and bucket name"
-      warn "Bucket: DigitalOcean -> Spaces -> craftive-backups (Frankfurt/FRA1)"
+      warn "Bucket: Cloudflare R2 -> craftive-backups-prod"
     fi
   else
-    if su -s /bin/bash -c "rclone ls spaces:craftive-backups --max-depth 1" "${DEPLOY_USER}" &>/dev/null; then
-      log "DO Spaces connection successful: craftive-backups bucket is reachable"
+    if su -s /bin/bash -c "rclone ls r2:craftive-backups-prod --max-depth 1" "${DEPLOY_USER}" &>/dev/null; then
+      log "Cloudflare R2 connection successful: craftive-backups-prod is reachable"
     else
       warn "Connection failed — check Access Key, Secret Key, and bucket name"
-      warn "Bucket: DigitalOcean -> Spaces -> craftive-backups (Frankfurt/FRA1)"
+      warn "Bucket: Cloudflare R2 -> craftive-backups-prod"
     fi
   fi
-elif rclone ls spaces:craftive-backups --max-depth 1 &>/dev/null; then
-  log "DO Spaces connection successful: craftive-backups bucket is reachable"
+elif rclone ls r2:craftive-backups-prod --max-depth 1 &>/dev/null; then
+  log "Cloudflare R2 connection successful: craftive-backups-prod is reachable"
 else
   warn "Connection failed — check Access Key, Secret Key, and bucket name"
-  warn "Bucket: DigitalOcean -> Spaces -> craftive-backups (Frankfurt/FRA1)"
+  warn "Bucket: Cloudflare R2 -> craftive-backups-prod"
 fi
 
 echo -e "\n${BOLD}Backup test reminder...${NC}"
