@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.backend.infrastructure.tenant.TenantFilter;
+import com.backend.application.cms.preview.CmsPreviewTicketService;
+import com.backend.application.cms.preview.CmsRequestContext;
+import com.backend.domain.port.TenantContextPort;
 
 @WebMvcTest(controllers = SecurityHeadersTest.PingController.class)
 @Import({ SecurityConfig.class, SecurityHeadersTest.TestCorsConfig.class })
@@ -33,6 +36,15 @@ class SecurityHeadersTest {
 
     @MockBean
     private TenantFilter tenantFilter;
+
+    @MockBean
+    private CmsPreviewTicketService cmsPreviewTicketService;
+
+    @MockBean
+    private CmsRequestContext cmsRequestContext;
+
+    @MockBean
+    private TenantContextPort tenantContextPort;
 
     @Test
     @DisplayName("X-Frame-Options: DENY present on all responses")

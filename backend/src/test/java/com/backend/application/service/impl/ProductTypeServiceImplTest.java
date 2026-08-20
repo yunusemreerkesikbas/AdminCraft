@@ -356,16 +356,21 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when generated code is duplicate")
-        void addAttribute_ThrowsException_WhenCodeDuplicate() {
+        @DisplayName("Should append a suffix when generated code is duplicate")
+        void addAttribute_GeneratesUniqueCode_WhenCodeDuplicate() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(eq(1L), anyString())).thenReturn(true);
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, "name")).thenReturn(true);
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, "name_1")).thenReturn(false);
+            when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
 
-            // When & Then
-            assertThatThrownBy(() -> productTypeService.addAttribute(
-                    1L, "Name", ProductFieldType.TEXT))
-                    .isInstanceOf(IllegalArgumentException.class);
+            // When
+            ProductAttributeDefinition result = productTypeService.addAttribute(
+                    1L, "Name", ProductFieldType.TEXT);
+
+            // Then
+            assertThat(result.getCode()).isEqualTo("name_1");
         }
 
         @Test

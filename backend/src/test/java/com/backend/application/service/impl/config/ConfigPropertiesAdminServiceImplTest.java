@@ -53,7 +53,7 @@ class ConfigPropertiesAdminServiceImplTest extends BaseServiceTest {
 
         List<ConfigPropertyResult> result = service.listProperties(tenantPrincipal());
 
-        assertThat(result).hasSize(7);
+        assertThat(result).hasSize(8);
         assertThat(result).extracting(ConfigPropertyResult::key).containsExactly(
                 "security.recaptcha.enabled",
                 "security.recaptcha.site_key",
@@ -61,7 +61,8 @@ class ConfigPropertiesAdminServiceImplTest extends BaseServiceTest {
                 "analytics.ga4.enabled",
                 "analytics.ga4.property_id",
                 "seo.insights.enabled",
-                "seo.search_console.property_url");
+                "seo.search_console.property_url",
+                "security.otp.resend_cooldown_seconds");
         assertThat(result.get(0).value()).isEqualTo("false");
         assertThat(result.get(1).value()).isNull();
         assertThat(result.get(2).value()).isNull();
@@ -74,6 +75,8 @@ class ConfigPropertiesAdminServiceImplTest extends BaseServiceTest {
         assertThat(result.get(5).secret()).isFalse();
         assertThat(result.get(6).value()).isNull();
         assertThat(result.get(6).secret()).isFalse();
+        assertThat(result.get(7).value()).isEqualTo("180");
+        assertThat(result.get(7).secret()).isFalse();
     }
 
     @Test
